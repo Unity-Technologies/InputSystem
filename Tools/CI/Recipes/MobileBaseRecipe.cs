@@ -19,10 +19,6 @@ public abstract class MobileBaseRecipe: BaseRecipe
             var supportedVersions = package.SupportedEditorVersions;
             foreach (var version in supportedVersions)
             {
-                // Skip tests on 2021.3 as it is longer supported
-                if (version == "2021.3")
-                    continue;
-
                 if (platform.System == SystemType.Android)
                 {
                     builders.AddRange(ProduceJobsForAndroid(package, platform, version));
@@ -53,15 +49,20 @@ public abstract class MobileBaseRecipe: BaseRecipe
 
     protected string PrepareUtrExecutable(IJobBuilder job, SystemType systemType)
     {
-        if (systemType == SystemType.Android)
+        var executableName = "utr.bat";
+        var utrDownloadCommand = UtrCommand.Download(systemType, executableName);
+        switch (systemType)
         {
-            var executableName = "utr.bat";
-            job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
-            var utrDownloadCommand = UtrCommand.Download(systemType, executableName);
-            job.WithCommands(utrDownloadCommand);
-            return executableName;
+            case SystemType.Android:
+                job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
+                job.WithCommands(utrDownloadCommand);
+                return executableName;
+            case SystemType.IOS:
+                job.WithCommands(utrDownloadCommand);
+                job.WithEnvironmentVariable("UTR_VERSION", "1.42.0");
+                return executableName;
+            default:
+                return "UnifiedTestRunner";
         }
-
-        return "UnifiedTestRunner";
     }
 }
