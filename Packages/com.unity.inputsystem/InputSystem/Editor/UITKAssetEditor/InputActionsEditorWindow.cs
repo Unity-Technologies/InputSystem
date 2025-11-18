@@ -267,14 +267,6 @@ namespace UnityEngine.InputSystem.Editor
         {
             DirtyInputActionsEditorWindow(newState);
             m_State = newState;
-
-            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
-            // No action taken apart from setting dirty flag, auto-save triggered as part of having a dirty asset
-            // and editor loosing focus instead.
-            #else
-            if (InputEditorUserSettings.autoSaveInputActionAssets)
-                Save(isAutoSave: false);
-            #endif
         }
 
         private void UpdateWindowTitle()
@@ -313,13 +305,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
         {
-            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
-            // Window is dirty is equivalent to if asset has changed
             var isWindowDirty = HasContentChanged();
-            #else
-            // Window is dirty is never true since every change is auto-saved
-            var isWindowDirty = !InputEditorUserSettings.autoSaveInputActionAssets && HasContentChanged();
-            #endif
 
             if (m_IsDirty == isWindowDirty)
                 return;
@@ -345,16 +331,15 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnLostFocus()
         {
-            // Auto-save triggers on focus-lost instead of on every change
-            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             if (InputEditorUserSettings.autoSaveInputActionAssets && m_IsDirty)
+            {
                 // We'd like to avoid saving in case the focus was lost due to the drop-down window being spawned.
                 // This code should be cleaned up once we migrate the InputControl stuff from ImGUI completely.
                 // Since at that point it stops being a separate window that steals focus.
                 // (See case ISXB-1221)
                 if (!InputControlPathEditor.IsShowingDropdown)
                     Save(isAutoSave: true);
-            #endif
+            }
 
             analytics.RegisterEditorFocusOut();
         }
