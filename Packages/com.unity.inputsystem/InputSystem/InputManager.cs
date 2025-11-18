@@ -1858,7 +1858,6 @@ namespace UnityEngine.InputSystem
             Debug.Assert(settings != null);
 
             m_Settings = settings;
-            m_LazyLoadCustomTypes =  () => RegisterCustomTypes(); // Cached delegate
 
             InitializeActions();
             InitializeData();
