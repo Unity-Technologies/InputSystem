@@ -49,18 +49,18 @@ public abstract class MobileBaseRecipe: BaseRecipe
 
     protected string PrepareUtrExecutable(IJobBuilder job, SystemType systemType)
     {
-        var executableName = "utr.bat";
-        var utrDownloadCommand = UtrCommand.Download(systemType, executableName);
         switch (systemType)
         {
             case SystemType.Android:
                 job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
-                job.WithCommands(utrDownloadCommand);
-                return executableName;
+                job.WithCommands(UtrCommand.Download(systemType, "utr.bat"));
+                return "utr.bat";
             case SystemType.IOS:
-                job.WithCommands(utrDownloadCommand);
+                job.WithCommands(UtrCommand.Download(systemType, "utr"));
+                // A temporary fix for the issue where UTR 1.41.0 cannot handle new signing for 6000.5 on iOS platform.
+                // It can be removed once https://artifactory.prd.it.unity3d.com/ui/native/unity-tools-local/utr-standalone/utr has been bumped to 1.42.0 or above.
                 job.WithEnvironmentVariable("UTR_VERSION", "1.42.0");
-                return "./" + executableName;
+                return "./utr";
             default:
                 return "UnifiedTestRunner";
         }

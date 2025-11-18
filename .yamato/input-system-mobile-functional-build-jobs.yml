@@ -66,9 +66,9 @@ inputsystem-mobilefunctionalbuildjobs_-_2022_3_-_ios:
   commands:
   - command: unity-downloader-cli -u 2022.3/staging -c Editor -c iOS --fast --wait
   - command: |-
-      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
-      chmod u+x utr.bat
-  - command: ./utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -167,9 +167,9 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_0_-_ios:
   commands:
   - command: unity-downloader-cli -u 6000.0/staging -c Editor -c iOS --fast --wait
   - command: |-
-      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
-      chmod u+x utr.bat
-  - command: ./utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -268,9 +268,9 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_2_-_ios:
   commands:
   - command: unity-downloader-cli -u 6000.2/staging -c Editor -c iOS --fast --wait
   - command: |-
-      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
-      chmod u+x utr.bat
-  - command: ./utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -369,9 +369,9 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_3_-_ios:
   commands:
   - command: unity-downloader-cli -u 6000.3/staging -c Editor -c iOS --fast --wait
   - command: |-
-      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
-      chmod u+x utr.bat
-  - command: ./utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -471,9 +471,9 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_ios:
   commands:
   - command: unity-downloader-cli -u 6000.4/staging -c Editor -c iOS --fast --wait
   - command: |-
-      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
-      chmod u+x utr.bat
-  - command: ./utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -573,9 +573,9 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_5_-_ios:
   commands:
   - command: unity-downloader-cli -u trunk -c Editor -c iOS --fast --wait
   - command: |-
-      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
-      chmod u+x utr.bat
-  - command: ./utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
