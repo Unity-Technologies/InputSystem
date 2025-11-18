@@ -64,7 +64,7 @@ inputsystem-mobileperformancetests_-_2022_3_-_ios:
   - command: |-
       curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
       chmod u+x utr.bat
-  - command: utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: ./utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -158,7 +158,7 @@ inputsystem-mobileperformancetests_-_6000_0_-_ios:
   - command: |-
       curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
       chmod u+x utr.bat
-  - command: utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: ./utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -252,7 +252,7 @@ inputsystem-mobileperformancetests_-_6000_2_-_ios:
   - command: |-
       curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
       chmod u+x utr.bat
-  - command: utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: ./utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -346,7 +346,7 @@ inputsystem-mobileperformancetests_-_6000_3_-_ios:
   - command: |-
       curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
       chmod u+x utr.bat
-  - command: utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: ./utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -440,7 +440,7 @@ inputsystem-mobileperformancetests_-_6000_4_-_ios:
   - command: |-
       curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
       chmod u+x utr.bat
-  - command: utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: ./utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -534,7 +534,7 @@ inputsystem-mobileperformancetests_-_6000_5_-_ios:
   - command: |-
       curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr.bat
       chmod u+x utr.bat
-  - command: utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: ./utr.bat --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:

@@ -60,7 +60,7 @@ public abstract class MobileBaseRecipe: BaseRecipe
             case SystemType.IOS:
                 job.WithCommands(utrDownloadCommand);
                 job.WithEnvironmentVariable("UTR_VERSION", "1.42.0");
-                return executableName;
+                return "./" + executableName;
             default:
                 return "UnifiedTestRunner";
         }
