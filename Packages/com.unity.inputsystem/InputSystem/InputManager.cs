@@ -1858,6 +1858,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(settings != null);
 
             m_Settings = settings;
+            m_LazyLoadCustomTypes =  () => RegisterCustomTypes(); // Cached delegate
 
             InitializeActions();
             InitializeData();
@@ -1913,9 +1914,9 @@ namespace UnityEngine.InputSystem
         internal void InitializeData()
         {
             m_Layouts.Allocate();
-            m_Processors.Initialize();
-            m_Interactions.Initialize();
-            m_Composites.Initialize();
+            m_Processors.Initialize(this);
+            m_Interactions.Initialize(this);
+            m_Composites.Initialize(this);
             m_DevicesById = new Dictionary<int, InputDevice>();
 
             // Determine our default set of enabled update types. By
@@ -2030,7 +2031,7 @@ namespace UnityEngine.InputSystem
             // .inputaction JSON assets. This is managed via TypeTable.cs.
         }
 
-        void RegisterCustomTypes(Type[] types)
+        static void RegisterCustomTypes(Type[] types)
         {
             foreach (Type type in types)
             {
@@ -2053,13 +2054,17 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        internal bool hasCustomTypesBeenRegistered { get; private set; }
+        private bool m_CustomTypesRegistered;
 
-        internal void RegisterCustomTypes()
+        internal bool RegisterCustomTypes()
         {
-            if (hasCustomTypesBeenRegistered)
-                return;
-            hasCustomTypesBeenRegistered = true;
+            // If we have already attempted to register custom types, there is no need to reattempt since we
+            // would end up with the same result again. Only with a domain reload would the resulting types
+            // be different, and hence it is sufficient to use a static flag that we do not reset.
+            if (!m_CustomTypesRegistered)
+                return false;
+
+            m_CustomTypesRegistered = true;
 
             k_InputRegisterCustomTypesMarker.Begin();
 
@@ -2085,11 +2090,13 @@ namespace UnityEngine.InputSystem
                 }
                 catch (ReflectionTypeLoadException)
                 {
-                    continue;
+                    // Ignore exception
                 }
             }
 
             k_InputRegisterCustomTypesMarker.End();
+
+            return true;
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -2270,6 +2277,7 @@ namespace UnityEngine.InputSystem
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
         internal InputSettings m_Settings;
+        private Func<bool> m_LazyLoadCustomTypes;
 
         // Extract as booleans (from m_Settings) because feature check is in the hot path
 
