@@ -56,7 +56,7 @@ The Input System supports several different workflows, each with its own advanta
 
 **Description**: The fifth video in the series explores in-game rebinding:
 
-- Learn how to use rebinding to enable players to customize their input controls during gameplay. 
+- Learn how to use rebinding to enable players to customize their input controls during gameplay.
 - Save these custom bindings using PlayerPrefs, to ensure your settings persist between game sessions.
 
 **Link**: [Watch Video 5/7](https://www.youtube.com/watch?v=JfuqMaOiNPs) (YouTube)
@@ -75,7 +75,7 @@ The Input System supports several different workflows, each with its own advanta
 
 ## Player Input Manager and local multiplayer games
 
-**Description**: The seventh video in the series focuses on local multiplayer games, where two or more players share the same computer and screen while using separate controllers. Learn how to use the Player Input Manager component to enable multiple players to control different characters in a local multiplayer setup. 
+**Description**: The seventh video in the series focuses on local multiplayer games, where two or more players share the same computer and screen while using separate controllers. Learn how to use the Player Input Manager component to enable multiple players to control different characters in a local multiplayer setup.
 
 This includes examples that demonstrate the following:
 
