@@ -89,19 +89,19 @@ namespace UnityEngine.InputSystem.Utilities
 
         private Type TryLookupTypeRegistration(InternedString internedName)
         {
-            if (table.TryGetValue(internedName, out var type))
-                return type;
-
-            // Failed to look-up type, either type do not exist or it is a custom type that has not been registered.
-            // Check whether we have attempted to load custom types and otherwise lazily load
-            // types only when referenced and reattempt looking up type by name. (ISXB-1766)
-            if (m_Manager != null)
+            if (!table.TryGetValue(internedName, out var type))
             {
-                if (m_Manager.RegisterCustomTypes())
-                    return TryLookupTypeRegistration(internedName); // Recursive call
+                // Failed to look-up type, either type do not exist or it is a custom type that has not been registered.
+                // Check whether we have attempted to load custom types and otherwise lazily load  types only when
+                // relevant and reattempt looking up type by name. (ISXB-1766)
+                if (m_Manager != null)
+                {
+                    if (m_Manager.RegisterCustomTypes())
+                        table.TryGetValue(internedName, out type);
+                }
             }
 
-            return null;
+            return type;
         }
 
         #if UNITY_EDITOR
