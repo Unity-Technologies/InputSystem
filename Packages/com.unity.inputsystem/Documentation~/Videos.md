@@ -3,69 +3,84 @@ uid: input-system-videos
 ---
 # Videos
 
-This page provides a collection of video resources to help you quickly get started with the Input System. The Input System supports several different workflows, each with its own advantages. These videos walk you through the most commonly used workflow and offer practical guidance to help you begin using the Input System right away.
+This page provides a collection of video resources to introduce the Input System in Unity 6. Follow the videos in the order provided, since many of the tutorials provide a foundation for understanding the more advanced tutorials.
+
+The Input System supports several different workflows, each with its own advantages. These videos walk you through the most commonly used workflows and offer practical guidance to help you begin using the Input System right away.
 
 
-## Input System in Unity 6 (1/7): Input Action Editor
+## Introduction to the Unity Input System
 
-**Description**: This is the first video in a 7-part series that will show you how to get started with Unity’s Input System and introduce some of its core concepts. You’ll learn how to install the Input System into your project, understand the concept of Input Actions, and how to use the Input System Actions Editor to bind them to various inputs, such as keys, gamepad buttons, and mouse axes.
+**Description**: This is the first video in a 7-part series that demonstrates how to get started with Unity’s Input System and introduces some of its core concepts. It covers the following lessons:
 
-We’ll also explore how Interactions define when an input action is triggered (e.g., press, hold, or release) and how Processors can modify or transform raw input data before it’s used (e.g., normalizing, inverting, or clamping values).
+- Learn how to install the Input System in your Unity project.
+- Understand the concept of input actions.
+- Learn how to use the **Input Actions Editor** to bind input actions to various inputs, such as keys, gamepad buttons, and mouse axes.
+- Explore how to define interactions when an input action is triggered (for example, press, hold, or release).
+- Learn how processors can modify or transform raw input data before it’s used (for example, normalizing, inverting, or clamping values).
 
 **Link**: [Watch video 1/7](https://www.youtube.com/watch?v=TiTKAseu17A) (YouTube)
 
 
-## Input System in Unity 6 (2/7): Input System Scripting
+## Input System scripting
 
-**Description**: In this video, where we dive into scripting with the Input System to control a third-person character.
+**Description**: The second video in the series introduces scripting with the Input System to control a third-person character:
 
-You'll learn how to write code to move and jump the third-person character using an Input System Asset, with support for both gamepad and mouse-and-keyboard inputs.
-
-We’ll also add a simple pause menu to demonstrate how Action Maps can be switched dynamically to handle different input contexts.
+- Learn how to write code to move and jump the third-person character using an Input System asset, with support for both gamepad and mouse-and-keyboard inputs.
+- Add a simple pause menu.
+- Learn how to dynamically switch action maps to handle different input contexts.
 
 **Link**: [Watch video 2/7](https://www.youtube.com/watch?v=Cd2Erk_bsRY) (YouTube)
 
 
-## Input System in Unity 6 (3/7): Input System Mobile controls
+## Mobile controls
 
-**Description**: In this video, we’ll show you how to add mobile touch controls to your game using Unity’s Input System.
+**Description**: The third video in the series demonstrates how to add mobile touch controls to your game using Unity’s Input System:
 
-You’ll learn how to use the On-Screen Stick and On-Screen Button components to set up on-screen controls for mobile devices, enabling touch-based input for third-person character movement.
+- Use the On-Screen Stick and On-Screen Button components to set up on-screen controls for mobile devices.
+- Enable touch-based input for third-person character movement.
 
 **Link**: [Watch Video 3/7](https://www.youtube.com/watch?v=aI-r7ILNDug) (YouTube)
 
 
-## Input System in Unity 6 (4/7): Input System and UI toolkit
+## UI toolkit with the Input System
 
-**Description**: In this video, we’ll show you how to integrate the Input System with UI Toolkit to navigate and interact with a series of buttons.
+**Description**: The fourth video in the series demonstrates how to integrate the Input System with UI Toolkit:
 
-You’ll also learn how to use gamepad controls to toggle between different button collections, enabling seamless switching on and off.
+- Learn how to navigate and interact with a series of buttons.
+- Use gamepad controls to toggle between different button collections, enabling seamless switching on and off.
 
 **Link**: [Watch Video 4/7](https://www.youtube.com/watch?v=GdjP5pggaHw) (YouTube)
 
 
-## Input System in Unity 6 (5/7): Rebinding Input System controls
+## Rebind Input System controls
 
-**Description**: In this video, we’ll explore in-game rebinding, a feature that lets players customize their input controls during gameplay.
+**Description**: The fifth video in the series explores in-game rebinding:
 
-You’ll also learn how to save these custom bindings using PlayerPrefs, an easy way to ensure your settings persist between game sessions.
+- Learn how to use rebinding to enable players to customize their input controls during gameplay. 
+- Save these custom bindings using PlayerPrefs, to ensure your settings persist between game sessions.
 
 **Link**: [Watch Video 5/7](https://www.youtube.com/watch?v=JfuqMaOiNPs) (YouTube)
 
 
-## Input System in Unity 6 (6/7): Player Input Component
+## Player Input Component
 
-**Description**: In this video, we focus on preparing a local multiplayer scene, where two or more players share the same computer and screen but use separate controllers.
+**Description**: The sixth video in the series explores preparing a local multiplayer scene, where two or more players share the same computer and screen but use separate controllers:
 
-We’ll dive into how to configure and script for the Player Input component, including its behaviors for communicating with your scripts – both Broadcast Messages and by invoking events.
+- Configure the Player Input component.
+- Set up scripts to interact with the Player Input component.
+- Set up behaviors for communicating with your scripts.
 
 **Link**: [Watch Video 6/7](https://www.youtube.com/watch?v=beDfIBLfx4c) (YouTube)
 
 
-## Input System in Unity 6 (7/7): Player Input Manager & local multiplayer
+## Player Input Manager and local multiplayer games
 
-**Description**: In this video, we focus on local multiplayer games, where two or more players share the same computer and screen while using separate controllers.
+**Description**: The seventh video in the series focuses on local multiplayer games, where two or more players share the same computer and screen while using separate controllers. Learn how to use the Player Input Manager component to enable multiple players to control different characters in a local multiplayer setup. 
 
-You’ll learn how to use the Player Input Manager component to enable multiple players to control different characters in a local multiplayer setup. We’ll demonstrate this with examples, including a local co-op setup, a split-screen configuration, and a two-player scenario.
+This includes examples that demonstrate the following:
+
+- A local co-op setup
+- A split-screen configuration
+- A two-player scenario
 
 **Link**: [Watch Video 7/7](https://www.youtube.com/watch?v=lGxXQzE5Vu8) (YouTube)
