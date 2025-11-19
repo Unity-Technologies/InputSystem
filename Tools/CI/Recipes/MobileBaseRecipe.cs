@@ -52,6 +52,9 @@ public abstract class MobileBaseRecipe: BaseRecipe
         switch (systemType)
         {
             case SystemType.Android:
+                // For build jobs on Android, we still use the built-in UTR and the extra commands are not needed.
+                if (job.Name.Contains("BuildJobs"))
+                    break;
                 job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
                 job.WithCommands(UtrCommand.Download(systemType, "utr.bat"));
                 return "utr.bat";
@@ -61,8 +64,8 @@ public abstract class MobileBaseRecipe: BaseRecipe
                 // It can be removed once https://artifactory.prd.it.unity3d.com/ui/native/unity-tools-local/utr-standalone/utr has been bumped to 1.42.0 or above.
                 job.WithEnvironmentVariable("UTR_VERSION", "1.42.0");
                 return "./utr";
-            default:
-                return "UnifiedTestRunner";
         }
+
+        return "UnifiedTestRunner";
     }
 }

@@ -9,16 +9,10 @@ inputsystem-mobilefunctionalbuildjobs_-_2022_3_-_android_-_il2cpp:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u 2022.3/staging -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -37,16 +31,10 @@ inputsystem-mobilefunctionalbuildjobs_-_2022_3_-_android_-_mono:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u 2022.3/staging -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -110,16 +98,10 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_0_-_android_-_il2cpp:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u 6000.0/staging -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -138,16 +120,10 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_0_-_android_-_mono:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u 6000.0/staging -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -211,16 +187,10 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_2_-_android_-_il2cpp:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u 6000.2/staging -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -239,16 +209,10 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_2_-_android_-_mono:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u 6000.2/staging -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -312,16 +276,10 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_3_-_android_-_il2cpp:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u 6000.3/staging -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -340,16 +298,10 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_3_-_android_-_mono:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u 6000.3/staging -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -414,16 +366,10 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_android_-_il2cpp:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u 6000.4/staging -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -442,16 +388,10 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_android_-_mono:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u 6000.4/staging -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -516,16 +456,10 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_5_-_android_-_il2cpp:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u trunk -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
@@ -544,16 +478,10 @@ inputsystem-mobilefunctionalbuildjobs_-_6000_5_-_android_-_mono:
     flavor: b1.xlarge
   commands:
   - command: unity-downloader-cli -u trunk -c Editor -c Android --fast --wait
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe devices
-  - command: curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr.bat --output utr.bat
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      utr.bat --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=!Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
   after:
-  - command: start %ANDROID_SDK_ROOT%\platform-tools\adb.exe connect %BOKKEN_DEVICE_IP%
-  - command: if not exist build\test-results mkdir build\test-results
-  - command: powershell %ANDROID_SDK_ROOT%\platform-tools\adb.exe logcat -d > build/test-results/device_log.txt
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
     logs:
