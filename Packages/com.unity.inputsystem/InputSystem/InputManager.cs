@@ -2060,8 +2060,8 @@ namespace UnityEngine.InputSystem
             // If we have already attempted to register custom types, there is no need to reattempt since we
             // would end up with the same result again. Only with a domain reload would the resulting types
             // be different, and hence it is sufficient to use a static flag that we do not reset.
-            if (!m_CustomTypesRegistered)
-                return false;
+            if (m_CustomTypesRegistered)
+                return false; // Already evaluated
 
             m_CustomTypesRegistered = true;
 
@@ -2095,7 +2095,7 @@ namespace UnityEngine.InputSystem
 
             k_InputRegisterCustomTypesMarker.End();
 
-            return true;
+            return true; // Signal that custom types were extracted and registered.
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
