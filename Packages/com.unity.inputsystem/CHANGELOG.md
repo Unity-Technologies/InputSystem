@@ -11,7 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Changed
-- Project-Wide Input Actions support can no longer compiled out (removed the UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS define). (ISX-2397)
+- Project-Wide Input Actions support can no longer be compiled out (removed the UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS define). (ISX-2397)
 - Removed code that had to do with Unity versions older than Unity 2022.3 LTS. (ISX-2396)
 - Auto-save on focus lost can no longer be compiled out (ISX-2397)
 - Deprecated the USE_IMGUI_EDITOR_FOR_ASSETS feature option (ISX-2397)
