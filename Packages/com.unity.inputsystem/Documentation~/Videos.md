@@ -12,7 +12,7 @@ This page provides a collection of video resources to help you quickly get start
 
 We’ll also explore how Interactions define when an input action is triggered (e.g., press, hold, or release) and how Processors can modify or transform raw input data before it’s used (e.g., normalizing, inverting, or clamping values).
 
-**Link**: [Watch Video](https://www.youtube.com/watch?v=TiTKAseu17A)
+**Link**: [Watch video 1/7](https://www.youtube.com/watch?v=TiTKAseu17A) (YouTube)
 
 
 ## Input System in Unity 6 (2/7): Input System Scripting
@@ -23,7 +23,7 @@ You'll learn how to write code to move and jump the third-person character using
 
 We’ll also add a simple pause menu to demonstrate how Action Maps can be switched dynamically to handle different input contexts.
 
-**Link**: [Watch Video](https://www.youtube.com/watch?v=Cd2Erk_bsRY)
+**Link**: [Watch video 2/7](https://www.youtube.com/watch?v=Cd2Erk_bsRY) (YouTube)
 
 
 ## Input System in Unity 6 (3/7): Input System Mobile controls
@@ -32,7 +32,7 @@ We’ll also add a simple pause menu to demonstrate how Action Maps can be switc
 
 You’ll learn how to use the On-Screen Stick and On-Screen Button components to set up on-screen controls for mobile devices, enabling touch-based input for third-person character movement.
 
-**Link**: [Watch Video](https://www.youtube.com/watch?v=aI-r7ILNDug)
+**Link**: [Watch Video 3/7](https://www.youtube.com/watch?v=aI-r7ILNDug) (YouTube)
 
 
 ## Input System in Unity 6 (4/7): Input System and UI toolkit
@@ -41,7 +41,7 @@ You’ll learn how to use the On-Screen Stick and On-Screen Button components to
 
 You’ll also learn how to use gamepad controls to toggle between different button collections, enabling seamless switching on and off.
 
-**Link**: [Watch Video](https://www.youtube.com/watch?v=GdjP5pggaHw)
+**Link**: [Watch Video 4/7](https://www.youtube.com/watch?v=GdjP5pggaHw) (YouTube)
 
 
 ## Input System in Unity 6 (5/7): Rebinding Input System controls
@@ -50,7 +50,7 @@ You’ll also learn how to use gamepad controls to toggle between different butt
 
 You’ll also learn how to save these custom bindings using PlayerPrefs, an easy way to ensure your settings persist between game sessions.
 
-**Link**: [Watch Video](https://www.youtube.com/watch?v=JfuqMaOiNPs)
+**Link**: [Watch Video 5/7](https://www.youtube.com/watch?v=JfuqMaOiNPs) (YouTube)
 
 
 ## Input System in Unity 6 (6/7): Player Input Component
@@ -59,7 +59,7 @@ You’ll also learn how to save these custom bindings using PlayerPrefs, an easy
 
 We’ll dive into how to configure and script for the Player Input component, including its behaviors for communicating with your scripts – both Broadcast Messages and by invoking events.
 
-**Link**: [Watch Video](https://www.youtube.com/watch?v=beDfIBLfx4c)
+**Link**: [Watch Video 6/7](https://www.youtube.com/watch?v=beDfIBLfx4c) (YouTube)
 
 
 ## Input System in Unity 6 (7/7): Player Input Manager & local multiplayer
@@ -68,4 +68,4 @@ We’ll dive into how to configure and script for the Player Input component, in
 
 You’ll learn how to use the Player Input Manager component to enable multiple players to control different characters in a local multiplayer setup. We’ll demonstrate this with examples, including a local co-op setup, a split-screen configuration, and a two-player scenario.
 
-**Link**: [Watch Video](https://www.youtube.com/watch?v=lGxXQzE5Vu8)
+**Link**: [Watch Video 7/7](https://www.youtube.com/watch?v=lGxXQzE5Vu8) (YouTube)
