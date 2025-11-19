@@ -390,6 +390,8 @@ MonoBehaviour:
   m_RebindOverlay: {fileID: 0}
   m_RebindText: {fileID: 0}
   m_RebindInfo: {fileID: 0}
+  m_RebindCancelButton: {fileID: 0}
+  m_RebindTimeout: 0
   m_UpdateBindingUIEvent:
     m_PersistentCalls:
       m_Calls: []
