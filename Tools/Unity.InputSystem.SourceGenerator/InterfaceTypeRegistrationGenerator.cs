@@ -7,6 +7,7 @@
 // - Generate diagnostic warnings for types implementing interfaces with private visibility?
 // - Improve generated type name generation to guarantee no clash.
 
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -16,11 +17,18 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Unity.InputSystem.SourceGenerator;
 
-/// <summary>
-/// Syntax and symbol helpers.
-/// </summary>
 static class Helpers
 {
+    private static readonly HashSet<string> ExcludedAssemblies =
+    [
+        "Unity.InputSystem"
+    ];
+
+    public static bool IsAcceptedAssembly(INamedTypeSymbol symbol)
+    {
+        return !ExcludedAssemblies.Contains(symbol.ContainingAssembly.Identity.Name);
+    }
+    
     public static bool IsEffectivelyPublic(INamedTypeSymbol type)
     {
         // The type itself must be public
@@ -28,7 +36,9 @@ static class Helpers
             return false;
 
         // Every containing type must also be public
-        for (var container = type.ContainingType; container is not null; container = container.ContainingType)
+        for (var container = type.ContainingType; 
+             container is not null; 
+             container = container.ContainingType)
         {
             if (container.DeclaredAccessibility != Accessibility.Public)
                 return false;
@@ -40,9 +50,6 @@ static class Helpers
     public static bool ImplementsInterface(INamedTypeSymbol type, INamedTypeSymbol interfaceSymbol)
         => type.AllInterfaces.Contains(interfaceSymbol);
 
-    public static bool ExtendsClass(INamedTypeSymbol type, INamedTypeSymbol baseSymbol)
-        => SymbolEqualityComparer.Default.Equals(type, baseSymbol);
-    
     public static bool IsOrInheritsFrom(INamedTypeSymbol type, INamedTypeSymbol baseSymbol)
     {
         // If you *don't* want to match A itself, start from type.BaseType instead.
@@ -57,7 +64,7 @@ static class Helpers
 }
 
 [Generator]
-public class InterfaceTypeRegistrationGenerator : IIncrementalGenerator
+public class TypeRegistrationGenerator : IIncrementalGenerator
 {
     internal const string RegistrationTemplateBegin = @"using System;
 using UnityEngine;
@@ -72,10 +79,10 @@ class @C
     static @C() { Register(); }
 #endif
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
     static void Register()
     {
-        Debug.Log(""Auto-registering @T via source generated type @C"");";
+        Debug.Log(""Registering @T (@A) via generated type @C"");";
     
     internal const string RegistrationTemplateEnd = @"
     }
@@ -86,7 +93,7 @@ class @C
     private readonly string _template;
     private readonly System.Func<INamedTypeSymbol, INamedTypeSymbol, bool> _accept;
 
-    protected InterfaceTypeRegistrationGenerator(string @interface, string template, 
+    protected TypeRegistrationGenerator(string @interface, string template, 
         System.Func<INamedTypeSymbol, INamedTypeSymbol, bool> accept)
     {
         _interface = @interface;
@@ -134,30 +141,27 @@ class @C
                 continue;
             
             // Generate type registration code and add to source
-            var source = GenerateFor(typeSymbol, template);
+            var fullyQualifiedTypeName = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var source = template.Replace("@C", typeSymbol.Name + "Registration")
+                .Replace("@T", fullyQualifiedTypeName)
+                .Replace("@A", typeSymbol.ContainingAssembly.Identity.Name);
+            
+            // Finally, add source to compilation context
             context.AddSource($"{typeSymbol.Name}_Generated.g.cs", SourceText.From(source, Encoding.UTF8));
         }
-    }
-
-
-    
-    private static string GenerateFor(INamedTypeSymbol type, string template)
-    {
-        var fullyQualifiedTypeName = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        return template.Replace("@C", type.Name + "Registration").Replace("@T", fullyQualifiedTypeName);
     }
 }
 
 /// <summary>
-/// Source generator that registers public types implementing IInputProcessor.
+/// Source generator that registers public types extending InputProcessor.
 /// </summary>
 [Generator]
-public sealed class ProcessorRegistration() : InterfaceTypeRegistrationGenerator(Base, Template, 
-    static (symbol, baseSymbol) => Helpers.IsEffectivelyPublic(symbol) && 
+public sealed class InputProcessorRegistration() : TypeRegistrationGenerator(Base, Template, 
+    static (symbol, baseSymbol) => Helpers.IsAcceptedAssembly(symbol) &&
+                                   Helpers.IsEffectivelyPublic(symbol) && 
                                    Helpers.IsOrInheritsFrom(symbol, baseSymbol))
 {
     private const string Base = "UnityEngine.InputSystem.InputProcessor";
-
     private const string Template = RegistrationTemplateBegin + 
         "        InputSystem.RegisterProcessor(typeof(@T));" +
         RegistrationTemplateEnd;
@@ -167,13 +171,28 @@ public sealed class ProcessorRegistration() : InterfaceTypeRegistrationGenerator
 /// Source generator that registers public types implementing IInputInteraction.
 /// </summary>
 [Generator]
-public sealed class InteractionRegistration() : InterfaceTypeRegistrationGenerator(Interface, Template,
-    static (symbol, @interface) => Helpers.IsEffectivelyPublic(symbol) && 
+public sealed class InputInteractionRegistration() : TypeRegistrationGenerator(Interface, Template,
+    static (symbol, @interface) => Helpers.IsAcceptedAssembly(symbol) &&
+                                   Helpers.IsEffectivelyPublic(symbol) && 
                                    Helpers.ImplementsInterface(symbol, @interface))
 {
     private const string Interface = "UnityEngine.InputSystem.IInputInteraction";
-
     private const string Template = RegistrationTemplateBegin + 
         "        InputSystem.RegisterInteraction(typeof(@T));" + 
         RegistrationTemplateEnd;
+}
+
+/// <summary>
+/// Source generator that registers public types derived from InputBindingComposite.
+/// </summary>
+[Generator]
+public sealed class InputBindingCompositeRegistration() : TypeRegistrationGenerator(Base, Template, 
+    static (symbol, baseSymbol) => Helpers.IsAcceptedAssembly(symbol) &&
+                                   Helpers.IsEffectivelyPublic(symbol) && 
+                                   Helpers.IsOrInheritsFrom(symbol, baseSymbol))
+{
+    private const string Base = "UnityEngine.InputSystem.InputBindingComposite";
+    private const string Template = RegistrationTemplateBegin + 
+                                    "        InputSystem.RegisterBindingComposite(typeof(@T), null);" +
+                                    RegistrationTemplateEnd;
 }
