@@ -212,7 +212,7 @@ namespace UnityEngine.InputSystem.Composites
     internal class AxisCompositeEditor : InputParameterEditor<AxisComposite>
     {
         private const string label = "Which Side Wins";
-        private const string tooltip = "Determine which axis 'wins' if both are actuated at the same time. "
+        private const string tooltipText = "Determine which axis 'wins' if both are actuated at the same time. "
             + "If 'Neither' is selected, the result is 0 (or, more precisely, "
             + "the midpoint between minValue and maxValue).";
 
@@ -224,7 +224,7 @@ namespace UnityEngine.InputSystem.Composites
         {
             var modeField = new EnumField(label, target.whichSideWins)
             {
-                tooltip = tooltip
+                tooltip = tooltipText
             };
 
             modeField.RegisterValueChangedCallback(evt =>

@@ -192,7 +192,7 @@ namespace UnityEngine.InputSystem.Composites
     internal class Vector2CompositeEditor : InputParameterEditor<Vector2Composite>
     {
         private const string label = "Mode";
-        private const string tooltip = "How to synthesize a Vector2 from the inputs. Digital "
+        private const string tooltipText = "How to synthesize a Vector2 from the inputs. Digital "
             + "treats part bindings as buttons (on/off) whereas Analog preserves "
             + "floating-point magnitudes as read from controls.";
 
@@ -204,7 +204,7 @@ namespace UnityEngine.InputSystem.Composites
         {
             var modeField = new EnumField(label, target.mode)
             {
-                tooltip = tooltip
+                tooltip = tooltipText
             };
 
             modeField.RegisterValueChangedCallback(evt =>
