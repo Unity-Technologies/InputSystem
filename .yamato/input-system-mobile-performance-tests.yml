@@ -61,7 +61,10 @@ inputsystem-mobileperformancetests_-_2022_3_-_ios:
     flavor: m1.mac
     model: SE
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: |-
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -70,6 +73,8 @@ inputsystem-mobileperformancetests_-_2022_3_-_ios:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_2022_3_-_ios
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobilePerformanceTests - 2022.3 - TvOS
 inputsystem-mobileperformancetests_-_2022_3_-_tvos:
@@ -150,7 +155,10 @@ inputsystem-mobileperformancetests_-_6000_0_-_ios:
     flavor: m1.mac
     model: SE
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: |-
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -159,6 +167,8 @@ inputsystem-mobileperformancetests_-_6000_0_-_ios:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_0_-_ios
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobilePerformanceTests - 6000.0 - TvOS
 inputsystem-mobileperformancetests_-_6000_0_-_tvos:
@@ -239,7 +249,10 @@ inputsystem-mobileperformancetests_-_6000_2_-_ios:
     flavor: m1.mac
     model: SE
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: |-
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -248,6 +261,8 @@ inputsystem-mobileperformancetests_-_6000_2_-_ios:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_2_-_ios
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobilePerformanceTests - 6000.2 - TvOS
 inputsystem-mobileperformancetests_-_6000_2_-_tvos:
@@ -328,7 +343,10 @@ inputsystem-mobileperformancetests_-_6000_3_-_ios:
     flavor: m1.mac
     model: SE-Gen3
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: |-
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -337,6 +355,8 @@ inputsystem-mobileperformancetests_-_6000_3_-_ios:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_3_-_ios
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobilePerformanceTests - 6000.3 - TvOS
 inputsystem-mobileperformancetests_-_6000_3_-_tvos:
@@ -417,7 +437,10 @@ inputsystem-mobileperformancetests_-_6000_4_-_ios:
     flavor: m1.mac
     model: SE-Gen3
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: |-
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -426,6 +449,8 @@ inputsystem-mobileperformancetests_-_6000_4_-_ios:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_4_-_ios
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobilePerformanceTests - 6000.4 - TvOS
 inputsystem-mobileperformancetests_-_6000_4_-_tvos:
@@ -506,7 +531,10 @@ inputsystem-mobileperformancetests_-_6000_5_-_ios:
     flavor: m1.mac
     model: SE-Gen3
   commands:
-  - command: UnifiedTestRunner --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
+  - command: |-
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --suite=playmode --category=Performance --reruncount=1 --clean-library --report-performance-data --performance-project-id=InputSystem --player-load-path=build/players --timeout=3600 --artifacts-path=build/test-results --platform=ios
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
@@ -515,6 +543,8 @@ inputsystem-mobileperformancetests_-_6000_5_-_ios:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_5_-_ios
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobilePerformanceTests - 6000.5 - TvOS
 inputsystem-mobileperformancetests_-_6000_5_-_tvos:
