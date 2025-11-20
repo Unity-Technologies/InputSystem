@@ -223,7 +223,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 m_ParameterEditor = null;
 
                 // Create parameter labels.
-                m_ParameterLabels = new (string text, string tooltip)[m_Parameters.Length];
+                m_ParameterLabels = new(string text, string tooltip)[m_Parameters.Length];
                 for (var i = 0; i < m_Parameters.Length; ++i)
                 {
                     // Look up tooltip from field.
