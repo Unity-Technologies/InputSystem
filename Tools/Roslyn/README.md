@@ -16,7 +16,7 @@ This allows generating required registration boilerplate code at compile-time in
 In addition, it eliminates the need to rely on slow and memory consuming run-time operations using 
 [.NET Reflection API](https://learn.microsoft.com/en-us/dotnet/fundamentals/reflection/reflection).
 
-## How to build and run tests
+## How to build 
 
 The simplest way to build the source generators are via the provided convenience scripts (internally using standard `dotnet` commands):
 
@@ -29,6 +29,15 @@ To build using Windows Command line prompt to build both `Debug` and `Release` t
 build
 ```
 
+To have more control over the build or to build individual targets, inspect the above mentioned scripts which 
+illustrate what `dotnet` commands are used. Consult [.NET CLI tools documentation](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet) 
+for additional options.
+
+When building the source generator, binaries are located under `./bin/<Configuration>`. For `Release` builds, the 
+resulting binary is also automatically copied into the designated folder location of the Input System package.
+
+## How to run tests
+
 To run tests and generate a test coverage report using macOS or *nix, use:
 ```
 ./test.sh
@@ -38,14 +47,31 @@ To run tests and generate a test coverage report using Windows, use:
 test
 ```
 
-To have more control over the build or to build individual targets, inspect the above mentioned scripts which 
-illustrate what `dotnet` commands are used. Consult [.NET CLI tools documentation](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet) 
-for additional options.
-
-When building the source generator, binaries are located under `./bin/<Configuration>`. For `Release` builds, the 
-resulting binary is also automatically copied into the designated folder location of the Input System package.
-
 Note that you may have to install `.NET Runtime` or add it to path if test run fails with error and prompts you that `Microsoft.NETCore.App` is outdated or missing.
+
+## How to run tests with test coverage report
+
+In order to generate test coverage reports you need to install `reportgenerator`. 
+
+It is restored as a global tool with:
+```
+dotnet tool restore
+```
+
+It is installed as a global tool with:
+```
+dotnet new tool-manifest         # if you don't already have a .config/dotnet-tools.json
+dotnet tool install dotnet-reportgenerator-globaltool
+```
+
+To run tests and generate a test coverage report using macOS or *nix, use:
+```
+./testcov.sh
+```
+To run tests and generate a test coverage report using Windows, use:
+```
+testcov
+```
 
 ## Dependencies
 

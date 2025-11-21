@@ -1,0 +1,1 @@
+source testcov.bat
