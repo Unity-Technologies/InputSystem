@@ -19,9 +19,15 @@ class Internal
     public class MyProcessor : InputProcessor { }
 }");
 
-    [Test] public Task ShouldGenerateRegistrationCode_IfPublicClassImplementsIInputInteractionViaUsing() => 
+    [Test] public Task ShouldGenerateRegistrationCode_IfPublicClassExtendsBaseViaUsing() => 
         Verify(@"using UnityEngine.InputSystem; public class MyProcessor : InputProcessor { }");
     
-    [Test] public Task ShouldGenerateRegistrationCode_IfPublicClassImplementsIInputInteraction() => 
+    [Test] public Task ShouldGenerateRegistrationCode_IfPublicClassExtendsBase() => 
         Verify("public class MyProcessor : UnityEngine.InputSystem.InputProcessor { }");
+    
+    [Test] public Task ShouldGenerateRegistrationCode_IfNestedPublicClassExtendsBase() => 
+        Verify(@"namespace Ns;
+public class Outer {
+    public class MyProcessor : UnityEngine.InputSystem.InputProcessor { }
+}");
 }

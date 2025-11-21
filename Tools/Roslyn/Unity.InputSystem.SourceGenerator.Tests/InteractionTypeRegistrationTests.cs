@@ -24,4 +24,10 @@ class Internal
     
     [Test] public Task ShouldGenerateRegistrationCode_IfPublicClassImplementsInterface() => 
         Verify(@"public class MyInteraction : UnityEngine.InputSystem.IInputInteraction { }");
+    
+    [Test] public Task ShouldGenerateRegistrationCode_IfNestedPublicClassImplementsInterface() => 
+        Verify(@"namespace Ns;
+public class Outer {
+    public class MyInteraction : UnityEngine.InputSystem.IInputInteraction { }
+}");    
 }

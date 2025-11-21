@@ -24,4 +24,10 @@ class Internal
     
     [Test] public Task ShouldGenerateRegistrationCode_IfPublicClassExtendsBase() => 
         Verify("public class MyBindingComposite : UnityEngine.InputSystem.InputBindingComposite { }");
+    
+    [Test] public Task ShouldGenerateRegistrationCode_IfNestedPublicClassExtendsBase() => 
+        Verify(@"namespace Ns;
+public class Outer {
+    public class MyBindingComposite : UnityEngine.InputSystem.InputBindingComposite { }
+}");
 }
