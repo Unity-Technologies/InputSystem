@@ -18,7 +18,7 @@ class Internal
 {
     public class MyProcessor : InputProcessor { }
 }");
-
+    
     [Test] public Task ShouldGenerateRegistrationCode_IfPublicClassExtendsBaseViaUsing() => 
         Verify(@"using UnityEngine.InputSystem; public class MyProcessor : InputProcessor { }");
     
