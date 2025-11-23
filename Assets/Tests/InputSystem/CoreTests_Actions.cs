@@ -1679,6 +1679,34 @@ partial class CoreTests
         Assert.That(receivedCalls, Is.EqualTo(2));
     }
 
+    // XXX
+
+    private int counter = 0;
+    
+    [Test]
+    [Category("Actions")]
+    public void Actions_CanDisableAndEnable_WhenDeviceIsDisconnected()
+    {
+        counter = 0;
+        
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var map = new InputActionMap("map");
+        
+        var action = map.AddAction(name: "Fire", binding: "<Gamepad>/buttonSouth");
+        action.performed += ctx => { ++counter; };
+        
+        map.Enable();
+        PressAndRelease(gamepad.buttonSouth);
+        InputSystem.Update();
+
+        Assert.That(counter, Is.EqualTo(1));
+        
+        InputSystem.RemoveDevice(gamepad);
+        InputSystem.Update();
+        
+        map.Enable();
+    }
+
     [Test]
     [Category("Actions")]
     public void Actions_CanDisableAndEnable_FromCallbackWhileOtherCompositeBindingIsProgress()
