@@ -19,10 +19,6 @@ public abstract class MobileBaseRecipe: BaseRecipe
             var supportedVersions = package.SupportedEditorVersions;
             foreach (var version in supportedVersions)
             {
-                // Skip tests on 2021.3 as it is longer supported
-                if (version == "2021.3")
-                    continue;
-
                 if (platform.System == SystemType.Android)
                 {
                     builders.AddRange(ProduceJobsForAndroid(package, platform, version));
@@ -53,13 +49,21 @@ public abstract class MobileBaseRecipe: BaseRecipe
 
     protected string PrepareUtrExecutable(IJobBuilder job, SystemType systemType)
     {
-        if (systemType == SystemType.Android)
+        switch (systemType)
         {
-            var executableName = "utr.bat";
-            job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
-            var utrDownloadCommand = UtrCommand.Download(systemType, executableName);
-            job.WithCommands(utrDownloadCommand);
-            return executableName;
+            case SystemType.Android:
+                // For build jobs on Android, we still use the built-in UTR and the extra commands are not needed.
+                if (job.Name.Contains("BuildJobs"))
+                    break;
+                job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
+                job.WithCommands(UtrCommand.Download(systemType, "utr.bat"));
+                return "utr.bat";
+            case SystemType.IOS:
+                job.WithCommands(UtrCommand.Download(systemType, "utr"));
+                // A temporary fix for the issue where UTR 1.41.0 cannot handle new signing for 6000.5 on iOS platform.
+                // It can be removed once https://artifactory.prd.it.unity3d.com/ui/native/unity-tools-local/utr-standalone/utr has been bumped to 1.42.0 or above.
+                job.WithEnvironmentVariable("UTR_VERSION", "1.42.0");
+                return "./utr";
         }
 
         return "UnifiedTestRunner";

@@ -1,11 +1,9 @@
 using System;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.Scripting;
+
 #if UNITY_EDITOR
-using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 #endif
 
 ////TODO: add ability to respond to any of the taps in the sequence (e.g. one response for single tap, another for double tap)
@@ -196,21 +194,14 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
-            if (!InputSystem.settings.useIMGUIEditorForAssets)
-                return;
-
-            target.tapCount = EditorGUILayout.IntField(m_TapCountLabel, target.tapCount);
-            m_TapDelaySetting.OnGUI();
-            m_TapTimeSetting.OnGUI();
-            m_PressPointSetting.OnGUI();
         }
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-            var tapCountField = new IntegerField(m_TapCountLabel.text)
+            var tapCountField = new IntegerField(tapLabel)
             {
                 value = target.tapCount,
-                tooltip = m_TapCountLabel.tooltip
+                tooltip = tapTooltip
             };
             tapCountField.RegisterValueChangedCallback(evt =>
             {
@@ -224,7 +215,8 @@ namespace UnityEngine.InputSystem.Interactions
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
         }
 
-        private readonly GUIContent m_TapCountLabel = new GUIContent("Tap Count", "How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.");
+        private const string tapLabel = "Tap Count";
+        private const string tapTooltip = "How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.";
 
         private CustomOrDefaultSetting m_PressPointSetting;
         private CustomOrDefaultSetting m_TapTimeSetting;

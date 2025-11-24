@@ -2,6 +2,7 @@
 * [Introduction](xref:input-system-index)
   * [Installation](xref:input-system-installation)
   * [Quickstart Guide](xref:input-system-quickstart)
+  * [Videos](xref:input-system-videos)
   * [Concepts](xref:basic-concepts)
   * [Workflows](xref:input-system-workflows)
     * [Workflow - Actions](xref:input-system-workflow-project-wide-actions)
