@@ -879,7 +879,7 @@ namespace UnityEngine.InputSystem
         {
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
-
+            
             // Default name to name of type without Processor suffix.
             if (string.IsNullOrEmpty(name))
             {
@@ -895,6 +895,8 @@ namespace UnityEngine.InputSystem
                 if (StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(precompiledLayouts[key].metadata, name, ';'))
                     s_Manager.m_Layouts.precompiledLayouts.Remove(key);
             }
+            
+            Debug.Log($"Registering {type} with alias {name}");
 
             s_Manager.processors.AddTypeRegistration(name, type);
         }
@@ -3597,7 +3599,9 @@ namespace UnityEngine.InputSystem
             // this would cancel the import of large assets that are dependent on the InputSystem package and import it as a dependency.
             EditorApplication.delayCall += ShowRestartWarning;
 
-            RunInitialUpdate();
+            // Run initial update but defer enabling actions until before-scene initialization hook.
+            // This allows type registrations to execute before attempting to enable Project-wide input actions.
+            RunInitialUpdate(false);
 
             k_InputInitializeInEditorMarker.End();
         }
@@ -3763,7 +3767,7 @@ namespace UnityEngine.InputSystem
 #endif
 
             // This is the point where we initialise project-wide actions for the Player
-            EnableActions();
+            // EnableActions();
         }
 
 #endif // UNITY_EDITOR
@@ -3771,6 +3775,13 @@ namespace UnityEngine.InputSystem
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RunInitialUpdate()
         {
+            RunInitialUpdate(true);
+        }
+
+        private static void RunInitialUpdate(bool enableActions)
+        {
+            Debug.Log($"RunInitialUpdate enableActions={enableActions}");
+            
             // Request an initial Update so that user methods such as Start and Awake
             // can access the input devices.
             //
@@ -3779,6 +3790,10 @@ namespace UnityEngine.InputSystem
             //       mask but will still restore devices. This means we're not actually processing input,
             //       but we will force the runtime to push its devices.
             Update(InputUpdateType.None);
+            
+            // If this was invoked as a runtime initialization hook we enable actions
+            if (enableActions)
+                EnableActions();
         }
 
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
@@ -3902,7 +3917,7 @@ namespace UnityEngine.InputSystem
             EnhancedTouchSupport.Reset();
 
             // This is the point where we initialise project-wide actions for the Editor Play-mode, Editor Tests and Player Tests.
-            EnableActions();
+            //EnableActions();
 
             k_InputResetMarker.End();
         }

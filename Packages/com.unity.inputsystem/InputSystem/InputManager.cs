@@ -2027,7 +2027,7 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("TwoModifiers", typeof(TwoModifiersComposite));
 
             // Register custom types by reflection
-            RegisterCustomTypes();
+            //RegisterCustomTypes();
         }
 
         void RegisterCustomTypes(Type[] types)
