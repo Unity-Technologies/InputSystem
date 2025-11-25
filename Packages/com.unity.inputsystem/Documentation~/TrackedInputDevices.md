@@ -11,12 +11,12 @@ Use the Tracked Pose Driver component to synchronize a __GameObject__'s transfor
 
 | **Property**  | **Description** |
 |-------------|-----------|
-|[`Tracking Type`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_trackingType)|Specify which transform properties (position, rotation, or both) to update based on the tracked data.|
-|[`Update Type`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_updateType)|Determine when updates to the transform occur within Unity's event loop, such as during rendering or gameplay.|
-|[`Ignore Tracking State`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_ignoreTrackingState)| Enable to ignore the tracking state and assume that the input pose is valid, even when flagged otherwise.|
-|[`Position Input`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_positionInput)|Set an input action that retrieves the position data (Vector3) of the tracked device.|
-|[`Rotation Input`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_rotationInput)| Set an input action that retrieves the rotation data (Quaternion) of the tracked device.|
-|[`Tracking State Input`](../api/UnityEngine.InputSystem.XR.TrackedPoseDriver.html#UnityEngine_InputSystem_XR_TrackedPoseDriver_trackingStateInput)|Set an input action that determines whether the tracking state (position or rotation) is valid (integer).|
+|[`Tracking Type`](xref:UnityEngine.InputSystem.XR.TrackedPoseDriver.trackingType)|Specify which transform properties (position, rotation, or both) to update based on the tracked data.|
+|[`Update Type`](xref:UnityEngine.InputSystem.XR.TrackedPoseDriver.updateType)|Determine when updates to the transform occur within Unity's event loop, such as during rendering or gameplay.|
+|[`Ignore Tracking State`](xref:UnityEngine.InputSystem.XR.TrackedPoseDriver.ignoreTrackingState)| Enable to ignore the tracking state and assume that the input pose is valid, even when flagged otherwise.|
+|[`Position Input`](xref:UnityEngine.InputSystem.XR.TrackedPoseDriver.positionInput)|Set an input action that retrieves the position data (Vector3) of the tracked device.|
+|[`Rotation Input`](xref:UnityEngine.InputSystem.XR.TrackedPoseDriver.rotationInput)| Set an input action that retrieves the rotation data (Quaternion) of the tracked device.|
+|[`Tracking State Input`](xref:UnityEngine.InputSystem.XR.TrackedPoseDriver.trackingStateInput)|Set an input action that determines whether the tracking state (position or rotation) is valid (integer).|
 
 ## Tracked Device Raycaster
 
@@ -28,8 +28,8 @@ The component also supports occlusion checks, custom ray distance limits, and fi
 
 | **Property**  | **Description** |
 |-------------|-----------|
-|[`Ignore Reversed Graphics`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_ignoreReversedGraphics)| Enable to ignore graphics whose normal faces away from the direction of the ray.|
-|[`Check For 2D Occlusion`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_checkFor2DOcclusion)|Enable occlusion checks for 2D objects, such as sprites in the scene.|
-|[`Check For 3D Occulusion`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_checkFor3DOcclusion)|Enable occlusion checks for 3D objects to prevent rays from passing through physical geometry.|
-|[`Max Distance`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_maxDistance)|Set the maximum ray distance for interaction detection in world space coordinates.|
-|[`Blocking Mask`](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html#UnityEngine_InputSystem_UI_TrackedDeviceRaycaster_blockingMask)|Define the layer mask used to check for occlusion when ray casting.|
+|[`Ignore Reversed Graphics`](xref:UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.ignoreReversedGraphics)| Enable to ignore graphics whose normal faces away from the direction of the ray.|
+|[`Check For 2D Occlusion`](xref:UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.checkFor2DOcclusion)|Enable occlusion checks for 2D objects, such as sprites in the scene.|
+|[`Check For 3D Occulusion`](xref:UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.checkFor3DOcclusion)|Enable occlusion checks for 3D objects to prevent rays from passing through physical geometry.|
+|[`Max Distance`](xref:UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.maxDistance)|Set the maximum ray distance for interaction detection in world space coordinates.|
+|[`Blocking Mask`](xref:UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.blockingMask)|Define the layer mask used to check for occlusion when ray casting.|

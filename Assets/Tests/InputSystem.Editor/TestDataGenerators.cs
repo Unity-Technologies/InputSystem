@@ -1,4 +1,3 @@
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 
@@ -65,4 +64,3 @@ public static class TestDataGenerators
         return new InputControlScheme(name, controlScheme.deviceRequirements, controlScheme.bindingGroup);
     }
 }
-#endif

@@ -286,7 +286,6 @@ namespace UnityEngine.InputSystem.Editor
                 .Cast<InputActionReference>();
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         private static readonly string[] s_DefaultAssetSearchFolders = new string[] { "Assets" };
 
         /// <summary>
@@ -324,8 +323,6 @@ namespace UnityEngine.InputSystem.Editor
             }
             return inputActionReferencesList;
         }
-
-#endif
 
         // Add item to plop an .inputactions asset into the project.
         [MenuItem("Assets/Create/Input Actions")]

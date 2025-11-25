@@ -3,7 +3,7 @@
         {
             "ValidationTest": "API Validation",
             "ExceptionMessage": "Breaking changes require a new major version.",
-            "PackageVersion": "1.16.0",
+            "PackageVersion": "1.17.0",
             "__comments": "starting from 2022.3 ugui is not added to the project by default. We have some APIs that are conditional on ugui being present, so the API Validation thinks we are breaking API, but that is not the case."
         }
     ],

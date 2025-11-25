@@ -56,6 +56,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <DualShockGamepad>/touchpadButton
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831073950378571
 GameObject:
   m_ObjectHideFlags: 0
@@ -112,6 +113,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/buttonNorth
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831074071876625
 GameObject:
   m_ObjectHideFlags: 0
@@ -168,6 +170,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/select
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831074153646138
 GameObject:
   m_ObjectHideFlags: 0
@@ -224,6 +227,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/leftTrigger
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831074316365813
 GameObject:
   m_ObjectHideFlags: 0
@@ -280,6 +284,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/leftShoulder
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831074333637589
 GameObject:
   m_ObjectHideFlags: 0
@@ -336,6 +341,7 @@ MonoBehaviour:
   m_Visualization: 4
   m_ControlPath: <Gamepad>
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831074406035309
 GameObject:
   m_ObjectHideFlags: 0
@@ -392,6 +398,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/dpad/up
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831074569589721
 GameObject:
   m_ObjectHideFlags: 0
@@ -448,6 +455,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/leftStickPress
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831074657706042
 GameObject:
   m_ObjectHideFlags: 0
@@ -504,6 +512,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/rightShoulder
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831074722065633
 GameObject:
   m_ObjectHideFlags: 0
@@ -560,6 +569,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/dpad
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831074890777055
 GameObject:
   m_ObjectHideFlags: 0
@@ -616,6 +626,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/buttonWest
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831074908778958
 GameObject:
   m_ObjectHideFlags: 0
@@ -672,6 +683,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/buttonEast
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831074960731593
 GameObject:
   m_ObjectHideFlags: 0
@@ -728,6 +740,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/dpad/down
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831075105443482
 GameObject:
   m_ObjectHideFlags: 0
@@ -784,6 +797,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/dpad/left
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831075159756557
 GameObject:
   m_ObjectHideFlags: 0
@@ -840,6 +854,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/start
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831075192722347
 GameObject:
   m_ObjectHideFlags: 0
@@ -896,6 +911,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/rightStick
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831075336578712
 GameObject:
   m_ObjectHideFlags: 0
@@ -952,6 +968,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/dpad/right
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831075476541849
 GameObject:
   m_ObjectHideFlags: 0
@@ -1032,6 +1049,7 @@ MonoBehaviour:
   m_Visualization: 0
   m_ControlPath: 
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831075516136798
 GameObject:
   m_ObjectHideFlags: 0
@@ -1088,6 +1106,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/leftStick
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831075640135799
 GameObject:
   m_ObjectHideFlags: 0
@@ -1144,6 +1163,7 @@ MonoBehaviour:
   m_Visualization: 7
   m_ControlPath: <Gamepad>
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831075882524473
 GameObject:
   m_ObjectHideFlags: 0
@@ -1200,6 +1220,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/rightStickPress
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831075888579012
 GameObject:
   m_ObjectHideFlags: 0
@@ -1256,6 +1277,7 @@ MonoBehaviour:
   m_Visualization: 6
   m_ControlPath: <Gamepad>
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831075958221744
 GameObject:
   m_ObjectHideFlags: 0
@@ -1312,6 +1334,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/rightTrigger
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &5430831075990510035
 GameObject:
   m_ObjectHideFlags: 0
@@ -1368,6 +1391,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Gamepad>/buttonSouth
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &7085638670613089846
 GameObject:
   m_ObjectHideFlags: 0
@@ -1424,3 +1448,4 @@ MonoBehaviour:
   m_Visualization: 8
   m_ControlPath: <Gamepad>/buttonEast
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0

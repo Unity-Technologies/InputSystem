@@ -312,32 +312,27 @@ namespace UnityEngine.InputSystem
         public InputStateBlock stateBlock => m_StateBlock;
 
         /// <summary>
-        /// Whether the control is considered noisy.
+        /// Retrieves whether the control is considered [noisy](xref:input-system-controls#noisy-controls).
         /// </summary>
         /// <value>True if the control produces noisy input.</value>
         /// <remarks>
         /// A control is considered "noisy" if it produces different values without necessarily requiring user
-        /// interaction. A good example are sensors (see <see cref="Sensor"/>). For example, the PS4 controller
-        /// which has a gyroscope sensor built into the device. Whereas sticks and buttons on the device require
-        /// user interaction to produce non-default values, the gyro will produce varying values even if the
-        /// device just sits there without user interaction.
+        /// interaction. For example, <see cref="UnityEngine.InputSystem.XR.XRHMD">XR head mounted displays</see>
+        /// or <see cref="Sensor">sensors</see> such as a <see cref="Gyroscope"/>. For more information, refer to
+        /// [Noisy controls](xref:input-system-controls#noisy-controls).
         ///
-        /// The value of this property is determined by the layout (<see cref="InputControlLayout"/>) that the
-        /// control has been built from.
+        /// The value of this property is determined by the <see cref="InputControlLayout">layout</see> that the
+        /// control has been built from (using <see cref="InputControlLayout.ControlItem.isNoisy"/>).
         ///
-        /// Note that for devices (<see cref="InputDevice"/>) this property is true if any control on the device
+        /// > [!NOTE]
+        /// > For <see cref="InputDevice">devices</see>, this property is true if any control on the device
         /// is marked as noisy.
         ///
-        /// The primary effect of being noise is on <see cref="InputDevice.MakeCurrent"/> and
+        /// The primary effect of being noisy is on <see cref="InputDevice.MakeCurrent"/> and
         /// on interactive rebinding (see <see cref="InputActionRebindingExtensions.RebindingOperation"/>).
         /// However, being noisy also affects automatic resetting of controls that happens when the application
-        /// loses focus. While other controls are reset to their default value (except if <c>Application.runInBackground</c>
-        /// is true and the device the control belongs to is marked as <see cref="InputDevice.canRunInBackground"/>),
-        /// noisy controls will not be reset but rather remain at their current value. This is based on the assumption
-        /// that noisy controls most often represent sensor values and snapping the last sampling value back to default
-        /// will usually have undesirable effects on an application's simulation logic.
+        /// loses focus. For more information, refer to [Noisy controls](xref:input-system-controls#noisy-controls).
         /// </remarks>
-        /// <seealso cref="InputControlLayout.ControlItem.isNoisy"/>
         /// <seealso cref="InputControlAttribute.noisy"/>
         public bool noisy
         {
@@ -361,29 +356,24 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Whether the control is considered synthetic.
+        /// Retrieves whether the control is considered [synthetic](xref:input-system-controls#synthetic-controls).
         /// </summary>
         /// <value>True if the control does not represent an actual physical control on the device.</value>
         /// <remarks>
         /// A control is considered "synthetic" if it does not correspond to an actual, physical control on the
-        /// device. An example for this is <see cref="Keyboard.anyKey"/> or the up/down/left/right buttons added
-        /// by <see cref="StickControl"/>.
+        /// device. For example, <see cref="Keyboard.anyKey"/> or the up/down/left/right buttons added
+        /// by <see cref="StickControl"/>. For more information, refer to
+        /// [Synthetic controls](xref:input-system-controls#synthetic-controls).
         ///
-        /// The value of this property is determined by the layout (<see cref="InputControlLayout"/>) that the
-        /// control has been built from.
+        /// The value of this property is determined by the <see cref="InputControlLayout">layout</see> that the
+        /// control has been built from (using <see cref="InputControlLayout.ControlItem.isSynthetic"/>).
         ///
-        /// The primary effect of being synthetic is in interactive rebinding (see
-        /// <see cref="InputActionRebindingExtensions.RebindingOperation"/>) where non-synthetic
-        /// controls will be favored over synthetic ones. This means, for example, that if both
-        /// <c>"&lt;Gamepad&gt;/leftStick/x"</c> and <c>"&lt;Gamepad&gt;/leftStick/left"</c> are
-        /// suitable picks, <c>"&lt;Gamepad&gt;/leftStick/x"</c> will be favored as it represents
-        /// input from an actual physical control whereas <c>"&lt;Gamepad&gt;/leftStick/left"</c>
-        /// represents input from a made-up control. If, however, the "left" button is the only
-        /// viable pick, it will be accepted.
-        ///
-        /// A control layout will specify if it is synthetic using <see cref="InputControlLayout.ControlItem.isSynthetic"/>.
-        /// See <see cref="InputControlAttribute.synthetic"/>.
+        /// The primary effect of being synthetic is on interactive rebinding (see
+        /// <see cref="InputActionRebindingExtensions.RebindingOperation"/>) where the input system favors
+        /// non-synthetic controls over synthetic ones for rebinding. For more information, refer to
+        /// [Synthetic controls](xref:input-system-controls#synthetic-controls).
         /// </remarks>
+        /// <seealso cref="InputControlAttribute.synthetic"/>
         public bool synthetic
         {
             get => (m_ControlFlags & ControlFlags.IsSynthetic) != 0;

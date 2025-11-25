@@ -302,7 +302,7 @@ namespace UnityEngine.InputSystem.Layouts
         public string shortDisplayName { get; set; }
 
         /// <summary>
-        /// Whether the control is noisy. Off by default.
+        /// Retrieves whether the control is [noisy](xref:input-system-controls#noisy-controls). Off by default.
         /// </summary>
         /// <value>Whether control is noisy.</value>
         /// <seealso cref="InputControl.noisy"/>
@@ -310,7 +310,7 @@ namespace UnityEngine.InputSystem.Layouts
         public bool noisy { get; set; }
 
         /// <summary>
-        /// Whether the control is synthetic. Off by default.
+        /// Retrieves whether the control is [synthetic](xref:input-system-controls#synthetic-controls). Off by default.
         /// </summary>
         /// <value>Whether control is synthetic.</value>
         /// <seealso cref="InputControl.synthetic"/>

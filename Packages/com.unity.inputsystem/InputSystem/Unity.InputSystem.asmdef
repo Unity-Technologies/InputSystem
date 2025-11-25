@@ -54,31 +54,6 @@
         },
         {
             "name": "Unity",
-            "expression": "[2021.3.11,2022.1)",
-            "define": "HAS_SET_LOCAL_POSITION_AND_ROTATION"
-        },
-        {
-            "name": "Unity",
-            "expression": "[2022.1.19,2022.2)",
-            "define": "HAS_SET_LOCAL_POSITION_AND_ROTATION"
-        },
-        {
-            "name": "Unity",
-            "expression": "2022.2",
-            "define": "HAS_SET_LOCAL_POSITION_AND_ROTATION"
-        },
-        {
-            "name": "Unity",
-            "expression": "2022.3",
-            "define": "UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS"
-        },
-        {
-            "name": "Unity",
-            "expression": "1",
-            "define": "UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST"
-        },
-        {
-            "name": "Unity",
             "expression": "6000.0.9",
             "define": "UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA"
         },

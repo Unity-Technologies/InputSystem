@@ -1,4 +1,3 @@
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -71,4 +70,3 @@ public static class TestData
         });
     }
 }
-#endif

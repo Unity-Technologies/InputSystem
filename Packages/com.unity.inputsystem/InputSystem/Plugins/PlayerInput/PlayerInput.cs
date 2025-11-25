@@ -52,76 +52,72 @@ namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Represents a separate player in the game complete with a set of actions exclusive
-    /// to the player and a set of paired device.
+    /// to the player and a set of paired devices.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// PlayerInput is a high-level wrapper around much of the input system's functionality
-    /// which is meant to help getting set up with the new input system quickly. It takes
-    /// care of <see cref="InputAction"/> bookkeeping and has a custom UI(requires the "Unity UI" package) to help
-    /// setting up input.
+    /// The `PlayerInput` class is a high-level wrapper around much of the input system's functionality
+    /// which helps set up the new input system quickly. PlayerInput manages <see cref="InputAction"/>s
+    /// and has a custom UI to help set up input. Note that the input system's custom UI requires
+    /// the [Unity UI](https://docs.unity3d.com/Packages/com.unity.ugui@latest) package.
     ///
-    /// The component supports local multiplayer implicitly. Each PlayerInput instance
-    /// represents a distinct user with its own set of devices and actions. To orchestrate
-    /// player management and facilitate mechanics such as joining by device activity, use
-    /// <see cref="UnityEngine.InputSystem.PlayerInputManager"/>.
+    /// The [Player Input](xref:input-system-player-input) component supports local multiplayer implicitly.
+    /// Each PlayerInput instance represents a distinct user with its own set of devices and actions.
+    /// To orchestrate player management and facilitate mechanics, such as joining by device activity, use
+    /// <see cref="PlayerInputManager"/>.
     ///
-    /// The way PlayerInput notifies script code of events is determined by <see cref="notificationBehavior"/>.
-    /// By default, this is set to <see cref="UnityEngine.InputSystem.PlayerNotifications.SendMessages"/> which will use
-    /// <see cref="GameObject.SendMessage(string,object)"/> to send messages to the <see cref="GameObject"/>
-    /// that PlayerInput sits on.
+    /// The way PlayerInput notifies script code of events is determined by the <see cref="notificationBehavior"/>
+    /// property. By default, this is set to [PlayerNotifications.SendMessages](xref:UnityEngine.InputSystem.PlayerNotifications.SendMessages),
+    /// which uses [SendMessage](xref:UnityEngine.GameObject.SendMessage(System.String)) to send
+    /// messages to the [GameObject](xref:UnityEngine.GameObject) that the PlayerInput is connected to.
     ///
-    /// When enabled, PlayerInput will create an <see cref="InputUser"/> and pair devices to the
-    /// user which are then specific to the player. The set of devices can be controlled explicitly
-    /// when instantiating a PlayerInput through <see cref="Instantiate(GameObject,int,string,int,InputDevice[])"/>
-    /// or <see cref="Instantiate(GameObject,int,string,int,InputDevice)"/>. This also makes it possible
-    /// to assign the same device to two different players, e.g. for split-keyboard play.
+    /// When enabled, PlayerInput creates an <see cref="InputUser"/> instance and pairs devices to the
+    /// user which are then associated to the player. If you instantiate a PlayerInput through
+    /// <see cref="Instantiate(GameObject,int,string,int,InputDevice[])"/>
+    /// or <see cref="Instantiate(GameObject,int,string,int,InputDevice)"/>, you can also control the set of
+    /// devices explicitly through the PlayerInput instance. This also makes it possible to assign the same
+    /// device to two different players, for example for split-keyboard play:
     ///
-    /// </para>
-    /// <code>
+    /// ```
     /// var p1 = PlayerInput.Instantiate(playerPrefab,
     ///     controlScheme: "KeyboardLeft", device: Keyboard.current);
     /// var p2 = PlayerInput.Instantiate(playerPrefab,
     ///     controlScheme: "KeyboardRight", device: Keyboard.current);
-    /// </code>
-    /// <para>
+    /// ```
     ///
-    /// If no specific devices are given to a PlayerInput, the component will look for compatible
-    /// devices present in the system and pair them to itself automatically. If the PlayerInput's
-    /// <see cref="actions"/> have control schemes defined for them, PlayerInput will look for a
-    /// control scheme for which all required devices are available and not paired to any other player.
-    /// It will try <see cref="defaultControlScheme"/> first (if set), but then fall back to trying
-    /// all available schemes in order. Once a scheme is found for which all required devices are
-    /// available, PlayerInput will pair those devices to itself and select the given scheme.
+    /// If a PlayerInput instance isn't paired to a specific device, the Player Input component looks for
+    /// compatible devices present in the input system and pairs them to the PlayerInput instance automatically.
+    /// If the PlayerInput's set of <see cref="actions"/> have control schemes defined, the PlayerInput looks for a
+    /// control scheme for which all required devices are available and doesn't pair to any other player.
+    /// The PlayerInput tries to pair using the <see cref="defaultControlScheme"/> first (if set). If the pairing is unsuccessful,
+    /// it tries each available scheme in order. After it finds a scheme where all required devices are
+    /// available, PlayerInput pairs those devices to itself and selects the given scheme.
     ///
-    /// If no control schemes are defined, PlayerInput will try to bind as many as-of-yet unpaired
-    /// devices to itself as it can match to bindings present in the <see cref="actions"/>. This means
-    /// that if, for example, there's binding for both keyboard and gamepad and there is one keyboard
-    /// and two gamepads available when PlayerInput is enabled, all three devices will be paired to
-    /// the player.
+    /// If no control schemes are defined, PlayerInput tries to bind as many unpaired
+    /// devices to itself as it can match to the bindings present in its set of <see cref="actions"/>. For example,
+    /// when the PlayerInput is enabled, if it finds a binding for both keyboard and gamepad, and one keyboard
+    /// and two gamepads are available in the input system, the PlayerInput pairs all three devices to the player.
     ///
-    /// Note that when using <see cref="PlayerInputManager"/>, device pairing to players is controlled
-    /// from the joining logic. In that case, PlayerInput will automatically pair the device from which
-    /// the player joined. If control schemes are present in <see cref="actions"/>, the first one compatible
-    /// with that device is chosen. If additional devices are required, these will be paired from the pool
-    /// of currently unpaired devices.
+    /// > [!NOTE]
+    /// > When you use the [Player Input Manager](xref:input-system-player-input-manager) component, the
+    /// > <see cref="PlayerInputManager"/> itself controls pairing devices to players through the joining logic.
+    /// > For more information, refer to the <see cref="PlayerInputManager"/> class documentation.
     ///
-    /// Device pairings can be changed at any time by either manually controlling pairing through
-    /// <see cref="InputUser.PerformPairingWithDevice"/> (and related methods) using a PlayerInput's
-    /// assigned <see cref="user"/> or by switching control schemes (e.g. using
-    /// <see cref="SwitchCurrentControlScheme(string,InputDevice[])"/>), if any are present in the PlayerInput's
-    /// <see cref="actions"/>.
+    /// To change device pairings at any time, you can use either of these techniques:
+    /// - Use <see cref="InputUser.PerformPairingWithDevice"/> (and related methods) to manually control pairing
+    /// using a PlayerInput's assigned <see cref="user"/> property.
+    /// - Switch control schemes (for example, using <see cref="SwitchCurrentControlScheme(string,InputDevice[])"/>),
+    /// if any are present in the PlayerInput's set of <see cref="actions"/>.
     ///
-    /// When a player loses a device paired to it (e.g. when it is unplugged or loses power), <see cref="InputUser"/>
-    /// will signal <see cref="InputUserChange.DeviceLost"/> which is also surfaced as a message,
+    /// When a player loses a paired device (such as when it is unplugged or loses power), <see cref="InputUser"/>
+    /// signals <see cref="InputUserChange.DeviceLost"/> which is also surfaced as a message,
     /// <see cref="deviceLostEvent"/>, or <see cref="onDeviceLost"/> (depending on <see cref="notificationBehavior"/>).
-    /// When a device is reconnected, <see cref="InputUser"/> will signal <see cref="InputUserChange.DeviceRegained"/>
+    /// When the device reconnects, <see cref="InputUser"/> signals <see cref="InputUserChange.DeviceRegained"/>
     /// which also is surfaced as a message, as <see cref="deviceRegainedEvent"/>, or <see cref="onDeviceRegained"/>
     /// (depending on <see cref="notificationBehavior"/>).
     ///
     /// When there is only a single active PlayerInput in the game, joining is not enabled (see
-    /// <see cref="PlayerInputManager.joiningEnabled"/>), and <see cref="neverAutoSwitchControlSchemes"/> is not
-    /// set to <c>true</c>, device pairings for the player will also update automatically based on device usage.
+    /// <see cref="PlayerInputManager.joiningEnabled"/>), and if <see cref="neverAutoSwitchControlSchemes"/> is not
+    /// set to <c>true</c>, device pairings for the player also update automatically based on device usage.
     ///
     /// If control schemes are present in <see cref="actions"/>, then if a device is used (not merely plugged in
     /// but rather receives input on a non-noisy, non-synthetic control) which is compatible with a control scheme
@@ -135,7 +131,6 @@ namespace UnityEngine.InputSystem
     ///
     /// Both behaviors described in the previous two paragraphs are automatically disabled if more than one
     /// PlayerInput is active.
-    /// </para>
     /// </remarks>
     /// <example>
     /// <code>
@@ -221,7 +216,7 @@ namespace UnityEngine.InputSystem
     /// }
     /// </code>
     /// </example>
-    /// <seealso cref="UnityEngine.InputSystem.PlayerInputManager"/>
+    /// <seealso cref="PlayerInputManager"/>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
     [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]
@@ -1794,7 +1789,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        #if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+        #if UNITY_EDITOR
         void Reset()
         {
             // Set default actions to project wide actions.

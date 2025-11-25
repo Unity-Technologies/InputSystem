@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -171,8 +171,6 @@ namespace UnityEngine.InputSystem.Editor
             var foldout = container.Q<Foldout>("Foldout");
             foldout.text = parameterListView.name;
             parameterListView.OnDrawVisualElements(foldout);
-
-            foldout.Add(new IMGUIContainer(parameterListView.OnGUI));
         }
     }
 }
