@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Search;
-using UnityEngine.Search;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -11,8 +10,6 @@ namespace UnityEngine.InputSystem.Editor
     {
         const string k_AssetFolderSearchProviderId = "AssetsInputActionAssetSearchProvider";
         const string k_ProjectWideActionsSearchProviderId = "ProjectWideInputActionAssetSearchProvider";
-
-        const string k_ProjectWideAssetIdentificationString = " [Project Wide Input Actions]";
 
         internal static SearchProvider CreateInputActionAssetSearchProvider()
         {
@@ -120,7 +117,6 @@ namespace UnityEngine.InputSystem.Editor
         // consistent between CreateItem and additional fetchLabel calls.
         private static string FetchLabel(Object obj)
         {
-            // if (obj == InputSystem.actions) return $"{obj.name}{k_ProjectWideAssetIdentificationString}";
             return obj.name;
         }
 
