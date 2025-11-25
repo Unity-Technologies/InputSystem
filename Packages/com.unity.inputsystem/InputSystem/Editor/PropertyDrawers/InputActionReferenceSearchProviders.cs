@@ -84,7 +84,17 @@ namespace UnityEngine.InputSystem.Editor
                 var label = fetchObjectLabel(asset);
                 if (!label.Contains(context.searchText, System.StringComparison.InvariantCultureIgnoreCase))
                     continue; // Ignore due to filtering
-                yield return provider.CreateItem(context, asset.GetInstanceID().ToString(), label, createItemFetchDescription(asset),
+
+                string itemId;
+
+                // 6.4 deprecated instance ids in favour of entity ids
+                #if UNITY_6000_4_OR_NEWER
+                itemId = asset.GetEntityId().ToString();
+                #else
+                itemId = asset.GetInstanceID().ToString();
+                #endif
+
+                yield return provider.CreateItem(context, itemId, label, createItemFetchDescription(asset),
                     null, asset);
             }
         }
