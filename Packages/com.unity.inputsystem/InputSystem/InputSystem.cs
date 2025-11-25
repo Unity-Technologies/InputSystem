@@ -868,7 +868,7 @@ namespace UnityEngine.InputSystem
         /// different names. When doing so, the first registration is considered as the "proper"
         /// name for the processor and all subsequent registrations will be considered aliases.
         ///
-        /// See the <a href="../manual/Processors.html">manual</a> for more details.
+        /// See the <a href="../manual/UsingProcessors.html">manual</a> for more details.
         /// </remarks>
         /// <seealso cref="InputProcessor{T}"/>
         /// <seealso cref="InputBinding.processors"/>
@@ -996,7 +996,7 @@ namespace UnityEngine.InputSystem
         /// different names. When doing so, the first registration is considered as the "proper"
         /// name for the processor and all subsequent registrations will be considered aliases.
         ///
-        /// See the <a href="../manual/Processors.html">manual</a> for more details.
+        /// See the <a href="../manual/UsingProcessors.html">manual</a> for more details.
         /// </remarks>
         /// <seealso cref="InputProcessor{T}"/>
         /// <seealso cref="InputBinding.processors"/>
