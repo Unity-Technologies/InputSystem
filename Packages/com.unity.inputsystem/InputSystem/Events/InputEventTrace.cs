@@ -325,7 +325,8 @@ namespace UnityEngine.InputSystem.LowLevel
             // Read header.
             if (reader.ReadInt32() != kFileFormat)
                 throw new IOException($"Stream does not appear to be an InputEventTrace (no '{kFileFormat}' code)");
-            if (reader.ReadInt32() > kFileVersion)
+			int fileVersion = reader.ReadInt32();
+            if (fileVersion > kFileVersion)
                 throw new IOException($"Stream is an InputEventTrace but a newer version (expected version {kFileVersion} or below)");
             reader.ReadInt32(); // Flags; ignored for now.
             reader.ReadInt32(); // Platform; for now we're not doing anything with it.
@@ -394,7 +395,7 @@ namespace UnityEngine.InputSystem.LowLevel
                             stateFormat = reader.ReadInt32(),
                             stateSizeInBytes = reader.ReadInt32(),
                             m_FullLayoutJson = reader.ReadString(),
-                            m_UsagesJson = kFileVersion >= 2 ? reader.ReadString() : null
+                            m_UsagesJson = fileVersion >= 2 ? reader.ReadString() : null // Usages were added in version 2
                         };
                     }
 
