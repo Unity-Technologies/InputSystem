@@ -269,6 +269,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 writer.Write(device.layout);
                 writer.Write(device.stateFormat);
                 writer.Write(device.stateSizeInBytes);
+                writer.Write(device.m_UsagesJson ?? string.Empty);
                 writer.Write(device.m_FullLayoutJson ?? string.Empty);
             }
 
@@ -392,6 +393,7 @@ namespace UnityEngine.InputSystem.LowLevel
                             layout = reader.ReadString(),
                             stateFormat = reader.ReadInt32(),
                             stateSizeInBytes = reader.ReadInt32(),
+                            m_UsagesJson = reader.ReadString(),
                             m_FullLayoutJson = reader.ReadString()
                         };
                     }
@@ -923,6 +925,12 @@ namespace UnityEngine.InputSystem.LowLevel
                         m_Layout = device.layout,
                         m_StateFormat = device.stateBlock.format,
                         m_StateSizeInBytes = (int)device.stateBlock.alignedSizeInBytes,
+
+                        // if the device has usages, store them as JSON in the device info
+                        // This way, when replaying the trace, we can recreate the device with the correct usages. For example XR devices
+                        m_UsagesJson = device.usages.Count > 0
+                            ? JsonUtility.ToJson(new DeviceInfo.UsagesJsonWrapper(device.usages))
+                            : null,
 
                         // If it's a generated layout, store the full layout JSON in the device info. We do this so that
                         // when saving traces for this kind of input, we can recreate the device.
@@ -1498,8 +1506,38 @@ namespace UnityEngine.InputSystem.LowLevel
                                 InputSystem.RegisterLayout(deviceInfo.m_FullLayoutJson);
                             }
 
+                            // Make sure original device is in a clean state.
+                            // Its useful to avoid some inactive devices to overwrite recorded state, for example what happens with XRHMD.
+                            var originalDevice = InputSystem.GetDeviceById(deviceInfo.m_DeviceId);
+                            if (originalDevice != null)
+                                InputSystem.ResetDevice(originalDevice);
+
+                            // Retrieve original usages. For example, LeftHand, RightHand, etc.
+                            ReadOnlyArray<InternedString> originalUsages = null;
+                            if (!string.IsNullOrEmpty(deviceInfo.m_UsagesJson))
+                                originalUsages = DeviceInfo.UsagesJsonWrapper.GetUsagesFromJson(deviceInfo.m_UsagesJson);
+
                             // Create device.
                             var device = InputSystem.AddDevice(layoutName);
+
+                            // Ensure usages from original device are present on the new device.
+                            bool usagesUpdated = false;
+                            for (int i = originalUsages.Count - 1; i >= 0; i--)
+                            {
+                                InternedString usage = originalUsages[i];
+                                if (!device.usages.Contains(usage))
+                                {
+                                    // Adds missing usages from original device.
+                                    device.AddDeviceUsage(usage);
+                                    usagesUpdated = true;
+                                }
+                            }
+                            if (usagesUpdated)
+                            {
+                                // Notify about usage change. Needed for XR devices to work with input replay.
+                                InputActionState.OnDeviceChange(device, InputDeviceChange.UsageChanged);
+                            }
+                            
                             WithDeviceMappedFromTo(originalDeviceId, device.deviceId);
                             m_CreatedDevices.AppendWithCapacity(device);
                             return device.deviceId;
@@ -1567,6 +1605,37 @@ namespace UnityEngine.InputSystem.LowLevel
             [SerializeField] internal FourCC m_StateFormat;
             [SerializeField] internal int m_StateSizeInBytes;
             [SerializeField] internal string m_FullLayoutJson;
+            [SerializeField] internal string m_UsagesJson;
+
+            [Serializable]
+            public struct UsagesJsonWrapper
+            {
+                [SerializeField] internal string[] m_usages;
+
+                public static ReadOnlyArray<InternedString> GetUsagesFromJson(string json)
+                {
+                    return JsonUtility.FromJson<UsagesJsonWrapper>(json).GetUsagesInternedStringArray();
+                }
+
+                public UsagesJsonWrapper(ReadOnlyArray<InternedString> usages)
+                {
+                    m_usages = new string[usages.Count];
+                    for (int i = 0; i < usages.Count; i++)
+                    {
+                        m_usages[i] = usages[i].ToString();
+                    }
+                }
+
+                internal readonly ReadOnlyArray<InternedString> GetUsagesInternedStringArray()
+                {
+                    InternedString[] internedUsages = new InternedString[m_usages.Length];
+                    for (int i = 0; i < m_usages.Length; i++)
+                    {
+                        internedUsages[i] = new InternedString(m_usages[i]);
+                    }
+                    return new ReadOnlyArray<InternedString>(internedUsages);
+				}
+			}
         }
     }
 }
