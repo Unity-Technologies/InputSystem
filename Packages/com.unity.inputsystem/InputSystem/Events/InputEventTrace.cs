@@ -1507,14 +1507,8 @@ namespace UnityEngine.InputSystem.LowLevel
                                 InputSystem.RegisterLayout(deviceInfo.m_FullLayoutJson);
                             }
 
-                            // Make sure original device is in a clean state.
-                            // Its useful to avoid some inactive devices to overwrite recorded state, for example what happens with XRHMD.
-                            var originalDevice = InputSystem.GetDeviceById(deviceInfo.m_DeviceId);
-                            if (originalDevice != null)
-                                InputSystem.ResetDevice(originalDevice);
-
                             // Retrieve original usages. For example, LeftHand, RightHand, etc.
-                            ReadOnlyArray<InternedString> originalUsages = null;
+                            ReadOnlyArray<InternedString> originalUsages = default;
                             if (!string.IsNullOrEmpty(deviceInfo.m_UsagesJson))
                                 originalUsages = DeviceInfo.UsagesJsonWrapper.GetUsagesFromJson(deviceInfo.m_UsagesJson);
 
@@ -1629,6 +1623,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 internal readonly ReadOnlyArray<InternedString> GetUsagesInternedStringArray()
                 {
+					if(m_usages == null)
+						return default;
                     InternedString[] internedUsages = new InternedString[m_usages.Length];
                     for (int i = 0; i < m_usages.Length; i++)
                     {
