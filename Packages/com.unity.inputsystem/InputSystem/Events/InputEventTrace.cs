@@ -269,8 +269,8 @@ namespace UnityEngine.InputSystem.LowLevel
                 writer.Write(device.layout);
                 writer.Write(device.stateFormat);
                 writer.Write(device.stateSizeInBytes);
-                writer.Write(device.m_UsagesJson ?? string.Empty);
                 writer.Write(device.m_FullLayoutJson ?? string.Empty);
+                writer.Write(device.m_UsagesJson ?? string.Empty);
             }
 
             // Write offset of device list.
@@ -393,8 +393,8 @@ namespace UnityEngine.InputSystem.LowLevel
                             layout = reader.ReadString(),
                             stateFormat = reader.ReadInt32(),
                             stateSizeInBytes = reader.ReadInt32(),
-                            m_UsagesJson = reader.ReadString(),
-                            m_FullLayoutJson = reader.ReadString()
+                            m_FullLayoutJson = reader.ReadString(),
+                            m_UsagesJson = kFileVersion >= 2 ? reader.ReadString() : null
                         };
                     }
 
@@ -926,16 +926,16 @@ namespace UnityEngine.InputSystem.LowLevel
                         m_StateFormat = device.stateBlock.format,
                         m_StateSizeInBytes = (int)device.stateBlock.alignedSizeInBytes,
 
-                        // if the device has usages, store them as JSON in the device info
-                        // This way, when replaying the trace, we can recreate the device with the correct usages. For example XR devices
-                        m_UsagesJson = device.usages.Count > 0
-                            ? JsonUtility.ToJson(new DeviceInfo.UsagesJsonWrapper(device.usages))
-                            : null,
-
                         // If it's a generated layout, store the full layout JSON in the device info. We do this so that
                         // when saving traces for this kind of input, we can recreate the device.
                         m_FullLayoutJson = InputControlLayout.s_Layouts.IsGeneratedLayout(device.m_Layout)
                             ? InputSystem.LoadLayout(device.layout).ToJson()
+                            : null,
+
+                        // if the device has usages, store them as JSON in the device info
+                        // This way, when replaying the trace, we can recreate the device with the correct usages. For example XR devices
+                        m_UsagesJson = device.usages.Count > 0
+                            ? JsonUtility.ToJson(new DeviceInfo.UsagesJsonWrapper(device.usages))
                             : null
                     });
             }
@@ -987,7 +987,7 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         private static FourCC kFileFormat => new FourCC('I', 'E', 'V', 'T');
-        private static int kFileVersion = 1;
+        private static int kFileVersion = 2;
 
         [Flags]
         private enum FileFlags
