@@ -1153,6 +1153,9 @@ namespace UnityEngine.InputSystem
                 if (IsControlEnabled(controlIndex))
                     continue;
 
+                if (controls[controlIndex].device.m_DeviceIndex < 0)
+                    return;
+
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
