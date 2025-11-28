@@ -1,9 +1,6 @@
 #if UNITY_ANALYTICS || UNITY_EDITOR
 using System;
 using UnityEngine.InputSystem.Layouts;
-#if UNITY_EDITOR
-using UnityEngine.InputSystem.Editor;
-#endif // UNITY_EDITOR
 
 ////FIXME: apparently shutdown events are not coming through in the analytics backend
 
@@ -155,8 +152,8 @@ namespace UnityEngine.InputSystem
                         devices = CollectRecognizedDevices(m_InputManager),
                         unrecognized_devices = CollectUnrecognizedDevices(m_InputManager),
 #if UNITY_EDITOR
-                        new_enabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled,
-                        old_enabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled,
+                        // new_enabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled,
+                        // old_enabled = EditorPlayerSettingHelpers.oldSystemBackendsEnabled,
 #endif // UNITY_EDITOR
                     };
                     error = null;
