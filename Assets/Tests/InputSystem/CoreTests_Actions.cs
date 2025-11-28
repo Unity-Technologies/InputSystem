@@ -12613,6 +12613,12 @@ partial class CoreTests
             // In reported issue, map state is changed from cancellation callback.
             map.Disable();
             map.Enable();
+
+            // This is not part of the bug reported in ISXB-1767 but extends the test coverage since
+            // it makes sure Disable() is safe after logically skipped Enable().
+            map.Disable();
+            map.Enable();
+
             ++canceled;
         };
 
@@ -12628,5 +12634,15 @@ partial class CoreTests
 
         // Remove the gamepad device. This is consistent with event queue based removal (not kept on list).
         InputSystem.RemoveDevice(gamepad);
+        InputSystem.Update();
+        Assert.That(canceled, Is.EqualTo(1));
+
+        // Reconnect the disconnected gamepad
+        InputSystem.AddDevice(gamepad);
+
+        // Interact again
+        Press(gamepad.leftTrigger, queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(started, Is.EqualTo(2));
     }
 }
