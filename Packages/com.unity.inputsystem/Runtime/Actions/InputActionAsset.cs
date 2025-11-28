@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
@@ -895,9 +894,13 @@ namespace UnityEngine.InputSystem
         internal void MarkAsDirty()
         {
 #if UNITY_EDITOR
-            InputSystem.TrackDirtyInputActionAsset(this);
+            s_OnMarkAsDirty?.Invoke(this);
 #endif
         }
+
+#if UNITY_EDITOR
+        internal static Action<InputActionAsset> s_OnMarkAsDirty;
+#endif
 
         internal bool IsEmpty()
         {
