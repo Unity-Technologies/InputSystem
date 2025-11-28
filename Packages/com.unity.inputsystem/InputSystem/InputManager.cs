@@ -1913,9 +1913,9 @@ namespace UnityEngine.InputSystem
         internal void InitializeData()
         {
             m_Layouts.Allocate();
-            m_Processors.Initialize();
-            m_Interactions.Initialize();
-            m_Composites.Initialize();
+            m_Processors.Initialize(this);
+            m_Interactions.Initialize(this);
+            m_Composites.Initialize(this);
             m_DevicesById = new Dictionary<int, InputDevice>();
 
             // Determine our default set of enabled update types. By
@@ -2026,11 +2026,11 @@ namespace UnityEngine.InputSystem
             composites.AddTypeRegistration("OneModifier", typeof(OneModifierComposite));
             composites.AddTypeRegistration("TwoModifiers", typeof(TwoModifiersComposite));
 
-            // Register custom types by reflection
-            //RegisterCustomTypes();
+            // ISXB-1766: Defer loading custom types by reflection unless we have to since referenced from
+            // .inputaction JSON assets. This is managed via TypeTable.cs.
         }
 
-        void RegisterCustomTypes(Type[] types)
+        static void RegisterCustomTypes(Type[] types)
         {
             foreach (Type type in types)
             {
@@ -2053,8 +2053,18 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        void RegisterCustomTypes()
+        private bool m_CustomTypesRegistered;
+
+        internal bool RegisterCustomTypes()
         {
+            // If we have already attempted to register custom types, there is no need to reattempt since we
+            // would end up with the same result again. Only with a domain reload would the resulting types
+            // be different, and hence it is sufficient to use a static flag that we do not reset.
+            if (m_CustomTypesRegistered)
+                return false; // Already evaluated
+
+            m_CustomTypesRegistered = true;
+
             k_InputRegisterCustomTypesMarker.Begin();
 
             var inputSystemAssembly = typeof(InputProcessor).Assembly;
@@ -2079,11 +2089,13 @@ namespace UnityEngine.InputSystem
                 }
                 catch (ReflectionTypeLoadException)
                 {
-                    continue;
+                    // Ignore exception
                 }
             }
 
             k_InputRegisterCustomTypesMarker.End();
+
+            return true; // Signal that custom types were extracted and registered.
         }
 
         internal void InstallRuntime(IInputRuntime runtime)
@@ -2163,6 +2175,9 @@ namespace UnityEngine.InputSystem
             // Clear layout cache.
             InputControlLayout.s_CacheInstance = default;
             InputControlLayout.s_CacheInstanceRef = 0;
+
+            // Invalidate type registrations
+            m_CustomTypesRegistered = false;
 
             // Detach from runtime.
             if (m_Runtime != null)
