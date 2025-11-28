@@ -355,15 +355,4 @@ namespace UnityEngine.InputSystem.OnScreen
             return parentTransform != null ? transform.parent.GetComponentInParent<RectTransform>() : null;
         }
     }
-
-#if UNITY_EDITOR
-    internal static class UGUIOnScreenControlEditorUtils
-    {
-        public static void ShowWarningIfNotPartOfCanvasHierarchy(OnScreenControl target)
-        {
-            if (UGUIOnScreenControlUtils.GetCanvasRectTransform(target.transform) == null)
-                UnityEditor.EditorGUILayout.HelpBox(target.GetWarningMessage(), UnityEditor.MessageType.Warning);
-        }
-    }
-#endif
 }

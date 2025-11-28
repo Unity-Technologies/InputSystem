@@ -7,10 +7,6 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 ////FIXME: The UI is currently not reacting to pointers until they are moved after the UI module has been enabled. What needs to
 ////       happen is that point, trackedDevicePosition, and trackedDeviceOrientation have initial state checks. However, for touch,
 ////       we do *not* want to react to the initial value as then we also get presses (unlike with other pointers). Argh.
@@ -1605,18 +1601,18 @@ namespace UnityEngine.InputSystem.UI
 
 #if UNITY_EDITOR
         /// <inheritdoc/>
-        protected override void Reset()
+        protected override         void Reset()
         {
             base.Reset();
 
-            var asset = (InputActionAsset)AssetDatabase.LoadAssetAtPath(
-                UnityEngine.InputSystem.Editor.PlayerInputEditor.kDefaultInputActionsAssetPath,
-                typeof(InputActionAsset));
-            // Setting default asset and actions when creating via inspector
-            Editor.InputSystemUIInputModuleEditor.ReassignActions(this, asset);
+            // Allow Editor to set default actions
+            s_OnReset?.Invoke(this);
         }
 
 #endif
+
+        // Internal hook for Editor to set default actions on Reset()
+        internal static Action<InputSystemUIInputModule> s_OnReset;
 
         /// <inheritdoc/>
         protected override void Awake()

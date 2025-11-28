@@ -8,11 +8,6 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UI;
 using UnityEngine.InputSystem.Controls;
 
-#if UNITY_EDITOR
-using UnityEditor;
-using UnityEditor.AnimatedValues;
-using UnityEngine.InputSystem.Editor;
-#endif
 ////TODO: custom icon for OnScreenStick component
 
 namespace UnityEngine.InputSystem.OnScreen
@@ -97,16 +92,12 @@ namespace UnityEngine.InputSystem.OnScreen
                     else if (m_PointerDownAction.m_Type != InputActionType.PassThrough)
                         m_PointerDownAction.m_Type = InputActionType.PassThrough;
 
-                    #if UNITY_EDITOR
-                    InputExitPlayModeAnalytic.suppress = true;
-                    #endif
+                    InputActionSetupExtensions.s_SuppressAnalytics?.Invoke(true);
                     m_PointerDownAction.AddBinding("<Mouse>/leftButton");
                     m_PointerDownAction.AddBinding("<Pen>/tip");
                     m_PointerDownAction.AddBinding("<Touchscreen>/touch*/press");
                     m_PointerDownAction.AddBinding("<XRController>/trigger");
-                    #if UNITY_EDITOR
-                    InputExitPlayModeAnalytic.suppress = false;
-                    #endif
+                    InputActionSetupExtensions.s_SuppressAnalytics?.Invoke(false);
                 }
 
                 if (m_PointerMoveAction == null || m_PointerMoveAction.bindings.Count == 0)
@@ -114,15 +105,11 @@ namespace UnityEngine.InputSystem.OnScreen
                     if (m_PointerMoveAction == null)
                         m_PointerMoveAction = new InputAction();
 
-                    #if UNITY_EDITOR
-                    InputExitPlayModeAnalytic.suppress = true;
-                    #endif
+                    InputActionSetupExtensions.s_SuppressAnalytics?.Invoke(true);
                     m_PointerMoveAction.AddBinding("<Mouse>/position");
                     m_PointerMoveAction.AddBinding("<Pen>/position");
                     m_PointerMoveAction.AddBinding("<Touchscreen>/touch*/position");
-                    #if UNITY_EDITOR
-                    InputExitPlayModeAnalytic.suppress = false;
-                    #endif
+                    InputActionSetupExtensions.s_SuppressAnalytics?.Invoke(false);
                 }
 
                 m_PointerDownAction.performed += OnPointerChanged;
@@ -371,7 +358,7 @@ namespace UnityEngine.InputSystem.OnScreen
             }
         }
 
-        private void UpdateDynamicOriginClickableArea()
+        internal void UpdateDynamicOriginClickableArea()
         {
             var dynamicOriginTransform = transform.Find(kDynamicOriginClickable);
             if (dynamicOriginTransform)
@@ -438,16 +425,16 @@ namespace UnityEngine.InputSystem.OnScreen
         [FormerlySerializedAs("movementRange")]
         [SerializeField]
         [Min(0)]
-        private float m_MovementRange = 50;
+        internal float m_MovementRange = 50;
 
         [SerializeField]
         [Tooltip("Defines the circular region where the onscreen control may have it's origin placed.")]
         [Min(0)]
-        private float m_DynamicOriginRange = 100;
+        internal float m_DynamicOriginRange = 100;
 
         [InputControl(layout = "Vector2")]
         [SerializeField]
-        private string m_ControlPath;
+        internal string m_ControlPath;
 
         [SerializeField]
         [Tooltip("Choose how the onscreen stick will move relative to it's origin and the press position.\n\n" +
@@ -457,34 +444,34 @@ namespace UnityEngine.InputSystem.OnScreen
             "exact position of the click or touch and begin tracking motion from there.\n\n" +
             "ExactPositionWithDynamicOrigin: The control's center of origin is determined by the initial press position. " +
             "The stick will begin un-actuated at this center position and then track the current pointer or finger position.")]
-        private Behaviour m_Behaviour;
+        internal Behaviour m_Behaviour;
 
         [SerializeField]
         [Tooltip("Set this to true to prevent cancellation of pointer events due to device switching. Cancellation " +
             "will appear as the stick jumping back and forth between the pointer position and the stick center.")]
-        private bool m_UseIsolatedInputActions;
+        internal bool m_UseIsolatedInputActions;
 
         [SerializeField]
         [Tooltip("The action that will be used to detect pointer down events on the stick control. Note that if no bindings " +
             "are set, default ones will be provided.")]
-        private InputAction m_PointerDownAction;
+        internal InputAction m_PointerDownAction;
 
         [SerializeField]
         [Tooltip("The action that will be used to detect pointer movement on the stick control. Note that if no bindings " +
             "are set, default ones will be provided.")]
-        private InputAction m_PointerMoveAction;
+        internal InputAction m_PointerMoveAction;
 
-        private Vector3 m_StartPos;
-        private Vector2 m_PointerDownPos;
+        internal Vector3 m_StartPos;
+        internal Vector2 m_PointerDownPos;
 
         [NonSerialized]
-        private List<RaycastResult> m_RaycastResults;
+        internal List<RaycastResult> m_RaycastResults;
         [NonSerialized]
-        private PointerEventData m_PointerEventData;
+        internal PointerEventData m_PointerEventData;
         [NonSerialized]
-        private TouchControl m_TouchControl;
+        internal TouchControl m_TouchControl;
         [NonSerialized]
-        private bool m_IsIsolationActive;
+        internal bool m_IsIsolationActive;
 
         protected override string controlPathInternal
         {
@@ -514,83 +501,6 @@ namespace UnityEngine.InputSystem.OnScreen
             /// The control will begin unactuated at this center position and then track the current press position.</summary>
             ExactPositionWithDynamicOrigin
         }
-
-#if UNITY_EDITOR
-        [CustomEditor(typeof(OnScreenStick))]
-        internal class OnScreenStickEditor : UnityEditor.Editor
-        {
-            private AnimBool m_ShowDynamicOriginOptions;
-            private AnimBool m_ShowIsolatedInputActions;
-
-            private SerializedProperty m_UseIsolatedInputActions;
-            private SerializedProperty m_Behaviour;
-            private SerializedProperty m_ControlPathInternal;
-            private SerializedProperty m_MovementRange;
-            private SerializedProperty m_DynamicOriginRange;
-            private SerializedProperty m_PointerDownAction;
-            private SerializedProperty m_PointerMoveAction;
-
-            public void OnEnable()
-            {
-                m_ShowDynamicOriginOptions = new AnimBool(false);
-                m_ShowIsolatedInputActions = new AnimBool(false);
-
-                m_UseIsolatedInputActions = serializedObject.FindProperty(nameof(OnScreenStick.m_UseIsolatedInputActions));
-
-                m_Behaviour = serializedObject.FindProperty(nameof(OnScreenStick.m_Behaviour));
-                m_ControlPathInternal = serializedObject.FindProperty(nameof(OnScreenStick.m_ControlPath));
-                m_MovementRange = serializedObject.FindProperty(nameof(OnScreenStick.m_MovementRange));
-                m_DynamicOriginRange = serializedObject.FindProperty(nameof(OnScreenStick.m_DynamicOriginRange));
-                m_PointerDownAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerDownAction));
-                m_PointerMoveAction = serializedObject.FindProperty(nameof(OnScreenStick.m_PointerMoveAction));
-            }
-
-            public void OnDisable()
-            {
-                // Report analytics
-                new InputComponentEditorAnalytic(InputSystemComponent.OnScreenStick).Send();
-                new OnScreenStickEditorAnalytic(this).Send();
-            }
-
-            public override void OnInspectorGUI()
-            {
-                // Current implementation has UGUI dependencies (ISXB-915, ISXB-916)
-                UGUIOnScreenControlEditorUtils.ShowWarningIfNotPartOfCanvasHierarchy((OnScreenStick)target);
-
-                EditorGUILayout.PropertyField(m_MovementRange);
-                EditorGUILayout.PropertyField(m_ControlPathInternal);
-                EditorGUILayout.PropertyField(m_Behaviour);
-
-                m_ShowDynamicOriginOptions.target = ((OnScreenStick)target).behaviour ==
-                    Behaviour.ExactPositionWithDynamicOrigin;
-                if (EditorGUILayout.BeginFadeGroup(m_ShowDynamicOriginOptions.faded))
-                {
-                    EditorGUI.indentLevel++;
-                    EditorGUI.BeginChangeCheck();
-                    EditorGUILayout.PropertyField(m_DynamicOriginRange);
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        ((OnScreenStick)target).UpdateDynamicOriginClickableArea();
-                    }
-                    EditorGUI.indentLevel--;
-                }
-                EditorGUILayout.EndFadeGroup();
-
-                EditorGUILayout.PropertyField(m_UseIsolatedInputActions);
-                m_ShowIsolatedInputActions.target = m_UseIsolatedInputActions.boolValue;
-                if (EditorGUILayout.BeginFadeGroup(m_ShowIsolatedInputActions.faded))
-                {
-                    EditorGUI.indentLevel++;
-                    EditorGUILayout.PropertyField(m_PointerDownAction);
-                    EditorGUILayout.PropertyField(m_PointerMoveAction);
-                    EditorGUI.indentLevel--;
-                }
-                EditorGUILayout.EndFadeGroup();
-
-                serializedObject.ApplyModifiedProperties();
-            }
-        }
-#endif
     }
 }
 #endif

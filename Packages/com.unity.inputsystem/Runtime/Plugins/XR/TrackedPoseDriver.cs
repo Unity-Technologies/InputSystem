@@ -311,13 +311,9 @@ namespace UnityEngine.InputSystem.XR
 
         private static void RenameAndEnable(InputAction action, string name)
         {
-#if UNITY_EDITOR
-            Editor.InputExitPlayModeAnalytic.suppress = true;
-#endif
+            InputActionSetupExtensions.s_SuppressAnalytics?.Invoke(true);
             action.Rename(name);
-#if UNITY_EDITOR
-            Editor.InputExitPlayModeAnalytic.suppress = false;
-#endif
+            InputActionSetupExtensions.s_SuppressAnalytics?.Invoke(false);
             action.Enable();
         }
 

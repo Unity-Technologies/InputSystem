@@ -1,10 +1,5 @@
 using System.Linq;
 using UnityEngine.InputSystem.Utilities;
-#if UNITY_EDITOR
-using UnityEditor;
-using UnityEngine.InputSystem.Editor;
-using UnityEngine.InputSystem.HID.Editor;
-#endif
 
 namespace UnityEngine.InputSystem.HID
 {
@@ -129,26 +124,6 @@ namespace UnityEngine.InputSystem.HID
 
             InputSystem.RegisterLayout<HID>();
             InputSystem.onFindLayoutForDevice += HID.OnFindLayoutForDevice;
-
-            // Add toolbar button to any devices using the "HID" interface. Opens
-            // a windows to browse the HID descriptor of the device.
-            #if UNITY_EDITOR
-            InputDeviceDebuggerWindow.onToolbarGUI +=
-                device =>
-            {
-                if (device.description.interfaceName == HID.kHIDInterface)
-                {
-                    if (GUILayout.Button(s_HIDDescriptor, EditorStyles.toolbarButton))
-                    {
-                        HIDDescriptorWindow.CreateOrShowExisting(device.deviceId, device.description);
-                    }
-                }
-            };
-            #endif
         }
-
-        #if UNITY_EDITOR
-        private static readonly GUIContent s_HIDDescriptor = new GUIContent("HID Descriptor");
-        #endif
     }
 }

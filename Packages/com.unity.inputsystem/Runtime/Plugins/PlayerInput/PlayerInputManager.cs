@@ -4,10 +4,6 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 ////REVIEW: should we automatically pool/retain up to maxPlayerCount player instances?
 
 ////REVIEW: the join/leave messages should probably give a *GameObject* rather than the PlayerInput component (which can be gotten to via a simple GetComponent(InChildren) call)
@@ -730,9 +726,6 @@ namespace UnityEngine.InputSystem
             if (isValid) return;
 
             var assetInfo = actions.name;
-#if UNITY_EDITOR
-            assetInfo = AssetDatabase.GetAssetPath(actions);
-#endif
             Debug.LogWarning($"The input action asset '{assetInfo}' in the player prefab assigned to PlayerInputManager has " +
                 "no control schemes with required devices. The JoinPlayersWhenButtonIsPressed join behavior " +
                 "will not work unless the expected input devices are listed as requirements in the input " +
