@@ -1,7 +1,6 @@
 #if UNITY_EDITOR || PACKAGE_DOCS_GENERATION
 using System.ComponentModel;
 using UnityEngine.InputSystem.LowLevel;
-using UnityEditor;
 
 namespace UnityEngine.InputSystem.Processors
 {

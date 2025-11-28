@@ -1,10 +1,5 @@
 using System;
 
-#if UNITY_EDITOR
-using UnityEngine.InputSystem.Editor;
-using UnityEngine.UIElements;
-#endif
-
 namespace UnityEngine.InputSystem.Processors
 {
     /// <summary>
@@ -72,36 +67,4 @@ namespace UnityEngine.InputSystem.Processors
             return $"AxisDeadzone(min={minOrDefault},max={maxOrDefault})";
         }
     }
-
-    #if UNITY_EDITOR
-    internal class AxisDeadzoneProcessorEditor : InputParameterEditor<AxisDeadzoneProcessor>
-    {
-        protected override void OnEnable()
-        {
-            m_MinSetting.Initialize("Min",
-                "Value below which input values will be clamped. After clamping, values will be renormalized to [0..1] between min and max.",
-                "Default Deadzone Min",
-                () => target.min, v => target.min = v,
-                () => InputSystem.settings.defaultDeadzoneMin);
-            m_MaxSetting.Initialize("Max",
-                "Value above which input values will be clamped. After clamping, values will be renormalized to [0..1] between min and max.",
-                "Default Deadzone Max",
-                () => target.max, v => target.max = v,
-                () => InputSystem.settings.defaultDeadzoneMax);
-        }
-
-        public override void OnGUI()
-        {
-        }
-
-        public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
-        {
-            m_MinSetting.OnDrawVisualElements(root, onChangedCallback);
-            m_MaxSetting.OnDrawVisualElements(root, onChangedCallback);
-        }
-
-        private CustomOrDefaultSetting m_MinSetting;
-        private CustomOrDefaultSetting m_MaxSetting;
-    }
-    #endif
 }
