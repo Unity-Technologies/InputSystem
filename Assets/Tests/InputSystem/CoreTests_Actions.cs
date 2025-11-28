@@ -17,7 +17,6 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.XInput;
-using UnityEngine.PlayerLoop;
 using UnityEngine.Profiling;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
