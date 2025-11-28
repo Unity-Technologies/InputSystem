@@ -8,7 +8,6 @@ using UnityEngineInternal.Input;
 #if UNITY_EDITOR
 using System.Reflection;
 using UnityEditor;
-using UnityEditorInternal;
 #endif
 
 // This should be the only file referencing the API at UnityEngineInternal.Input.
@@ -306,8 +305,14 @@ namespace UnityEngine.InputSystem.LowLevel
 #endif
         #if UNITY_EDITOR
 
-        public bool isInPlayMode => EditorApplication.isPlaying;
-        public bool isEditorActive => InternalEditorUtility.isApplicationActive;
+        // These fields are set by InputSystemEditorInitializer to avoid direct Editor dependencies
+        internal bool m_IsInPlayMode;
+        internal bool m_IsEditorActive = true;
+        internal bool m_IsEditorPaused;
+
+        public bool isInPlayMode => m_IsInPlayMode;
+        public bool isEditorActive => m_IsEditorActive;
+        public bool isEditorPaused => m_IsEditorPaused;
 
         public Func<IntPtr, bool> onUnityRemoteMessage
         {

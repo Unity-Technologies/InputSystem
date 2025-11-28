@@ -18,10 +18,6 @@ using Unity.Profiling;
 using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
-using UnityEngine.InputSystem.Editor;
-#endif
-
-#if UNITY_EDITOR
 using CustomBindingPathValidator = System.Func<string, System.Action>;
 #endif
 
@@ -407,7 +403,7 @@ namespace UnityEngine.InputSystem
 
         private bool gameIsPlaying =>
 #if UNITY_EDITOR
-            (m_Runtime.isInPlayMode && !UnityEditor.EditorApplication.isPaused) || m_RunPlayerUpdatesInEditMode;
+            (m_Runtime.isInPlayMode && !m_Runtime.isEditorPaused) || m_RunPlayerUpdatesInEditMode;
 #else
             true;
 #endif
@@ -1050,7 +1046,7 @@ namespace UnityEngine.InputSystem
             // is useful to ensure that things like keyboard, mouse, and pen keep working in the editor
             // even if not supported as devices in the game.
             #if UNITY_EDITOR
-            if (InputEditorUserSettings.addDevicesNotSupportedByProject)
+            if (m_AddDevicesNotSupportedByProject)
                 return true;
             #endif
 
@@ -1895,7 +1891,7 @@ namespace UnityEngine.InputSystem
         private void InitializeActions()
         {
 #if UNITY_EDITOR
-            m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+            m_Actions = s_GetProjectWideActions?.Invoke();
 #else
             m_Actions = null;
             var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
@@ -1986,7 +1982,7 @@ namespace UnityEngine.InputSystem
             // Precompiled layouts.
             RegisterPrecompiledLayout<FastKeyboard>(FastKeyboard.metadata);
             RegisterPrecompiledLayout<FastTouchscreen>(FastTouchscreen.metadata);
-            RegisterPrecompiledLayout<FastMouse>(FastMouse.metadata);
+            // RegisterPrecompiledLayout<FastMouse>(FastMouse.metadata);
 
             // Register processors.
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
@@ -2234,6 +2230,16 @@ namespace UnityEngine.InputSystem
         #if UNITY_EDITOR
         // remember time offset to correctly restore it after editor mode is done
         private double latestNonEditorTimeOffsetToRealtimeSinceStartup;
+
+        // Track edit/play mode transition times (set by Editor via InputSystemEditorInitializer)
+        internal double m_ExitEditModeTime;
+        internal double m_EnterPlayModeTime;
+
+        // Editor settings (set by InputSystemEditorInitializer)
+        internal bool m_AddDevicesNotSupportedByProject;
+
+        // Editor callback to get project-wide actions
+        internal static Func<InputActionAsset> s_GetProjectWideActions;
         #endif
 
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
@@ -3803,10 +3809,10 @@ namespace UnityEngine.InputSystem
         {
             return (eventType == StateEvent.Type || eventType == DeltaStateEvent.Type) &&
                 (updateType & InputUpdateType.Editor) == 0 &&
-                InputSystem.s_SystemObject.exitEditModeTime > 0 &&
-                eventTime >= InputSystem.s_SystemObject.exitEditModeTime &&
-                (eventTime < InputSystem.s_SystemObject.enterPlayModeTime ||
-                    InputSystem.s_SystemObject.enterPlayModeTime == 0);
+                m_ExitEditModeTime > 0 &&
+                eventTime >= m_ExitEditModeTime &&
+                (eventTime < m_EnterPlayModeTime ||
+                    m_EnterPlayModeTime == 0);
         }
 
         /// <summary>

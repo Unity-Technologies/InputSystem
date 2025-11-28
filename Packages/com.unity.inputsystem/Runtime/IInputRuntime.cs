@@ -192,6 +192,7 @@ namespace UnityEngine.InputSystem.LowLevel
         Action onProjectChange { get; set; }
         bool isInPlayMode { get;  }
         bool isEditorActive { get; }
+        bool isEditorPaused { get; }
 
         // Functionality related to the Unity Remote.
         Func<IntPtr, bool> onUnityRemoteMessage { set; }
