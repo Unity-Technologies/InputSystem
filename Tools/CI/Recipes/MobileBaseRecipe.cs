@@ -6,7 +6,7 @@ using RecipeEngine.Unity.Abstractions.Packages;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public abstract class MobileBaseRecipe: BaseRecipe
+public abstract class MobileBaseRecipe : BaseRecipe
 {
     public override IEnumerable<IJobBuilder> GetJobs()
     {
@@ -57,6 +57,7 @@ public abstract class MobileBaseRecipe: BaseRecipe
                     break;
                 job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
                 job.WithCommands(UtrCommand.Download(systemType, "utr.bat"));
+                job.WithEnvironmentVariable("UTR_VERSION", "1.42.0");
                 return "utr.bat";
             case SystemType.IOS:
                 job.WithCommands(UtrCommand.Download(systemType, "utr"));
