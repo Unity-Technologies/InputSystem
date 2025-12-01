@@ -25,6 +25,8 @@ inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_il2cpp:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_2022_3_-_android_-_il2cpp
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 2022.3 - Android - mono
 inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_mono:
@@ -51,6 +53,8 @@ inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_mono:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_2022_3_-_android_-_mono
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 2022.3 - IOS
 inputsystem-mobilefunctionaltests_-_2022_3_-_ios:
@@ -119,6 +123,8 @@ inputsystem-mobilefunctionaltests_-_6000_0_-_android_-_il2cpp:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_0_-_android_-_il2cpp
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 6000.0 - Android - mono
 inputsystem-mobilefunctionaltests_-_6000_0_-_android_-_mono:
@@ -145,6 +151,8 @@ inputsystem-mobilefunctionaltests_-_6000_0_-_android_-_mono:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_0_-_android_-_mono
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 6000.0 - IOS
 inputsystem-mobilefunctionaltests_-_6000_0_-_ios:
@@ -213,6 +221,8 @@ inputsystem-mobilefunctionaltests_-_6000_2_-_android_-_il2cpp:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_2_-_android_-_il2cpp
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 6000.2 - Android - mono
 inputsystem-mobilefunctionaltests_-_6000_2_-_android_-_mono:
@@ -239,6 +249,8 @@ inputsystem-mobilefunctionaltests_-_6000_2_-_android_-_mono:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_2_-_android_-_mono
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 6000.2 - IOS
 inputsystem-mobilefunctionaltests_-_6000_2_-_ios:
@@ -307,6 +319,8 @@ inputsystem-mobilefunctionaltests_-_6000_3_-_android_-_il2cpp:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_3_-_android_-_il2cpp
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 6000.3 - Android - mono
 inputsystem-mobilefunctionaltests_-_6000_3_-_android_-_mono:
@@ -333,6 +347,8 @@ inputsystem-mobilefunctionaltests_-_6000_3_-_android_-_mono:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_3_-_android_-_mono
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 6000.3 - IOS
 inputsystem-mobilefunctionaltests_-_6000_3_-_ios:
@@ -401,6 +417,8 @@ inputsystem-mobilefunctionaltests_-_6000_4_-_android_-_il2cpp:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_android_-_il2cpp
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 6000.4 - Android - mono
 inputsystem-mobilefunctionaltests_-_6000_4_-_android_-_mono:
@@ -427,6 +445,8 @@ inputsystem-mobilefunctionaltests_-_6000_4_-_android_-_mono:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_android_-_mono
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 6000.4 - IOS
 inputsystem-mobilefunctionaltests_-_6000_4_-_ios:
@@ -495,6 +515,8 @@ inputsystem-mobilefunctionaltests_-_6000_5_-_android_-_il2cpp:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_5_-_android_-_il2cpp
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 6000.5 - Android - mono
 inputsystem-mobilefunctionaltests_-_6000_5_-_android_-_mono:
@@ -521,6 +543,8 @@ inputsystem-mobilefunctionaltests_-_6000_5_-_android_-_mono:
       - build/test-results/**/*
   dependencies:
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_5_-_android_-_mono
+  variables:
+    UTR_VERSION: 1.42.0
 
 # InputSystem-MobileFunctionalTests - 6000.5 - IOS
 inputsystem-mobilefunctionaltests_-_6000_5_-_ios:
