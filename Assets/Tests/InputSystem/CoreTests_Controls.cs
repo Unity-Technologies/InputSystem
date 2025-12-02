@@ -17,6 +17,9 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 using UnityEngine.TestTools.Constraints;
 using Is = NUnit.Framework.Is;
+#if UNITY_6000_5_OR_NEWER
+using UnityEngine.Assemblies;
+#endif
 
 partial class CoreTests
 {
@@ -1545,7 +1548,11 @@ partial class CoreTests
         var inputDevice = typeof(InputDevice);
         var inputControlType = typeof(InputControl);
         var checkedTypes = new HashSet<Type>();
+#if UNITY_6000_5_OR_NEWER
+        foreach (var assembly in CurrentAssemblies.GetLoadedAssemblies())
+#else
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+#endif
         {
             try
             {

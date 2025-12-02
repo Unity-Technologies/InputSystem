@@ -16,6 +16,9 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
 using Unity.Profiling;
 using UnityEngineInternal.Input;
+#if UNITY_6000_5_OR_NEWER
+using UnityEngine.Assemblies;
+#endif
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -2059,7 +2062,11 @@ namespace UnityEngine.InputSystem
 
             var inputSystemAssembly = typeof(InputProcessor).Assembly;
             var inputSystemName = inputSystemAssembly.GetName().Name;
+#if UNITY_6000_5_OR_NEWER
+            var assemblies = CurrentAssemblies.GetLoadedAssemblies();
+#else
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+#endif
             foreach (var assembly in assemblies)
             {
                 try
