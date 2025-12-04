@@ -10,6 +10,27 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+
+- Fixed warnings being generated on Unity 6.4 and 6.5. (ISX-2395).
+
+## [1.17.0] - 2025-11-25
+
+### Changed
+- Project-Wide Input Actions support can no longer be compiled out (removed the `UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS` define). (ISX-2397)
+- Removed code that had to do with Unity versions older than Unity 2022.3 LTS. (ISX-2396)
+- Auto-save on focus lost can no longer be compiled out (ISX-2397)
+- Deprecated the `USE_IMGUI_EDITOR_FOR_ASSETS` feature option (ISX-2397)
+
+### Fixed
+- An issue where a UITK MouseEvent was triggered when changing from Scene View to Game View in the Editor has been fixed. [ISXB-1671](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1671)
+- Fix documentation error in file AndroidGameController.cs mentioning a wrong controller. [DOCATT-9806]
+- Deferred auto-registration of processors, interactions and composite binding types referenced by `InputActionAsset`
+  to only happen once when an unresolved type reference is found in an action definition. This avoids reflective
+  type loading from assemblies for all cases where the Input System is not extended. (ISXB-1766).
+
+## [1.16.0] - 2025-11-10
+
 ### Changed
 - Replaced "Look" rebinding button for "Keyboard" control scheme with a mouse sensitivity slider in `RebindingUISample` to illustrate how to support customizing scaling of mouse deltas and how to reapply the persisted setting between runs.
 - Changed: Input System no longer depends the obsolete com.unity.modules.vr package.
@@ -19,6 +40,7 @@ however, it has to be formatted properly to pass verification tests.
 - Added an example of how to swap two similar controls to the `RebindingUISample`. This is accessible via a button with two arrows at the right hand-side of the screen. Pressing the button allows swapping the current bindings of the "Move" and "Look" gamepad bindings via the new `RebindActionUI.SwapBinding(RebindActionUI other)` method.
 - Added support for (MonoBehavior OnMouse events) [https://docs.unity3d.com/ScriptReference/MonoBehaviour.html] when running the Input System on Unity 6000.4 or newer.
 - Added tests and a sample for MonoBehavior OnMouse events using the InputSystem package.
+- Added support for all the existing InputControl types in InputTestFixture.Trigger [ISXB-1716]
 
 ### Fixed
 - Fixed warnings being generated on Unity 6.3 (beta). (ISXB-1718).
@@ -34,7 +56,10 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed HID parsing not handling logical minimum and maximum values correctly when they are negative. This applies for platforms that parse HID descriptors in the package, e.g. macOS at the moment.
 - Fix usage of correct data format for stick axes in HID Layout Builder ([User contribution](https://github.com/Unity-Technologies/InputSystem/pull/2245))
 - Fixed InputSystemUIInputModule calling pointer events on parent objects even when the "Send Pointer Hover To Parent" is off on 2022.3.XX. This was  was previously only available on Unity 6 versions since 1.11.0. [ISXB-1296]
+- Limited the Add Control Scheme popup window max size to be its parent window, so that it won't resize beyond the visible area. [ISXB-1733](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1733)
 - Fixed an issue where the action icon would shrink or disappear from UI when an action has a very long name. [ISXB-1650](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1650).
+- Fixed upgrading input actions containing multiple processors [ISXB-1674](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1674).
+- Fixed an issue that led to non-deterministic behaviour during `.inputaction` asset imports that could lead to corrupted assets or Unity hanging during asset import when "Generate C# Scripts" was active in importer settings. [ISXB-1746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1746)
 
 ## [1.15.0] - 2025-10-03
 
@@ -455,7 +480,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed issue of visual elements being null during editing project-wide actions in project settings which prompted console errors.
 - Fixed case ISX-1436 (UI TK Input Action Asset Editor - Error deleting Bindings with DeleteKey on Windows).
 - Fixed issue with UI Toolkit based Input Action Editor not restoring it's selected items after Domain Reload.
-- Fixed the [`GetHapticCapabilitiesCommand`](xref:UnityEngine.InputSystem.XR.Haptics.GetHapticCapabilitiesCommand) always failing to execute due to a mismatch in the size in bytes of the payload and the size expected by XR devices. Changed [`HapticCapabilities`](xref:UnityEngine.InputSystem.XR.Haptics.HapticCapabilities) to include all properties returned by the XR input subsystem. This makes Input System match the functionality provided by the [XR](https://docs.unity3d.com/Manual/com.unity.modules.xr.html) module's [`InputDevice.TryGetHapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.InputDevice.TryGetHapticCapabilities.html) and [`HapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.HapticCapabilities.html).
+- Fixed the [`GetHapticCapabilitiesCommand`](xref:UnityEngine.InputSystem.XR.Haptics.GetHapticCapabilitiesCommand) always failing to execute due to a mismatch in the size in bytes of the payload and the size expected by XR devices. Changed [`HapticCapabilities`](xref:UnityEngine.InputSystem.XR.Haptics.HapticCapabilities) to include all properties returned by the XR input subsystem. This makes Input System match the functionality provided by the [XR](https://docs.unity3d.com/Manual/com.unity.modules.xr.html) module's [`InputDevice.TryGetHapticCapabilities`](xref:UnityEngine.XR.InputDevice.TryGetHapticCapabilities(UnityEngine.XR.HapticCapabilities&)) and [`HapticCapabilities`](xref:UnityEngine.XR.HapticCapabilities).
 - Fixed issue where deleting a binding in the Input Action Editor would usually result in an unexpected item being selected next.
 
 ## [1.8.0-pre.1] - 2023-09-04
@@ -1891,7 +1916,8 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 - **The system no longer supports processing input in __BOTH__ fixed and dynamic updates**. Instead, a choice has to be made whether to process input before each `FixedUpdate()` or before each `Update()`.
   * Rationale: the existing code that supported having both updates receive input independently still had several holes and became increasingly complex and brittle. Our solution was based on not actually processing input twice but on channeling input concurrently into both the state of both updates. Together with the fact that specific inputs have to reset (and possibly accumulate) correctly with respect to their update time slices, this became increasingly hard to do right. This, together with the fact that we've come to increasingly question the value of this feature, led us to removing the capability while preserving the ability to determine where input is processed.
-  * NOTE: Timeslicing is NOT affected by this. You can still switch to `ProcessEventInFixedUpdates` and get events timesliced to individual `FixedUpdate` periods according to their timestamps.
+    > [!NOTE]
+    > Timeslicing is NOT affected by this. You can still switch to `ProcessEventInFixedUpdates` and get events timesliced to individual `FixedUpdate` periods according to their timestamps.
   * `InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate` has been removed.
   * `InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly` has been renamed to `InputSettings.UpdateMode.ProcessEventsInDynamicUpdate` and is now the default.
   * `InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly` has been renamed to `InputSettings.UpdateMode.ProcessEventsInFixedUpdate`.
@@ -2092,9 +2118,10 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 ## [0.2.6-preview] - 2019-03-20
 
->NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
->NOTE: The minimum version requirement for the new input system has been bumped
-       to 2019.1
+> [!NOTE]
+> The UI code for editing actions has largely been rewritten. There may be regressions.
+>
+> The minimum version requirement for the new input system has been bumped to 2019.1
 
 ### Added
 
@@ -2172,7 +2199,8 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 This release contains a number of fairly significant changes. The focus has been on further improving the action system to make it easier to use as well as to make it work more reliably and predictably.
 
->NOTE: There are some breaking changes. Please see the "Changed" section below.
+> [!NOTE]
+> There are some breaking changes. Please see the "Changed" section below.
 
 ### Changed
 
@@ -2308,10 +2336,11 @@ This release contains a number of fairly significant changes. The focus has been
 
 ## [0.1.2-preview] - 2018-12-19
 
-    NOTE: The minimum version requirement for the new input system has been bumped
-          to 2018.3. The previous minum requirement of 2018.2 is no longer supported.
-          Also, we have dropped support for the .NET 3.5 runtime. The new .NET 4
-          runtime is now required to use the new input system.
+> [!NOTE]
+> The minimum version requirement for the new input system has been bumped
+> to 2018.3. The previous minum requirement of 2018.2 is no longer supported.
+> Also, we have dropped support for the .NET 3.5 runtime. The new .NET 4
+> runtime is now required to use the new input system.
 
 We've started working on documentation. The current work-in-progress can be found on [GitHub](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/InputSystem.md).
 

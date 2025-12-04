@@ -27,6 +27,23 @@ namespace UnityEngine.InputSystem.Utilities
             return $"{name}({parameterString})";
         }
 
+        internal static string ToSerializableString(IEnumerable<NameAndParameters> list)
+        {
+            if (list == null)
+                return string.Empty;
+
+            return string.Join(NamedValue.Separator, list.Select(x => x.ToString()).ToArray());
+        }
+
+        internal static NameAndParameters Create(string name, IList<NamedValue> parameters)
+        {
+            return new NameAndParameters
+            {
+                name = name,
+                parameters = new ReadOnlyArray<NamedValue>(parameters.ToArray())
+            };
+        }
+
         public static IEnumerable<NameAndParameters> ParseMultiple(string text)
         {
             List<NameAndParameters> list = null;

@@ -26,8 +26,10 @@ public class MobilePerformanceBuildJobs: MobileBaseRecipe
             .WithDescription(jobName)
             .WithPlatform(platform)
             .WithCommands(Utilities.GetEditorDownloadCommand(unityBranch, platform));
+        
+        var utrExecutable = PrepareUtrExecutable(job, platform.System);
 
-        var utrCommand = UtrCommand.Run(platform.System, b => b
+        var utrCommand = UtrCommand.Run(platform.System, utrExecutable,b => b
                 .WithTestProject($"{ProjectPath}")
                 .WithEditor(".Editor")
                 .WithSuite(UtrTestSuiteType.Playmode)

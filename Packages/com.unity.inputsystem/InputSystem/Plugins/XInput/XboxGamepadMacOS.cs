@@ -127,12 +127,6 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
             RightThumbstickPress = 15,
         }
 
-        // IL2CPP on 2021 doesn't respect the FieldOffsets - as such, we need some padding fields
-#if UNITY_2021 && ENABLE_IL2CPP
-        [FieldOffset(0)]
-        private uint padding;
-#endif
-
         [InputControl(name = "buttonSouth", bit = (uint)Button.A, displayName = "A")]
         [InputControl(name = "buttonEast", bit = (uint)Button.B, displayName = "B")]
         [InputControl(name = "buttonWest", bit = (uint)Button.X, displayName = "X")]
@@ -154,19 +148,8 @@ namespace UnityEngine.InputSystem.XInput.LowLevel
         [InputControl(name = "leftTrigger", format = "BYTE")]
         [FieldOffset(6)] public byte leftTrigger;
 
-#if UNITY_2021 && ENABLE_IL2CPP
-        [FieldOffset(7)]
-        private byte triggerPadding;
-#endif
-
         [InputControl(name = "rightTrigger", format = "BYTE")]
         [FieldOffset(8)] public byte rightTrigger;
-
-#if UNITY_2021 && ENABLE_IL2CPP
-        [FieldOffset(9)]
-        private byte triggerPadding2;
-#endif
-
 
         [InputControl(name = "leftStick", layout = "Stick", format = "VC2S")]
         [InputControl(name = "leftStick/x", offset = 0, format = "SHRT", parameters = "")]
@@ -419,9 +402,10 @@ namespace UnityEngine.InputSystem.XInput
     /// </summary>
     /// <remarks>
     /// An Xbox One wireless gamepad connected to a mac using Bluetooth.
-    /// Note: only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
-    /// with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
-    /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on older macOS versions
+    /// > [!NOTE]
+    /// > Only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
+    /// > with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
+    /// Unlike wired controllers, bluetooth-capable Xbox One controllers do not need a custom driver to work on older macOS versions
     /// </remarks>
     [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXState), hideInUI = true)]
     public class XboxOneGampadMacOSWireless : XInputController
@@ -436,8 +420,9 @@ namespace UnityEngine.InputSystem.XInput
     /// The reason this is different from <see cref="XboxOneGampadMacOSWireless"/> is that some Xbox Controllers have
     /// different View and Share button bit mapping. So we need to use a different layout for those controllers. It seems
     /// that some Xbox One and Xbox Series controller share the same mappings so this combines them all.
-    /// Note: only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
-    /// with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
+    /// > [!NOTE]
+    /// > Only the latest version of Xbox One wireless gamepads support Bluetooth. Older models only work
+    /// > with a proprietary Xbox wireless protocol, and cannot be used on a Mac.
     /// Unlike wired controllers, bluetooth-cabable Xbox One controllers do not need a custom driver to work on older macOS versions
     /// </remarks>
     [InputControlLayout(displayName = "Wireless Xbox Controller", stateType = typeof(XInputControllerWirelessOSXStateV2), hideInUI = true)]

@@ -84,13 +84,13 @@ namespace UnityEngine.InputSystem
         ///
         /// By default, an action is started as soon as a control moves away from its default value. This is
         /// the case for both <see cref="InputActionType.Button"/> actions (which, however, does not yet have to mean
-        /// that the button press threshold has been reached; see <see cref="InputSettings.defaultButtonPressPoint"/>)
+        /// that the button press threshold has been reached; refer to <see cref="InputSettings.defaultButtonPressPoint"/>)
         /// and <see cref="InputActionType.Value"/> actions. <see cref="InputActionType.PassThrough"/> does not use
         /// the <c>Started</c> phase and instead goes straight to <see cref="Performed"/>.
         ///
         /// For <see cref="InputActionType.Value"/> actions, <c>Started</c> will immediately be followed by <see cref="Performed"/>.
         ///
-        /// Note that interactions (see <see cref="IInputInteraction"/>) can alter how an action does or does not progress through
+        /// Note that interactions (refer to <see cref="IInputInteraction"/>) can alter how an action does or does not progress through
         /// the phases.
         /// </summary>
         Started,
@@ -99,11 +99,11 @@ namespace UnityEngine.InputSystem
         /// The action has been performed. Leads to <see cref="InputAction.performed"/> getting called.
         ///
         /// By default, a <see cref="InputActionType.Button"/> action performs when a control crosses the button
-        /// press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>), a <see cref="InputActionType.Value"/>
+        /// press threshold (refer to <see cref="InputSettings.defaultButtonPressPoint"/>), a <see cref="InputActionType.Value"/>
         /// action performs on any value change that isn't the default value, and a <see cref="InputActionType.PassThrough"/>
         /// action performs on any value change including going back to the default value.
         ///
-        /// Note that interactions (see <see cref="IInputInteraction"/>) can alter how an action does or does not progress through
+        /// Note that interactions (refer to <see cref="IInputInteraction"/>) can alter how an action does or does not progress through
         /// the phases.
         ///
         /// For a given action, finding out whether it was performed in the current frame can be done with <see cref="InputAction.WasPerformedThisFrame"/>.
@@ -120,14 +120,13 @@ namespace UnityEngine.InputSystem
         /// The action has stopped. Leads to <see cref="InputAction.canceled"/> getting called.
         ///
         /// By default, a <see cref="InputActionType.Button"/> action cancels when a control falls back below the button
-        /// press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>) and a <see cref="InputActionType.Value"/>
+        /// press threshold (refer to <see cref="InputSettings.defaultButtonPressPoint"/>) and a <see cref="InputActionType.Value"/>
         /// action cancels when a control moves back to its default value. A <see cref="InputActionType.PassThrough"/> action
         /// does not generally cancel based on input on its controls.
         ///
-        /// An action will also get canceled when it is disabled while in progress (see <see cref="InputAction.Disable"/>).
-        /// Also, when an <see cref="InputDevice"/> that is
+        /// An action will also get canceled when it is disabled while in progress (refer to <see cref="InputAction.Disable"/>).
         ///
-        /// Note that interactions (see <see cref="IInputInteraction"/>) can alter how an action does or does not progress through
+        /// Note that interactions (refer to <see cref="IInputInteraction"/>) can alter how an action does or does not progress through
         /// the phases.
         /// </summary>
         Canceled

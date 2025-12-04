@@ -654,7 +654,8 @@ namespace UnityEngine.InputSystem
     /// <summary>
     /// Hinge angle sensor.
     /// This sensor is usually available on foldable devices.
-    ///  Note: The step resolution for angle is device dependentent, on Android you can query the sensor resolution by querying device capabilities.
+    /// > [!NOTE]
+    /// > The step resolution for angle is device dependentent, on Android you can query the sensor resolution by querying device capabilities.
     /// </summary>
     [InputControlLayout(displayName = "Hinge Angle")]
     public class HingeAngle : Sensor

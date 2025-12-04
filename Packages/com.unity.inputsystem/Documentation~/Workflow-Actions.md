@@ -3,9 +3,9 @@ uid: input-system-workflow-project-wide-actions
 ---
 # Workflow Overview - Actions
 
-<img src="Images/Workflow-Actions.png" height="200px">
+![The Input Device and Actions icons under the Binding header lead directly into the icon representing your action code.](Images/Workflow-Actions.png){height="200px"}
 
-<br/>
+
 While the Input System has a variety of workflows to choose from, this is the primary recommended workflow, which suits most common scenarios for game and app input.
 
 In this workflow, you configure Actions in the [**Input Actions** editor](ActionsEditor.html), then set up references to those actions and read their values in your code.
@@ -14,14 +14,14 @@ In this workflow, you configure Actions in the [**Input Actions** editor](Action
 
 Open the Input System settings by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**.
 
-If you have not yet created and assigned the default [project-wide actions](ProjectWideActions.md), the Input System settings window displays a button to do this.
+If you have not yet created and assigned the default [project-wide actions](xref:project-wide-actions), the Input System settings window displays a button to do this.
 
 Once you have created and assigned the default project-wide actions, the Actions Editor is displayed:
 
-![image alt text](./Images/ProjectSettingsInputActionsSimpleShot.png)
-*The Input Actions editor in the Project Settings window*
+![The Input Actions Editor in the Project Settings window](./Images/ProjectSettingsInputActionsSimpleShot.png)
 
-The [Input Actions editor](ActionsEditor.html) provides a way to define and manage Actions which relate to what you want users to be able to do in your game or app. It also allows you to create bindings between your Actions and one or more types of control on various devices, such as a stick on a gamepad, a key on a keyboard, or a button on an XR controller.
+
+The [Input Actions Editor](ActionsEditor.html) provides a way to define and manage Actions which relate to what you want users to be able to do in your game or app. It also allows you to create bindings between your Actions and one or more types of control on various devices, such as a stick on a gamepad, a key on a keyboard, or a button on an XR controller.
 
 Actions and Bindings allows you to separate the conceptual actions that you want in your game or app from the specific devices and controls that a player has to use to perform the actions, which can make your code simpler and more flexible. This is in contrast to [directly reading device states](Workflow-Direct.html) in your code, which can suit simple projects, but can become unwieldy and inflexible for more complex projects.
 
@@ -101,7 +101,7 @@ public class Example : MonoBehaviour
 > You should avoid using `FindAction` in your `Update()` loop, because it performs a string-based lookup which could impact performance. This is why the Action references in the example above are found during the Start() function, and stored in variables after finding them.
 
 > [!NOTE]
-> The [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html) API refers specifically to the Action Asset assigned as the [project-wide actions](ProjectWideActions.md). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you want to access.
+> The [InputSystem.actions](xref:UnityEngine.InputSystem.InputSystem) API refers specifically to the Action Asset assigned as the [project-wide actions](xref:project-wide-actions). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you want to access.
 
 ## Pros and Cons
 
@@ -109,4 +109,4 @@ This is the recommended workflow with the Input System Package, providing a flex
 
 You benefit from the Action-based features such as Action Maps, Bindings, and the ability to configure them in the Actions Editor. You can also implement [user rebinding at runtime](ActionBindings.html#interactive-rebinding).
 
-This workflow alone doesn't provide built-in support for local multiplayer scenarios with multiple devices, so if you are producing a local multiplayer game you might want to consider using the [Actions and PlayerInput](./Workflow-PlayerInput.md) workflow.
+This workflow alone doesn't provide built-in support for local multiplayer scenarios with multiple devices, so if you are producing a local multiplayer game you might want to consider using the [Actions and PlayerInput](xref:input-system-workflow-player-input) workflow.

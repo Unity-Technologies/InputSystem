@@ -888,10 +888,11 @@ namespace UnityEngine.InputSystem
         /// we don't even need a separate array but rather just need to find out which slice in the
         /// bindings array corresponds to which action.
         ///
-        /// NOTE: Bindings for individual actions aren't queried by the system itself during normal
-        ///       runtime operation so we only do this for cases where the user asks for the
-        ///       information. If the user never asks for bindings or controls on a per-action basis,
-        ///       none of this data gets initialized.
+        /// > [!NOTE]
+        /// > Bindings for individual actions aren't queried by the system itself during normal
+        /// > runtime operation so we only do this for cases where the user asks for the
+        /// > information. If the user never asks for bindings or controls on a per-action basis,
+        /// > none of this data gets initialized.
         /// </remarks>
         internal ReadOnlyArray<InputBinding> GetBindingsForSingleAction(InputAction action)
         {

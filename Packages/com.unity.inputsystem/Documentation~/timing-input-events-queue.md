@@ -1,3 +1,6 @@
+---
+uid: input-system-timing-queue
+---
 # The input events queue
 
 The Input System receives information from hardware input devices as a stream of events. These events represent either system events received from the input device, or snapshots in time based on frequent samples from the device.
@@ -14,7 +17,7 @@ Because a device can cause events at times when the input system can't process t
 
 Unity’s player loop repeats at frequent intervals depending on how fast your game or app is running. The player loop repeats once per frame, and performs the Update and FixedUpdate calls. However, the player loop in your game or app usually runs at a rate that's different to the rate of incoming events from input controls, which tend to have their own rate of operation.
 
-This means that each time an Update cycle occurs while a user is moving an input control, there's likely to be a queue of events representing the gradual change in values that occurred between the last frame and the current frame. This queue is processed at the beginning of the next Update or FixedUpdate, depending on which [**Input Update Mode**](timing-select-mode.md) you're using.
+This means that each time an Update cycle occurs while a user is moving an input control, there's likely to be a queue of events representing the gradual change in values that occurred between the last frame and the current frame. This queue is processed at the beginning of the next Update or FixedUpdate, depending on which [**Input Update Mode**](xref:input-system-timing-select) you're using.
 
 ## Event grouping and processing
 

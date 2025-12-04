@@ -11,9 +11,9 @@ The following are the three different ways of applying Processors to input event
 
 ## Processors on Bindings
 
-When you create Bindings for your [actions](Actions.md), you can choose to add Processors to the Bindings. These process the values from the controls they bind to, before the system applies them to the Action value. For instance, you might want to invert the `Vector2` values from the controls along the Y-axis before passing these values to the Action that drives the input logic for your application. To do this, you can add an [Invert Vector2](ProcessorTypes.md#invert-vector-2) Processor to your Binding.
+When you create Bindings for your [actions](xref:input-system-actions), you can choose to add Processors to the Bindings. These process the values from the controls they bind to, before the system applies them to the Action value. For instance, you might want to invert the `Vector2` values from the controls along the Y-axis before passing these values to the Action that drives the input logic for your application. To do this, you can add an [Invert Vector2](ProcessorTypes.md#invert-vector-2) Processor to your Binding.
 
-If you're using Actions defined in the [Input Actions Editor](ActionsEditor.md), or in an [Action Asset](ActionAssets.md), you can add any Processor to your Bindings in the Input Action editor:
+If you're using Actions defined in the [Input Actions Editor](xref:input-system-configuring-input), or in an [Action Asset](xref:input-system-action-assets), you can add any Processor to your Bindings in the Input Action editor:
 
 1. Select the Binding you want to add Processors to so that the Binding Properties panel shows up on the right side.
 2. Select the **Add (+)** icon on the __Processors__ foldout to open a list of all available Processors that match your control type.
@@ -36,7 +36,7 @@ action.AddBinding("<Gamepad>/leftStick")
 
 Processors on Actions work in the same way as Processors on Bindings, but they affect all controls bound to an Action, rather than just the controls from a specific Binding. If there are Processors on both the Binding and the Action, the system processes the ones from the Binding first.
 
-You can add and edit Processors on Actions in the [Input Actions Editor](ActionsEditor.md), or in an  [Action Asset](ActionAssets.md) the [same way](#processors-on-bindings) as you would for Bindings: select an Action to edit, then add one or more Processors in the right window pane.
+You can add and edit Processors on Actions in the [Input Actions Editor](xref:input-system-configuring-input), or in an  [Action Asset](xref:input-system-action-assets) the [same way](#processors-on-bindings) as you would for Bindings: select an Action to edit, then add one or more Processors in the right window pane.
 
 If you create your Actions in code, you can add Processors like this:
 
@@ -46,11 +46,11 @@ var action = new InputAction(processors: "invertVector2(invertX=false)");
 
 ## Processors on Controls
 
-You can have any number of Processors directly on an [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html), which then process the values read from the Control. Whenever you call [`ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) on a Control, all Processors on that Control process the value before it gets returned to you. You can use [`ReadUnprocessedValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadUnprocessedValue) on a Control to bypass the Processors.
+You can have any number of Processors directly on an [`InputControl`](xref:UnityEngine.InputSystem.InputControl), which then process the values read from the Control. Whenever you call [`ReadValue`](xref:UnityEngine.InputSystem.InputControl`1.ReadValue) on a Control, all Processors on that Control process the value before it gets returned to you. You can use [`ReadUnprocessedValue`](xref:UnityEngine.InputSystem.InputControl`1.ReadUnprocessedValue) on a Control to bypass the Processors.
 
-The Input System adds Processors to a Control during device creation, if they're specified in the Control's [layout](Layouts.md). You can't add Processors to existing Controls after they've been created, so you can only add Processors to Controls when you're [creating custom devices](Devices.md#creating-custom-devices). The devices that the Input System supports out of the box already have some useful Processors added on their Controls. For instance, sticks on gamepads have a [Stick Deadzone](ProcessorTypes.md#stick-deadzone) Processor.
+The Input System adds Processors to a Control during device creation, if they're specified in the Control's [layout](xref:input-system-layouts). You can't add Processors to existing Controls after they've been created, so you can only add Processors to Controls when you're [creating custom devices](xref:input-system-devices#creating-custom-devices). The devices that the Input System supports out of the box already have some useful Processors added on their Controls. For instance, sticks on gamepads have a [Stick Deadzone](ProcessorTypes.md#stick-deadzone) Processor.
 
-If you're using a layout generated by the Input System from a [state struct](Devices.md#step-1-the-state-struct) using [`InputControlAttributes`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html), you can specify the Processors you want to use via the [`processors`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_processors) property of the attribute, like this:
+If you're using a layout generated by the Input System from a [state struct](xref:input-system-devices#step-1-the-state-struct) using [`InputControlAttributes`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute), you can specify the Processors you want to use via the [`processors`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute.processors) property of the attribute, like this:
 
 ```CSharp
 public struct MyDeviceState : IInputStateTypeInfo
@@ -65,7 +65,7 @@ public struct MyDeviceState : IInputStateTypeInfo
 }
 ```
 
-If you [create a layout from JSON](Layouts.md#layout-from-json), you can specify Processors on your Controls like this:
+If you [create a layout from JSON](xref:input-system-layouts#layout-from-json), you can specify Processors on your Controls like this:
 
 ```CSharp
 {

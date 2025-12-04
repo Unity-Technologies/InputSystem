@@ -1,5 +1,4 @@
 using System;
-using UnityEngine.Scripting;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -93,21 +92,13 @@ namespace UnityEngine.InputSystem.Processors
 
         public override void OnGUI()
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
-#endif
-            m_MinSetting.OnGUI();
-            m_MaxSetting.OnGUI();
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             m_MinSetting.OnDrawVisualElements(root, onChangedCallback);
             m_MaxSetting.OnDrawVisualElements(root, onChangedCallback);
         }
-
-#endif
 
         private CustomOrDefaultSetting m_MinSetting;
         private CustomOrDefaultSetting m_MaxSetting;

@@ -315,7 +315,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         public uint playerCount => 1; // TODO
 
         // copied from UIElementsRuntimeUtility.cs
-        static Vector2 ScreenBottomLeftToPanelPosition(Vector2 position, int targetDisplay)
+        internal static Vector2 ScreenBottomLeftToPanelPosition(Vector2 position, int targetDisplay)
         {
             // Flip positions Y axis between input and UITK
             var screenHeight = Screen.height;

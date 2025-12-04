@@ -1,3 +1,6 @@
+---
+uid: input-system-timing-optimize-dynamic
+---
 # Optimize for dynamic update (non-physics) scenarios
 
 If you're not working with the physics system or using `FixedUpdate`, always set the input system to process input in sync with the frame rate and `Update()` calls. This is the default setting, but to check or set this, go to  **Project Settings** \> **Input System Package** \> **Input Settings**, and set **Update Mode** to **Process Events in Dynamic Update**.
@@ -10,7 +13,7 @@ Poll input in `Update` and use those values to control your game in `Update`. If
 
 ![image alt text](./Images/TimingInputsPerFrame.png)
 
-Also use `Update` to poll for discrete on/off state changes using API such as [`WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_) and **WasReleasedThisFrame**.
+Also use `Update` to poll for discrete on/off state changes using API such as [`WasPressedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame*) and **WasReleasedThisFrame**.
 
 > [!NOTE]
 > The input system doesn't detect multiple discrete on/off events that happen in a single frame when you use the poll driven approach. Multiple discrete on/off events might happen if your game is running at a low frame rate and a user repeatedly presses a button very rapidly, or if the user is using a type of game controller with a rapid "auto fire" mode. The polling technique also can't detect the order of multiple buttons were pressed on the same frame. Use event-driven input if you require this information.
