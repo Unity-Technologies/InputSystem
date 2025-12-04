@@ -1,10 +1,10 @@
 #if UNITY_EDITOR || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS || PACKAGE_DOCS_GENERATION
 using System.Runtime.InteropServices;
-using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.iOS.LowLevel;
+using UnityEngine.InputSystem.Switch;
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.iOS.LowLevel
