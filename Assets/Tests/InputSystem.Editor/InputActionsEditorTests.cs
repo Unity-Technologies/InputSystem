@@ -1,6 +1,4 @@
-// UITK TreeView is not supported in earlier versions
-// Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && UNITY_6000_0_OR_NEWER
+#if UNITY_EDITOR && UNITY_6000_0_OR_NEWER
 
 using NUnit.Framework;
 using System;

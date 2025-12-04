@@ -24,7 +24,8 @@ class MyEditorWindow : EditorWindow
 
 This encompasses all code called from `OnGUI()` methods, which means that you can also use the Input System in property drawers, Inspectors, and other similar places.
 
->__Note__: Unity doesn't support Actions in Edit mode.
+> [!NOTE]
+> Unity doesn't support Actions in Edit mode.
 
 ## Coordinate System
 

@@ -1,26 +1,12 @@
-// UITK TreeView is not supported in earlier versions
-// Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using System;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.Callbacks;
-using UnityEditor.PackageManager.UI;
 using UnityEditor.ShortcutManagement;
 using UnityEngine.UIElements;
-using UnityEditor.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
-    // TODO: Remove when UIToolkit editor is complete and set as the default editor
-    [InitializeOnLoad]
-    internal static class EnableUITKEditor
-    {
-        static EnableUITKEditor()
-        {
-        }
-    }
-
     internal class InputActionsEditorWindow : EditorWindow, IInputActionAssetEditor
     {
         // Register editor type via static constructor to enable asset monitoring
@@ -72,9 +58,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private static bool OpenAsset(Object obj)
         {
-            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
-                return false;
-
             // Grab InputActionAsset.
             // NOTE: We defer checking out an asset until we save it. This allows a user to open an .inputactions asset and look at it
             //       without forcing a checkout.
@@ -281,14 +264,6 @@ namespace UnityEngine.InputSystem.Editor
         {
             DirtyInputActionsEditorWindow(newState);
             m_State = newState;
-
-            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
-            // No action taken apart from setting dirty flag, auto-save triggered as part of having a dirty asset
-            // and editor loosing focus instead.
-            #else
-            if (InputEditorUserSettings.autoSaveInputActionAssets)
-                Save(isAutoSave: false);
-            #endif
         }
 
         private void UpdateWindowTitle()
@@ -304,11 +279,11 @@ namespace UnityEngine.InputSystem.Editor
         private void Save(bool isAutoSave)
         {
             var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
             var projectWideActions = InputSystem.actions;
             if (projectWideActions != null && path == AssetDatabase.GetAssetPath(projectWideActions))
                 ProjectWideActionsAsset.Verify(GetEditedAsset());
-            #endif
+
             if (InputActionAssetManager.SaveAsset(path, GetEditedAsset().ToJson()))
                 TryUpdateFromAsset();
 
@@ -327,13 +302,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void DirtyInputActionsEditorWindow(InputActionsEditorState newState)
         {
-            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
-            // Window is dirty is equivalent to if asset has changed
             var isWindowDirty = HasContentChanged();
-            #else
-            // Window is dirty is never true since every change is auto-saved
-            var isWindowDirty = !InputEditorUserSettings.autoSaveInputActionAssets && HasContentChanged();
-            #endif
 
             if (m_IsDirty == isWindowDirty)
                 return;
@@ -359,16 +328,15 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnLostFocus()
         {
-            // Auto-save triggers on focus-lost instead of on every change
-            #if UNITY_INPUT_SYSTEM_INPUT_ACTIONS_EDITOR_AUTO_SAVE_ON_FOCUS_LOST
             if (InputEditorUserSettings.autoSaveInputActionAssets && m_IsDirty)
+            {
                 // We'd like to avoid saving in case the focus was lost due to the drop-down window being spawned.
                 // This code should be cleaned up once we migrate the InputControl stuff from ImGUI completely.
                 // Since at that point it stops being a separate window that steals focus.
                 // (See case ISXB-1221)
                 if (!InputControlPathEditor.IsShowingDropdown)
                     Save(isAutoSave: true);
-            #endif
+            }
 
             analytics.RegisterEditorFocusOut();
         }

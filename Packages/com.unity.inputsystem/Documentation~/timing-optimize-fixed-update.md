@@ -1,6 +1,9 @@
+---
+uid: input-system-timing-optimize-fixed
+---
 # Optimize for fixed-timestep or physics-based scenarios
 
-If you are working with the physics system or using `FixedUpdate` to control your game in a scenario where a small amount of input latency is acceptable (for example, a few frames), the simplest approach is to set the [input system update mode](./timing-select-mode.md) to **Process Events in Fixed Update**. This means your input code in `FixedUpdate` will operate as expected.
+If you are working with the physics system or using `FixedUpdate` to control your game in a scenario where a small amount of input latency is acceptable (for example, a few frames), the simplest approach is to set the [input system update mode](xref:input-system-timing-select) to **Process Events in Fixed Update**. This means your input code in `FixedUpdate` will operate as expected.
 
 To get the minimum possible latency from the Input System and minimize lag, set the input system update mode to **Process Events in Dynamic Update**. However in doing this, you must understand how to avoid the problems which can arise when using this strategy. Although it might seem incorrect if you have code in `FixedUpdate`, for most cases, this approach minimizes lag compared with processing events in Fixed Update. The reasons for this are explained in detail on this page. Having a good understanding of how input is processed in each mode allows you to make your own decision about how best to process input for your particular project.
 
@@ -48,11 +51,11 @@ This has the counterintuitive effect that the processing of input on frame 4 act
 
 To minimize input latency in input code in `FixedUpdate` calls, set the input system update mode to **Process Events in Dynamic Update**, which eliminates the problem of unprocessed time described previously. You can then use an event-driven or polling technique to read your input without missing events that occurred after the last fixed timestep but before the current frame.
 
-However, the **Process Events in Dynamic Update** mode might introduce the problem of missed or duplicate discrete events, such as attempting to read whether a button was pressed in a given frame. If you use this strategy, you must understand how to [avoid missed or duplicate events](./timing-missed-duplicate-events.md) in mixed timing scenarios requiring fixed and dynamic input.
+However, the **Process Events in Dynamic Update** mode might introduce the problem of missed or duplicate discrete events, such as attempting to read whether a button was pressed in a given frame. If you use this strategy, you must understand how to [avoid missed or duplicate events](xref:input-system-timing-missed) in mixed timing scenarios requiring fixed and dynamic input.
 
 ### Event-driven input with fixed update code
 
-For event-driven input, where the [Player Input component](./PlayerInput.md) calls events in your code, you should store the input values in variables which you can then read in your `FixedUpdate` call. For example:
+For event-driven input, where the [Player Input component](xref:input-system-player-input) calls events in your code, you should store the input values in variables which you can then read in your `FixedUpdate` call. For example:
 
 ```
 using UnityEngine;

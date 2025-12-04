@@ -25,12 +25,16 @@ namespace UnityEngine.InputSystem.Utilities
         public HashSet<InternedString> aliases;
         #endif
 
-        public void Initialize()
+        // Strong coupling to Input Manager which is always the owner
+        private InputManager m_Manager;
+
+        public void Initialize(InputManager manager)
         {
             table = new Dictionary<InternedString, Type>();
             #if UNITY_EDITOR
             aliases = new HashSet<InternedString>();
             #endif
+            m_Manager = manager;
         }
 
         public InternedString FindNameForType(Type type)
@@ -80,10 +84,24 @@ namespace UnityEngine.InputSystem.Utilities
             if (table == null)
                 throw new InvalidOperationException("Input System not yet initialized");
 
-            var internedName = new InternedString(name);
-            if (table.TryGetValue(internedName, out var type))
-                return type;
-            return null;
+            return TryLookupTypeRegistration(new InternedString(name));
+        }
+
+        private Type TryLookupTypeRegistration(InternedString internedName)
+        {
+            if (!table.TryGetValue(internedName, out var type))
+            {
+                // Failed to look-up type, either type do not exist or it is a custom type that has not been registered.
+                // Check whether we have attempted to load custom types and otherwise lazily load  types only when
+                // relevant and reattempt looking up type by name. (ISXB-1766)
+                if (m_Manager != null)
+                {
+                    if (m_Manager.RegisterCustomTypes())
+                        table.TryGetValue(internedName, out type);
+                }
+            }
+
+            return type;
         }
 
         #if UNITY_EDITOR

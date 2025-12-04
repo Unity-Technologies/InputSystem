@@ -167,13 +167,9 @@ namespace UnityEngine.InputSystem.Editor
                         throw new Exception("Unsupported editor property drawer mode");
                 }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 var inputSystemActions = InputSystem.actions;
                 var actionsPath = inputSystemActions == null ? null : AssetDatabase.GetAssetPath(inputSystemActions);
                 has_projectwide_input_action_asset = !string.IsNullOrEmpty(actionsPath);
-#else
-                has_projectwide_input_action_asset = false;
-#endif
 
                 var settingsPath = settings == null ? null : AssetDatabase.GetAssetPath(settings);
                 has_settings_asset = !string.IsNullOrEmpty(settingsPath);
@@ -199,12 +195,6 @@ namespace UnityEngine.InputSystem.Editor
                 feature_paranoid_read_value_caching_checks_enabled =
                     settings.IsFeatureEnabled(InputFeatureNames.kParanoidReadValueCachingChecks);
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                feature_use_imgui_editor_for_assets =
-                    settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets);
-#else
-                feature_use_imgui_editor_for_assets = false;
-#endif
                 feature_disable_unity_remote_support =
                     settings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport);
                 feature_run_player_updates_in_editmode =
@@ -336,12 +326,6 @@ namespace UnityEngine.InputSystem.Editor
             /// as defined in InputSystem 1.8.x.
             /// </summary>
             public bool feature_paranoid_read_value_caching_checks_enabled;
-
-            /// <summary>
-            /// Represents internal feature flag <see cref="InputFeatureNames.kUseIMGUIEditorForAssets" />
-            /// as defined in InputSystem 1.8.x.
-            /// </summary>
-            public bool feature_use_imgui_editor_for_assets;
 
             /// <summary>
             /// Represents internal feature flag <see cref="InputFeatureNames.kDisableUnityRemoteSupport" />

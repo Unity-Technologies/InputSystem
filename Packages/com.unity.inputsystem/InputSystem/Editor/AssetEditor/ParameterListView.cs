@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
@@ -135,7 +134,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                     parameter.value = parameter.value.ConvertTo(underlyingTypeCode);
 
                     // Read enum names and values.
-                    parameter.enumNames = Enum.GetNames(fieldType).Select(x => new GUIContent(x)).ToArray();
+                    parameter.enumNames = Enum.GetNames(fieldType);
                     ////REVIEW: this probably falls apart if multiple members have the same value
                     var list = new List<int>();
                     foreach (var value in Enum.GetValues(fieldType))
@@ -224,7 +223,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 m_ParameterEditor = null;
 
                 // Create parameter labels.
-                m_ParameterLabels = new GUIContent[m_Parameters.Length];
+                m_ParameterLabels = new(string text, string tooltip)[m_Parameters.Length];
                 for (var i = 0; i < m_Parameters.Length; ++i)
                 {
                     // Look up tooltip from field.
@@ -236,7 +235,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
                     // Create label.
                     var niceName = ObjectNames.NicifyVariableName(m_Parameters[i].value.name);
-                    m_ParameterLabels[i] = new GUIContent(niceName, tooltip);
+                    m_ParameterLabels[i] = (niceName, tooltip);
                 }
             }
         }
@@ -247,7 +246,6 @@ namespace UnityEngine.InputSystem.Editor.Lists
             m_ParameterEditor = null;
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public void OnDrawVisualElements(VisualElement root)
         {
             if (m_ParameterEditor != null)
@@ -278,7 +276,7 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
                 if (parameter.isEnum)
                 {
-                    var names = parameter.enumNames.Select(c => c.text).ToList();
+                    var names = parameter.enumNames.ToList();
                     var rawValue = parameter.value.value.ToInt32();
                     var selectedIndex = parameter.enumValues.IndexOf(rawValue);
                     if (selectedIndex < 0 || selectedIndex >= names.Count)
@@ -343,8 +341,6 @@ namespace UnityEngine.InputSystem.Editor.Lists
             }
         }
 
-#endif
-
         private void OnValuesChanged()
         {
             ReadParameterValuesFrom(m_ParameterEditor.target);
@@ -353,72 +349,6 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
         public void OnGUI()
         {
-            // If we have a dedicated parameter editor, let it do all the work.
-            if (m_ParameterEditor != null)
-            {
-                EditorGUI.BeginChangeCheck();
-                m_ParameterEditor.OnGUI();
-                if (EditorGUI.EndChangeCheck())
-                {
-                    ReadParameterValuesFrom(m_ParameterEditor.target);
-                    onChange?.Invoke();
-                }
-                return;
-            }
-
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // handled by OnDrawVisualElements with UI Toolkit
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
-#endif
-            // Otherwise, fall back to our default logic.
-            if (m_Parameters == null)
-                return;
-            for (var i = 0; i < m_Parameters.Length; i++)
-            {
-                var parameter = m_Parameters[i];
-                var label = m_ParameterLabels[i];
-
-                EditorGUI.BeginChangeCheck();
-
-                object result = null;
-                if (parameter.isEnum)
-                {
-                    var intValue = parameter.value.value.ToInt32();
-                    result = EditorGUILayout.IntPopup(label, intValue, parameter.enumNames, parameter.enumValues);
-                }
-                else if (parameter.value.type == TypeCode.Int64 || parameter.value.type == TypeCode.UInt64)
-                {
-                    var longValue = parameter.value.value.ToInt64();
-                    result = EditorGUILayout.LongField(label, longValue);
-                }
-                else if (parameter.value.type.IsInt())
-                {
-                    var intValue = parameter.value.value.ToInt32();
-                    result = EditorGUILayout.IntField(label, intValue);
-                }
-                else if (parameter.value.type == TypeCode.Single)
-                {
-                    var floatValue = parameter.value.value.ToSingle();
-                    result = EditorGUILayout.FloatField(label, floatValue);
-                }
-                else if (parameter.value.type == TypeCode.Double)
-                {
-                    var floatValue = parameter.value.value.ToDouble();
-                    result = EditorGUILayout.DoubleField(label, floatValue);
-                }
-                else if (parameter.value.type == TypeCode.Boolean)
-                {
-                    var boolValue = parameter.value.value.ToBoolean();
-                    result = EditorGUILayout.Toggle(label, boolValue);
-                }
-
-                if (EditorGUI.EndChangeCheck())
-                {
-                    parameter.value.value = PrimitiveValue.FromObject(result).ConvertTo(parameter.value.type);
-                    m_Parameters[i] = parameter;
-                    onChange?.Invoke();
-                }
-            }
         }
 
         ////REVIEW: check whether parameters have *actually* changed?
@@ -451,14 +381,15 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
         private InputParameterEditor m_ParameterEditor;
         private EditableParameterValue[] m_Parameters;
-        private GUIContent[] m_ParameterLabels;
+
+        private (string text, string tooltip)[] m_ParameterLabels;
 
         private struct EditableParameterValue
         {
             public NamedValue value;
             public NamedValue? defaultValue;
             public int[] enumValues;
-            public GUIContent[] enumNames;
+            public string[] enumNames;
             public FieldInfo field;
 
             public bool isEnum => enumValues != null;

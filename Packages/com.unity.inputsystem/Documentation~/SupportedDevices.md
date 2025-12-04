@@ -11,18 +11,18 @@ Support for the following Devices doesn't require specialized support of particu
 
 |Device|Windows|Mac|Linux|UWP|Android|iOS|tvOS|Xbox(3)|PS4(3)|Switch(3)|WebGL|
 |------|-------|---|-----|---|-------|---|----|----|---|------|-----|
-|[Mouse](Mouse.md)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
-|[Keyboard](Keyboard.md)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
-|[Pen](Pen.md)|Yes|No |No|Yes|Yes|Yes|No|No|No|No|No|
-|[Touchscreen](Touch.md)|Yes|No|No|Yes|Yes|Yes|Yes(4)|No|No|No|Yes|
-|[Sensors](Sensors.md)|No|No|No|No|Yes|Yes|No|No|No|No|Yes(5)|
+|[Mouse](xref:input-system-mouse)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
+|[Keyboard](xref:input-system-keyboard)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
+|[Pen](xref:input-system-pen)|Yes|No |No|Yes|Yes|Yes|No|No|No|No|No|
+|[Touchscreen](xref:input-system-touch)|Yes|No|No|Yes|Yes|Yes|Yes(4)|No|No|No|Yes|
+|[Sensors](xref:input-system-sensors)|No|No|No|No|Yes|Yes|No|No|No|No|Yes(5)|
 |[Joystick](#other-gamepads-joysticks-and-racing-wheels) (2)|Yes|Yes|Yes|Yes|Yes|No|No|No|No|No|Yes|
 
->__Notes__:
->1. Joysticks are supported as generic HIDs, refer to [Other gamepads, joysticks, and racing wheels](#other-gamepads-joysticks-and-racing-wheels) to learn more.
->2. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
->3. Indirect touches are received from Siri Remote.
->4. Sensor support for WebGL on Android and iOS devices is available in Unity 2021.2
+> [!NOTE]
+> 1. Joysticks are supported as generic HIDs, refer to [Other gamepads, joysticks, and racing wheels](#other-gamepads-joysticks-and-racing-wheels) to learn more.
+> 2. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
+> 3. Indirect touches are received from Siri Remote.
+> 4. Sensor support for WebGL on Android and iOS devices is available in Unity 2021.2
 
 ## Gamepads
 
@@ -35,32 +35,33 @@ Support for the following Devices doesn't require specialized support of particu
 |Switch|Yes (10)|Yes (10)|Yes|Yes|No|No|No|No|No|Yes|Sometimes (2)|
 |MFi (such as SteelSeries)|No|Sometimes (12)|No|No|No|Yes|Yes|No|No|No|No|
 
->__Notes__:
->1. The trigger motors on the Xbox One controller are only supported on UWP and Xbox.
->2. WebGL support varies between browsers, Devices, and operating systems.
->3. XInput controllers on macOS currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports only USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth, and are natively supported on Macs as HIDs without any additional drivers when connected via Bluetooth.
->4. This includes any XInput-compatible Device.
->5. Unity doesn't support motor rumble and lightbar color over Bluetooth. Unity doesn't support the gyro or accelerometer on PS4/PS5 controllers on platforms other than the PlayStation consoles. Unity also doesn't support the DualShock 4 USB Wireless Adapter. On UWP, only USB connection is supported, motor rumble and lightbar are not working correctly.
->6. Unity supports Made for iOS (MFi) certified controllers on iOS. Xbox One and PS4 controllers are only supported on iOS 13 or higher.
->7. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
->8. Unity supports PS4 controllers on Android devices running [Android 10 or higher](https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android).
->9. Unity supports PS5 controllers on Android devices running [Android 12 or higher](https://playstation.com/en-gb/support/hardware/pair-dualsense-controller-bluetooth/).
->10. Switch Joy-Cons are not currently supported on Windows and Mac. Some of official accessories are supported on Windows and Mac: "Hori Co HORIPAD for Nintendo Switch", "HORI Pokken Tournament DX Pro Pad", "HORI Wireless Switch Pad", "HORI Real Arcade Pro V Hayabusa in Switch Mode", "PowerA NSW Fusion Wired FightPad", "PowerA NSW Fusion Pro Controller (USB only)", "PDP Wired Fight Pad Pro: Mario", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Faceoff Deluxe Wired Pro Controller for Nintendo Switch", "PDP Afterglow Wireless Switch Controller", "PDP Rockcandy Wired Controller".
->11. PS5 DualSense is supported on Windows and macOS via USB HID, though setting motor rumble and lightbar color when connected over Bluetooth is currently not supported.
->12. SteelSeries Nimbus+ supported via HID on macOS.
-On UWP only USB connection is supported, motor rumble and lightbar are not working correctly.
-On Android it's expected to be working from Android 12.
-On iOS/tvOS it's currently recognized as a generic gamepad and most controls do work.
->13. To ensure all controller types are detected on UWP, enable the HumanInterfaceDevice setting in [UWP Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettingsWSA.html#Capabilities).
+> [!NOTE]
+> 1. The trigger motors on the Xbox One controller are only supported on UWP and Xbox.
+> 2. WebGL support varies between browsers, Devices, and operating systems.
+> 3. XInput controllers on macOS currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports only USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth, and are natively supported on Macs as HIDs without any additional drivers when connected via Bluetooth.
+> 4. This includes any XInput-compatible Device.
+> 5. Unity doesn't support motor rumble and lightbar color over Bluetooth. Unity doesn't support the gyro or accelerometer on PS4/PS5 controllers on platforms other than the PlayStation consoles. Unity also doesn't support the DualShock 4 USB Wireless Adapter. On UWP, only USB connection is supported, motor rumble and lightbar are not working correctly.
+> 6. Unity supports Made for iOS (MFi) certified controllers on iOS. Xbox One and PS4 controllers are only supported on iOS 13 or higher.
+> 7. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
+> 8. Unity supports PS4 controllers on Android devices running [Android 10 or higher](https://playstation.com/en-us/support/hardware/ps4-pair-dualshock-4-wireless-with-sony-xperia-and-android).
+> 9. Unity supports PS5 controllers on Android devices running [Android 12 or higher](https://playstation.com/en-gb/support/hardware/pair-dualsense-controller-bluetooth/).
+> 10. Switch Joy-Cons are not currently supported on Windows and Mac. Some of official accessories are supported on Windows and Mac: "Hori Co HORIPAD for Nintendo Switch", "HORI Pokken Tournament DX Pro Pad", "HORI Wireless Switch Pad", "HORI Real Arcade Pro V Hayabusa in Switch Mode", "PowerA NSW Fusion Wired FightPad", "PowerA NSW Fusion Pro Controller (USB only)", "PDP Wired Fight Pad Pro: Mario", "PDP Faceoff Wired Pro Controller for Nintendo Switch", "PDP Faceoff Deluxe Wired Pro Controller for Nintendo Switch", "PDP Afterglow Wireless Switch Controller", "PDP Rockcandy Wired Controller".
+> 11. PS5 DualSense is supported on Windows and macOS via USB HID, though setting motor rumble and lightbar color when connected over Bluetooth is currently not supported.
+> 12. SteelSeries Nimbus+ supported via HID on macOS.
+>       - On UWP only USB connection is supported, motor rumble and lightbar are not working correctly.
+>       - On Android it's expected to be working from Android 12.
+>       - On iOS/tvOS it's currently recognized as a generic gamepad and most controls do work.
+> 13. To ensure all controller types are detected on UWP, enable the HumanInterfaceDevice setting in [UWP Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettingsWSA.html#Capabilities).
 
 ### WebGL
 
-The Input System supports the *Standard Gamepad* mapping as specified in the [W3C Gamepad Specification](https://www.w3.org/TR/gamepad/#remapping). It also supports gamepads and joysticks that the browser surfaces without a mapping, but this support is generally limited to detecting the axes and buttons which are present, without any context as to what they mean. This means gamepads and joysticks are generally only useful when [the user manually remaps them](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html). The Input System reports these Devices as generic [`Joysticks`](../api/UnityEngine.InputSystem.Joystick.html).
+The Input System supports the *Standard Gamepad* mapping as specified in the [W3C Gamepad Specification](https://www.w3.org/TR/gamepad/#remapping). It also supports gamepads and joysticks that the browser surfaces without a mapping, but this support is generally limited to detecting the axes and buttons which are present, without any context as to what they mean. This means gamepads and joysticks are generally only useful when [the user manually remaps them](xref:UnityEngine.InputSystem.InputActionRebindingExtensions). The Input System reports these Devices as generic [`Joysticks`](xref:UnityEngine.InputSystem.Joystick).
 
 Support varies between browsers, Devices, and operating systems, and further differs for different browser versions, so it's not feasible to provide an up-to-date compatibility list. At the time of this publication (September 2019), Safari, Chrome, Edge, and Firefox all support the gamepad API, but only Chrome reliably maps common gamepads (Xbox and PlayStation controllers) to the W3C Standard Gamepad mapping, which allows the Input System to correctly identify and map controls.
 
->__Note__: WebGL currently doesn't support rumble.
+> [!NOTE]
+> WebGL currently doesn't support rumble.
 
 ## Other gamepads, joysticks, and racing wheels
 
-The Input System supports any Device which implements the USB HID specification. However, for Devices which don't have specific [layouts](Layouts.md) implemented in the Input System, the system can only surface the information available from the HID descriptor of the Device, which limits how precisely it can describe a control. These Devices often work best when allowing the user to [manually remap the controls](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html). If you need to support a specific Device, you can also [add your own mapping for it](HID.md#creating-a-custom-device-layout). See documentation on [HID](HID.md) for more information.
+The Input System supports any Device which implements the USB HID specification. However, for Devices which don't have specific [layouts](xref:input-system-layouts) implemented in the Input System, the system can only surface the information available from the HID descriptor of the Device, which limits how precisely it can describe a control. These Devices often work best when allowing the user to [manually remap the controls](xref:UnityEngine.InputSystem.InputActionRebindingExtensions). If you need to support a specific Device, you can also [add your own mapping for it](xref:input-system-hid#creating-a-custom-device-layout). See documentation on [HID](xref:input-system-hid) for more information.
