@@ -56,6 +56,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/eraser
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677240764781865
 GameObject:
   m_ObjectHideFlags: 0
@@ -112,6 +113,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/twist
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677241026549177
 GameObject:
   m_ObjectHideFlags: 0
@@ -168,6 +170,7 @@ MonoBehaviour:
   m_Visualization: 6
   m_ControlPath: <Pen>
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677241337048307
 GameObject:
   m_ObjectHideFlags: 0
@@ -224,6 +227,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/barrel2
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677241357042698
 GameObject:
   m_ObjectHideFlags: 0
@@ -280,6 +284,7 @@ MonoBehaviour:
   m_Visualization: 7
   m_ControlPath: <Pen>
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677241370664185
 GameObject:
   m_ObjectHideFlags: 0
@@ -336,6 +341,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/delta
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677241453528548
 GameObject:
   m_ObjectHideFlags: 0
@@ -407,6 +413,7 @@ MonoBehaviour:
   m_Visualization: 0
   m_ControlPath: 
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677241460091171
 GameObject:
   m_ObjectHideFlags: 0
@@ -463,6 +470,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/position
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677241631212989
 GameObject:
   m_ObjectHideFlags: 0
@@ -519,6 +527,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/tip
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677241652670376
 GameObject:
   m_ObjectHideFlags: 0
@@ -575,6 +584,7 @@ MonoBehaviour:
   m_Visualization: 4
   m_ControlPath: <Pen>
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677241761661965
 GameObject:
   m_ObjectHideFlags: 0
@@ -631,6 +641,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/tilt
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677241827783031
 GameObject:
   m_ObjectHideFlags: 0
@@ -687,6 +698,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/barrel1
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677241919970685
 GameObject:
   m_ObjectHideFlags: 0
@@ -743,6 +755,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/pressure
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677242061452016
 GameObject:
   m_ObjectHideFlags: 0
@@ -799,6 +812,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/inRange
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677242357097671
 GameObject:
   m_ObjectHideFlags: 0
@@ -855,6 +869,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/barrel4
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &3520677242431053808
 GameObject:
   m_ObjectHideFlags: 0
@@ -911,3 +926,4 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Pen>/barrel3
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0

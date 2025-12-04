@@ -10,6 +10,12 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+
+- Fixed warnings being generated on Unity 6.4 and 6.5. (ISX-2395).
+
+## [1.17.0] - 2025-11-25
+
 ### Changed
 - Project-Wide Input Actions support can no longer be compiled out (removed the `UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS` define). (ISX-2397)
 - Removed code that had to do with Unity versions older than Unity 2022.3 LTS. (ISX-2396)
@@ -19,7 +25,9 @@ however, it has to be formatted properly to pass verification tests.
 ### Fixed
 - An issue where a UITK MouseEvent was triggered when changing from Scene View to Game View in the Editor has been fixed. [ISXB-1671](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1671)
 - Fix documentation error in file AndroidGameController.cs mentioning a wrong controller. [DOCATT-9806]
-
+- Deferred auto-registration of processors, interactions and composite binding types referenced by `InputActionAsset`
+  to only happen once when an unresolved type reference is found in an action definition. This avoids reflective
+  type loading from assemblies for all cases where the Input System is not extended. (ISXB-1766).
 
 ## [1.16.0] - 2025-11-10
 
