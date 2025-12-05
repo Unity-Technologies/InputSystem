@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Editor
     internal class PlayerInputEditor : UnityEditor.Editor
     {
         public const string kDefaultInputActionsAssetPath =
-            "Packages/com.unity.inputsystem/InputSystem/Plugins/PlayerInput/DefaultInputActions.inputactions";
+            "Packages/com.unity.inputsystem/Runtime/Plugins/PlayerInput/DefaultInputActions.inputactions";
 
         public void OnEnable()
         {

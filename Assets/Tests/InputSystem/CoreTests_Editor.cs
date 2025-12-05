@@ -2632,7 +2632,7 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_CanIconsForLayouts()
     {
-        const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
+        const string kIconPath = "Packages/com.unity.inputsystem/Editor/Icons/";
         var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
         var scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
         var scalePostFix = scale > 1 ? $"@{scale}x" : "";

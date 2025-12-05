@@ -11,8 +11,8 @@ namespace UnityEngine.InputSystem.Editor
     /// </summary>
     internal static class InputActionAssetIconLoader
     {
-        private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
-        private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
+        private const string kActionIcon = "Packages/com.unity.inputsystem/Editor/Icons/InputAction.png";
+        private const string kAssetIcon = "Packages/com.unity.inputsystem/Editor/Icons/InputActionAsset.png";
 
         /// <summary>
         /// Attempts to load the icon associated with an <see cref="InputActionAsset"/>.
