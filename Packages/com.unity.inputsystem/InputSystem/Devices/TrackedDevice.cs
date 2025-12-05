@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem
     /// [Tracked Pose Driver](xref:input-system-tracked-input-devices#tracked-pose-driver)
     /// component rather than being read directly from this class.
     ///
-    /// Refer to the [Starter Assets](https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@latest/index.html?subfolder=/manual/samples-spatial-keyboard.html)
+    /// Refer to the [Starter Assets](xref:xri-samples-starter-assets)
     /// sample in the XR Interaction Toolkit package for a Demo Scene with an XR rig
     /// hierarchy that uses these concepts.
     /// </remarks>
@@ -37,15 +37,11 @@ namespace UnityEngine.InputSystem
         public IntegerControl trackingState { get; protected set; }
 
         /// <summary>
-        /// Indicates whether the input device is actively tracked or not.
+        /// Indicates whether the input device is actively tracked (1) or not (0).
         /// </summary>
         /// <remarks>
-        /// This property can contain a simple bit (1 or 0), but for some Open XR devices, this might
-        /// contain a float that includes bits that can indicate whether the device's position is actual
-        /// or inferred from its last-known [pose](xref:openxr-input#pose-data) (OpenXR Plugin package).
-        ///
-        /// For more information about how the float represents inferred position vs. actual position in
-        /// OpenXR devices, refer to [Reference Spaces](https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#reference-spaces)
+        /// For more information about how OpenXR represents inferred position vs. actual position, refer to
+        /// [Reference Spaces](https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#spaces-reference-spaces)
         /// (OpenXR Specification).
         /// </remarks>
         [InputControl(synthetic = true)]
@@ -58,7 +54,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// For more information about how OpenXR represents the grip pose, refer to
-        /// [Standard pose identifiers](https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#semantic-path-standard-identifiers)
+        /// [Standard pose identifiers](https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#semantic-paths-standard-identifiers)
         /// (OpenXR Specification).
         ///
         /// > [!NOTE]
@@ -77,7 +73,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// For more information about how OpenXR represents the grip pose, refer to
-        /// [Standard pose identifiers](https://registry.khronos.org/OpenXR/specs/1.0/html/xrspec.html#semantic-path-standard-identifiers)
+        /// [Standard pose identifiers](https://registry.khronos.org/OpenXR/specs/1.1/html/xrspec.html#semantic-paths-standard-identifiers)
         /// (OpenXR Specification).
         ///
         /// > [!NOTE]
