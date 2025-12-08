@@ -19,7 +19,8 @@ using UnityEngine.Profiling;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
-using Is = UnityEngine.TestTools.Constraints.Is;
+
+using Is = NUnit.Framework.Is;
 using Random = UnityEngine.Random;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 

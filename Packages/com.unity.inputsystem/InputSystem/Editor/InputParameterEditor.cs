@@ -32,7 +32,6 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         public abstract void OnGUI();
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         /// <summary>
         /// Add visual elements for this parameter editor to a root VisualElement.
         /// </summary>
@@ -40,7 +39,6 @@ namespace UnityEngine.InputSystem.Editor
         /// <param name="onChangedCallback">A callback that will be called when any of the parameter editors
         /// changes value.</param>
         public abstract void OnDrawVisualElements(VisualElement root, Action onChangedCallback);
-#endif
 
         internal abstract void SetTarget(object target);
 
@@ -182,7 +180,6 @@ namespace UnityEngine.InputSystem.Editor
             OnEnable();
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         /// <summary>
         /// Default stub implementation of <see cref="InputParameterEditor.OnDrawVisualElements"/>.
         /// Should be overridden to create the desired UI.
@@ -190,8 +187,6 @@ namespace UnityEngine.InputSystem.Editor
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
         }
-
-#endif
 
         /// <summary>
         /// Helper for parameters that have defaults (usually from <see cref="InputSettings"/>).
@@ -223,7 +218,6 @@ namespace UnityEngine.InputSystem.Editor
                         $"Uses \"{defaultName}\" set in project-wide input settings.");
             }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             public void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
             {
                 var value = m_GetValue();
@@ -328,7 +322,6 @@ namespace UnityEngine.InputSystem.Editor
                 m_FloatField?.SetEnabled(!m_UseDefaultValue);
             }
 
-#endif
             private void SetValue(float newValue)
             {
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
@@ -406,9 +399,7 @@ namespace UnityEngine.InputSystem.Editor
             private FloatField m_FloatField;
             private Button m_OpenInputSettingsButton;
             private Toggle m_DefaultToggle;
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             private HelpBox m_HelpBox;
-#endif
         }
     }
 }

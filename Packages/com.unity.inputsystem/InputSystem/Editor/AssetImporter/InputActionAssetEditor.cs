@@ -247,14 +247,8 @@ namespace UnityEngine.InputSystem.Editor
                 }
             }
 
-            // Note: Callback prior to Unity 2021.2 did not provide a boolean indicating domain relaod.
-#if UNITY_2021_2_OR_NEWER
             private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
                 string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
-#else
-            private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets,
-                string[] movedAssets, string[] movedFromAssetPaths)
-#endif
             {
                 Process(importedAssets, s_Imported);
                 Process(deletedAssets, s_Deleted);

@@ -192,8 +192,9 @@ namespace UnityEngine.InputSystem.Utilities
         /// </summary>
         /// <param name="action">The action to be recorded.</param>
         /// <remarks>
-        /// **Note:** This method does not prevent you from subscribing to the same action multiple times.
-        /// If you subscribe to the same action multiple times, your event buffer will contain duplicate entries.
+        /// > [!NOTE]
+        /// > This method does not prevent you from subscribing to the same action multiple times.
+        /// > If you subscribe to the same action multiple times, your event buffer will contain duplicate entries.
         /// </remarks>
         /// <exception cref="ArgumentNullException">If <paramref name="action"/> is <c>null</c>.</exception>
         /// <seealso cref="SubscribeTo(InputActionMap)"/>
@@ -218,8 +219,9 @@ namespace UnityEngine.InputSystem.Utilities
         /// </summary>
         /// <param name="actionMap">The action-map containing all actions to be recorded.</param>
         /// <remarks>
-        /// **Note:** This method does not prevent you from subscribing to the same action multiple times.
-        /// If you subscribe to the same action multiple times, your event buffer will contain duplicate entries.
+        /// > [!NOTE]
+        /// > This method does not prevent you from subscribing to the same action multiple times.
+        /// > If you subscribe to the same action multiple times, your event buffer will contain duplicate entries.
         /// </remarks>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="actionMap"/> is null.</exception>
         /// <seealso cref="SubscribeTo(InputAction)"/>
@@ -242,7 +244,8 @@ namespace UnityEngine.InputSystem.Utilities
         /// </summary>
         /// <param name="action">The action to unsubscribe from.</param>
         /// <remarks>
-        /// **Note:** This method has no side effects if you attempt to unsubscribe from an action that you have not previously subscribed to.
+        /// > [!NOTE]
+        /// > This method has no side effects if you attempt to unsubscribe from an action that you have not previously subscribed to.
         /// </remarks>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="action"/> is <c>null</c>.</exception>
         /// <seealso cref="UnsubscribeFrom(InputActionMap)"/>
@@ -269,7 +272,8 @@ namespace UnityEngine.InputSystem.Utilities
         /// </summary>
         /// <param name="actionMap">The action-map containing actions to unsubscribe from.</param>
         /// <remarks>
-        /// **Note:** This method has no side effects if you attempt to unsubscribe from an action-map that you have not previously subscribed to.
+        /// > [!NOTE]
+        /// > This method has no side effects if you attempt to unsubscribe from an action-map that you have not previously subscribed to.
         /// </remarks>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="actionMap"/> is <c>null</c>.</exception>
         /// <seealso cref="UnsubscribeFrom(InputAction)"/>
@@ -335,7 +339,8 @@ namespace UnityEngine.InputSystem.Utilities
         /// Clears all recorded data.
         /// </summary>
         /// <remarks>
-        /// **Note:** This method does not unsubscribe any actions that the instance is listening to, so after clearing the recorded data, new input on those subscribed actions will continue to be recorded.
+        /// > [!NOTE]
+        /// > This method does not unsubscribe any actions that the instance is listening to, so after clearing the recorded data, new input on those subscribed actions will continue to be recorded.
         /// </remarks>
         public void Clear()
         {

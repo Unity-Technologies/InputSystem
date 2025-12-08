@@ -3,10 +3,10 @@ uid: input-system-workflow-direct
 ---
 # Workflow Overview - Directly Reading Device States
 
-<img src="Images/Workflow-Direct.png" height="200px">
+![The Input Device icon leads directly into the icon representing your action code.](Images/Workflow-Direct.png){height="200px"}
 
-<br/>
-This is the simplest and most direct input workflow, but the least flexible. It bypasses the [Input Actions editor](ActionsEditor.md), so you do not benefit from all the features come with [Actions](Actions.md).
+
+This is the simplest and most direct input workflow, but the least flexible. It bypasses the [Input Actions editor](xref:input-system-configuring-input), so you do not benefit from all the features come with [Actions](xref:input-system-actions).
 
 It can be useful if you want a quick implementation with one specific type of device. It's generally not the best choice if you want to provide your users with multiple types of input or if you want to target multiple platforms.
 
@@ -39,7 +39,7 @@ public class MyPlayerScript : MonoBehaviour
 }
 ```
 
-The example above reads values directly from  the right trigger, and the left stick, of the currently connected [gamepad](Gamepad.html). It does not use the input system’s "Action" class, and instead the conceptual actions in your game or app, such as "move" and "use", are implicitly defined by what your code does in response to the input. You can use the same approach for other Device types such as the [keyboard](../api/UnityEngine.InputSystem.Keyboard.html) or [mouse](../api/UnityEngine.InputSystem.Mouse.html).
+The example above reads values directly from  the right trigger, and the left stick, of the currently connected [gamepad](Gamepad.html). It does not use the input system’s "Action" class, and instead the conceptual actions in your game or app, such as "move" and "use", are implicitly defined by what your code does in response to the input. You can use the same approach for other Device types such as the [keyboard](xref:UnityEngine.InputSystem.Keyboard) or [mouse](xref:UnityEngine.InputSystem.Mouse).
 
 ## Pros and Cons
 

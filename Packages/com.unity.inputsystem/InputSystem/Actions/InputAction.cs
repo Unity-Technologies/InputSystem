@@ -1248,8 +1248,9 @@ namespace UnityEngine.InputSystem
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
-        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasPressedThisDynamicUpdate"/> during dynamic Update instead.
+        /// > [!NOTE]
+        /// > If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// > the dynamic Update, use <see cref="WasPressedThisDynamicUpdate"/> during dynamic Update instead.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
         /// <seealso cref="WasPressedThisDynamicUpdate"/>
@@ -1337,8 +1338,9 @@ namespace UnityEngine.InputSystem
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
-        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasReleasedThisDynamicUpdate"/> during dynamic Update instead.
+        /// > [!NOTE]
+        /// > If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// > the dynamic Update, use <see cref="WasReleasedThisDynamicUpdate"/> during dynamic Update instead.
         /// </remarks>
         /// <seealso cref="IsPressed"/>
         /// <seealso cref="WasReleasedThisDynamicUpdate"/>
@@ -1437,8 +1439,9 @@ namespace UnityEngine.InputSystem
         /// This method will disregard whether the action is currently enabled or disabled. It will keep returning
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         ///
-        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasPerformedThisDynamicUpdate"/> when trying to access in dynamic Update instead.
+        /// > [!NOTE]
+        /// > If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// > the dynamic Update, use <see cref="WasPerformedThisDynamicUpdate"/> when trying to access in dynamic Update instead.
         /// </remarks>
         /// <seealso cref="WasPerformedThisDynamicUpdate"/>
         /// <seealso cref="WasCompletedThisFrame"/>
@@ -1546,8 +1549,9 @@ namespace UnityEngine.InputSystem
         /// true for the duration of the frame even if the action was subsequently disabled in the frame.
         /// </para>
         /// <para>
-        /// NOTE: If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
-        /// the dynamic Update, use <see cref="WasCompletedThisDynamicUpdate"/> to access this during dynamic Update instead.
+        /// > [!NOTE]
+        /// > If the <see cref="InputSettings.updateMode"/> is set to <see cref="InputSettings.UpdateMode.ProcessEventsInFixedUpdate"/> or <see cref="InputSettings.UpdateMode.ProcessEventsManually"/> and InputSystem.Update() is not called in
+        /// > the dynamic Update, use <see cref="WasCompletedThisDynamicUpdate"/> to access this during dynamic Update instead.
         /// </para>
         /// </remarks>
         /// <example>

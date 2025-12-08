@@ -1,5 +1,3 @@
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-
 namespace UnityEngine.InputSystem.Samples.ProjectWideActions
 {
     public class ProjectWideActionsExample : MonoBehaviour
@@ -76,5 +74,3 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
         }
     } // class ProjectWideActionsExample
 } // namespace UnityEngine.InputSystem.Samples.ProjectWideActions
-
-#endif

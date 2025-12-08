@@ -999,10 +999,8 @@ internal class CorePerformanceTests : CoreTestsFixture
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Disable the project wide actions actions to avoid performance impact.
         InputSystem.actions?.Disable();
-#endif
 
         Measure.Method(() =>
         {
@@ -1041,10 +1039,8 @@ internal class CorePerformanceTests : CoreTestsFixture
             .Run();
 
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Re-enable the project wide actions actions.
         InputSystem.actions?.Enable();
-#endif
         return;
 
         void MethodToMeasure(Gamepad g)

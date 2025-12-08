@@ -10,6 +10,7 @@ using RecipeEngine.Api.Dependencies;
 using RecipeEngine.Api.Platforms;
 using RecipeEngine.Modules.InfrastructureInstabilityDetection;
 using RecipeEngine.Modules.Wrench.Helpers;
+using System.Globalization;
 
 namespace InputSystem.Cookbook.Recipes;
 
@@ -25,8 +26,10 @@ public class MobileFunctionalBuildJobs: MobileBaseRecipe
             .WithDescription(jobName)
             .WithPlatform(platform)
             .WithCommands(Utilities.GetEditorDownloadCommand(unityBranch, platform));
+        
+        var utrExecutable = PrepareUtrExecutable(job, platform.System);
 
-        var utrCommand = UtrCommand.Run(platform.System, b => b
+        var utrCommand = UtrCommand.Run(platform.System, utrExecutable,b => b
                 .WithTestProject($"{ProjectPath}")
                 .WithEditor(".Editor")
                 .WithSuite(UtrTestSuiteType.Playmode)
@@ -48,7 +51,7 @@ public class MobileFunctionalBuildJobs: MobileBaseRecipe
 
         // Bokken iPhones that run iOS 15 and above should have UNITY_HANDLEUIINTERRUPTIONS env var set to 1
         // 6000.3+ versions support iOS 15, so apply this only for those versions and above.
-        if (platform.System == SystemType.IOS && float.Parse(unityVersion) > 6000.2f)
+        if (platform.System == SystemType.IOS && float.Parse(unityVersion, CultureInfo.InvariantCulture) > 6000.2f)
             job.WithEnvironmentVariable("UNITY_HANDLEUIINTERRUPTIONS", 1);
 
         return job;
@@ -82,7 +85,7 @@ public class MobileFunctionalTests: MobileBaseRecipe
         }
 
         // For 6000.3+ versions, use iOS15 platform to run tests.
-        if (platform.System == SystemType.IOS && float.Parse(unityVersion) > 6000.2f)
+        if (platform.System == SystemType.IOS && float.Parse(unityVersion, CultureInfo.InvariantCulture) > 6000.2f)
             platform = Settings.iOS15Platform;
 
         IJobBuilder job = JobBuilder.Create(jobName).WithDescription(jobName).WithPlatform(platform);

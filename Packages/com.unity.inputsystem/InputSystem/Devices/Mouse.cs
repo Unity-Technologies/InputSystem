@@ -28,7 +28,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <value>Position of mouse on screen.</value>
         /// <remarks>
         /// On Windows, delta originates from RAWINPUT API.
-        /// Note: This value might not update every frame, particularly if your project is running at a high frame rates. This value might also update at a different time than the <see cref="Pointer.delta"/>. If you need a delta value that correlates with position, you should compute it based on the previous position value.
+        /// > [!NOTE]
+        /// > This value might not update every frame, particularly if your project is running at a high frame rates. This value might also update at a different time than the <see cref="Pointer.delta"/>. If you need a delta value that correlates with position, you should compute it based on the previous position value.
         /// </remarks>
         /// <seealso cref="Pointer.position"/>
         [InputControl(usage = "Point", dontReset = true)] // Mouse should stay put when we reset devices.
@@ -41,7 +42,8 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <value>Mouse movement.</value>
         /// <remarks>
         /// On Windows, delta originates from RAWINPUT API.
-        /// Note: This value might not update every frame, particularly if your project is running at a high frame rates. This value might also update at a different time than the <see cref="Pointer.position"/>. If you need a delta value that correlates with position, you should compute it based on the previous position value.
+        /// > [!NOTE]
+        /// > This value might not update every frame, particularly if your project is running at a high frame rates. This value might also update at a different time than the <see cref="Pointer.position"/>. If you need a delta value that correlates with position, you should compute it based on the previous position value.
         /// </remarks>
         /// <seealso cref="Pointer.delta"/>
         [InputControl(usage = "Secondary2DMotion", layout = "Delta")]
