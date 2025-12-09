@@ -28,6 +28,7 @@ however, it has to be formatted properly to pass verification tests.
 - Deferred auto-registration of processors, interactions and composite binding types referenced by `InputActionAsset`
   to only happen once when an unresolved type reference is found in an action definition. This avoids reflective
   type loading from assemblies for all cases where the Input System is not extended. (ISXB-1766).
+- Fixed extra empty lines being displayed in the control binding list when mouse buttons are pressed [ISXB-1677](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1677)
 
 ## [1.16.0] - 2025-11-10
 
