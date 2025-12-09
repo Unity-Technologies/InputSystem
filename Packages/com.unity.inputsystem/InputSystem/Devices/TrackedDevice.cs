@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Represents the rotation portion of the input device's primary
-        /// [pose](xref:input-system-tracked-input-devices#tracked-pose-driver). For an HMD
+        /// [pose](xref:openxr-input#pose-data). For an HMD
         /// device, this means the "center" eye pose. For XR controllers, it means the "grip" pose.
         /// </summary>
         /// <remarks>
