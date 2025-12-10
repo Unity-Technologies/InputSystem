@@ -245,7 +245,7 @@ namespace UnityEngine.InputSystem.Editor
             if (hasAsset)
             {
                 m_StateContainer = new StateContainer(m_State, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset)));
-                m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, null);
+                m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, SaveAssetOnFocusLost);
                 m_StateContainer.Initialize(m_RootVisualElement.Q("action-editor"));
             }
         }
