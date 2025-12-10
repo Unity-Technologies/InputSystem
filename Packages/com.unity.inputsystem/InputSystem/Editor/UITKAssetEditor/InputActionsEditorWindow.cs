@@ -338,6 +338,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (!InputControlPathEditor.IsShowingDropdown)
                 {
                     Save(isAutoSave: true);
+                }
             }
 
             analytics.RegisterEditorFocusOut();
