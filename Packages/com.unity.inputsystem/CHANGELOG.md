@@ -15,6 +15,10 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed warnings being generated on Unity 6.4 and 6.5. (ISX-2395).
 - Fixed extra empty lines being displayed in the control binding list when mouse buttons are pressed [ISXB-1677](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1677)
 
+### Changed
+
+- Updated documentation to reflect PS5 controller support on Linux.
+
 ## [1.17.0] - 2025-11-25
 
 ### Changed
