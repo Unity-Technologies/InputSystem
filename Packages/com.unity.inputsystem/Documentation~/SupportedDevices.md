@@ -71,7 +71,7 @@ The Input System supports any Device which implements the USB HID specification.
 Some Linux distributions restrict access to HIDRAW devices by default. If your user account doesn't have permission to access the PS5 controller through HIDRAW, Unity will fall back to treating the controller as a standard gamepad.
 
 > [!NOTE]
-> When Unity falls back to treating the controller as a standard gamepad, advanced PS5 features, such as light bar, will not be available. 
+> When Unity falls back to treating the controller as a standard gamepad, advanced PS5 features, such as light bar, will not be available.
 
 If your PS5 controller isn't detected through the HID subsystem, follow these steps to grant the necessary permissions:
 
@@ -84,7 +84,7 @@ If your PS5 controller isn't detected through the HID subsystem, follow these st
     ```
     # PS5 DualSense Edge
     KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0df2", GROUP="gamepad", MODE="0660"
-    
+
     # PS5 DualSense
     KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0ce6", GROUP="gamepad", MODE="0660"
     ```
