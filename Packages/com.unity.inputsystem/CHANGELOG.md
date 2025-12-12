@@ -10,6 +10,10 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
+
+- Adjusted documentation to reflect that the OnMouse MonoBehaviour events are supported starting from Unity 6.4 onwards.
+
 ### Fixed
 
 - Fixed warnings being generated on Unity 6.4 and 6.5. (ISX-2395).
