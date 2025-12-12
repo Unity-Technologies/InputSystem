@@ -184,6 +184,16 @@
     -unity-background-scale-mode: scale-to-fit;
 }
 
+.add-button-dark-theme {
+    background-image: resource('d_Toolbar Plus.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.add-button {
+    background-image: resource('Toolbar Plus.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
 .search-field {
     display: none;
     width: 190px;
