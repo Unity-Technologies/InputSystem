@@ -80,7 +80,7 @@ If your PS5 controller isn't detected through the HID subsystem, follow these st
     sudo nano /etc/udev/rules.d/70-sony-controllers.rules
     ```
 
-2. Add the following lines to the file. Save the file, then exit the editor.
+2. Add the following lines to the `.rules` file. Save the file, then exit the nano editor.
     ```
     # PS5 DualSense Edge
     KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="054c", ATTRS{idProduct}=="0df2", GROUP="gamepad", MODE="0660"
