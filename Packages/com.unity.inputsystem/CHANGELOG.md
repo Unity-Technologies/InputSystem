@@ -12,7 +12,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
-- Adjusted documentation to reflect that the OnMouse MonoBehaviour events are supported starting from Unity 6.4 onwards.
+- Updated documentation to reflect that the OnMouse MonoBehaviour events are now supported in Unity 6.4 and above.
 
 ### Fixed
 
