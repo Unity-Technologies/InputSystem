@@ -228,19 +228,13 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ShowControlSchemeEditor(VisualElement parent, bool updateExisting = false)
         {
-            m_SaveAction?.Invoke();
+            var controlSchemesView = CreateChildView(new ControlSchemesView(parent, stateContainer, updateExisting));
+            controlSchemesView.UpdateView(stateContainer.GetState());
 
-            rootElement.schedule.Execute(() =>
+            controlSchemesView.OnClosing += _ =>
             {
-                var controlSchemesView =
-                    CreateChildView(new ControlSchemesView(parent, stateContainer, updateExisting));
-                controlSchemesView.UpdateView(stateContainer.GetState());
-
-                controlSchemesView.OnClosing += _ =>
-                {
-                    DestroyChildView(controlSchemesView);
-                };
-            }).ExecuteLater(50);
+                DestroyChildView(controlSchemesView);
+            };
         }
 
         private void SelectControlScheme(int controlSchemeIndex)

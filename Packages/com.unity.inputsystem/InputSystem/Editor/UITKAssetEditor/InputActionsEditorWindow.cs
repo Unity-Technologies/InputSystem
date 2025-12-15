@@ -335,7 +335,7 @@ namespace UnityEngine.InputSystem.Editor
                 // This code should be cleaned up once we migrate the InputControl stuff from ImGUI completely.
                 // Since at that point it stops being a separate window that steals focus.
                 // (See case ISXB-1221)
-                if (!InputControlPathEditor.IsShowingDropdown)
+                if (!InputControlPathEditor.IsShowingDropdown && !ControlSchemesView.IsShowingControlSchemeView)
                 {
                     Save(isAutoSave: true);
                 }

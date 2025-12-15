@@ -175,7 +175,12 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ValidateAndSaveAsset(InputActionAsset asset)
         {
-            ProjectWideActionsAsset.Verify(asset); // Ignore verification result for save
+            if (!InputEditorUserSettings.autoSaveInputActionAssets || ControlSchemesView.IsShowingControlSchemeView)
+            {
+                return;
+            }
+
+            ProjectWideActionsAsset.Verify(asset);     // Ignore verification result for save
             EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 
