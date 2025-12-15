@@ -231,10 +231,7 @@ namespace UnityEngine.InputSystem.Editor
             var controlSchemesView = CreateChildView(new ControlSchemesView(parent, stateContainer, updateExisting));
             controlSchemesView.UpdateView(stateContainer.GetState());
 
-            controlSchemesView.OnClosing += _ =>
-            {
-                DestroyChildView(controlSchemesView);
-            };
+            controlSchemesView.OnClosing += _ => DestroyChildView(controlSchemesView);
         }
 
         private void SelectControlScheme(int controlSchemeIndex)
