@@ -99,7 +99,7 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 
 ### Mouse
 
-The MonoBehaviour.OnMouse events such as [MonoBehaviour.OnMouseDown()](https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnMouseDown.html) are supported using the Unity Editor 6.4 or newer. 
+`MonoBehaviour.OnMouse` events, such as [MonoBehaviour.OnMouseDown](https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnMouseDown.html), are supported in Unity 6.4 and later.  
 
 |Input Manager (Old)|Input System (New)|
 |--|--|
