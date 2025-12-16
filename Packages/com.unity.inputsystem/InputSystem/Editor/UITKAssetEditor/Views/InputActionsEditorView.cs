@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private readonly Action m_SaveAction;
 
-        private ControlSchemesView m_ControlSchemesView;
+        public ControlSchemesView ControlSchemesView { get; private set; }
 
         public InputActionsEditorView(VisualElement root, StateContainer stateContainer, bool isProjectSettings,
                                       Action saveAction)
@@ -236,12 +236,13 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ShowControlSchemeEditor(VisualElement parent, bool updateExisting = false)
         {
-            m_ControlSchemesView = CreateChildView(new ControlSchemesView(parent, stateContainer, updateExisting));
-            m_ControlSchemesView.UpdateView(stateContainer.GetState());
-            m_ControlSchemesView.OnClosing += _ =>
+            ControlSchemesView = CreateChildView(new ControlSchemesView(parent, stateContainer, updateExisting));
+            ControlSchemesView.UpdateView(stateContainer.GetState());
+
+            ControlSchemesView.OnClosing += _ =>
             {
-                DestroyChildView(m_ControlSchemesView);
-                m_ControlSchemesView = null;
+                DestroyChildView(ControlSchemesView);
+                ControlSchemesView = null;
             };
         }
 

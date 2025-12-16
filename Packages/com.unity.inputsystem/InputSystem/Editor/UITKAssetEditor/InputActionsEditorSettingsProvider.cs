@@ -178,7 +178,7 @@ namespace UnityEngine.InputSystem.Editor
             // This code should be cleaned up once we migrate the InputControl stuff from ImGUI completely.
             // Since at that point it stops being a separate window that steals focus.
             // (See case ISXB-1713)
-            if (!InputEditorUserSettings.autoSaveInputActionAssets || ControlSchemesView.IsShowingControlSchemeView)
+            if (!InputEditorUserSettings.autoSaveInputActionAssets || m_View.ControlSchemesView != null)
             {
                 return;
             }

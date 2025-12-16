@@ -14,16 +14,9 @@ namespace UnityEngine.InputSystem.Editor
         private string m_NewName;
         public event Action<ViewBase<InputControlScheme>> OnClosing;
 
-        /// <summary>
-        /// This property is only set from this class in order to communicate that we're showing the control schemes view at the moment
-        /// It's employed to skip auto-saving, because that complicates the save causing this window to close when adding a new device type.
-        /// </summary>
-        internal static bool IsShowingControlSchemeView { get; private set; }
-
         public ControlSchemesView(VisualElement root, StateContainer stateContainer, bool updateExisting = false)
             : base(root, stateContainer)
         {
-            IsShowingControlSchemeView = true;
             m_UpdateExisting = updateExisting;
 
             var controlSchemeEditor = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
@@ -124,7 +117,6 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void DestroyView()
         {
-            IsShowingControlSchemeView = false;
             m_ModalWindow.RemoveFromHierarchy();
         }
 
@@ -144,8 +136,6 @@ namespace UnityEngine.InputSystem.Editor
 
         private void CloseView()
         {
-            IsShowingControlSchemeView = false;
-
             // Closing the View without explicitly selecting "Save" or "Cancel" holds the values in the
             // current UI state but won't persist them; the Asset Editor state isn't dirtied.
             //
