@@ -19,6 +19,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     {
         base.OneTimeSetUp();
         m_Asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>();
+        m_Asset.AddControlScheme(new InputControlScheme("test"));
         var actionMap = m_Asset.AddActionMap("First Name");
         m_Asset.AddActionMap("Second Name");
         m_Asset.AddActionMap("Third Name");
@@ -233,6 +234,29 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
         // Check on the asset side
         Assert.That(m_Window.currentAssetInEditor.actionMaps[0].actions[1].name, Is.EqualTo("New Name"));
+    }
+
+    /// <summary>
+    /// <see href="https://jira.unity3d.com/browse/ISXB-1607">ISXB-1607</see>
+    /// Fix an out of range exception when pressing undo after creating and editing a new control scheme.
+    /// </summary>
+    /// <returns></returns>
+    [UnityTest]
+    [Ignore("Currently this is difficult to test, Darren - re-visit once we have converted the advanced dropdown to UIToolkit")]
+    public IEnumerator CanUndoActionMap_ControlSchemeEdit()
+    {
+        var controlSchemeToolbarMenu = m_Window.rootVisualElement.Q("control-schemes-toolbar-menu");
+
+        // changing the selection triggers a state change, wait for the scheduler to process the frame
+        yield return WaitForSchedulerLoop();
+        yield return WaitForNotDirty();
+
+        SimulateClickOn(controlSchemeToolbarMenu);
+
+        yield return WaitForSchedulerLoop();
+        yield return WaitForNotDirty();
+
+        yield return WaitForFocus(m_Window.rootVisualElement.Q("control-schemes-toolbar-menu"));
     }
 }
 #endif

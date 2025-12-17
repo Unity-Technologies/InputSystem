@@ -145,10 +145,16 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var controlSchemeSerializedProperty = state.selectedControlSchemeIndex == -1 ? null :
-                    state.serializedObject
-                        .FindProperty(nameof(InputActionAsset.m_ControlSchemes))
-                        .GetArrayElementAtIndex(state.selectedControlSchemeIndex);
+                SerializedProperty controlSchemeSerializedProperty = null;
+                var serializedProperty = state.serializedObject
+                    .FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+
+                if (state.selectedControlSchemeIndex < serializedProperty.arraySize)
+                {
+                    controlSchemeSerializedProperty = state.selectedControlSchemeIndex == -1 ? null :
+                        serializedProperty
+                            .GetArrayElementAtIndex(state.selectedControlSchemeIndex);
+                }
 
                 if (controlSchemeSerializedProperty == null)
                 {

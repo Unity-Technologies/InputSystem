@@ -175,7 +175,15 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ValidateAndSaveAsset(InputActionAsset asset)
         {
-            ProjectWideActionsAsset.Verify(asset); // Ignore verification result for save
+            // This code should be cleaned up once we migrate the InputControl stuff from ImGUI completely.
+            // Since at that point it stops being a separate window that steals focus.
+            // (See case ISXB-1713)
+            if (!InputEditorUserSettings.autoSaveInputActionAssets || m_View.IsControlSchemeViewActive())
+            {
+                return;
+            }
+
+            ProjectWideActionsAsset.Verify(asset);     // Ignore verification result for save
             EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 
