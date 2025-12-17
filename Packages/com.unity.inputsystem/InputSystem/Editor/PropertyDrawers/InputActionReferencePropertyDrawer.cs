@@ -48,9 +48,7 @@ namespace UnityEngine.InputSystem.Editor
             // Only assign the value was actually changed by the user.
             if (EditorGUI.EndChangeCheck() && !Equals(candidate, current))
             {
-                var reference = candidate as InputActionReference;
-                property.objectReferenceValue = reference ?
-                    InputActionReference.Create(reference.action) : null;
+                property.objectReferenceValue = candidate as InputActionReference; // set to either the reference or null.
             }
 
             EditorGUI.EndProperty();
