@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 
 - Updated documentation to reflect that the OnMouse MonoBehaviour events are now supported in Unity 6.4 and above.
+- Updated the supported devices documentation to clarify that touchscreens are supported on Linux.
 
 ### Fixed
 
