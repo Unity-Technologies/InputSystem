@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- Fixed add buttons use add icon in input actions window (ISX-2340)
 - Fixed warnings being generated on Unity 6.4 and 6.5. (ISX-2395).
 - Fixed extra empty lines being displayed in the control binding list when mouse buttons are pressed [ISXB-1677](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1677)
 - Fixed InputActionReference not being set when attempting to set it on a Prefab or ScriptableObject [ISXB-1787](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1787)

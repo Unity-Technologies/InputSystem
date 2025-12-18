@@ -175,12 +175,30 @@
 }
 
 .add-binging-button-dark-theme {
+    width: 14px;
+    height: 14px;
     background-image: resource('d_Toolbar Plus More.png');
     -unity-background-scale-mode: scale-to-fit;
 }
 
 .add-binging-button {
+    width: 14px;
+    height: 14px;
     background-image: resource('Toolbar Plus More.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.add-button-dark-theme {
+    width: 18px;
+    height: 18px;
+    background-image: resource('d_Toolbar Plus.png');
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.add-button {
+    width: 18px;
+    height: 18px;
+    background-image: resource('Toolbar Plus.png');
     -unity-background-scale-mode: scale-to-fit;
 }
 
