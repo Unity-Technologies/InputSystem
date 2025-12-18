@@ -115,6 +115,11 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlSchemesView?.Cancel();
         }
 
+        public bool IsControlSchemeViewActive()
+        {
+            return m_ControlSchemesView != null;
+        }
+
         private void OnReset()
         {
             Dispatch(Commands.ReplaceActionMaps(ProjectWideActionsAsset.GetDefaultAssetJson()));
@@ -238,6 +243,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             m_ControlSchemesView = CreateChildView(new ControlSchemesView(parent, stateContainer, updateExisting));
             m_ControlSchemesView.UpdateView(stateContainer.GetState());
+
             m_ControlSchemesView.OnClosing += _ =>
             {
                 DestroyChildView(m_ControlSchemesView);

@@ -256,7 +256,6 @@ namespace UnityEngine.InputSystem.Editor
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
             m_View = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, () => Save(isAutoSave: false));
-
             m_StateContainer.Initialize(rootVisualElement.Q("action-editor"));
         }
 
@@ -334,8 +333,10 @@ namespace UnityEngine.InputSystem.Editor
                 // This code should be cleaned up once we migrate the InputControl stuff from ImGUI completely.
                 // Since at that point it stops being a separate window that steals focus.
                 // (See case ISXB-1221)
-                if (!InputControlPathEditor.IsShowingDropdown)
+                if (!InputControlPathEditor.IsShowingDropdown && !m_View.IsControlSchemeViewActive())
+                {
                     Save(isAutoSave: true);
+                }
             }
 
             analytics.RegisterEditorFocusOut();
@@ -415,8 +416,7 @@ namespace UnityEngine.InputSystem.Editor
             var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             if (assetPath == null)
             {
-                Debug.LogWarning(
-                    $"Failed to open InputActionAsset with GUID {m_AssetGUID}. The asset might have been deleted.");
+                Debug.LogWarning($"Failed to open InputActionAsset with GUID {m_AssetGUID}. The asset might have been deleted.");
                 return false;
             }
 
