@@ -49,9 +49,8 @@ namespace UnityEngine.InputSystem.Layouts
         /// <seealso cref="LowLevel.InputStateBlock.format"/>
         public string stateFormat { get; set; }
 
-        ////TODO: rename this to just "usages"; "commonUsages" is such a weird name
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Justification = "According to MSDN, this message can be ignored for attribute parameters, as there are no better alternatives.")]
-        public string[] commonUsages { get; set; }
+        public string[] usages { get; set; }
 
         public string variants { get; set; }
 
