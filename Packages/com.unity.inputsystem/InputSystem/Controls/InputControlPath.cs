@@ -775,9 +775,7 @@ namespace UnityEngine.InputSystem
             // Match current path component against current control.
             return parser.current.Matches(currentControl);
         }
-
-        ////TODO: refactor this to use the new PathParser
-
+        
         /// <summary>
         /// Recursively match path elements in <paramref name="path"/>.
         /// </summary>
@@ -792,134 +790,80 @@ namespace UnityEngine.InputSystem
             ref InputControlList<TControl> matches, bool matchMultiple)
             where TControl : InputControl
         {
+            if (control == null)
+                throw new ArgumentNullException(nameof(control));
+            if (path == null)
+                throw new ArgumentNullException(nameof(path));
+
             var pathLength = path.Length;
+            if (indexInPath < 0 || indexInPath > pathLength)
+                throw new ArgumentOutOfRangeException(nameof(indexInPath));
 
-            // Try to get a match. A path spec has three components:
-            //    "<layout>{usage}name"
-            // All are optional but at least one component must be present.
-            // Names can be aliases, too.
-            // We don't tap InputControl.path strings of controls so as to not create a
-            // bunch of string objects while feeling our way down the hierarchy.
+            // Create substring from current index so we can use PathParser for the next component.
+            var subPath = path.Substring(indexInPath);
+            if (subPath.Length == 0)
+                return null;
 
-            var controlIsMatch = true;
-
-            // Match by layout.
-            if (path[indexInPath] == '<')
+            // Find end of first component in subPath (stop at unescaped '/').
+            var compEnd = 0;
+            while (compEnd < subPath.Length)
             {
-                ++indexInPath;
-                controlIsMatch =
-                    MatchPathComponent(control.layout, path, ref indexInPath, PathComponentType.Layout);
-
-                // If the layout isn't a match, walk up the base layout
-                // chain and match each base layout.
-                if (!controlIsMatch)
+                if (subPath[compEnd] == '\\' && compEnd + 1 < subPath.Length)
                 {
-                    var baseLayout = control.m_Layout;
-                    while (InputControlLayout.s_Layouts.baseLayoutTable.TryGetValue(baseLayout, out baseLayout))
-                    {
-                        controlIsMatch = MatchPathComponent(baseLayout, path, ref indexInPath,
-                            PathComponentType.Layout);
-                        if (controlIsMatch)
-                            break;
-                    }
+                    // Skip escaped char.
+                    compEnd += 2;
+                    continue;
                 }
+                if (subPath[compEnd] == '/')
+                    break;
+                compEnd++;
             }
 
-            // Match by usage.
-            while (indexInPath < pathLength && path[indexInPath] == '{' && controlIsMatch)
-            {
-                ++indexInPath;
+            var componentStr = subPath.Substring(0, compEnd);
 
-                for (var i = 0; i < control.usages.Count; ++i)
-                {
-                    controlIsMatch = MatchPathComponent(control.usages[i], path, ref indexInPath, PathComponentType.Usage);
-                    if (controlIsMatch)
-                        break;
-                }
+            // Parse the single component.
+            var componentParser = new PathParser(componentStr);
+            if (!componentParser.MoveToNextComponent())
+                return null; // malformed/empty component
+
+            var component = componentParser.current;
+
+            // Use ParsedPathComponent.Matches to test if current control satisfies component.
+            if (!component.Matches(control))
+                return null;
+
+            // If there's no more path after this component, we matched.
+            var restStart = compEnd;
+            // If there's a separating '/', skip it for the remainder.
+            if (restStart < subPath.Length && subPath[restStart] == '/')
+                restStart++;
+
+            var remainder = restStart >= subPath.Length ? string.Empty : subPath.Substring(restStart);
+
+            // If remainder is empty, we've reached the end -> success.
+            if (string.IsNullOrEmpty(remainder))
+            {
+                if (!(control is TControl match))
+                    return null;
+                if (matchMultiple)
+                    matches.Add(match);
+                return match;
             }
 
-            // Match by display name.
-            if (indexInPath < pathLength - 1 && controlIsMatch && path[indexInPath] == '#' &&
-                path[indexInPath + 1] == '(')
+            // Otherwise, dive into children or route by usage depending on next char.
+            TControl lastMatch;
+            if (remainder[0] == '{')
             {
-                indexInPath += 2;
-                controlIsMatch = MatchPathComponent(control.displayName, path, ref indexInPath,
-                    PathComponentType.DisplayName);
+                // Usage-based routing from the device root. Pass remainder as a new path starting at 0.
+                lastMatch = MatchByUsageAtDeviceRootRecursive(control.device, remainder, 0, ref matches, matchMultiple);
+            }
+            else
+            {
+                // Recurse into children. Pass remainder as a new path starting at 0.
+                lastMatch = MatchChildrenRecursive(control, remainder, 0, ref matches, matchMultiple);
             }
 
-            // Match by name.
-            if (indexInPath < pathLength && controlIsMatch && path[indexInPath] != '/')
-            {
-                // Normal name match.
-                controlIsMatch = MatchPathComponent(control.name, path, ref indexInPath, PathComponentType.Name);
-
-                // Alternative match by alias.
-                if (!controlIsMatch)
-                {
-                    for (var i = 0; i < control.aliases.Count && !controlIsMatch; ++i)
-                    {
-                        controlIsMatch = MatchPathComponent(control.aliases[i], path, ref indexInPath,
-                            PathComponentType.Name);
-                    }
-                }
-            }
-
-            // If we have a match, return it or, if there's children, recurse into them.
-            if (controlIsMatch)
-            {
-                // If we ended up on a wildcard, we've successfully matched it.
-                if (indexInPath < pathLength && path[indexInPath] == '*')
-                    ++indexInPath;
-
-                // If we've reached the end of the path, we have a match.
-                if (indexInPath == pathLength)
-                {
-                    // Check type.
-                    if (!(control is TControl match))
-                        return null;
-
-                    if (matchMultiple)
-                        matches.Add(match);
-                    return match;
-                }
-
-                // If we've reached a separator, dive into our children.
-                if (path[indexInPath] == '/')
-                {
-                    ++indexInPath;
-
-                    // Silently accept trailing slashes.
-                    if (indexInPath == pathLength)
-                    {
-                        // Check type.
-                        if (!(control is TControl match))
-                            return null;
-
-                        if (matchMultiple)
-                            matches.Add(match);
-                        return match;
-                    }
-
-                    // See if we want to match children by usage or by name.
-                    TControl lastMatch;
-                    if (path[indexInPath] == '{')
-                    {
-                        // Usages are kind of like entry points that can route to anywhere else
-                        // on a device's control hierarchy and then we keep going from that re-routed
-                        // point.
-                        lastMatch = MatchByUsageAtDeviceRootRecursive(control.device, path, indexInPath, ref matches, matchMultiple);
-                    }
-                    else
-                    {
-                        // Go through children and see what we can match.
-                        lastMatch = MatchChildrenRecursive(control, path, indexInPath, ref matches, matchMultiple);
-                    }
-
-                    return lastMatch;
-                }
-            }
-
-            return null;
+            return lastMatch;
         }
 
         private static TControl MatchByUsageAtDeviceRootRecursive<TControl>(InputDevice device, string path, int indexInPath,
