@@ -507,8 +507,10 @@ namespace UnityEngine.InputSystem
                     nextChar = str[++posInStr];
                 if (nextChar == '*')
                 {
-                    ////TODO: make sure we don't end up with ** here
-
+                    // Collapse consecutive '*' so we don't end up with `**` semantics here.
+                    while (posInStr + 1 < strLength && str[posInStr + 1] == '*')
+                        ++posInStr;
+                    
                     if (posInStr == strLength - 1)
                         return true; // Wildcard at end of string so rest is matched.
 
