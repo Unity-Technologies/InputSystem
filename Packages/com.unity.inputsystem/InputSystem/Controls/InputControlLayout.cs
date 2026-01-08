@@ -996,9 +996,9 @@ namespace UnityEngine.InputSystem.Layouts
                 isNoisy = layoutAttribute?.isNoisy ?? false
             };
 
-            if (layoutAttribute?.commonUsages != null)
+            if (layoutAttribute?.usages != null)
                 layout.m_CommonUsages =
-                    ArrayHelpers.Select(layoutAttribute.commonUsages, x => new InternedString(x));
+                    ArrayHelpers.Select(layoutAttribute.usages, x => new InternedString(x));
 
             return layout;
         }
