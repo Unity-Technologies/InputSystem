@@ -178,6 +178,7 @@
     width: 16px;
     height: 16px;
     background-image: resource('d_Toolbar Plus More.png');
+    background-color: transparent;
     -unity-background-scale-mode: scale-to-fit;
 }
 
@@ -185,6 +186,7 @@
     width: 16px;
     height: 16px;
     background-image: resource('Toolbar Plus More.png');
+    background-color: transparent;
     -unity-background-scale-mode: scale-to-fit;
 }
 
@@ -192,6 +194,7 @@
     width: 16px;
     height: 16px;
     background-image: resource('d_Toolbar Plus.png');
+    background-color: transparent;
     -unity-background-scale-mode: scale-to-fit;
 }
 
@@ -199,6 +202,7 @@
     width: 16px;
     height: 16px;
     background-image: resource('Toolbar Plus.png');
+    background-color: transparent;
     -unity-background-scale-mode: scale-to-fit;
 }
 
