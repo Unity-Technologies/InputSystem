@@ -360,7 +360,7 @@ namespace UnityEngine.InputSystem.Editor
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if ((value - float.Epsilon) == m_DefaultInitializedValue)
                     value = m_DefaultInitializedValue;
-    
+
                 const float k_MinValue = 0f;
                 const float k_MaxValue = 1f;
                 var newValue = EditorGUILayout.Slider(m_ValueLabel, value, k_MinValue, k_MaxValue, GUILayout.ExpandWidth(false));
