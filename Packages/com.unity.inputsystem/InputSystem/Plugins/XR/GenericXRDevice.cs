@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.XR
         /// var action = new InputAction(binding: "/&lt;XRController&gt;{leftHand}/position");
         /// To make the left-hand XR controller behave like the right-hand one
         /// var controller = XRController.leftHand;
-        /// InputSystem.SetUsage(controller, CommonUsages.RightHand);
+        /// InputSystem.SetUsage(controller, Usages.RightHand);
         /// </remarks>
         public static XRController leftHand => InputSystem.GetDevice<XRController>(Usages.LeftHand);
 
@@ -119,9 +119,9 @@ namespace UnityEngine.InputSystem.XR
             if (deviceDescriptor != null)
             {
                 if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.Left) != 0)
-                    InputSystem.SetDeviceUsage(this, CommonUsages.LeftHand);
+                    InputSystem.SetDeviceUsage(this, Usages.LeftHand);
                 else if ((deviceDescriptor.characteristics & InputDeviceCharacteristics.Right) != 0)
-                    InputSystem.SetDeviceUsage(this, CommonUsages.RightHand);
+                    InputSystem.SetDeviceUsage(this, Usages.RightHand);
             }
 #endif
         }

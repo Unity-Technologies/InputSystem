@@ -220,7 +220,7 @@ namespace UnityEngine.InputSystem.Linux
                             .WithParameters(parameters);
 
                         if (IsAxis(feature, SDLAxisUsage.RotateZ))
-                            control.WithUsages(CommonUsages.Twist);
+                            control.WithUsages(Usages.Twist);
                         break;
                     }
 
