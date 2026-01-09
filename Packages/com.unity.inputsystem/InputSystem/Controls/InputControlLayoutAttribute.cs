@@ -49,6 +49,9 @@ namespace UnityEngine.InputSystem.Layouts
         /// <seealso cref="LowLevel.InputStateBlock.format"/>
         public string stateFormat { get; set; }
 
+	/// <summary>
+        /// Provides a set of commonly used input usage strings.
+        /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Justification = "According to MSDN, this message can be ignored for attribute parameters, as there are no better alternatives.")]
         public string[] usages { get; set; }
 
