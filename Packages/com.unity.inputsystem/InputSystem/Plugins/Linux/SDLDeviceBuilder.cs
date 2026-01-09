@@ -86,7 +86,7 @@ namespace UnityEngine.InputSystem.Linux
                 .WithLayout("Stick")
                 .WithByteOffset((uint)byteOffset)
                 .WithSizeInBits((uint)xFeature.featureSize * 8 + (uint)yFeature.featureSize * 8)
-                .WithUsages(CommonUsages.Primary2DMotion);
+                .WithUsages(Usages.Primary2DMotion);
 
             builder.AddControl(stickName + "/x")
                 .WithFormat(InputStateBlock.FormatInt)
@@ -148,7 +148,7 @@ namespace UnityEngine.InputSystem.Linux
                 .WithLayout("Dpad")
                 .WithByteOffset((uint)xFeature.offset)
                 .WithSizeInBits((uint)xFeature.featureSize * 8 + (uint)yFeature.featureSize * 8)
-                .WithUsages(CommonUsages.Hatswitch);
+                .WithUsages(Usages.Hatswitch);
 
             builder.AddControl(hatName + "/up")
                 .WithFormat(InputStateBlock.FormatInt)

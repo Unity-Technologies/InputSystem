@@ -1614,7 +1614,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string format;
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
             public string runInBackground;
-            public string[] commonUsages;
+            public string[] usages;
             public string displayName;
             public string description;
             public string type; // This is mostly for when we turn arbitrary InputControlLayouts into JSON; less for layouts *coming* from JSON.

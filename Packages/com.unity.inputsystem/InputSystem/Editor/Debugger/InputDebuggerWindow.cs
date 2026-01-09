@@ -778,7 +778,7 @@ namespace UnityEngine.InputSystem.Editor
                     var value = layout.m_UpdateBeforeRender.Value ? "Update" : "Disabled";
                     AddChild(item, "Before Render: " + value, ref id);
                 }
-                if (layout.commonUsages.Count > 0)
+                if (layout.usages.Count > 0)
                 {
                     AddChild(item,
                         "Usages: " +

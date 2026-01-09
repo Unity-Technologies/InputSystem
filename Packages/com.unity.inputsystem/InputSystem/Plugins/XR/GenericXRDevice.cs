@@ -98,13 +98,13 @@ namespace UnityEngine.InputSystem.XR
         /// var controller = XRController.leftHand;
         /// InputSystem.SetUsage(controller, CommonUsages.RightHand);
         /// </remarks>
-        public static XRController leftHand => InputSystem.GetDevice<XRController>(CommonUsages.LeftHand);
+        public static XRController leftHand => InputSystem.GetDevice<XRController>(Usages.LeftHand);
 
         /// <summary>
         /// A quick accessor for the currently active right handed device.  This is also tracked via usages on the device.
         /// </summary>
         /// <remarks>If there is no left hand connected, this will be null. This also matches any currently tracked device that contains the 'RightHand' device usage.</remarks>
-        public static XRController rightHand => InputSystem.GetDevice<XRController>(CommonUsages.RightHand);
+        public static XRController rightHand => InputSystem.GetDevice<XRController>(Usages.RightHand);
 
         /// <summary>
         /// Override for FinishSetup().

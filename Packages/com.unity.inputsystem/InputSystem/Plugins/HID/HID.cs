@@ -377,7 +377,7 @@ namespace UnityEngine.InputSystem.HID
                         .WithBitOffset((uint)bitOffset)
                         .WithByteOffset((uint)byteOffset)
                         .WithSizeInBits((uint)sizeInBits)
-                        .WithUsages(CommonUsages.Primary2DMotion);
+                        .WithUsages(Usages.Primary2DMotion);
 
                     var xElementParameters = xElement.DetermineParameters();
                     var yElementParameters = yElement.DetermineParameters();
@@ -706,11 +706,11 @@ namespace UnityEngine.InputSystem.HID
             internal InternedString[] DetermineUsages()
             {
                 if (usagePage == UsagePage.Button && usage == 1)
-                    return new[] {CommonUsages.PrimaryTrigger, CommonUsages.PrimaryAction};
+                    return new[] {Usages.PrimaryTrigger, Usages.PrimaryAction};
                 if (usagePage == UsagePage.Button && usage == 2)
-                    return new[] {CommonUsages.SecondaryTrigger, CommonUsages.SecondaryAction};
+                    return new[] {Usages.SecondaryTrigger, Usages.SecondaryAction};
                 if (usagePage == UsagePage.GenericDesktop && usage == (int)GenericDesktop.Rz)
-                    return new[] { CommonUsages.Twist };
+                    return new[] { Usages.Twist };
                 ////TODO: assign hatswitch usage to first and only to first hatswitch element
                 return null;
             }
