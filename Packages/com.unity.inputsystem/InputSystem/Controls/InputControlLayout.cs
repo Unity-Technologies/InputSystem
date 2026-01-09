@@ -8,55 +8,6 @@ using System.Runtime.Serialization;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-////TODO: *kill* variants!
-
-////TODO: we really need proper verification to be in place to ensure that the resulting layout isn't coming out with a bad memory layout
-
-////TODO: add code-generation that takes a layout and spits out C# code that translates it to a common value format
-////      (this can be used, for example, to translate all the various gamepad formats into one single common gamepad format)
-
-////TODO: allow layouts to set default device names
-
-////TODO: allow creating generic controls as parents just to group child controls
-
-////TODO: allow things like "-something" and "+something" for usages, processors, etc
-
-////TODO: allow setting whether the device should automatically become current and whether it wants noise filtering
-
-////TODO: ensure that if a layout sets a device description, it is indeed a device layout
-
-////TODO: make offset on InputControlAttribute relative to field instead of relative to entire state struct
-
-////REVIEW: common usages are on all layouts but only make sense for devices
-
-////REVIEW: useStateFrom seems like a half-measure; it solves the problem of setting up state blocks but they often also
-////        require a specific set of processors
-
-////REVIEW: Can we allow aliases to be paths rather than just plain names? This would allow changing the hierarchy around while
-////        keeping backwards-compatibility.
-
-// Q: Why is there this layout system instead of just new'ing everything up in hand-written C# code?
-// A: The current approach has a couple advantages.
-//
-//    * Since it's data-driven, entire layouts can be represented as just data. They can be added to already deployed applications,
-//      can be sent over the wire, can be analyzed by tools, etc.
-//
-//    * The layouts can be rearranged in powerful ways, even on the fly. Data can be inserted or modified all along the hierarchy
-//      both from within a layout itself as well as from outside through overrides. The resulting compositions would often be very
-//      hard/tedious to set up in a linear C# inheritance hierarchy and likely result in repeated reallocation and rearranging of
-//      already created setups.
-//
-//    * Related to that, the data-driven layouts make it possible to significantly change the data model without requiring changes
-//      to existing layouts. This, too, would be more complicated if every device would simply new up everything directly.
-//
-//    * We can generate code from them. Means we can, for example, generate code for the DOTS runtime from the same information
-//      that exists in the input system but without depending on its InputDevice C# implementation.
-//
-//    The biggest drawback, other than code complexity, is that building an InputDevice from an InputControlLayout is slow.
-//    This is somewhat offset by having a code generator that can "freeze" a specific layout into simple C# code. For these,
-//    the result is code at least as efficient (but likely *more* efficient) than the equivalent in a code-only layout approach
-//    while at the same time offering all the advantages of the data-driven approach.
-
 namespace UnityEngine.InputSystem.Layouts
 {
     /// <summary>
@@ -418,7 +369,7 @@ namespace UnityEngine.InputSystem.Layouts
 
         public IEnumerable<InternedString> appliedOverrides => m_AppliedOverrides;
 
-        public ReadOnlyArray<InternedString> commonUsages => new ReadOnlyArray<InternedString>(m_CommonUsages);
+        public ReadOnlyArray<InternedString> usages => new ReadOnlyArray<InternedString>(m_Usages);
 
         /// <summary>
         /// List of child controls defined for the layout.
@@ -996,9 +947,9 @@ namespace UnityEngine.InputSystem.Layouts
                 isNoisy = layoutAttribute?.isNoisy ?? false
             };
 
-            if (layoutAttribute?.commonUsages != null)
-                layout.m_CommonUsages =
-                    ArrayHelpers.Select(layoutAttribute.commonUsages, x => new InternedString(x));
+            if (layoutAttribute?.usages != null)
+                layout.m_Usages =
+                    ArrayHelpers.Select(layoutAttribute.usages, x => new InternedString(x));
 
             return layout;
         }
@@ -1027,7 +978,7 @@ namespace UnityEngine.InputSystem.Layouts
         internal bool? m_UpdateBeforeRender;
         internal InlinedArray<InternedString> m_BaseLayouts;
         private InlinedArray<InternedString> m_AppliedOverrides;
-        private InternedString[] m_CommonUsages;
+        private InternedString[] m_Usages;
         internal ControlItem[] m_Controls;
         internal string m_DisplayName;
         private string m_Description;
@@ -1368,7 +1319,7 @@ namespace UnityEngine.InputSystem.Layouts
                 m_StateFormat = other.m_StateFormat;
 
             // Combine common usages.
-            m_CommonUsages = ArrayHelpers.Merge(other.m_CommonUsages, m_CommonUsages);
+            m_Usages = ArrayHelpers.Merge(other.m_Usages, m_Usages);
 
             // Retain list of overrides.
             m_AppliedOverrides.Merge(other.m_AppliedOverrides);
@@ -1614,7 +1565,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string format;
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
             public string runInBackground;
-            public string[] commonUsages;
+            public string[] usages;
             public string displayName;
             public string description;
             public string type; // This is mostly for when we turn arbitrary InputControlLayouts into JSON; less for layouts *coming* from JSON.
@@ -1658,7 +1609,7 @@ namespace UnityEngine.InputSystem.Layouts
                     isGenericTypeOfDevice = isGenericTypeOfDevice,
                     hideInUI = hideInUI,
                     m_Variants = new InternedString(variant),
-                    m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x)),
+                    m_Usages = ArrayHelpers.Select(usages, x => new InternedString(x)),
                 };
                 if (!string.IsNullOrEmpty(format))
                     layout.m_StateFormat = new FourCC(format);
@@ -1725,7 +1676,7 @@ namespace UnityEngine.InputSystem.Layouts
                     extend = layout.m_BaseLayouts.length == 1 ? layout.m_BaseLayouts[0].ToString() : null,
                     extendMultiple = layout.m_BaseLayouts.length > 1 ? layout.m_BaseLayouts.ToArray(x => x.ToString()) : null,
                     format = layout.stateFormat.ToString(),
-                    commonUsages = ArrayHelpers.Select(layout.m_CommonUsages, x => x.ToString()),
+                    usages = ArrayHelpers.Select(layout.m_Usages, x => x.ToString()),
                     controls = ControlItemJson.FromControlItems(layout.m_Controls),
                     beforeRender = layout.m_UpdateBeforeRender != null ? (layout.m_UpdateBeforeRender.Value ? "Update" : "Ignore") : null,
                 };

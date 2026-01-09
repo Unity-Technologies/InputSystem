@@ -6,19 +6,6 @@ using System.Text;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.LowLevel;
 
-////REVIEW: why not switch to this being the default mechanism? seems like this could allow us to also solve
-////        the actions-update-when-not-expected problem; plus give us access to easy polling
-
-////REVIEW: should this automatically unsubscribe itself on disposal?
-
-////TODO: make it possible to persist this same way that it should be possible to persist InputEventTrace
-
-////TODO: make this one thread-safe
-
-////TODO: add random access capability
-
-////TODO: protect traces against controls changing configuration (if state layouts change, we're affected)
-
 namespace UnityEngine.InputSystem.Utilities
 {
     /// <summary>

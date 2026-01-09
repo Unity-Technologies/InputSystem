@@ -3,22 +3,6 @@ using System.Runtime.CompilerServices;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Utilities;
 
-////TODO: the Debug.Asserts here should be also be made as checks ahead of time (on the layout)
-
-////TODO: the read/write methods need a proper pass for consistency
-
-////FIXME: some architectures have strict memory alignment requirements; we should honor them when
-////       we read/write primitive values or support stitching values together from bytes manually
-////       where needed
-
-////TODO: allow bitOffset to be non-zero for byte-aligned control as long as result is byte-aligned
-
-////REVIEW: The combination of byte and bit offset instead of just a single bit offset has turned out
-////        to be plenty awkward to use in practice; should be replace it?
-
-////REVIEW: AutomaticOffset is a very awkward mechanism; it's primary use really is for "parking" unused
-////        controls for which a more elegant and robust mechanism can surely be devised
-
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
