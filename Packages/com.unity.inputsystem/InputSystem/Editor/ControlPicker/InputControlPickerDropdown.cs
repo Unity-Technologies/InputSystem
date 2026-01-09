@@ -185,10 +185,10 @@ namespace UnityEngine.InputSystem.Editor
 
             var defaultControlPickerLayout = new DefaultInputControlPickerLayout();
 
-            // Add common usage variants of the device
-            if (layout.commonUsages.Count > 0)
+            // Add usage variants of the device
+            if (layout.usages.Count > 0)
             {
-                foreach (var usage in layout.commonUsages)
+                foreach (var usage in layout.usages)
                 {
                     var usageItem = new DeviceDropdownItem(layout, usage);
 

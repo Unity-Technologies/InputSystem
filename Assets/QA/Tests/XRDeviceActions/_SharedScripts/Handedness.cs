@@ -12,8 +12,8 @@ public class Handedness : MonoBehaviour
     {
         var handedness = "";
 
-        var leftHand = InputSystem.GetDevice<XRController>(CommonUsages.LeftHand);
-        var rightHand = InputSystem.GetDevice<XRController>(CommonUsages.RightHand);
+        var leftHand = InputSystem.GetDevice<XRController>(Usages.LeftHand);
+        var rightHand = InputSystem.GetDevice<XRController>(Usages.RightHand);
 
         if (leftHand != null)
             handedness += "Left ";

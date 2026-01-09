@@ -3,9 +3,9 @@ using UnityEngine.InputSystem.Utilities;
 namespace UnityEngine.InputSystem
 {
     /// <summary>
-    /// A collection of common usage string values as reported by <see cref="InputControl.usages"/>.
+    /// A collection of usage string values as reported by <see cref="InputControl.usages"/>.
     /// </summary>
-    public static class CommonUsages
+    public static class Usages
     {
         /// <summary>
         /// Primary 2D motion control.

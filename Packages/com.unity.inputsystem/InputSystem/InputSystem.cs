@@ -1645,7 +1645,7 @@ namespace UnityEngine.InputSystem
         /// <example>
         /// <code>
         /// // Get the left hand XRController.
-        /// var leftHand = InputSystem.GetDevice&lt;XRController&gt;(CommonUsages.leftHand);
+        /// var leftHand = InputSystem.GetDevice&lt;XRController&gt;(Usages.leftHand);
         ///
         /// // Mark gamepad #2 as being for player 1.
         /// InputSystem.SetDeviceUsage(Gamepad.all[1], "Player1");
@@ -2016,7 +2016,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputControl.usages"/>
         /// <seealso cref="AddDeviceUsage(InputDevice,string)"/>
         /// <seealso cref="RemoveDeviceUsage(InputDevice,string)"/>
-        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="Usages"/>
         /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void SetDeviceUsage(InputDevice device, string usage)
         {
@@ -2063,7 +2063,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputControl.usages"/>
         /// <seealso cref="AddDeviceUsage(InputDevice,InternedString)"/>
         /// <seealso cref="RemoveDeviceUsage(InputDevice,InternedString)"/>
-        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="Usages"/>
         /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void SetDeviceUsage(InputDevice device, InternedString usage)
         {
@@ -2096,7 +2096,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputControl.usages"/>
         /// <seealso cref="SetDeviceUsage(InputDevice,string)"/>
         /// <seealso cref="RemoveDeviceUsage(InputDevice,string)"/>
-        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="Usages"/>
         /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void AddDeviceUsage(InputDevice device, string usage)
         {
@@ -2129,7 +2129,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputControl.usages"/>
         /// <seealso cref="SetDeviceUsage(InputDevice,InternedString)"/>
         /// <seealso cref="RemoveDeviceUsage(InputDevice,InternedString)"/>
-        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="Usages"/>
         /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void AddDeviceUsage(InputDevice device, InternedString usage)
         {
@@ -2157,7 +2157,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputControl.usages"/>
         /// <seealso cref="SetDeviceUsage(InputDevice,string)"/>
         /// <seealso cref="AddDeviceUsage(InputDevice,string)"/>
-        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="Usages"/>
         /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void RemoveDeviceUsage(InputDevice device, string usage)
         {
@@ -2185,7 +2185,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputControl.usages"/>
         /// <seealso cref="SetDeviceUsage(InputDevice,InternedString)"/>
         /// <seealso cref="AddDeviceUsage(InputDevice,InternedString)"/>
-        /// <seealso cref="CommonUsages"/>
+        /// <seealso cref="Usages"/>
         /// <seealso cref="InputDeviceChange.UsageChanged"/>
         public static void RemoveDeviceUsage(InputDevice device, InternedString usage)
         {

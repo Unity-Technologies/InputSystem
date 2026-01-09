@@ -907,7 +907,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// Note that device requirements may require specific controls to be present rather than only requiring
         /// the presence of a certain type of device. For example, a requirement with a <see cref="controlPath"/>
-        /// of "*/{PrimaryAction}" will be satisfied by any device that has a control marked as <see cref="CommonUsages.PrimaryAction"/>.
+        /// of "*/{PrimaryAction}" will be satisfied by any device that has a control marked as <see cref="Usages.PrimaryAction"/>.
         ///
         /// Requirements are ordered in a list and can combine with their previous requirement in either <see cref="isAND">
         /// AND</see> or in <see cref="isOR">OR</see> fashion. The default is for requirements to combine with AND.

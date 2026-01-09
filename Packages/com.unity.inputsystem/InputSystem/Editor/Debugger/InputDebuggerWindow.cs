@@ -781,8 +781,8 @@ namespace UnityEngine.InputSystem.Editor
                 if (layout.commonUsages.Count > 0)
                 {
                     AddChild(item,
-                        "Common Usages: " +
-                        string.Join(", ", layout.commonUsages.Select(x => x.ToString()).ToArray()),
+                        "Usages: " +
+                        string.Join(", ", layout.usages.Select(x => x.ToString()).ToArray()),
                         ref id);
                 }
                 if (layout.appliedOverrides.Count() > 0)

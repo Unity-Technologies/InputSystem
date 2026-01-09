@@ -217,14 +217,14 @@ partial class CoreTests
     public void Editor_DomainReload_PreservesUsagesOnDevices()
     {
         var device = InputSystem.AddDevice<Gamepad>();
-        InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
+        InputSystem.SetDeviceUsage(device, Usages.LeftHand);
 
         SimulateDomainReload();
 
         var newDevice = InputSystem.devices[0];
 
         Assert.That(newDevice.usages, Has.Count.EqualTo(1));
-        Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
+        Assert.That(newDevice.usages, Has.Exactly(1).EqualTo(Usages.LeftHand));
     }
 
     // We have code that will automatically query the enabled state of devices on creation

@@ -776,7 +776,7 @@ internal partial class CoreTests
         var action = new InputAction(binding: "<Gamepad>/buttonSouth");
 
         var rightHand = InputSystem.AddDevice<Gamepad>();
-        InputSystem.SetDeviceUsage(rightHand, CommonUsages.RightHand);
+        InputSystem.SetDeviceUsage(rightHand, Usages.RightHand);
 
         using (var rebind = new InputActionRebindingExtensions.RebindingOperation().WithAction(action).Start())
         {
@@ -1122,8 +1122,8 @@ internal partial class CoreTests
 
         var rightHandVertical = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.SetDeviceUsage(rightHandVertical, CommonUsages.RightHand);
-        InputSystem.AddDeviceUsage(rightHandVertical, CommonUsages.Vertical);
+        InputSystem.SetDeviceUsage(rightHandVertical, Usages.RightHand);
+        InputSystem.AddDeviceUsage(rightHandVertical, Usages.Vertical);
 
         using (var rebind = new InputActionRebindingExtensions.RebindingOperation().WithAction(action).Start())
         {
