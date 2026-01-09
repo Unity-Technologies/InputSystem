@@ -447,7 +447,7 @@ partial class CoreTests
         Assert.That(device.leftStick.x.normalize, Is.True);
     }
 
-    [InputControlLayout(commonUsages = new[] {"LeftHand", "RightHand"})]
+    [InputControlLayout(usages = new[] {"LeftHand", "RightHand"})]
     private class DeviceWithCommonUsages : InputDevice
     {
     }
