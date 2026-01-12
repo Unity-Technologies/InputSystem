@@ -1,9 +1,6 @@
 using System;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Networking.PlayerConnection;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace UnityEngine.InputSystem
 {
@@ -15,18 +12,10 @@ namespace UnityEngine.InputSystem
     // NOTE: The Unity EditorConnection/PlayerConnection mechanism requires this to
     //       be a ScriptableObject as it will register every listeners as a persistent
     //       one.
+    // NOTE: In the editor, the actual instance is managed by RemoteInputPlayerConnectionEditor
+    //       which inherits from ScriptableSingleton to survive domain reloads.
     [Serializable]
-    internal class RemoteInputPlayerConnection :
-#if UNITY_EDITOR
-        // In the editor, we need to make sure that we get the same instance after domain reloads.
-        // Otherwise, callbacks we have registered before the reload will no longer be valid, because
-        // the object instance they point to will not deserialize to a valid object. So we use a
-        // ScriptableSingleton instance, which fullfills these requirements. In the player, we need to
-        // use a simple ScriptableObject, as ScriptableSingleton is an editor-only class.
-        ScriptableSingleton<RemoteInputPlayerConnection>,
-#else
-        ScriptableObject,
-#endif
+    internal class RemoteInputPlayerConnection : ScriptableObject,
         IObserver<InputRemoting.Message>, IObservable<InputRemoting.Message>
     {
         public static readonly Guid kNewDeviceMsg = new Guid("fcd9651ded40425995dfa6aeb78f1f1c");
@@ -209,5 +198,21 @@ namespace UnityEngine.InputSystem
                 ArrayHelpers.Erase(ref owner.m_Subscribers, this);
             }
         }
+
+        #if UNITY_EDITOR
+        // In Editor, the instance is managed by RemoteInputPlayerConnectionEditor (ScriptableSingleton)
+        // This is set by InputSystemEditorInitializer
+        internal static Func<RemoteInputPlayerConnection> s_GetInstance;
+
+        public static RemoteInputPlayerConnection instance
+        {
+            get
+            {
+                if (s_GetInstance != null)
+                    return s_GetInstance();
+                return null;
+            }
+        }
+        #endif
     }
 }
