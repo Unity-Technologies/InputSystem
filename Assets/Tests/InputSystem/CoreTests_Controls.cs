@@ -1613,7 +1613,7 @@ partial class CoreTests
     public void Controls_MatchPathComponent_CollapsesConsecutiveWildcards()
     {
         var component = "leftTrigger";
-        var componentType = PathComponentType.Name;
+        var componentType = InputControlPath.PathComponentType.Name;
 
         var patterns = new[]
         {
@@ -1625,7 +1625,7 @@ partial class CoreTests
         foreach (var path in patterns)
         {
             var indexInPath = 0;
-            var result = MatchPathComponent(component, path, ref indexInPath, componentType);
+            var result = InputControlPath.MatchPathComponent(component, path, ref indexInPath, componentType);
 
             // All patterns should match
             Assert.IsTrue(result, $"Pattern '{path}' should match '{component}'");
