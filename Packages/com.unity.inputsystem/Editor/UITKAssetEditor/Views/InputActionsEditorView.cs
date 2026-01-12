@@ -278,7 +278,7 @@ namespace UnityEngine.InputSystem.Editor
 
             foreach (SerializedProperty controlScheme in controlSchemesArray)
             {
-                yield return new InputControlScheme(controlScheme);
+                yield return InputControlSchemeEditorExtensions.FromSerializedProperty(controlScheme);
             }
         }
     }

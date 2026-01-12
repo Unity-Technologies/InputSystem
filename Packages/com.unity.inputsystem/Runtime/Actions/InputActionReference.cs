@@ -207,6 +207,13 @@ namespace UnityEngine.InputSystem
         /// This method is used to clear the Action references when exiting PlayMode since those objects are no
         /// longer valid.
         /// </remarks>
+        #if UNITY_EDITOR
+        // Callbacks set by Editor to check asset status without direct UnityEditor dependency
+        internal static Func<Object, bool> s_IsSubAsset;
+        internal static Func<Object, string> s_GetAssetPath;
+        internal static Func<string, Object> s_LoadMainAssetAtPath;
+        #endif
+
         internal static void InvalidateAll()
         {
             // It might be possible that Object.FindObjectOfTypeAll(true) would be sufficient here since we only
@@ -266,21 +273,25 @@ namespace UnityEngine.InputSystem
             // editor and not in final builds. The alternative would be to set a non-serialized field on the reference
             // when importing assets which would simplify this class, but it adds complexity to import stage and
             // is more difficult to assess from a asset version portability perspective.
-            static bool CanSetReference(InputActionReference reference)
+            bool CanSetReference(InputActionReference reference)
             {
+                // If callbacks aren't set, allow the operation
+                if (s_IsSubAsset == null || s_GetAssetPath == null || s_LoadMainAssetAtPath == null)
+                    return true;
+
                 // "Immutable" input action references are always sub-assets of InputActionAsset.
-                var isSubAsset = UnityEditor.AssetDatabase.IsSubAsset(reference);
+                var isSubAsset = s_IsSubAsset(reference);
                 if (!isSubAsset)
                     return true;
 
                 // If we cannot get the path of our reference, we cannot be a persisted asset within an InputActionAsset.
-                var path = UnityEditor.AssetDatabase.GetAssetPath(reference);
+                var path = s_GetAssetPath(reference);
                 if (path == null)
                     return true;
 
                 // If we cannot get the main asset we cannot be a persisted asset within an InputActionAsset.
                 // Also we check that it is the expected type.
-                var mainAsset = UnityEditor.AssetDatabase.LoadMainAssetAtPath(path);
+                var mainAsset = s_LoadMainAssetAtPath(path);
                 if (!mainAsset)
                     return true;
 
