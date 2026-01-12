@@ -1031,7 +1031,7 @@ namespace UnityEngine.InputSystem
             return lastMatch;
         }
 
-        private enum PathComponentType
+        internal enum PathComponentType
         {
             Name,
             DisplayName,
@@ -1039,7 +1039,7 @@ namespace UnityEngine.InputSystem
             Layout
         }
 
-        private static bool MatchPathComponent(string component, string path, ref int indexInPath, PathComponentType componentType, int startIndexInComponent = 0)
+        internal static bool MatchPathComponent(string component, string path, ref int indexInPath, PathComponentType componentType, int startIndexInComponent = 0)
         {
             Debug.Assert(component != null, "Component string is null");
             Debug.Assert(path != null, "Path is null");
