@@ -5,11 +5,6 @@ using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
-#if UNITY_EDITOR
-using System.Reflection;
-using UnityEditor;
-#endif
-
 // This should be the only file referencing the API at UnityEngineInternal.Input.
 
 namespace UnityEngine.InputSystem.LowLevel
@@ -167,6 +162,11 @@ namespace UnityEngine.InputSystem.LowLevel
             set => NativeInputSystem.onDeviceDiscovered = value;
         }
 
+        // Callbacks set by Editor to handle shutdown subscription
+        // In Editor, we use EditorApplication.wantsToQuit which expects Func<bool>
+        internal Action<Func<bool>> m_RegisterWantsToQuit;
+        internal Action<Func<bool>> m_UnregisterWantsToQuit;
+
         public Action onShutdown
         {
             get => m_ShutdownMethod;
@@ -174,19 +174,25 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 if (value == null)
                 {
-                    #if UNITY_EDITOR
-                    EditorApplication.wantsToQuit -= OnWantsToShutdown;
-                    #else
-                    Application.quitting -= OnShutdown;
-                    #endif
+                    if (m_UnregisterWantsToQuit != null)
+                    {
+                        m_UnregisterWantsToQuit(OnWantsToShutdown);
+                    }
+                    else
+                    {
+                        Application.quitting -= OnShutdown;
+                    }
                 }
                 else if (m_ShutdownMethod == null)
                 {
-                    #if UNITY_EDITOR
-                    EditorApplication.wantsToQuit += OnWantsToShutdown;
-                    #else
-                    Application.quitting += OnShutdown;
-                    #endif
+                    if (m_RegisterWantsToQuit != null)
+                    {
+                        m_RegisterWantsToQuit(OnWantsToShutdown);
+                    }
+                    else
+                    {
+                        Application.quitting += OnShutdown;
+                    }
                 }
 
                 m_ShutdownMethod = value;
@@ -303,6 +309,7 @@ namespace UnityEngine.InputSystem.LowLevel
             get => NativeInputSystem.GetScrollWheelDeltaPerTick();
         }
 #endif
+
         #if UNITY_EDITOR
 
         // These fields are set by InputSystemEditorInitializer to avoid direct Editor dependencies
@@ -314,6 +321,13 @@ namespace UnityEngine.InputSystem.LowLevel
         public bool isEditorActive => m_IsEditorActive;
         public bool isEditorPaused => m_IsEditorPaused;
 
+        // Unity Remote callbacks - set by Editor
+        internal Action<Func<IntPtr, bool>> m_SetUnityRemoteMessageHandler;
+        internal Action<bool> m_SetUnityRemoteGyroEnabledCallback;
+        internal Action<float> m_SetUnityRemoteGyroUpdateIntervalCallback;
+
+        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
+
         public Func<IntPtr, bool> onUnityRemoteMessage
         {
             set
@@ -321,110 +335,81 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (m_UnityRemoteMessageHandler == value)
                     return;
 
-                if (m_UnityRemoteMessageHandler != null)
-                {
-                    var removeMethod = GetUnityRemoteAPIMethod("RemoveMessageHandler");
-                    removeMethod?.Invoke(null, new[] { m_UnityRemoteMessageHandler });
-                    m_UnityRemoteMessageHandler = null;
-                }
-
-                if (value != null)
-                {
-                    var addMethod = GetUnityRemoteAPIMethod("AddMessageHandler");
-                    addMethod?.Invoke(null, new[] { value });
-                    m_UnityRemoteMessageHandler = value;
-                }
+                m_UnityRemoteMessageHandler = value;
+                m_SetUnityRemoteMessageHandler?.Invoke(value);
             }
         }
 
         public void SetUnityRemoteGyroEnabled(bool value)
         {
-            var setMethod = GetUnityRemoteAPIMethod("SetGyroEnabled");
-            setMethod?.Invoke(null, new object[] { value });
+            m_SetUnityRemoteGyroEnabledCallback?.Invoke(value);
         }
 
         public void SetUnityRemoteGyroUpdateInterval(float interval)
         {
-            var setMethod = GetUnityRemoteAPIMethod("SetGyroUpdateInterval");
-            setMethod?.Invoke(null, new object[] { interval });
+            m_SetUnityRemoteGyroUpdateIntervalCallback?.Invoke(interval);
         }
 
-        private MethodInfo GetUnityRemoteAPIMethod(string methodName)
-        {
-            var editorAssembly = typeof(EditorApplication).Assembly;
-            var genericRemoteClass = editorAssembly.GetType("UnityEditor.Remote.GenericRemote");
-            if (genericRemoteClass == null)
-                return null;
-
-            return genericRemoteClass.GetMethod(methodName);
-        }
-
-        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
-        private Action<PlayModeStateChange> m_OnPlayModeChanged;
+        private Action<int> m_OnPlayModeChanged;
         private Action m_OnProjectChanged;
-
-        private void OnPlayModeStateChanged(PlayModeStateChange value)
-        {
-            m_OnPlayModeChanged(value);
-        }
-
-        private void OnProjectChanged()
-        {
-            m_OnProjectChanged();
-        }
-
-        public Action<PlayModeStateChange> onPlayModeChanged
+        /// <summary>
+        /// Callback for play mode state changes. The int parameter corresponds to PlayModeStateChange enum values:
+        /// 0 = EnteredEditMode, 1 = ExitingEditMode, 2 = EnteredPlayMode, 3 = ExitingPlayMode
+        /// </summary>
+        public Action<int> onPlayModeChanged
         {
             get => m_OnPlayModeChanged;
-            set
-            {
-                if (value == null)
-                    EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-                else if (m_OnPlayModeChanged == null)
-                    EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-                m_OnPlayModeChanged = value;
-            }
+            set => m_OnPlayModeChanged = value;
         }
 
         public Action onProjectChange
         {
             get => m_OnProjectChanged;
-            set
-            {
-                if (value == null)
-                    EditorApplication.projectChanged -= OnProjectChanged;
-                else if (m_OnProjectChanged == null)
-                    EditorApplication.projectChanged += OnProjectChanged;
-                m_OnProjectChanged = value;
-            }
+            set => m_OnProjectChanged = value;
+        }
+
+        /// <summary>
+        /// Called by InputSystemEditorInitializer to dispatch play mode changes
+        /// </summary>
+        internal void DispatchPlayModeChange(int change)
+        {
+            m_OnPlayModeChanged?.Invoke(change);
+        }
+
+        /// <summary>
+        /// Called by InputSystemEditorInitializer to dispatch project changes
+        /// </summary>
+        internal void DispatchProjectChange()
+        {
+            m_OnProjectChanged?.Invoke();
         }
 
         #endif // UNITY_EDITOR
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 
+        // Callback for sending analytics in Editor - set by InputSystemEditorInitializer
+        internal Action<InputAnalytics.IInputAnalytic> m_SendEditorAnalytic;
+
         public void SendAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
         #if ENABLE_CLOUD_SERVICES_ANALYTICS
-            #if (UNITY_EDITOR)
-                #if (UNITY_2023_2_OR_NEWER)
-            EditorAnalytics.SendAnalytic(analytic);
-                #else
-            // The preprocessor filtering is a workaround for the fact that the AnalyticsResult enum is not available before 2023.1.0a14 when not using the built-in Unity Analytics module.
-                    #if UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
-            var info = analytic.info;
-            EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
-            EditorAnalytics.SendEventWithLimit(info.Name, analytic);
-                    #endif // UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
-                #endif // UNITY_2023_2_OR_NEWER
-            #elif (UNITY_ANALYTICS) // Implicitly: !UNITY_EDITOR
+            // In Editor, use the callback set by InputSystemEditorInitializer
+            if (m_SendEditorAnalytic != null)
+            {
+                m_SendEditorAnalytic(analytic);
+                return;
+            }
+
+            #if UNITY_ANALYTICS
+            // In Player builds, use the regular Analytics API
             var info = analytic.info;
             Analytics.Analytics.RegisterEvent(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
             if (analytic.TryGatherData(out var data, out var error))
                 Analytics.Analytics.SendEvent(info.Name, data);
             else
                 Debug.Log(error);     // Non fatal
-            #endif //UNITY_EDITOR
+            #endif
         #endif //ENABLE_CLOUD_SERVICES_ANALYTICS
         }
 

@@ -3,9 +3,6 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Layouts;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 ////TODO: add API to send events in bulk rather than one by one
 
@@ -188,7 +185,11 @@ namespace UnityEngine.InputSystem.LowLevel
         #endif // UNITY_ANALYTICS || UNITY_EDITOR
 
         #if UNITY_EDITOR
-        Action<PlayModeStateChange> onPlayModeChanged { get; set; }
+        /// <summary>
+        /// Callback for play mode state changes. The int parameter corresponds to PlayModeStateChange enum values:
+        /// 0 = EnteredEditMode, 1 = ExitingEditMode, 2 = EnteredPlayMode, 3 = ExitingPlayMode
+        /// </summary>
+        Action<int> onPlayModeChanged { get; set; }
         Action onProjectChange { get; set; }
         bool isInPlayMode { get;  }
         bool isEditorActive { get; }

@@ -45,7 +45,133 @@ namespace UnityEngine.InputSystem.Editor
             InputActionAsset.s_OnMarkAsDirty = TrackDirtyInputActionAsset;
             InputManager.s_GetProjectWideActions = () => ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
             InputSystem.s_Manager.m_AddDevicesNotSupportedByProject = InputEditorUserSettings.addDevicesNotSupportedByProject;
+
+            // Register callback for tests to call InputSystem.OnPlayModeChange (takes int)
+            InputSystem.s_OnPlayModeChangeCallback = change => OnPlayModeChange((PlayModeStateChange)change);
+
+            // Register Editor-specific callbacks on NativeInputRuntime
+            if (InputRuntime.s_Instance is NativeInputRuntime nativeRuntime)
+            {
+                // Shutdown callback
+                nativeRuntime.m_RegisterWantsToQuit = RegisterWantsToQuit;
+                nativeRuntime.m_UnregisterWantsToQuit = UnregisterWantsToQuit;
+
+                // Unity Remote callbacks
+                nativeRuntime.m_SetUnityRemoteMessageHandler = SetUnityRemoteMessageHandler;
+                nativeRuntime.m_SetUnityRemoteGyroEnabledCallback = SetUnityRemoteGyroEnabled;
+                nativeRuntime.m_SetUnityRemoteGyroUpdateIntervalCallback = SetUnityRemoteGyroUpdateInterval;
+
+                // Editor Analytics callback
+                nativeRuntime.m_SendEditorAnalytic = SendEditorAnalytic;
+            }
+
+            // Register RemoteInputPlayerConnection instance getter
+            RemoteInputPlayerConnection.s_GetInstance = RemoteInputPlayerConnectionEditor.GetInstance;
+
+            // Register EnhancedTouchSupport assembly reload callbacks
+            EnhancedTouch.EnhancedTouchSupport.s_BeforeAssemblyReloadCallback = RegisterBeforeAssemblyReload;
+            EnhancedTouch.EnhancedTouchSupport.s_UnregisterBeforeAssemblyReloadCallback = UnregisterBeforeAssemblyReload;
+
+            // Register InputActionReference asset database callbacks
+            InputActionReference.s_IsSubAsset = AssetDatabase.IsSubAsset;
+            InputActionReference.s_GetAssetPath = AssetDatabase.GetAssetPath;
+            InputActionReference.s_LoadMainAssetAtPath = AssetDatabase.LoadMainAssetAtPath;
         }
+
+        #region Editor Callbacks for NativeInputRuntime
+
+        // Track AssemblyReloadEvents callbacks so we can unregister them
+        private static readonly Dictionary<Action, AssemblyReloadEvents.AssemblyReloadCallback> s_AssemblyReloadCallbacks =
+            new Dictionary<Action, AssemblyReloadEvents.AssemblyReloadCallback>();
+
+        private static void RegisterBeforeAssemblyReload(Action action)
+        {
+            if (s_AssemblyReloadCallbacks.ContainsKey(action))
+                return;
+
+            AssemblyReloadEvents.AssemblyReloadCallback callback = () => action();
+            s_AssemblyReloadCallbacks[action] = callback;
+            AssemblyReloadEvents.beforeAssemblyReload += callback;
+        }
+
+        private static void UnregisterBeforeAssemblyReload(Action action)
+        {
+            if (s_AssemblyReloadCallbacks.TryGetValue(action, out var callback))
+            {
+                AssemblyReloadEvents.beforeAssemblyReload -= callback;
+                s_AssemblyReloadCallbacks.Remove(action);
+            }
+        }
+
+        private static void RegisterWantsToQuit(Func<bool> handler)
+        {
+            EditorApplication.wantsToQuit += handler;
+        }
+
+        private static void UnregisterWantsToQuit(Func<bool> handler)
+        {
+            EditorApplication.wantsToQuit -= handler;
+        }
+
+        // Unity Remote support
+        private static Func<IntPtr, bool> s_CurrentUnityRemoteMessageHandler;
+
+        private static void SetUnityRemoteMessageHandler(Func<IntPtr, bool> handler)
+        {
+            if (s_CurrentUnityRemoteMessageHandler != null)
+            {
+                var removeMethod = GetUnityRemoteAPIMethod("RemoveMessageHandler");
+                removeMethod?.Invoke(null, new object[] { s_CurrentUnityRemoteMessageHandler });
+            }
+
+            s_CurrentUnityRemoteMessageHandler = handler;
+
+            if (handler != null)
+            {
+                var addMethod = GetUnityRemoteAPIMethod("AddMessageHandler");
+                addMethod?.Invoke(null, new object[] { handler });
+            }
+        }
+
+        private static void SetUnityRemoteGyroEnabled(bool value)
+        {
+            var setMethod = GetUnityRemoteAPIMethod("SetGyroEnabled");
+            setMethod?.Invoke(null, new object[] { value });
+        }
+
+        private static void SetUnityRemoteGyroUpdateInterval(float interval)
+        {
+            var setMethod = GetUnityRemoteAPIMethod("SetGyroUpdateInterval");
+            setMethod?.Invoke(null, new object[] { interval });
+        }
+
+        private static System.Reflection.MethodInfo GetUnityRemoteAPIMethod(string methodName)
+        {
+            var editorAssembly = typeof(EditorApplication).Assembly;
+            var genericRemoteClass = editorAssembly.GetType("UnityEditor.Remote.GenericRemote");
+            if (genericRemoteClass == null)
+                return null;
+
+            return genericRemoteClass.GetMethod(methodName);
+        }
+
+        // Editor Analytics
+        private static void SendEditorAnalytic(InputAnalytics.IInputAnalytic analytic)
+        {
+            #if ENABLE_CLOUD_SERVICES_ANALYTICS
+                #if UNITY_2023_2_OR_NEWER
+            EditorAnalytics.SendAnalytic(analytic);
+                #else
+                    #if UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
+            var info = analytic.info;
+            EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+            EditorAnalytics.SendEventWithLimit(info.Name, analytic);
+                    #endif
+                #endif
+            #endif
+        }
+
+        #endregion
 
         private static void UpdateEditorState()
         {
@@ -134,9 +260,9 @@ namespace UnityEngine.InputSystem.Editor
                 SetUpEditorRemoting();
             }
 
-            // Register Editor callbacks
-            InputSystem.s_Manager.m_Runtime.onPlayModeChanged = OnPlayModeChange;
-            InputSystem.s_Manager.m_Runtime.onProjectChange = OnProjectChange;
+            // Subscribe to Editor events directly (cleaner separation from Runtime)
+            EditorApplication.playModeStateChanged += OnEditorPlayModeStateChanged;
+            EditorApplication.projectChanged += OnEditorProjectChanged;
 
             // Initialize Unity Remote support (Editor-only)
             UnityRemoteSupport.Initialize();
@@ -230,6 +356,39 @@ namespace UnityEngine.InputSystem.Editor
             EditorApplication.delayCall -= ShowRestartWarning;
         }
 
+        /// <summary>
+        /// Called by EditorApplication.playModeStateChanged
+        /// </summary>
+        private static void OnEditorPlayModeStateChanged(PlayModeStateChange change)
+        {
+            // Dispatch to runtime callback if registered
+            if (InputRuntime.s_Instance is NativeInputRuntime nativeRuntime)
+            {
+                nativeRuntime.DispatchPlayModeChange((int)change);
+            }
+
+            // Handle the change
+            OnPlayModeChange(change);
+        }
+
+        /// <summary>
+        /// Called by EditorApplication.projectChanged
+        /// </summary>
+        private static void OnEditorProjectChanged()
+        {
+            // Dispatch to runtime callback if registered
+            if (InputRuntime.s_Instance is NativeInputRuntime nativeRuntime)
+            {
+                nativeRuntime.DispatchProjectChange();
+            }
+
+            // Handle the change
+            OnProjectChange();
+        }
+
+        /// <summary>
+        /// Public method for tests and direct calls (with PlayModeStateChange enum)
+        /// </summary>
         internal static void OnPlayModeChange(PlayModeStateChange change)
         {
             switch (change)

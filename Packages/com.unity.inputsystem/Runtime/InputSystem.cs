@@ -3456,6 +3456,26 @@ namespace UnityEngine.InputSystem
 
         // The rest here is internal stuff to manage singletons, survive domain reloads,
         // and to support the reset ability for tests.
+
+        #if UNITY_EDITOR
+        /// <summary>
+        /// Callback for handling play mode changes. Set by InputSystemEditorInitializer.
+        /// The int parameter corresponds to PlayModeStateChange enum values:
+        /// 0 = EnteredEditMode, 1 = ExitingEditMode, 2 = EnteredPlayMode, 3 = ExitingPlayMode
+        /// </summary>
+        internal static Action<int> s_OnPlayModeChangeCallback;
+
+        /// <summary>
+        /// Forward to InputSystemEditorInitializer for tests.
+        /// Uses int to avoid direct UnityEditor dependency.
+        /// </summary>
+        internal static void OnPlayModeChange(int change)
+        {
+            s_OnPlayModeChangeCallback?.Invoke(change);
+        }
+
+        #endif
+
         static InputSystem()
         {
             InitializeInPlayer();
