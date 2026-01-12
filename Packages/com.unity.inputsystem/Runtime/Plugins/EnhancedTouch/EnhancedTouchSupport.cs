@@ -1,9 +1,6 @@
 using System;
 using System.Diagnostics;
 using UnityEngine.InputSystem.LowLevel;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 ////REVIEW: this *really* should be renamed to TouchPolling or something like that
 
@@ -68,6 +65,12 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         private static int s_Enabled;
         private static InputSettings.UpdateMode s_UpdateMode;
 
+        #if UNITY_EDITOR
+        // Callbacks set by Editor to subscribe to AssemblyReloadEvents
+        internal static Action<Action> s_BeforeAssemblyReloadCallback;
+        internal static Action<Action> s_UnregisterBeforeAssemblyReloadCallback;
+        #endif
+
         /// <summary>
         /// Enable enhanced touch support.
         /// </summary>
@@ -91,7 +94,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             InputSystem.onSettingsChange += OnSettingsChange;
 
             #if UNITY_EDITOR
-            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeDomainReload;
+            s_BeforeAssemblyReloadCallback?.Invoke(OnBeforeDomainReload);
             #endif
 
             SetUpState();
@@ -116,7 +119,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             InputSystem.onSettingsChange -= OnSettingsChange;
 
             #if UNITY_EDITOR
-            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeDomainReload;
+            s_UnregisterBeforeAssemblyReloadCallback?.Invoke(OnBeforeDomainReload);
             #endif
 
             TearDownState();
