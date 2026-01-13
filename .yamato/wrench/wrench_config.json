@@ -28,6 +28,7 @@
           "com.unity.xr.visionos"
         ],
         "6000.5": [
+          "com.unity.charactercontroller",
           "com.unity.polyspatial",
           "com.unity.polyspatial.extensions",
           "com.unity.polyspatial.visionos",
