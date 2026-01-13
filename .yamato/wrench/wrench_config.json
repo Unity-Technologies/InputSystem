@@ -20,7 +20,7 @@
         "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:ASSEMBLY_NAME;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:YAMATO_SOURCE_DIR/Packages;"
       ],
       "dependantsToIgnoreInPreviewApv": {
-        "6000.3": [
+        ">=6000.3": [
           "com.unity.polyspatial",
           "com.unity.polyspatial.extensions",
           "com.unity.polyspatial.visionos",

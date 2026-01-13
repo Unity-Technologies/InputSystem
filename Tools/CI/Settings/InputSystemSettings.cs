@@ -104,7 +104,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
         InputSystemPackage.DependantsToIgnoreInPreviewApv = new Dictionary<Editor, ISet<string>>()
         {
             {
-                new Editor("6000.3",  ""),
+                new Editor(">=6000.3",  ""),
                 new HashSet<string>()
                 {
                     "com.unity.polyspatial",
