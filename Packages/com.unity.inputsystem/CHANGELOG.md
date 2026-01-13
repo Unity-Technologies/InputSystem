@@ -11,7 +11,7 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Changed
-- Updated handle consecutive wildcards in StringMatches in InputControlPath.cs.
+- Consecutive wildcard characters ('*') used in input control-paths are now collapsed into a single wildcard when multiple consecutive wildcard characters are present.
 - Updated documentation to reflect that the OnMouse MonoBehaviour events are now supported in Unity 6.4 and above.
 - Updated the supported devices documentation to clarify that touchscreens are supported on Linux.
 
