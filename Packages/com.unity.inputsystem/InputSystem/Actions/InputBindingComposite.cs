@@ -6,15 +6,6 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
-////TODO: support nested composites
-
-////REVIEW: composites probably need a reset method, too (like interactions), so that they can be stateful
-
-////REVIEW: isn't this about arbitrary value processing? can we open this up more and make it
-////        not just be about composing multiple bindings?
-
-////REVIEW: when we get blittable type constraints, we can probably do away with the pointer-based ReadValue version
-
 namespace UnityEngine.InputSystem
 {
     ////TODO: clarify whether this can have state or not
