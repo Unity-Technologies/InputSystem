@@ -15,7 +15,33 @@ namespace UnityEngine.InputSystem.Editor
         private bool m_Quitting;
         private List<InputDevice> m_DisabledDevices;
 
+        //DeviceSimulatorFocusWatcher focusWatcher;
+
+        // TODO: Code Review
+        private bool m_SimulatorHasFocus;
+
         public override string title => "Input System";
+
+        public void OnFocusChanged(bool hasFocus)
+        {
+            m_SimulatorHasFocus = hasFocus;
+
+            // Conflicting devices should only be enabled when the
+            // simulator is _not_ in focus
+            bool isEnabled = !m_SimulatorHasFocus;
+            foreach (var device in m_DisabledDevices)
+            {
+                if (isEnabled)
+                    InputSystem.EnableDevice(device);
+                else
+                    InputSystem.DisableDevice(device);
+            }
+        }
+
+        // Called when the device simulator window has gained or lost focus
+        public void OnLostFocus()
+        {
+        }
 
         public override void OnCreate()
         {
@@ -26,11 +52,20 @@ namespace UnityEngine.InputSystem.Editor
                 UnityEditor.EditorApplication.quitting += OnQuitting;
 
                 m_DisabledDevices = new List<InputDevice>();
+                m_SimulatorHasFocus = true;
 
                 // deviceSimulator is never null when the plugin is instantiated by a simulator window, but it can be null during unit tests
                 if (deviceSimulator != null)
                     deviceSimulator.touchScreenInput += OnTouchEvent;
                 InputSystem.onDeviceChange += OnDeviceChange;
+
+                // TODO: Code Review
+                // Application.isFocused // When the player currently has focus
+                // if (IsConflictingDevice(device))
+                // {
+                //     m_ConflictingDevices.Add(device);
+                //     InputSystem.DisableDevice(device);
+                // }
 
                 // UGUI elements like a button don't get pressed when multiple pointers for example mouse and touchscreen are sending data at the same time
                 foreach (var device in InputSystem.devices)
@@ -70,6 +105,30 @@ namespace UnityEngine.InputSystem.Editor
             if (change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected)
                 DisableConflictingDevice(device);
         }
+
+        // TODO: Code Review
+        //  private bool IsConflictingDevice(InputDevice device)
+        // {
+        //     return (device.native && (device is Mouse || device is Pen) && device.enabled);
+        // }
+        //
+        // private void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        // {
+        //     if (IsConflictingDevice(device) == false)
+        //         return;
+        //
+        //     if (change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected)
+        //     {
+        //         m_ConflictingDevices.Add(device);
+        //         if (m_SimulatorHasFocus)
+        //             InputSystem.DisableDevice(device);
+        //     }
+        //
+        //     if (change == InputDeviceChange.Removed || change == InputDeviceChange.Disconnected)
+        //     {
+        //         m_ConflictingDevices.Remove(device);
+        //     }
+        // }
 
         private static UnityEngine.InputSystem.TouchPhase ToInputSystem(UnityEditor.DeviceSimulation.TouchPhase original)
         {
