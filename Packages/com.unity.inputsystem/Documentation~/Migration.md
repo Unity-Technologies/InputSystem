@@ -99,6 +99,8 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 
 ### Mouse
 
+`MonoBehaviour.OnMouse` events, such as [MonoBehaviour.OnMouseDown](https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnMouseDown.html), are supported in Unity 6.4 and later.
+
 |Input Manager (Old)|Input System (New)|
 |--|--|
 [`Input.GetMouseButton`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButton.html)<br/>Example: `Input.GetMouseButton(0)`|Use [`isPressed`](xref:UnityEngine.InputSystem.Controls.ButtonControl.isPressed) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.isPressed`

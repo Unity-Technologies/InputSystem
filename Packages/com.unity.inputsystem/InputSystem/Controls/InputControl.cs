@@ -8,26 +8,6 @@ using UnityEngine.InputSystem.Utilities;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Layouts;
 
-////REVIEW: should EvaluateMagnitude() be called EvaluateActuation() or something similar?
-
-////REVIEW: as soon as we gain the ability to have blittable type constraints, InputControl<TValue> should be constrained such
-
-////REVIEW: Reading and writing is asymmetric. Writing does not involve processors, reading does.
-
-////REVIEW: While the arrays used by controls are already nicely centralized on InputDevice, InputControls still
-////        hold a bunch of reference data that requires separate scanning. Can we move *all* reference data to arrays
-////        on InputDevice and make InputControls reference-free? Most challenging thing probably is getting rid of
-////        the InputDevice reference itself.
-
-////REVIEW: how do we do stuff like smoothing over time?
-
-////TODO: allow easier access to the default state such that you can easily create a state event containing only default state
-
-////TODO: come up with a way where we do ReadValue on the most common forms/setups of controls and not have any virtual method dispatch but
-////      rather go with minimal overhead directly to reading out memory
-////      (this should at least cover FLT, single BIT, and INT controls; and should be able to apply the common transformations
-////      as per AxisControl)
-
 namespace UnityEngine.InputSystem
 {
     /// <summary>

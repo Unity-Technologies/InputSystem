@@ -6,7 +6,7 @@ using RecipeEngine.Unity.Abstractions.Packages;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public abstract class MobileBaseRecipe: BaseRecipe
+public abstract class MobileBaseRecipe : BaseRecipe
 {
     public override IEnumerable<IJobBuilder> GetJobs()
     {
@@ -53,10 +53,13 @@ public abstract class MobileBaseRecipe: BaseRecipe
         {
             case SystemType.Android:
                 // For build jobs on Android, we still use the built-in UTR and the extra commands are not needed.
-                if (job.Name.Contains("BuildJobs"))
+                if (job.Name != null && job.Name.Contains("BuildJobs"))
                     break;
                 job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
                 job.WithCommands(UtrCommand.Download(systemType, "utr.bat"));
+                // Yet another temporary fix. UTR 1.43.0 was failing on Android builds due to some internal issue so
+                // we are forcing UTR version 1.42.0 for Android platform.
+                job.WithEnvironmentVariable("UTR_VERSION", "1.42.0");
                 return "utr.bat";
             case SystemType.IOS:
                 job.WithCommands(UtrCommand.Download(systemType, "utr"));

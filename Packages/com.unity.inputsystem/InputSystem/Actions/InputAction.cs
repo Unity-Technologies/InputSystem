@@ -1777,7 +1777,7 @@ namespace UnityEngine.InputSystem
             + "the action will perform.")]
         [SerializeField] internal InputActionType m_Type;
         [FormerlySerializedAs("m_ExpectedControlLayout")]
-        [Tooltip("The type of control expected by the action (e.g. \"Button\" or \"Stick\"). This will limit the controls shown "
+        [Tooltip("The type of control expected by the action (e.g. \"Digital\" for buttons, \"Vector2\" for sticks). This will limit the controls shown "
             + "when setting up bindings in the UI and will also limit which controls can be bound interactively to the action.")]
         [SerializeField] internal string m_ExpectedControlType;
         [Tooltip("Unique ID of the action (GUID). Used to reference the action from bindings such that actions can be renamed "

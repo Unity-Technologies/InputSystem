@@ -118,7 +118,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (!item.children.Any())
             {
-                if (!item.IsSeparator())
+                if (!item.IsSeparator() && item.searchableName.Length > 0)
                     m_SearchableElements.Add(item);
                 return;
             }

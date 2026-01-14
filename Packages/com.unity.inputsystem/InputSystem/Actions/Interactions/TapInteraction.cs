@@ -9,7 +9,7 @@ using UnityEngine.UIElements;
 namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
-    /// Performs the action if the control is pressed held for at least the set
+    /// Performs the action if the control is pressed and released within the set
     /// duration (which defaults to <see cref="InputSettings.defaultTapTime"/>)
     /// and then released.
     /// </summary>

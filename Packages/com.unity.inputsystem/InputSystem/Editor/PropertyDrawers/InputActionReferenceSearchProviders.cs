@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.Editor
         // SearchFlags: these flags are used to customize how search is performed and how search
         // results are displayed in the advanced object picker.
         // Note: SearchFlags.Packages is not currently used and hides all results from packages.
-        internal static readonly SearchFlags PickerSearchFlags = SearchFlags.Sorted | SearchFlags.OpenPicker;
+        internal static readonly SearchFlags PickerSearchFlags = SearchFlags.OpenPicker;
 
         // Search.SearchViewFlags : these flags are used to customize the appearance of the PickerWindow.
         internal static readonly Search.SearchViewFlags PickerViewFlags = SearchViewFlags.DisableBuilderModeToggle
@@ -84,7 +84,17 @@ namespace UnityEngine.InputSystem.Editor
                 var label = fetchObjectLabel(asset);
                 if (!label.Contains(context.searchText, System.StringComparison.InvariantCultureIgnoreCase))
                     continue; // Ignore due to filtering
-                yield return provider.CreateItem(context, asset.GetInstanceID().ToString(), label, createItemFetchDescription(asset),
+
+                string itemId;
+
+                // 6.4 deprecated instance ids in favour of entity ids
+                #if UNITY_6000_4_OR_NEWER
+                itemId = asset.GetEntityId().ToString();
+                #else
+                itemId = asset.GetInstanceID().ToString();
+                #endif
+
+                yield return provider.CreateItem(context, itemId, label, createItemFetchDescription(asset),
                     null, asset);
             }
         }
