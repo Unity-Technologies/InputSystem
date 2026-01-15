@@ -10,7 +10,13 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
 
+- Updated `m_ActionAssetInstanceID` in PlayerInputEditor.cs to use `EntityId` instead of `InstanceID`.
+
+### Fixed
+
+### Added
 
 ## [1.18.0] - 2026-01-14
 
