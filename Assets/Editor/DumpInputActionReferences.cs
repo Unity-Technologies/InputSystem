@@ -19,8 +19,10 @@ internal static class DumpInputActionReferences
     private static void DumpReferences()
     {
         var sb = new StringBuilder();
+#pragma warning disable CS0618 // Type or member is obsolete
         DumpReferences(sb, "Loaded objects", Object.FindObjectsByType<InputActionReference>(
             FindObjectsInactive.Include, FindObjectsSortMode.InstanceID));
+#pragma warning restore CS0618 // Type or member is obsolete
         DumpReferences(sb, "All objects:", Resources.FindObjectsOfTypeAll<InputActionReference>());
         Debug.Log(sb.ToString());
     }
