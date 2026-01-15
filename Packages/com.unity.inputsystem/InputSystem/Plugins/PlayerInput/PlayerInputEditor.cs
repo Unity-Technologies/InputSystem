@@ -97,7 +97,11 @@ namespace UnityEngine.InputSystem.Editor
 
             var assetChanged = CheckIfActionAssetChanged();
             // initialize the editor component if the asset has changed or if it has not been initialized yet
+#if UNITY_6000_5_OR_NEWER
+            if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || assetChanged || m_ActionAssetEntityId == EntityId.None)
+#else
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || assetChanged || m_ActionAssetInstanceID == 0)
+#endif
             {
                 InitializeEditorComponent(assetChanged);
                 actionsWereChanged = true;
@@ -278,6 +282,15 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (m_ActionsProperty.objectReferenceValue != null)
             {
+#if UNITY_6000_5_OR_NEWER
+                EntityId assetEntityId = m_ActionsProperty.objectReferenceValue.GetEntityId();
+                bool result = assetEntityId != m_ActionAssetEntityId && m_ActionAssetEntityId != EntityId.None;
+                m_ActionAssetEntityId = assetEntityId;
+                return result;
+            }
+
+            m_ActionAssetEntityId = EntityId.None;
+#else
                 // 6.4 deprecates instance id in favour of entity ids (a class)
                 // Fortunately, there is an implicit cast from entity id to an integer so we can have minimum footprint for now.
                 int assetInstanceID;
@@ -295,6 +308,8 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             m_ActionAssetInstanceID = -1;
+#endif
+
             return false;
         }
 
@@ -656,7 +671,11 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
         [NonSerialized] private bool m_ActionAssetInitialized;
+#if UNITY_6000_5_OR_NEWER
+        [NonSerialized] private EntityId m_ActionAssetEntityId;
+#else
         [NonSerialized] private int m_ActionAssetInstanceID;
+#endif
     }
 }
 #endif // UNITY_EDITOR
