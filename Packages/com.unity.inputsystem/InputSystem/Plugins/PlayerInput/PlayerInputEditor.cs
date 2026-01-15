@@ -289,7 +289,6 @@ namespace UnityEngine.InputSystem.Editor
                 return result;
             }
 
-            m_ActionAssetEntityId = EntityId.None;
 #else
                 // 6.4 deprecates instance id in favour of entity ids (a class)
                 // Fortunately, there is an implicit cast from entity id to an integer so we can have minimum footprint for now.
@@ -309,7 +308,6 @@ namespace UnityEngine.InputSystem.Editor
 
             m_ActionAssetInstanceID = -1;
 #endif
-
             return false;
         }
 
