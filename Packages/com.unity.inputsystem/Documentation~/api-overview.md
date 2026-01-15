@@ -10,7 +10,7 @@ The Input System's API is contained in the `UnityEngine.InputSystem` namespace. 
 using UnityEngine.InputSystem;
 ```
 
-## Important API
+## Important APIs
 
 |API name|Description|
 |-----|-----------|
