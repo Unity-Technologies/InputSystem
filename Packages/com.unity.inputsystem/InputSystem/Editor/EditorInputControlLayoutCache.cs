@@ -28,6 +28,7 @@ namespace UnityEngine.InputSystem.Editor
             get
             {
                 Refresh();
+                
                 return InputControlLayout.cache.table.Values;
             }
         }
