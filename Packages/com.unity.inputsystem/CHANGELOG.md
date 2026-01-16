@@ -10,12 +10,17 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
+- Consecutive wildcard characters ('*') used in input control-paths are now collapsed into a single wildcard when multiple consecutive wildcard characters are present.
+
+### Added
+
+### Fixed
 
 
 ## [1.18.0] - 2026-01-14
 
 ### Changed
-- Consecutive wildcard characters ('*') used in input control-paths are now collapsed into a single wildcard when multiple consecutive wildcard characters are present.
 - Updated documentation to reflect that the OnMouse MonoBehaviour events are now supported in Unity 6.4 and above.
 - Updated the supported devices documentation to clarify that touchscreens are supported on Linux.
 - Updated documentation to reflect PS5 controller support on Linux.
