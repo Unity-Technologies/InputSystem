@@ -283,18 +283,18 @@ namespace UnityEngine.InputSystem.Editor
             var obj = m_ActionsProperty.objectReferenceValue;
             if (obj == null)
                 return false;
-            
+
 #if UNITY_6000_4_OR_NEWER
-                EntityId assetEntityId = obj.GetEntityId();
-                bool result = assetEntityId != m_ActionAssetEntityId && m_ActionAssetEntityId != EntityId.None;
-                m_ActionAssetEntityId = assetEntityId;
-                return result;
+            EntityId assetEntityId = obj.GetEntityId();
+            bool result = assetEntityId != m_ActionAssetEntityId && m_ActionAssetEntityId != EntityId.None;
+            m_ActionAssetEntityId = assetEntityId;
+            return result;
 #else
-                int assetInstanceID = obj.GetInstanceID();
-                // if the m_ActionAssetInstanceID is 0 the PlayerInputEditor has not been initialized yet, but the asset did not change
-                bool result = assetInstanceID != m_ActionAssetInstanceID && m_ActionAssetInstanceID != 0;
-                m_ActionAssetInstanceID = (int)assetInstanceID;
-                return result;
+            int assetInstanceID = obj.GetInstanceID();
+            // if the m_ActionAssetInstanceID is 0 the PlayerInputEditor has not been initialized yet, but the asset did not change
+            bool result = assetInstanceID != m_ActionAssetInstanceID && m_ActionAssetInstanceID != 0;
+            m_ActionAssetInstanceID = (int)assetInstanceID;
+            return result;
 #endif
         }
 
