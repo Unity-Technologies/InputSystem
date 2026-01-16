@@ -52,7 +52,7 @@ public class MobilePerformanceBuildJobs: MobileBaseRecipe
                 new Artifact("logs", "build/logs/**/*"))
             .WithInfrastructureInstabilityDetection<WrenchExtensions.CustomScriptInfo>();
         
-        if (platform.System == SystemType.IOS && float.Parse(unityVersion, CultureInfo.InvariantCulture) > 6000.2f)
+        if (platform.System == SystemType.IOS && float.Parse(unityVersion, CultureInfo.InvariantCulture) >= 6000.3f)
             job.WithEnvironmentVariable("UNITY_HANDLEUIINTERRUPTIONS", 1);
 
         return job;
@@ -86,7 +86,7 @@ public class MobilePerformanceTests: MobileBaseRecipe
         }
 
         // For 6000.3+ versions, use iOS15 platform to run tests.
-        if (platform.System == SystemType.IOS && float.Parse(unityVersion, CultureInfo.InvariantCulture) > 6000.2f)
+        if (platform.System == SystemType.IOS && float.Parse(unityVersion, CultureInfo.InvariantCulture) >= 6000.3f)
             platform = Settings.iOS15Platform;
         
         IJobBuilder job = JobBuilder.Create(jobName).WithDescription(jobName).WithPlatform(platform);
