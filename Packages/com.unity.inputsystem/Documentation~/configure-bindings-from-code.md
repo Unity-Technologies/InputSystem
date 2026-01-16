@@ -1,3 +1,7 @@
+---
+uid: input-system-bindings-from-code
+---
+
 # Configure bindings from code
 
 
