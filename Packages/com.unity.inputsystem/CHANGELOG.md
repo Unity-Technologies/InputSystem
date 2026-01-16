@@ -13,6 +13,7 @@ however, it has to be formatted properly to pass verification tests.
 ### Changed
 
 - Updated `m_ActionAssetInstanceID` in PlayerInputEditor.cs to use `EntityId` instead of `InstanceID`.
+- Consecutive wildcard characters ('*') used in input control-paths are now collapsed into a single wildcard when multiple consecutive wildcard characters are present.
 
 ### Fixed
 
@@ -21,7 +22,6 @@ however, it has to be formatted properly to pass verification tests.
 ## [1.18.0] - 2026-01-14
 
 ### Changed
-
 - Updated documentation to reflect that the OnMouse MonoBehaviour events are now supported in Unity 6.4 and above.
 - Updated the supported devices documentation to clarify that touchscreens are supported on Linux.
 - Updated documentation to reflect PS5 controller support on Linux.
