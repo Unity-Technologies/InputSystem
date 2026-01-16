@@ -97,7 +97,7 @@ namespace UnityEngine.InputSystem.Editor
 
             var assetChanged = CheckIfActionAssetChanged();
             // initialize the editor component if the asset has changed or if it has not been initialized yet
-#if UNITY_6000_5_OR_NEWER
+#if UNITY_6000_4_OR_NEWER
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || assetChanged || m_ActionAssetEntityId == EntityId.None)
 #else
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || assetChanged || m_ActionAssetInstanceID == 0)
@@ -280,35 +280,22 @@ namespace UnityEngine.InputSystem.Editor
         // One such case is when the user triggers a "Reset" on the component.
         bool CheckIfActionAssetChanged()
         {
-            if (m_ActionsProperty.objectReferenceValue != null)
-            {
-#if UNITY_6000_5_OR_NEWER
-                EntityId assetEntityId = m_ActionsProperty.objectReferenceValue.GetEntityId();
+            var obj = m_ActionsProperty.objectReferenceValue;
+            if (obj == null)
+                return false;
+            
+#if UNITY_6000_4_OR_NEWER
+                EntityId assetEntityId = obj.GetEntityId();
                 bool result = assetEntityId != m_ActionAssetEntityId && m_ActionAssetEntityId != EntityId.None;
                 m_ActionAssetEntityId = assetEntityId;
                 return result;
-            }
-
 #else
-                // 6.4 deprecates instance id in favour of entity ids (a class)
-                // Fortunately, there is an implicit cast from entity id to an integer so we can have minimum footprint for now.
-                int assetInstanceID;
-
-                #if UNITY_6000_4_OR_NEWER
-                assetInstanceID = m_ActionsProperty.objectReferenceValue.GetEntityId();
-                #else
-                assetInstanceID = m_ActionsProperty.objectReferenceValue.GetInstanceID();
-                #endif
-
+                int assetInstanceID = obj.GetInstanceID();
                 // if the m_ActionAssetInstanceID is 0 the PlayerInputEditor has not been initialized yet, but the asset did not change
                 bool result = assetInstanceID != m_ActionAssetInstanceID && m_ActionAssetInstanceID != 0;
                 m_ActionAssetInstanceID = (int)assetInstanceID;
                 return result;
-            }
-
-            m_ActionAssetInstanceID = -1;
 #endif
-            return false;
         }
 
         private void DoHelpCreateAssetUI()
@@ -669,7 +656,7 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
         [NonSerialized] private bool m_ActionAssetInitialized;
-#if UNITY_6000_5_OR_NEWER
+#if UNITY_6000_4_OR_NEWER
         [NonSerialized] private EntityId m_ActionAssetEntityId;
 #else
         [NonSerialized] private int m_ActionAssetInstanceID;
