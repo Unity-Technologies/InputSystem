@@ -1607,4 +1607,30 @@ partial class CoreTests
             Assert.That(setMethod.IsPublic, Is.True, inputControlMessage);
         }
     }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_MatchPathComponent_CollapsesConsecutiveWildcards()
+    {
+        var component = "leftTrigger";
+        var componentType = InputControlPath.PathComponentType.Name;
+
+        var patterns = new[]
+        {
+            "*Trigger",
+            "**Trigger",
+            "***Trigger"
+        };
+
+        foreach (var path in patterns)
+        {
+            var indexInPath = 0;
+            var result = InputControlPath.MatchPathComponent(component, path, ref indexInPath, componentType);
+
+            // All patterns should match
+            Assert.IsTrue(result, $"Pattern '{path}' should match '{component}'");
+            Assert.AreEqual(path.Length, indexInPath,
+                $"Index should advance past entire pattern for '{path}'");
+        }
+    }
 }

@@ -53,12 +53,18 @@ internal static class Utilities
         foreach (var field in type.GetFields())
         {
             var attribute = field.GetCustomAttribute<EnumMemberAttribute>();
-            if (attribute != null && attribute.Value == value)
+
+            // Ensure both the attribute and its value match
+            if (attribute?.Value == value)
             {
-                return (TEnum)field.GetValue(null);
+                var val = field.GetValue(null);
+                if (val is TEnum result)
+                {
+                    return result;
+                }
             }
         }
 
-        throw new ArgumentException($"No EnumMemberAttribute with value '{value}' found in enum '{type.Name}'.");
+        throw new ArgumentException($"Value '{value}' not found in {type.Name}.");
     }
 }
