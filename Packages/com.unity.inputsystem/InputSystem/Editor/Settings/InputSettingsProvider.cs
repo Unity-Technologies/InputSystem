@@ -22,6 +22,11 @@ namespace UnityEngine.InputSystem.Editor
 
         public const string kSettingsPath = InputSettingsPath.kSettingsRootPath + "/Settings";
 
+        private static readonly string[] kInputSettingsKeywords =
+        {
+            "Input", "Action", "Controls", "Gamepad", "Keyboard", "Mouse", "Touch"
+        };
+
         public static void Open()
         {
             SettingsService.OpenProjectSettings(kSettingsPath);
@@ -35,10 +40,7 @@ namespace UnityEngine.InputSystem.Editor
                 // We put this in a child node called "Settings" when Project-wide Actions is enabled.
                 // When not enabled it sits on the main package Settings node.
                 label = "Settings",
-                keywords = new[]
-                {
-                    "Input", "Action", "Controls", "Gamepad", "Keyboard", "Mouse", "Touch"
-                }
+                keywords = kInputSettingsKeywords
             };
         }
 
