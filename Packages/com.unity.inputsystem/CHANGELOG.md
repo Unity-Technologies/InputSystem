@@ -21,7 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Added
 
-- Added `keyboards` for InputSystem project settings window.
+- Added `keywords` for InputSystem project settings window.
 
 ## [1.18.0] - 2026-01-14
 
