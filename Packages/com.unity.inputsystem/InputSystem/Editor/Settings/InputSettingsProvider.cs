@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
@@ -36,7 +35,10 @@ namespace UnityEngine.InputSystem.Editor
                 // We put this in a child node called "Settings" when Project-wide Actions is enabled.
                 // When not enabled it sits on the main package Settings node.
                 label = "Settings",
-                keywords = new HashSet<string>(new[] { "Input", "Action", "Controls", "Gamepad", "Keyboard", "Mouse", "Touch" })
+                keywords = new[]
+                {
+                    "Input", "Action", "Controls", "Gamepad", "Keyboard", "Mouse", "Touch"
+                }
             };
         }
 
