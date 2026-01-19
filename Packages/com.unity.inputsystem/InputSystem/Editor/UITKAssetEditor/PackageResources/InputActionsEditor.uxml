@@ -12,7 +12,7 @@
                 </ui:VisualElement>
                 <ui:VisualElement name="save-asset-toolbar-container" style="flex-direction: row; justify-content: flex-end;">
                     <uie:ToolbarButton text="Save Asset" display-tooltip-when-elided="true" name="save-asset-toolbar-button" style="align-items: auto;"/>
-                    <uie:ToolbarToggle focusable="false" label="Auto-Save" name="auto-save-toolbar-toggle" style="width: 76px;"/>
+                    <uie:ToolbarToggle focusable="false" label="Auto-Save" name="auto-save-toolbar-toggle" style="width: 73px;"/>
                 </ui:VisualElement>
             </uie:Toolbar>
         </ui:VisualElement>
