@@ -19,8 +19,9 @@ however, it has to be formatted properly to pass verification tests.
 
 - Fixed the `Auto-Save` toggle button with some extra pixels to align the text in the window better.
 
-
 ### Added
+
+- Added `keyboards` for InputSystem project settings window.
 
 ## [1.18.0] - 2026-01-14
 
