@@ -9,14 +9,6 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 
-////REVIEW: should this enumerate *backwards* in time rather than *forwards*?
-
-////TODO: allow correlating history to frames/updates
-
-////TODO: add ability to grow such that you can set it to e.g. record up to 4 seconds of history and it will automatically keep the buffer size bounded
-
-////REVIEW: should we align the extra memory on a 4 byte boundary?
-
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>

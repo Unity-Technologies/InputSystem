@@ -119,7 +119,7 @@ public class Example : MonoBehaviour
             // teleport occurs on the first frame that the action is pressed, and not again until the button is released
         }
 
-        if (submit.WasReleasedThisFrame())
+        if (submitAction.WasReleasedThisFrame())
         {
             // submit occurs on the frame that the action is released, a common technique for buttons relating to UI controls.
         }

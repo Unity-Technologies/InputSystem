@@ -28,27 +28,6 @@ using UnityEngine.Networking.PlayerConnection;
 using CustomBindingPathValidator = System.Func<string, System.Action>;
 #endif
 
-////TODO: allow aliasing processors etc
-
-////REVIEW: rename all references to "frame" to refer to "update" instead (e.g. wasPressedThisUpdate)?
-
-////TODO: add APIs to get to the state blocks (equivalent to what you currently get with e.g. InputSystem.devices[0].currentStatePtr)
-
-////FIXME: modal dialogs (or anything that interrupts normal Unity operation) are likely a problem for the system as is; there's a good
-////       chance the event queue will just get swamped; should be only the background queue though so I guess once it fills up we
-////       simply start losing input but it won't grow infinitely
-
-////REVIEW: make more APIs thread-safe?
-
-////REVIEW: it'd be great to be able to set up monitors from control paths (independently of actions; or should we just use actions?)
-
-////REVIEW: have InputSystem.onTextInput that's fired directly from the event processing loop?
-////        (and allow text input events that have no associated target device? this way we don't need a keyboard to get text input)
-
-////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
-
-////TODO: release native allocations when exiting
-
 namespace UnityEngine.InputSystem
 {
     /// <summary>

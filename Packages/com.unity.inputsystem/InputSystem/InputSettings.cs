@@ -6,26 +6,6 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 
-////TODO: make sure that alterations made to InputSystem.settings in play mode do not leak out into edit mode or the asset
-
-////TODO: handle case of supportFixedUpdates and supportDynamicUpdates both being set to false; should it be an enum?
-
-////TODO: figure out how this gets into a build
-
-////TODO: allow setting up single- and multi-user configs for the project
-
-////TODO: allow enabling/disabling plugins
-
-////REVIEW: should the project settings include a list of action assets to use? (or to force into a build)
-
-////REVIEW: add extra option to enable late-updates?
-
-////REVIEW: put default sensor sampling frequency here?
-
-////REVIEW: put default gamepad polling frequency here?
-
-////REVIEW: Have an InputActionAsset field in here that allows having a single default set of actions that are enabled with no further setup?
-
 namespace UnityEngine.InputSystem
 {
     /// <summary>
