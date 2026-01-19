@@ -17,7 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
-- Fixed the `Auto-Save` toggle button with some extra pixels to alignment better the text in the window.
+- Fixed the `Auto-Save` toggle button with some extra pixels to align the text in the window better.
 
 
 ### Added
