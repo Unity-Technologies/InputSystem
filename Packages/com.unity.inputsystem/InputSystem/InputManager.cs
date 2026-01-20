@@ -2519,12 +2519,6 @@ namespace UnityEngine.InputSystem
 
         private void OnNativeDeviceDiscovered(int deviceId, string deviceDescriptor)
         {
-            var deviceTag = InputDeviceDescription.FromJson(deviceDescriptor).product;
-
-            Debug.Log($"OnNativeDeviceDiscovered {deviceTag}");
-
-            NativeInputSystem.LogDeviceConnectedInsight( deviceTag );
-
             // Make sure we're not adding to m_AvailableDevices before we restored what we
             // had before a domain reload.
             RestoreDevicesAfterDomainReloadIfNecessary();
@@ -2536,6 +2530,12 @@ namespace UnityEngine.InputSystem
 
             // Parse description, if need be.
             var description = device?.description ?? InputDeviceDescription.FromJson(deviceDescriptor);
+
+            var deviceTag = description.product;
+
+            Debug.Log($"OnNativeDeviceDiscovered {deviceTag}");
+
+            NativeInputSystem.LogDeviceConnectedInsight(description.serial, description.product, description.interfaceName, description.version);
 
             // Add it.
             var markAsRemoved = false;
