@@ -2531,10 +2531,6 @@ namespace UnityEngine.InputSystem
             // Parse description, if need be.
             var description = device?.description ?? InputDeviceDescription.FromJson(deviceDescriptor);
 
-            var deviceTag = description.product;
-
-            Debug.Log($"OnNativeDeviceDiscovered {deviceTag}");
-
             NativeInputSystem.LogDeviceConnectedInsight(description.serial, description.product, description.interfaceName, description.version);
 
             // Add it.
@@ -3602,6 +3598,8 @@ namespace UnityEngine.InputSystem
                         case DeviceRemoveEvent.Type:
                         {
                             RemoveDevice(device, keepOnListOfAvailableDevices: false);
+
+                            NativeInputSystem.LogDeviceDisconnectedInsight(device.description.serial);
 
                             // If it's a native device with a description, put it on the list of disconnected
                             // devices.
