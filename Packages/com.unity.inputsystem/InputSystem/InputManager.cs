@@ -2531,7 +2531,7 @@ namespace UnityEngine.InputSystem
             // Parse description, if need be.
             var description = device?.description ?? InputDeviceDescription.FromJson(deviceDescriptor);
 
-#if UNITY_INPUTSYSTEM_SUPPORTS_INSIGHTS
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
             NativeInputSystem.LogDeviceConnectedInsight(description.serial, description.product, description.interfaceName, description.version);
 #endif
 
@@ -3601,7 +3601,7 @@ namespace UnityEngine.InputSystem
                         {
                             RemoveDevice(device, keepOnListOfAvailableDevices: false);
 
-#if UNITY_INPUTSYSTEM_SUPPORTS_INSIGHTS
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
                             NativeInputSystem.LogDeviceDisconnectedInsight(device.description.serial);
 #endif
                             // If it's a native device with a description, put it on the list of disconnected

@@ -100,7 +100,7 @@
         {
             "name": "Unity",
             "expression": "6000.5.0a5",
-            "define": "UNITY_INPUTSYSTEM_SUPPORTS_INSIGHTS"
+            "define": "UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS"
         }        
     ],
     "noEngineReferences": false

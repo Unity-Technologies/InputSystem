@@ -10,6 +10,7 @@ using Unity.Profiling;
 using UnityEngine.InputSystem.Utilities;
 
 using ProfilerMarker = Unity.Profiling.ProfilerMarker;
+using UnityEngineInternal.Input;
 
 ////TODO: now that we can bind to controls by display name, we need to re-resolve controls when those change (e.g. when the keyboard layout changes)
 
@@ -957,6 +958,14 @@ namespace UnityEngine.InputSystem
                 NotifyListenersOfActionChange(InputActionChange.ActionEnabled, map.m_SingletonAction);
             else
                 NotifyListenersOfActionChange(InputActionChange.ActionMapEnabled, map);
+
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
+            // also report all actions to insights
+            foreach (var inputAction in map.actions)
+            {
+                NativeInputSystem.LogInputActionInsight(inputAction.name, inputAction.type.ToString());
+            }
+#endif
         }
 
         private void EnableControls(InputActionMap map)
