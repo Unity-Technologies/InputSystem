@@ -122,6 +122,11 @@
 
 .properties-foldout-toggle {
     background-color: var(--input-editor-colors-properties-foldout);
+    height: 20px;
+}
+
+.properties-foldout-toggle:hover {
+    background-color: #474747;
 }
 
 .name-and-parameter-empty-label {
