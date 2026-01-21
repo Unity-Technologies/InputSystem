@@ -482,15 +482,15 @@ namespace UnityEngine.InputSystem
         }
 
         // We don't want to populate Insights from within tests, even when running them in players
-        public void LogDeviceConnectedInsight(string serial, string product, string deviceInterface, string version)
+        public void LogDeviceConnectedInsight(InputDeviceDescription description)
         {
         }
 
-        public void LogDeviceDisconnectedInsight(string serial)
+        public void LogDeviceDisconnectedInsight(InputDeviceDescription description)
         {
         }
 
-        public void LogInputActionInsight(string name, string type)
+        public void LogInputActionInsight(InputAction action)
         {
         }
 

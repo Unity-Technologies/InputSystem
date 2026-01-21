@@ -4,6 +4,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
+using UnityEngine.InputSystem.Layouts;
+
 
 #if UNITY_EDITOR
 using System.Reflection;
@@ -423,24 +425,24 @@ namespace UnityEngine.InputSystem.LowLevel
         #endif //ENABLE_CLOUD_SERVICES_ANALYTICS
         }
 
-        public void LogDeviceConnectedInsight(string serial, string product, string deviceInterface, string version)
+        public void LogDeviceConnectedInsight(InputDeviceDescription description)
         {
 #if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
-            NativeInputSystem.LogDeviceConnectedInsight(serial, product, deviceInterface, version);
+            NativeInputSystem.LogDeviceConnectedInsight(description.serial, description.product, description.interfaceName, description.version);
 #endif
         }
 
-        public void LogDeviceDisconnectedInsight(string serial)
+        public void LogDeviceDisconnectedInsight(InputDeviceDescription description)
         {
 #if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
-            NativeInputSystem.LogDeviceDisconnectedInsight(serial);
+            NativeInputSystem.LogDeviceDisconnectedInsight(description.serial);
 #endif
         }
 
-        public void LogInputActionInsight(string name, string type)
+        public void LogInputActionInsight(InputAction action)
         {
 #if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
-            NativeInputSystem.LogInputActionInsight(name, type);
+            NativeInputSystem.LogInputActionInsight(action.name, action.type.ToString());
 #endif
         }
 

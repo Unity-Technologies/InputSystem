@@ -963,7 +963,7 @@ namespace UnityEngine.InputSystem
             // also report all actions to insights
             foreach (var inputAction in map.actions)
             {
-                InputSystem.s_Manager.m_Runtime.LogInputActionInsight( inputAction.name, inputAction.type.ToString() );
+                InputSystem.s_Manager.m_Runtime.LogInputActionInsight( inputAction );
             }
 #endif
         }
