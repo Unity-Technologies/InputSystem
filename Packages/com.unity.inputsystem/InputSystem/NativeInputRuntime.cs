@@ -427,21 +427,21 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public void LogDeviceConnectedInsight(InputDeviceDescription description)
         {
-#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS && !UNITY_EDITOR
             NativeInputSystem.LogDeviceConnectedInsight(description.serial, description.product, description.interfaceName, description.version);
 #endif
         }
 
         public void LogDeviceDisconnectedInsight(InputDeviceDescription description)
         {
-#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS && !UNITY_EDITOR
             NativeInputSystem.LogDeviceDisconnectedInsight(description.serial);
 #endif
         }
 
         public void LogInputActionInsight(InputAction action)
         {
-#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS && !UNITY_EDITOR
             NativeInputSystem.LogInputActionInsight(action.name, action.type.ToString());
 #endif
         }
