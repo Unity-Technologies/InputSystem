@@ -125,18 +125,9 @@
     height: 20px;
 }
 
-
 .properties-foldout-toggle:hover {
     background-color: var(--input-editor-colors-properties-foldout-toggle-hover);
-    /*
-    background-color: #474747;
-    */
 }
-/*!* Dark theme hover *!
-!* Light theme hover – pick a lighter hover color that fits the light palette *!
-.properties-foldout-toggle.light:hover {
-    background-color: #e6e6e6;
-}*/
 
 .name-and-parameter-empty-label {
     margin-top: 5px;
