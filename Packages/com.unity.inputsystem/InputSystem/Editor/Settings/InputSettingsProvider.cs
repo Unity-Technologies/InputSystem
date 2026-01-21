@@ -137,8 +137,12 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.Separator();
                 EditorGUILayout.Space();
 
+                EditorGUILayout.LabelField("Action Properties - Processors", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(m_DefaultDeadzoneMin, m_DefaultDeadzoneMinContent);
                 EditorGUILayout.PropertyField(m_DefaultDeadzoneMax, m_DefaultDeadzoneMaxContent);
+                EditorGUILayout.Space();
+
+                EditorGUILayout.LabelField("Action Properties - Interactions", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(m_DefaultButtonPressPoint, m_DefaultButtonPressPointContent);
                 EditorGUILayout.PropertyField(m_ButtonReleaseThreshold, m_ButtonReleaseThresholdContent);
                 EditorGUILayout.PropertyField(m_DefaultTapTime, m_DefaultTapTimeContent);
@@ -146,6 +150,7 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.PropertyField(m_DefaultHoldTime, m_DefaultHoldTimeContent);
                 EditorGUILayout.PropertyField(m_TapRadius, m_TapRadiusContent);
                 EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
+                EditorGUILayout.Space();
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
