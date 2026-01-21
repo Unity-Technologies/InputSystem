@@ -423,6 +423,27 @@ namespace UnityEngine.InputSystem.LowLevel
         #endif //ENABLE_CLOUD_SERVICES_ANALYTICS
         }
 
-        #endif // UNITY_ANALYTICS || UNITY_EDITOR
+        public void LogDeviceConnectedInsight(string serial, string product, string deviceInterface, string version)
+        {
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
+            NativeInputSystem.LogDeviceConnectedInsight(serial, product, deviceInterface, version);
+#endif
+        }
+
+        public void LogDeviceDisconnectedInsight(string serial)
+        {
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
+            NativeInputSystem.LogDeviceDisconnectedInsight(serial);
+#endif
+        }
+
+        public void LogInputActionInsight(string name, string type)
+        {
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
+            NativeInputSystem.LogInputActionInsight(name, type);
+#endif
+        }
+
+#endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

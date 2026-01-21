@@ -481,6 +481,19 @@ namespace UnityEngine.InputSystem
             #endif // UNITY_2023_2_OR_NEWER
         }
 
-        #endif // UNITY_ANALYTICS || UNITY_EDITOR
+        // We don't want to populate Insights from within tests, even when running them in players
+        public void LogDeviceConnectedInsight(string serial, string product, string deviceInterface, string version)
+        {
+        }
+
+        public void LogDeviceDisconnectedInsight(string serial)
+        {
+        }
+
+        public void LogInputActionInsight(string name, string type)
+        {
+        }
+
+#endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }
