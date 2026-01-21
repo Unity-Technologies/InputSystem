@@ -30,7 +30,7 @@
                 </ui:VisualElement>
                 <ui:TwoPaneSplitView name="actions-and-properties-split-view" fixed-pane-index="1" fixed-pane-initial-dimension="320" view-data-key="actions-editor-splitter-2" style="height: auto; min-width: 450px;">
                     <ui:VisualElement name="actions-container" class="body-panel-container">
-                        <ui:VisualElement name="header" class="body-panel-header">
+                        <ui:VisualElement name="header" class="body-panel-header" style="justify-content: space-between;">
                             <ui:Label text="Actions" display-tooltip-when-elided="true" name="actions-label"/>
                             <ui:Button display-tooltip-when-elided="true" name="add-new-action-button" style="align-items: auto;"/>
                         </ui:VisualElement>
