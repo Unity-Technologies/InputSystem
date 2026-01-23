@@ -12644,4 +12644,73 @@ partial class CoreTests
         InputSystem.Update();
         Assert.That(started, Is.EqualTo(2));
     }
+    
+    // Similar to above but with additional keyboard input happening in parallel.
+    // Currently does not capture what was observed by QA when testing fix for ISXB-1767 so likely needs more
+    // tweaking to be representative to repro project scenario.
+    [Test, Description("https://jira.unity3d.com/browse/ISXB-1767")]
+    public void Actions_CanHandleDeviceDisconnectWithControlSchemesAndReconnectWhileGettingKeyboardInput()
+    {
+        int started = 0;
+        int performed = 0;
+        int canceled = 0;
+
+        // Create an input action asset object.
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        // These control schemes are critical to this test. Without them the exception won't happen.
+        var keyboardScheme = actions.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
+        var gamepadScheme = actions.AddControlScheme("Gamepad").WithRequiredDevice<Gamepad>();
+
+        // Create a single action map since its sufficient for the scenario.
+        var map = actions.AddActionMap("map");
+
+        var action = map.AddAction(name: "Toggle", InputActionType.Button);
+        action.AddBinding("<Gamepad>/leftTrigger");
+        action.AddBinding("<Keyboard>/space");
+        action.started += context => ++ started;
+        action.performed += context => ++ performed;
+        action.canceled += (context) =>
+        {
+            // In reported issue, map state is changed from cancellation callback.
+            map.Disable();
+            map.Enable();
+
+            // This is not part of the bug reported in ISXB-1767 but extends the test coverage since
+            // it makes sure Disable() is safe after logically skipped Enable().
+            map.Disable();
+            map.Enable();
+
+            ++canceled;
+        };
+
+        // Add a keyboard and a gamepad.
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Enable the map, press (and hold) the left trigger and assert action is firing.
+        map.Enable();
+        Press(gamepad.leftTrigger, queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(started, Is.EqualTo(1));
+
+        // EDIT: Insert keyboard input
+        Press(keyboard.spaceKey);
+        
+        // Remove the gamepad device. This is consistent with event queue based removal (not kept on list).
+        InputSystem.RemoveDevice(gamepad);
+        InputSystem.Update();
+        Assert.That(canceled, Is.EqualTo(1));
+
+        // EDIT: Insert keyboard input
+        Press(keyboard.spaceKey);
+        
+        // Reconnect the disconnected gamepad
+        InputSystem.AddDevice(gamepad);
+
+        // Interact again, expecting gamepad scheme to become active
+        Press(gamepad.leftTrigger, queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(started, Is.EqualTo(2));
+    }
 }
