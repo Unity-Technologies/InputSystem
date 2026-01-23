@@ -12,18 +12,33 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Changed
 
-- Updated documentation to reflect that the OnMouse MonoBehaviour events are now supported in Unity 6.4 and above.
+- Updated `m_ActionAssetInstanceID` in PlayerInputEditor.cs to use `EntityId` instead of `InstanceID`.
+- Consecutive wildcard characters ('*') used in input control-paths are now collapsed into a single wildcard when multiple consecutive wildcard characters are present.
 
 ### Fixed
 
+- Fixed the `Auto-Save` toggle button with some extra pixels to align the text in the window better.
+- Align title font size with toolbar style in `Input Action` window.
+- Updated Action Properties headers to use colors consistent with GameObject component headers.
+
+### Added
+
+- Added `keywords` for InputSystem project settings window.
+
+## [1.18.0] - 2026-01-14
+
+### Changed
+- Updated documentation to reflect that the OnMouse MonoBehaviour events are now supported in Unity 6.4 and above.
+- Updated the supported devices documentation to clarify that touchscreens are supported on Linux.
+- Updated documentation to reflect PS5 controller support on Linux.
+
+### Fixed
+
+- Fixed add buttons use add icon in input actions window (ISX-2340)
 - Fixed warnings being generated on Unity 6.4 and 6.5. (ISX-2395).
 - Fixed extra empty lines being displayed in the control binding list when mouse buttons are pressed [ISXB-1677](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1677)
 - Fixed InputActionReference not being set when attempting to set it on a Prefab or ScriptableObject [ISXB-1787](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1787)
 - Fixed misaligned Virtual Cursor when changing resolution [ISXB-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1119)
-
-### Changed
-
-- Updated documentation to reflect PS5 controller support on Linux.
 
 ## [1.17.0] - 2025-11-25
 

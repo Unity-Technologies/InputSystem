@@ -16,6 +16,9 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.InputSystem.Layouts;
 using Unity.Profiling;
 using UnityEngineInternal.Input;
+#if UNITY_6000_5_OR_NEWER
+using UnityEngine.Assemblies;
+#endif
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -24,22 +27,6 @@ using UnityEngine.InputSystem.Editor;
 #if UNITY_EDITOR
 using CustomBindingPathValidator = System.Func<string, System.Action>;
 #endif
-
-////TODO: make diagnostics available in dev players and give it a public API to enable them
-
-////TODO: work towards InputManager having no direct knowledge of actions
-
-////TODO: allow pushing events into the system any which way; decouple from the buffer in NativeInputSystem being the only source
-
-////REVIEW: change the event properties over to using IObservable?
-
-////REVIEW: instead of RegisterInteraction and RegisterProcessor, have a generic RegisterInterface (or something)?
-
-////REVIEW: can we do away with the 'previous == previous frame' and simply buffer flip on every value write?
-
-////REVIEW: should we force keeping mouse/pen/keyboard/touch around in editor even if not in list of supported devices?
-
-////REVIEW: do we want to filter out state events that result in no state change?
 
 #pragma warning disable CS0649
 namespace UnityEngine.InputSystem
@@ -2069,7 +2056,11 @@ namespace UnityEngine.InputSystem
 
             var inputSystemAssembly = typeof(InputProcessor).Assembly;
             var inputSystemName = inputSystemAssembly.GetName().Name;
+#if UNITY_6000_5_OR_NEWER
+            var assemblies = CurrentAssemblies.GetLoadedAssemblies();
+#else
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+#endif
             foreach (var assembly in assemblies)
             {
                 try
