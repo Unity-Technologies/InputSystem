@@ -20,6 +20,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed the `Auto-Save` toggle button with some extra pixels to align the text in the window better.
 - Align title font size with toolbar style in `Input Action` window.
 - Updated Action Properties headers to use colors consistent with GameObject component headers.
+- Fixed misaligned Virtual Cursor when changing resolution [ISXB-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1119)
 
 ### Added
 
@@ -38,7 +39,6 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed warnings being generated on Unity 6.4 and 6.5. (ISX-2395).
 - Fixed extra empty lines being displayed in the control binding list when mouse buttons are pressed [ISXB-1677](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1677)
 - Fixed InputActionReference not being set when attempting to set it on a Prefab or ScriptableObject [ISXB-1787](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1787)
-- Fixed misaligned Virtual Cursor when changing resolution [ISXB-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1119)
 
 ## [1.17.0] - 2025-11-25
 
