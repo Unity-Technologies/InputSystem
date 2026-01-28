@@ -194,19 +194,6 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
-        public Action<bool> onPlayerFocusChanged
-        {
-            get => m_FocusChangedMethod;
-            set
-            {
-                if (value == null)
-                    Application.focusChanged -= OnFocusChanged;
-                else if (m_FocusChangedMethod == null)
-                    Application.focusChanged += OnFocusChanged;
-                m_FocusChangedMethod = value;
-            }
-        }
-
         public bool isPlayerFocused => Application.isFocused;
 
         public float pollingFrequency
@@ -280,13 +267,6 @@ namespace UnityEngine.InputSystem.LowLevel
             }
 
             return true;
-        }
-
-        private Action<bool> m_FocusChangedMethod;
-
-        private void OnFocusChanged(bool focus)
-        {
-            m_FocusChangedMethod(focus);
         }
 
         public Vector2 screenSize => new Vector2(Screen.width, Screen.height);

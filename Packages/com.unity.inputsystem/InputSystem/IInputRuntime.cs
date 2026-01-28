@@ -110,12 +110,6 @@ namespace UnityEngine.InputSystem.LowLevel
         Action<int, string> onDeviceDiscovered { get; set; }
 
         /// <summary>
-        /// Set delegate to call when the application changes focus.
-        /// </summary>
-        /// <seealso cref="Application.onFocusChanged"/>
-        Action<bool> onPlayerFocusChanged { get; set; }
-
-        /// <summary>
         // Is true when the player or game view has focus.
         /// </summary>
         /// <seealso cref="Application.isFocused"/>

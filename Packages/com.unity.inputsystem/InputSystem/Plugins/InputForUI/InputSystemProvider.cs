@@ -276,10 +276,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             return Event.CompareType(a, b);
         }
 
+        // Can't be removed as it's part of the IEventProviderImpl interface
         public void OnFocusChanged(bool focus)
-        {
-            m_InputEventPartialProvider.OnFocusChanged(focus);
-        }
+        { }
 
         public bool RequestCurrentState(Event.Type type)
         {
