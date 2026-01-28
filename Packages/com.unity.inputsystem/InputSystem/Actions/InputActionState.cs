@@ -1481,18 +1481,18 @@ namespace UnityEngine.InputSystem
                     if (m_OnBeforeUpdateHooked)
                         bindingStatePtr->initialStateCheckPending = false;
 
+                    var control = controls[controlIndex];
+
                     // We might end up here if an action map is enabled from e.g. an event processing callback such as
                     // InputAction.cancel event handler (ISXB-1767). In this case we must skip controls associated with
                     // a device that is not connected to the system (Have deviceIndex < 0). We check this here to not
                     // cause side effects if aborting later in the call-chain.
-                    if (!controls[controlIndex].device.added)
+                    if (control == null || !controls[controlIndex].device.added)
                     {
                         return;
                     }
 
                     // Store magnitude. We do this once and then only read it from here.
-                    var control = controls[controlIndex];
-
                     trigger.magnitude = control.CheckStateIsAtDefault() ? 0f : control.magnitude;
                     controlMagnitudes[controlIndex] = trigger.magnitude;
 
