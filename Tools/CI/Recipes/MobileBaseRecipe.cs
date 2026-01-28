@@ -53,7 +53,7 @@ public abstract class MobileBaseRecipe : BaseRecipe
         {
             case SystemType.Android:
                 // For build jobs on Android, we still use the built-in UTR and the extra commands are not needed.
-                if (job.Name.Contains("BuildJobs"))
+                if (job.Name != null && job.Name.Contains("BuildJobs"))
                     break;
                 job.WithCommands(Settings.AndroidExtraCommands).WithAfterCommands(Settings.AndroidExtraAfterCommands);
                 job.WithCommands(UtrCommand.Download(systemType, "utr.bat"));

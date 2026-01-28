@@ -17,6 +17,9 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Profiling;
 using UnityEngine.TestTools.Constraints;
 using Is = NUnit.Framework.Is;
+#if UNITY_6000_5_OR_NEWER
+using UnityEngine.Assemblies;
+#endif
 
 partial class CoreTests
 {
@@ -1545,7 +1548,11 @@ partial class CoreTests
         var inputDevice = typeof(InputDevice);
         var inputControlType = typeof(InputControl);
         var checkedTypes = new HashSet<Type>();
+#if UNITY_6000_5_OR_NEWER
+        foreach (var assembly in CurrentAssemblies.GetLoadedAssemblies())
+#else
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+#endif
         {
             try
             {
@@ -1598,6 +1605,32 @@ partial class CoreTests
             var inputControlMessage = $"A public setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
             Assert.That(setMethod, Is.Not.Null, inputControlMessage);
             Assert.That(setMethod.IsPublic, Is.True, inputControlMessage);
+        }
+    }
+
+    [Test]
+    [Category("Controls")]
+    public void Controls_MatchPathComponent_CollapsesConsecutiveWildcards()
+    {
+        var component = "leftTrigger";
+        var componentType = InputControlPath.PathComponentType.Name;
+
+        var patterns = new[]
+        {
+            "*Trigger",
+            "**Trigger",
+            "***Trigger"
+        };
+
+        foreach (var path in patterns)
+        {
+            var indexInPath = 0;
+            var result = InputControlPath.MatchPathComponent(component, path, ref indexInPath, componentType);
+
+            // All patterns should match
+            Assert.IsTrue(result, $"Pattern '{path}' should match '{component}'");
+            Assert.AreEqual(path.Length, indexInPath,
+                $"Index should advance past entire pattern for '{path}'");
         }
     }
 }
