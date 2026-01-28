@@ -2988,6 +2988,12 @@ namespace UnityEngine.InputSystem
             var backgroundBehavior = m_Settings.backgroundBehavior;
             if (backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
             {
+                if (focus == false)
+                {
+                    foreach (var device in devices)
+                        device.MarkStateKnownRecursively(false);
+                }
+
                 // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
                 // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
                 m_HasFocus = focus;

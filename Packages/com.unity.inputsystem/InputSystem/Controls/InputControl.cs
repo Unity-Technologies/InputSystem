@@ -1275,6 +1275,22 @@ namespace UnityEngine.InputSystem
         }
 
         #endif
+
+        protected bool m_isStateKnown = false;
+        public bool isStateKnown => m_isStateKnown;
+
+        internal virtual void MarkStateKnownRecursively(bool isStateKnown)
+        {
+            m_isStateKnown = isStateKnown;
+
+            foreach (var inputControl in children)
+                inputControl.MarkStateKnownRecursively(isStateKnown);
+        }
+
+        internal virtual void SetStateKnown(bool isStateKnown)
+        {
+            m_isStateKnown = isStateKnown;
+        }
     }
 
     /// <summary>
@@ -1286,6 +1302,13 @@ namespace UnityEngine.InputSystem
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {
+        private TValue m_lastKnownValue;
+        internal override void SetStateKnown(bool isStateKnown)
+        {
+            m_lastKnownValue = m_CachedValue;
+            m_isStateKnown = isStateKnown;
+        }
+
         /// <inheritdoc/>
         public override Type valueType => typeof(TValue);
 
@@ -1363,6 +1386,21 @@ namespace UnityEngine.InputSystem
                     }
                 }
 #endif
+
+                if (!isStateKnown)
+                {
+                    // TODO: Replace value check with timestamp check?
+                    if (!m_lastKnownValue.Equals(m_CachedValue))
+                    {
+                        // An interaction happened, so we know that the new state 
+                        SetStateKnown(true);
+                    }
+                    else
+                    {
+                        // We forcibly chnage the value to default.
+                        m_CachedValue = ReadDefaultValue();
+                    }
+                }
 
                 return ref m_CachedValue;
             }
