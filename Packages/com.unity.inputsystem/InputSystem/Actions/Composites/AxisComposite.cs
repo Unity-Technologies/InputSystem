@@ -5,7 +5,6 @@ using UnityEngine.InputSystem.Utilities;
 
 #if UNITY_EDITOR
 using System;
-using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
 #endif
@@ -212,25 +211,20 @@ namespace UnityEngine.InputSystem.Composites
     #if UNITY_EDITOR
     internal class AxisCompositeEditor : InputParameterEditor<AxisComposite>
     {
-        private GUIContent m_WhichAxisWinsLabel = new GUIContent("Which Side Wins",
-            "Determine which axis 'wins' if both are actuated at the same time. "
+        private const string label = "Which Side Wins";
+        private const string tooltipText = "Determine which axis 'wins' if both are actuated at the same time. "
             + "If 'Neither' is selected, the result is 0 (or, more precisely, "
-            + "the midpoint between minValue and maxValue).");
+            + "the midpoint between minValue and maxValue).";
 
         public override void OnGUI()
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
-#endif
-            target.whichSideWins = (AxisComposite.WhichSideWins)EditorGUILayout.EnumPopup(m_WhichAxisWinsLabel, target.whichSideWins);
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-            var modeField = new EnumField(m_WhichAxisWinsLabel.text, target.whichSideWins)
+            var modeField = new EnumField(label, target.whichSideWins)
             {
-                tooltip = m_WhichAxisWinsLabel.tooltip
+                tooltip = tooltipText
             };
 
             modeField.RegisterValueChangedCallback(evt =>
@@ -241,8 +235,6 @@ namespace UnityEngine.InputSystem.Composites
 
             root.Add(modeField);
         }
-
-#endif
     }
     #endif
 }

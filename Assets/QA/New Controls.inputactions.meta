@@ -1,9 +1,12 @@
 fileFormatVersion: 2
 guid: c9004b116dbdcf0428ade13281fd27c7
 ScriptedImporter:
-  fileIDToRecycleName:
-    11400000: <root>
+  internalIDToNameTable:
+  - first:
+      114: 11400000
+    second: <root>
   externalObjects: {}
+  serializedVersion: 2
   userData: 
   assetBundleName: 
   assetBundleVariant: 
@@ -12,6 +15,3 @@ ScriptedImporter:
   wrapperCodePath: 
   wrapperClassName: 
   wrapperCodeNamespace: 
-  generateActionEvents: 0
-  actionGuids: []
-  actionMapGuids: []

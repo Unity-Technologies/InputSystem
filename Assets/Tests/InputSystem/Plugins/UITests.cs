@@ -21,7 +21,7 @@ using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
-using Is = UnityEngine.TestTools.Constraints.Is;
+using Is = NUnit.Framework.Is;
 using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
 using UnityEngine.Scripting;
 using Cursor = UnityEngine.Cursor;

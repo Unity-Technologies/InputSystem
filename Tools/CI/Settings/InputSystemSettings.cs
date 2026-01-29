@@ -113,6 +113,18 @@ public class InputSystemSettings : AnnotatedSettingsBase
                     "com.unity.polyspatial.xr",
                     "com.unity.xr.visionos" 
                 }
+            },
+            {
+                new Editor("6000.5",  ""),
+                new HashSet<string>()
+                {
+                    "com.unity.polyspatial",
+                    "com.unity.polyspatial.visionos",
+                    "com.unity.polyspatial.extensions",
+                    "com.unity.polyspatial.xr",
+                    "com.unity.xr.visionos",
+                    "com.unity.charactercontroller"
+                }
             }
         };
 
@@ -157,16 +169,16 @@ public class InputSystemSettings : AnnotatedSettingsBase
             }
             
             MobileBuildPlatforms.Add(platform, new Platform(
-                new Agent(v["build"]["image"].ToString(), 
-                    Utilities.GetEnumValue<FlavorType>(v["build"]["flavor"].ToString()), 
-                    Utilities.GetEnumValue<ResourceType>(v["build"]["type"].ToString())),
+                new Agent(v?["build"]?["image"]?.ToString() ?? string.Empty, 
+                    Utilities.GetEnumValue<FlavorType>(v?["build"]?["flavor"]?.ToString() ?? string.Empty), 
+                    Utilities.GetEnumValue<ResourceType>(v?["build"]?["type"]?.ToString() ?? string.Empty)),
                 platform));
             
             MobileTestPlatforms.Add(platform, new Platform(
-                new Agent(v["run"]["image"].ToString(), 
-                    Utilities.GetEnumValue<FlavorType>(v["run"]["flavor"].ToString()), 
-                    Utilities.GetEnumValue<ResourceType>(v["run"]["type"].ToString()),
-                    v["run"]["model"]?.ToString()),
+                new Agent(v?["run"]?["image"]?.ToString() ?? string.Empty, 
+                    Utilities.GetEnumValue<FlavorType>(v?["run"]?["flavor"]?.ToString() ?? string.Empty), 
+                    Utilities.GetEnumValue<ResourceType>(v?["run"]?["type"]?.ToString() ?? string.Empty),
+                    v?["run"]?["model"]?.ToString()),
                 platform));
         }
     }

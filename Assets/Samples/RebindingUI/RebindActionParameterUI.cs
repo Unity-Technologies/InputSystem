@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem.Samples.RebindUI
         /// <summary>
         /// The preference key to be used for persistence.
         /// </summary>
-        public string mPreferenceKey
+        public string preferenceKey
         {
             get => m_PreferenceKey;
             set => m_PreferenceKey = value;

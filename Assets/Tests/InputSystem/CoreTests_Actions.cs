@@ -21,11 +21,10 @@ using UnityEngine.Profiling;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.TestTools.Constraints;
-using Is = UnityEngine.TestTools.Constraints.Is;
+
+using Is = NUnit.Framework.Is;
 
 #pragma warning disable CS0649
-[SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
-
 // As should be obvious from the number of tests in here, the action system rivals the entire combined rest of the system
 // in terms of complexity.
 partial class CoreTests
@@ -36,9 +35,6 @@ partial class CoreTests
     [TestCase(InputFeatureNames.kParanoidReadValueCachingChecks)]
     [TestCase(InputFeatureNames.kDisableUnityRemoteSupport)]
     [TestCase(InputFeatureNames.kRunPlayerUpdatesInEditMode)]
-    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-    [TestCase(InputFeatureNames.kUseIMGUIEditorForAssets)]
-    #endif
     public void Settings_ShouldStoreSettingsAndFeatureFlags(string featureName)
     {
         using (var settings = Scoped.Object(InputSettings.CreateInstance<InputSettings>()))
@@ -644,6 +640,60 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [Description("Tests that that only the latest event after focus is regained is able to trigger the action." +
+        "Depends on background behavior. (ISXB-1671)")]
+    [TestCase(InputSettings.BackgroundBehavior.IgnoreFocus)]
+    [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices)]
+    [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)]
+    public void Actions_DoNotGetTriggeredByOutOfFocusEventInEditor(InputSettings.BackgroundBehavior backgroundBehavior)
+    {
+        InputSystem.settings.backgroundBehavior = backgroundBehavior;
+
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var mousePointAction = new InputAction(binding: "<Mouse>/position", type: InputActionType.PassThrough);
+        mousePointAction.Enable();
+
+        using (var trace = new InputActionTrace(mousePointAction))
+        {
+            // Note: We currently test against timestamps otherwise the test fails. But, ideally, we wouldn't need to.
+            // If we ever reach a point of having all relevant input events in the queue (including focus events) we
+            // could just rely on order of event. Which means this test work for a fixed timestamp and it should
+            // changed accordingly.
+            currentTime += 1.0f;
+            runtime.PlayerFocusLost();
+            currentTime += 1.0f;
+            // Queuing an event like it would be in the editor when the GameView is out of focus.
+            Set(mouse.position, new Vector2(0.234f, 0.345f) , queueEventOnly: true);
+            currentTime += 1.0f;
+            // Gaining focus like it would happen in the editor when the GameView regains focus.
+            runtime.PlayerFocusGained();
+            currentTime += 1.0f;
+            // This emulates a device sync that happens when the player regains focus through an IOCTL command.
+            // That's why it also has it's time incremented.
+            Set(mouse.position, new Vector2(1.0f, 2.0f), queueEventOnly: true);
+            currentTime += 1.0f;
+            // This update should not trigger any ction as it's an editor update.
+            InputSystem.Update(InputUpdateType.Editor);
+            currentTime += 1.0f;
+
+            var actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(0));
+            // This update should trigger an action with regards to the event queued after focus was regained.
+            // The one queued while out of focus should have been ignored and we should expect only one action triggered.
+            // Unless background behavior is set to IgnoreFocus in which case both events should trigger the action.
+            InputSystem.Update(InputUpdateType.Dynamic);
+
+            actions = trace.ToArray();
+            Assert.That(actions, Has.Length.EqualTo(backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus ? 2 : 1));
+            Assert.That(actions[0].phase, Is.EqualTo(InputActionPhase.Performed));
+            Vector2Control control = (Vector2Control)actions[0].control;
+            // Make sure the value is from the event after focus was regained.
+            Assert.That(control.value, Is.EqualTo(new Vector2(1.0f, 2.0f)).Using(Vector2EqualityComparer.Instance));
+        }
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_TimeoutsDoNotGetTriggeredInEditorUpdates()
     {
         ResetTime();
@@ -714,10 +764,8 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanTargetSameControlWithMultipleActions()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
-#endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -3682,10 +3730,8 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanCreateActionAssetWithMultipleActionMaps()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
-#endif
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
@@ -3936,10 +3982,8 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WithMultipleBoundControls_DriveInteractionsFromControlWithGreatestActuation()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
-#endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -4228,10 +4272,8 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WithMultipleBoundControls_CanHandleInteractionsThatTriggerOnlyOnButtonRelease()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
-#endif
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var gamepad = InputSystem.AddDevice<Gamepad>();
@@ -4763,10 +4805,8 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanRecordAllActionsInTheSystem()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
-#endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -5290,10 +5330,8 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanQueryAllEnabledActions()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable(); // Remove from `ListEnabledActions`
-#endif
 
         var action = new InputAction(binding: "<Gamepad>/leftStick");
         action.Enable();
@@ -5567,11 +5605,9 @@ partial class CoreTests
     [TestCaseSource(typeof(ModificationCases))]
     public void Actions_CanHandleModification(Modification modification, IInputActionCollection2 actions)
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
         InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
-#endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -6459,11 +6495,9 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenDeviceIsRemoved_DeviceIsRemovedFromDeviceMask()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
         InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
-#endif
 
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -6607,11 +6641,9 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenControlsUpdate_NotificationIsTriggered_ButOnlyAfterBindingsHaveFirstBeenResolved()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
         InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
- #endif
 
         var enabledAction = new InputAction("enabledAction", binding: "<Gamepad>/leftTrigger");
 
@@ -6669,11 +6701,9 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenControlsUpdateInActionMap_NotificationIsTriggered()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
         InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
-#endif
 
         var actionMap = new InputActionMap("map");
         actionMap.AddAction("action", binding: "<Gamepad>/leftTrigger");
@@ -6701,11 +6731,9 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_WhenControlsUpdateInActionAsset_NotificationIsTriggered()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
         InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
-#endif
 
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         asset.name = "asset";
@@ -6891,10 +6919,8 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanFindEnabledActions()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable(); // Remove from `ListEnabledActions`
-#endif
 
         var action1 = new InputAction(name: "a");
         var action2 = new InputAction(name: "b");
@@ -8239,10 +8265,12 @@ partial class CoreTests
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
 
-        asset.AddActionMap(new InputActionMap("test"));
+        var map = new InputActionMap("test");
+        asset.AddActionMap(map);
         asset.RemoveActionMap("test");
 
         Assert.That(asset.actionMaps, Is.Empty);
+        Assert.That(map.asset, Is.Null);
     }
 
     [Test]
@@ -11541,43 +11569,6 @@ partial class CoreTests
 
     [Test]
     [Category("Actions")]
-    public void Actions_CanResolveActionReference()
-    {
-        var map = new InputActionMap("map");
-        map.AddAction("action1");
-        var action2 = map.AddAction("action2");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map);
-
-        var reference = ScriptableObject.CreateInstance<InputActionReference>();
-        reference.Set(asset, "map", "action2");
-
-        var referencedAction = reference.action;
-
-        Assert.That(referencedAction, Is.SameAs(action2));
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_CanResolveActionReference_EvenAfterActionHasBeenRenamed()
-    {
-        var map = new InputActionMap("map");
-        var action = map.AddAction("oldName");
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        asset.AddActionMap(map);
-
-        var reference = ScriptableObject.CreateInstance<InputActionReference>();
-        reference.Set(asset, "map", "oldName");
-
-        action.Rename("newName");
-
-        var referencedAction = reference.action;
-
-        Assert.That(referencedAction, Is.SameAs(action));
-    }
-
-    [Test]
-    [Category("Actions")]
     public void Actions_CanDisableAllEnabledActionsInOneGo()
     {
         var action1 = new InputAction(binding: "<Gamepad>/leftStick");
@@ -11908,10 +11899,8 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanUseTouchWithActions()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
-#endif
 
         var touchscreen = InputSystem.AddDevice<Touchscreen>();
 
@@ -11983,10 +11972,8 @@ partial class CoreTests
     [Category("Actions")]
     public void Actions_CanDrivePointerInputFromTouchPenAndMouse()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable(); // Prevent these actions appearing in the `InputActionTrace`
-#endif
 
         // Give us known parameters for tap detection.
         InputSystem.settings.defaultTapTime = 0.5f;

@@ -691,6 +691,72 @@ public class InputForUITests : InputTestFixture
         LogAssert.NoUnexpectedReceived();
     }
 
+    [Test]
+    [Category("Actions")]
+    [Description("Tests that that only the latest event after focus is regained is able to trigger the action." +
+        "Depends on background behavior. " +
+        "Similar to CoreTests_Actions.Actions_DoNotGetTriggeredByOutOfFocusEventInEditor but with InputForUI nuances.")]
+    [TestCase(InputSettings.BackgroundBehavior.IgnoreFocus)]
+    [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices)]
+    [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)]
+    public void UIActions_DoNotGetTriggeredByOutOfFocusEventInEditor(InputSettings.BackgroundBehavior backgroundBehavior)
+    {
+        InputSystem.settings.backgroundBehavior = backgroundBehavior;
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        Vector2 focusPosition = new Vector2(800f, 600f);
+        Vector2 outOfFocusPosition = new Vector2(100f, 500f);
+
+        // Simulate moving the mouse, losing focus, moving out of focus, regaining focus, and moving again to emulate
+        // a device sync that happens when regaining focus in play mode.
+        Update();
+        currentTime += 1.0f;
+        Set(mouse.position, new Vector2(1.0f, 1.0f), queueEventOnly: true);
+        currentTime += 1.0f;
+        Update();
+        currentTime += 1.0f;
+        runtime.PlayerFocusLost();
+        currentTime += 1.0f;
+        Set(mouse.position, outOfFocusPosition , queueEventOnly: true);
+        currentTime += 1.0f;
+        runtime.PlayerFocusGained();
+        currentTime += 1.0f;
+        Set(mouse.position, focusPosition, queueEventOnly: true);
+        currentTime += 1.0f;
+
+        // We call specific updates to simulate editor behavior when regaining focus.
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.AreEqual(0, m_InputForUIEvents.Count);
+        InputSystem.Update();
+        // Calling the event provider update after we call InputSystem updates so that we trigger InputForUI events
+        EventProvider.NotifyUpdate();
+
+        // Convert the input coordinates to UI panel space. We only assume 1 display for the tests.
+        var focusPositionInUI = InputSystemProvider.ScreenBottomLeftToPanelPosition(focusPosition, 0);
+        var outOfFocusPositionInUI = InputSystemProvider.ScreenBottomLeftToPanelPosition(outOfFocusPosition, 0);
+
+
+        // If we don't ignore focus, we only expect one event (the last one after focus is regained).
+        Assert.AreEqual(backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus ? 1 : 2, m_InputForUIEvents.Count);
+
+        // There will be an out of focus event only if we are ignoring focus. Validate its position.
+        if (backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
+        {
+            Assert.That(GetNextRecordedUIEvent() is
+            {
+                type: Event.Type.PointerEvent,
+                asPointerEvent: { type: PointerEvent.Type.PointerMoved, eventSource: EventSource.Mouse, position: var outOfFocusVector2 },
+            } && Mathf.Approximately(outOfFocusVector2.y, outOfFocusPositionInUI.y) && Mathf.Approximately(outOfFocusVector2.x, outOfFocusPositionInUI.x));
+        }
+
+        // Validate that we only we get the event for the position after focus is regained. Make sure its position is correct.
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.PointerMoved, eventSource: EventSource.Mouse, position: var focusPositionVector2 },
+        } && Mathf.Approximately(focusPositionVector2.y, focusPositionInUI.y) && Mathf.Approximately(focusPositionVector2.x, focusPositionInUI.x));
+    }
+
 #endif // UNITY_EDITOR
 
     [Test]

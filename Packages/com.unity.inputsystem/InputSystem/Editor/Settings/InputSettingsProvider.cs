@@ -8,7 +8,6 @@ using UnityEngine.UIElements;
 
 ////TODO: detect if new input backends are enabled and put UI in here to enable them if needed
 
-////TODO: keywords (2019.1+)
 #pragma warning disable CS0414
 namespace UnityEngine.InputSystem.Editor
 {
@@ -21,13 +20,12 @@ namespace UnityEngine.InputSystem.Editor
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
 
-        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        // When Project Wide Actions are enabled we place this as a child node to main settings node.
         public const string kSettingsPath = InputSettingsPath.kSettingsRootPath + "/Settings";
-        #else
-        // When Project Wide Actions are not enabled we let this be the main settings node.
-        public const string kSettingsPath = "Project/Input System Package";
-        #endif
+
+        private static readonly string[] kInputSettingsKeywords =
+        {
+            "Input", "Action", "Controls", "Gamepad", "Keyboard", "Mouse", "Touch"
+        };
 
         public static void Open()
         {
@@ -39,11 +37,10 @@ namespace UnityEngine.InputSystem.Editor
         {
             return new InputSettingsProvider(kSettingsPath, SettingsScope.Project)
             {
-                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 // We put this in a child node called "Settings" when Project-wide Actions is enabled.
                 // When not enabled it sits on the main package Settings node.
-                label = "Settings"
-                #endif
+                label = "Settings",
+                keywords = kInputSettingsKeywords
             };
         }
 

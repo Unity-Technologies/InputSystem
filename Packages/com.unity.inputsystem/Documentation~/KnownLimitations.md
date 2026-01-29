@@ -29,9 +29,9 @@ The following is a list of known limitations that the Input System currently has
 * (Android) We only support a single Touchscreen at the moment.
 * Joy-Cons are only supported on Switch.
 * Sensors in the PS4 controller are currently only supported on PS4.
-  >NOTE: Support for NDA platforms is distributed as separate packages due to licensing restrictions. The packages, at this point, are made available separately to licensees for download and installation.
+    > [!NOTE]
+    > Support for NDA platforms is distributed as separate packages due to licensing restrictions. The packages, at this point, are made available separately to licensees for download and installation.
 
 ## Features Supported by Old Input Manager
 
-* `MonoBehaviour` mouse methods (`OnMouseEnter`, `OnMouseDrag`, etc) will not be called by the Input System.
 * Unity Remote doesn't currently support the Input System. This is being worked on.

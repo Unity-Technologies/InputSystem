@@ -2,8 +2,6 @@ using System;
 
 namespace UnityEngine.InputSystem.Utilities
 {
-    // this parser uses Span<T> so it's only available from later unity versions
-#if UNITY_2021_2_OR_NEWER
     internal struct PredictiveParser
     {
         public void ExpectSingleChar(ReadOnlySpan<char> str, char c)
@@ -144,5 +142,4 @@ namespace UnityEngine.InputSystem.Utilities
 
         private int m_Position;
     }
-#endif
 }

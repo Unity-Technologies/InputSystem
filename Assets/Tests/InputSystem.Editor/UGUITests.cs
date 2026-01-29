@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_6000_0_OR_NEWER
+#if UNITY_EDITOR && UNITY_6000_0_OR_NEWER && UNITY_INPUT_SYSTEM_ENABLE_UI
 using System;
 using NUnit.Framework;
 using UnityEditor;

@@ -5,6 +5,9 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
+#if UNITY_6000_5_OR_NEWER
+using UnityEngine.Assemblies;
+#endif
 
 ////REVIEW: generalize this to something beyond just parameters?
 
@@ -32,7 +35,6 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         public abstract void OnGUI();
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         /// <summary>
         /// Add visual elements for this parameter editor to a root VisualElement.
         /// </summary>
@@ -40,7 +42,6 @@ namespace UnityEngine.InputSystem.Editor
         /// <param name="onChangedCallback">A callback that will be called when any of the parameter editors
         /// changes value.</param>
         public abstract void OnDrawVisualElements(VisualElement root, Action onChangedCallback);
-#endif
 
         internal abstract void SetTarget(object target);
 
@@ -52,7 +53,11 @@ namespace UnityEngine.InputSystem.Editor
             if (s_TypeLookupCache == null)
             {
                 s_TypeLookupCache = new Dictionary<Type, Type>();
+#if UNITY_6000_5_OR_NEWER
+                foreach (var assembly in CurrentAssemblies.GetLoadedAssemblies())
+#else
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+#endif
                 {
                     foreach (var typeInfo in assembly.DefinedTypes)
                     {
@@ -182,7 +187,6 @@ namespace UnityEngine.InputSystem.Editor
             OnEnable();
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         /// <summary>
         /// Default stub implementation of <see cref="InputParameterEditor.OnDrawVisualElements"/>.
         /// Should be overridden to create the desired UI.
@@ -190,8 +194,6 @@ namespace UnityEngine.InputSystem.Editor
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
         }
-
-#endif
 
         /// <summary>
         /// Helper for parameters that have defaults (usually from <see cref="InputSettings"/>).
@@ -223,7 +225,6 @@ namespace UnityEngine.InputSystem.Editor
                         $"Uses \"{defaultName}\" set in project-wide input settings.");
             }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             public void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
             {
                 var value = m_GetValue();
@@ -328,7 +329,6 @@ namespace UnityEngine.InputSystem.Editor
                 m_FloatField?.SetEnabled(!m_UseDefaultValue);
             }
 
-#endif
             private void SetValue(float newValue)
             {
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
@@ -406,9 +406,7 @@ namespace UnityEngine.InputSystem.Editor
             private FloatField m_FloatField;
             private Button m_OpenInputSettingsButton;
             private Toggle m_DefaultToggle;
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             private HelpBox m_HelpBox;
-#endif
         }
     }
 }

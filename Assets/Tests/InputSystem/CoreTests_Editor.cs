@@ -2892,7 +2892,6 @@ partial class CoreTests
 
     private static void DisableProjectWideActions()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // If the system has project-wide input actions they will start enabled once InputSystem.Reset() is called and
         // be disabled entering EditMode. Hence, we adjust extra variable to compensate ofstate allocated by
         // project-wide actions.
@@ -2902,14 +2901,12 @@ partial class CoreTests
             InputSystem.actions.Disable();
             InputActionState.DestroyAllActionMapStates();
         }
-#endif
     }
 
     [Test]
     [Category("Editor")]
     public void Editor_InitializeInEditor_EnablesProjectWideActions()
     {
-        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         if (InputSystem.actions != null)
         {
             // Asserts that project wide actions are enabled by default.
@@ -2935,7 +2932,6 @@ partial class CoreTests
 
             Assert.That(InputSystem.actions.enabled, Is.False);
         }
-        #endif
     }
 
     [Test]
@@ -2952,13 +2948,10 @@ partial class CoreTests
         // Enter play mode.
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-
         // This simulates enabling project-wide actions, which is done before just before entering play mode,
         // called from InputSystem.InitializeInEditor().
         if (InputSystem.actions)
             InputSystem.actions.Enable();
-#endif
 
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
 

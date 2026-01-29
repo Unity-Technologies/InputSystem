@@ -255,8 +255,8 @@ namespace UnityEngine.InputSystem
     /// <remarks>
     /// Named according to the US keyboard layout which is used as a reference layout.
     ///
-    /// Note:
-    /// Unity input system key codes and input manager key codes are designed with game controls in mind.
+    /// > [!NOTE]
+    /// > Unity input system key codes and input manager key codes are designed with game controls in mind.
     ///
     /// This means the way they are assigned is intended to preserve the location of keys on keyboards,
     /// so that pressing a key in the same location on different keyboards should result in the same action

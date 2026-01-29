@@ -6,26 +6,6 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Utilities;
 
-////TODO: make sure that alterations made to InputSystem.settings in play mode do not leak out into edit mode or the asset
-
-////TODO: handle case of supportFixedUpdates and supportDynamicUpdates both being set to false; should it be an enum?
-
-////TODO: figure out how this gets into a build
-
-////TODO: allow setting up single- and multi-user configs for the project
-
-////TODO: allow enabling/disabling plugins
-
-////REVIEW: should the project settings include a list of action assets to use? (or to force into a build)
-
-////REVIEW: add extra option to enable late-updates?
-
-////REVIEW: put default sensor sampling frequency here?
-
-////REVIEW: put default gamepad polling frequency here?
-
-////REVIEW: Have an InputActionAsset field in here that allows having a single default set of actions that are enabled with no further setup?
-
 namespace UnityEngine.InputSystem
 {
     /// <summary>
@@ -739,6 +719,11 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(featureName))
                 throw new ArgumentNullException(nameof(featureName));
 
+            if (featureName == InputFeatureNames.kUseIMGUIEditorForAssets)
+            {
+                throw new ArgumentException($"The {InputFeatureNames.kUseIMGUIEditorForAssets} feature flag is no longer supported.");
+            }
+
             if (m_FeatureFlags == null)
                 m_FeatureFlags = new HashSet<string>();
 
@@ -978,15 +963,9 @@ namespace UnityEngine.InputSystem
             MultilineBoth,
         }
 
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        /// <summary>
-        /// Determines if we should render the UI with IMGUI even if an UI Toolkit UI is available.
-        ///
-        /// This should be used when writing a custom <see cref="InputParameterEditor"/> to :
-        /// * support inspector view which only work in IMGUI for now.
-        /// * prevent the UI to be rendered in IMGUI and UI Toolkit in the Input Actions Editor window.
-        /// </summary>
-        public bool useIMGUIEditorForAssets => UnityEditor.EditorGUI.indentLevel > 0 || IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets);
+#if UNITY_EDITOR
+        [Obsolete("useIMGUIEditorForAssets is obsolete and will be removed in a future release.")]
+        public bool useIMGUIEditorForAssets => false;
 #endif
 
         private static bool CompareFloats(float a, float b)
@@ -1059,11 +1038,7 @@ namespace UnityEngine.InputSystem
                 CompareFeatureFlag(a, b, InputFeatureNames.kParanoidReadValueCachingChecks) &&
                 CompareFeatureFlag(a, b, InputFeatureNames.kDisableUnityRemoteSupport) &&
                 CompareFeatureFlag(a, b, InputFeatureNames.kRunPlayerUpdatesInEditMode) &&
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 CompareFeatureFlag(a, b, InputFeatureNames.kUseIMGUIEditorForAssets);
-#else
-                true;     // Improves formatting
-#endif
         }
     }
 }

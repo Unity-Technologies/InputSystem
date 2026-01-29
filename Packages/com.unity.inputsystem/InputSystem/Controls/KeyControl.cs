@@ -12,8 +12,8 @@ namespace UnityEngine.InputSystem.Controls
     /// have symbols associated with them which may change depending on keyboard layout as well as in combination
     /// with other keys.
     ///
-    /// Note:
-    /// Unity input system key codes and input manager key codes are designed with game controls in mind.
+    /// > [!NOTE]
+    /// > Unity input system key codes and input manager key codes are designed with game controls in mind.
     ///
     /// This means the way they are assigned is intended to preserve the location of keys on keyboards,
     /// so that pressing a key in the same location on different keyboards should result in the same action
