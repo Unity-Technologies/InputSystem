@@ -1395,9 +1395,10 @@ namespace UnityEngine.InputSystem
 #endif
 
                 // If the state is unknown (e.g., after focus loss with IgnoreFocus setting),
-                // return the default value until we receive an input event for this control.
-                // The control will be marked as "known" when WriteChangedControlStates processes
-                // an event that covers this control (either a full state event or a delta state event).
+                // return the default value instead of potentially stale cached data.
+                // NOTE: Currently, there is no mechanism to automatically mark controls as "known"
+                // when events arrive, due to limitations in identifying which specific control
+                // triggered a full state event. See ISXB-1730 investigation for details.
                 if (!isStateKnown)
                 {
                     return ref m_DefaultValue;
