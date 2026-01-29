@@ -97,7 +97,11 @@ namespace UnityEngine.InputSystem.Editor
 
             var assetChanged = CheckIfActionAssetChanged();
             // initialize the editor component if the asset has changed or if it has not been initialized yet
+#if UNITY_6000_4_OR_NEWER
+            if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || assetChanged || m_ActionAssetEntityId == EntityId.None)
+#else
             if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || assetChanged || m_ActionAssetInstanceID == 0)
+#endif
             {
                 InitializeEditorComponent(assetChanged);
                 actionsWereChanged = true;
@@ -276,17 +280,22 @@ namespace UnityEngine.InputSystem.Editor
         // One such case is when the user triggers a "Reset" on the component.
         bool CheckIfActionAssetChanged()
         {
-            if (m_ActionsProperty.objectReferenceValue != null)
-            {
-                var assetInstanceID = m_ActionsProperty.objectReferenceValue.GetInstanceID();
-                // if the m_ActionAssetInstanceID is 0 the PlayerInputEditor has not been initialized yet, but the asset did not change
-                bool result = assetInstanceID != m_ActionAssetInstanceID && m_ActionAssetInstanceID != 0;
-                m_ActionAssetInstanceID = (int)assetInstanceID;
-                return result;
-            }
+            var obj = m_ActionsProperty.objectReferenceValue;
+            if (obj == null)
+                return false;
 
-            m_ActionAssetInstanceID = -1;
-            return false;
+#if UNITY_6000_4_OR_NEWER
+            EntityId assetEntityId = obj.GetEntityId();
+            bool result = assetEntityId != m_ActionAssetEntityId && m_ActionAssetEntityId != EntityId.None;
+            m_ActionAssetEntityId = assetEntityId;
+            return result;
+#else
+            int assetInstanceID = obj.GetInstanceID();
+            // if the m_ActionAssetInstanceID is 0 the PlayerInputEditor has not been initialized yet, but the asset did not change
+            bool result = assetInstanceID != m_ActionAssetInstanceID && m_ActionAssetInstanceID != 0;
+            m_ActionAssetInstanceID = (int)assetInstanceID;
+            return result;
+#endif
         }
 
         private void DoHelpCreateAssetUI()
@@ -647,7 +656,11 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
         [NonSerialized] private bool m_ActionAssetInitialized;
+#if UNITY_6000_4_OR_NEWER
+        [NonSerialized] private EntityId m_ActionAssetEntityId;
+#else
         [NonSerialized] private int m_ActionAssetInstanceID;
+#endif
     }
 }
 #endif // UNITY_EDITOR

@@ -39,6 +39,8 @@ namespace UnityEngine.InputSystem.Editor
             if (addInteractionButton == null)
             {
                 addInteractionButton = CreateAddButton(interactionsToggle, "add-new-interaction-button");
+                addInteractionButton.AddToClassList(EditorGUIUtility.isProSkin ? "add-binging-button-dark-theme" : "add-binging-button");
+
                 new ContextualMenuManipulator(_ => {}){target = addInteractionButton, activators = {new ManipulatorActivationFilter(){button = MouseButton.LeftMouse}}};
             }
             var processorToggle = processorsFoldout.Q<Toggle>();
@@ -46,6 +48,8 @@ namespace UnityEngine.InputSystem.Editor
             if (addProcessorButton == null)
             {
                 addProcessorButton = CreateAddButton(processorToggle, "add-new-processor-button");
+                addProcessorButton.AddToClassList(EditorGUIUtility.isProSkin ? "add-binging-button-dark-theme" : "add-binging-button");
+
                 new ContextualMenuManipulator(_ => {}){target = addProcessorButton, activators = {new ManipulatorActivationFilter(){button = MouseButton.LeftMouse}}};
             }
         }
@@ -53,7 +57,6 @@ namespace UnityEngine.InputSystem.Editor
         private TextElement CreateAddButton(Toggle toggle, string name)
         {
             var addButton = new Button();
-            addButton.text = "+";
             addButton.name = name;
             addButton.focusable = false;
             #if UNITY_EDITOR_OSX

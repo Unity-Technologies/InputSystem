@@ -5,26 +5,6 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
-////TODO: add capabilities indicating whether pressure is supported
-
-////REVIEW: is there an opportunity to collapse "press" and "pressure" into one? after all, if there's any pressure, isn't the pointer pressed?
-
-////REVIEW: should "displayIndex" be called "windowIndex"? or be part of a better thought-out multi-display API altogether?
-
-////REVIEW: add click and clickCount controls directly to Pointer?
-////        (I gave this a look but in my initial try, found it somewhat difficult to add click detection at the Pointer level due
-////        to the extra state it involves)
-
-////REVIEW: should we put lock state directly on Pointer?
-
-////REVIEW: should pointer IDs be required to be globally unique across pointing devices?
-////REVIEW: should we create new devices instead of using pointer IDs?
-
-////FIXME: pointer deltas in EditorWindows need to be Y *down*
-
-////REVIEW: kill EditorWindowSpace processor and add GetPositionInEditorWindowSpace() and GetDeltaInEditorWindowSpace()?
-////        (if we do this, every touch control has to get this, too)
-
 namespace UnityEngine.InputSystem.LowLevel
 {
     /// <summary>
