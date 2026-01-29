@@ -1436,6 +1436,9 @@ namespace UnityEngine.InputSystem
             Debug.Assert(controlIndex >= 0 && controlIndex < totalControlCount, "Control index out of range");
             Debug.Assert(bindingIndex >= 0 && bindingIndex < totalBindingCount, "Binding index out of range");
 
+            if (InputSystem.s_Manager.ShouldSuppressActionsForDevice(controls[controlIndex].device))
+                return;
+
             using (InputActionRebindingExtensions.DeferBindingResolution())
             {
                 // Callbacks can do pretty much anything and thus trigger arbitrary state/configuration

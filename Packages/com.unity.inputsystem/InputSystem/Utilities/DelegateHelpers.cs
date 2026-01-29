@@ -1,5 +1,6 @@
 using System;
 using Unity.Profiling;
+using UnityEngine.InputSystem.LowLevel;
 
 namespace UnityEngine.InputSystem.Utilities
 {
@@ -80,6 +81,37 @@ namespace UnityEngine.InputSystem.Utilities
                 }
             }
             callbacks.UnlockForChanges();
+            marker.End();
+        }
+
+        public static bool InvokeCallbacksSafeUntilHandled(ref CallbackArray<Action<InputEventPtr, InputDevice>> callbacks,
+            InputEventPtr eventPtr, InputDevice device, ProfilerMarker marker, string callbackName, bool stopOnHandled)
+        {
+            if (callbacks.length == 0)
+                return false;
+
+            marker.Begin();
+            callbacks.LockForChanges();
+            for (var i = 0; i < callbacks.length; ++i)
+            {
+                try
+                {
+                    callbacks[i](eventPtr, device);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogException(exception);
+                    Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
+                }
+
+                if (stopOnHandled && eventPtr.handled)
+                {
+                    callbacks.UnlockForChanges();
+                    return true;
+                }
+            }
+            callbacks.UnlockForChanges();
+            return false;
             marker.End();
         }
 
