@@ -2236,6 +2236,7 @@ namespace UnityEngine.InputSystem
         internal CallbackArray<InputDeviceCommandDelegate> m_DeviceCommandCallbacks;
         private CallbackArray<LayoutChangeListener> m_LayoutChangeListeners;
         private CallbackArray<EventListener> m_EventListeners;
+        private uint[] m_SuppressActionsForDeviceUpdate;
         private CallbackArray<UpdateListener> m_BeforeUpdateListeners;
         private CallbackArray<UpdateListener> m_AfterUpdateListeners;
         private CallbackArray<Action> m_SettingsChangedListeners;
@@ -3454,22 +3455,29 @@ namespace UnityEngine.InputSystem
                         }
                     }
 
+                    var currentEventPtr = new InputEventPtr(currentEventReadPtr);
+
                     // Give listeners a shot at the event.
                     // NOTE: We call listeners also for events where the device is disabled. This is crucial for code
                     //       such as TouchSimulation that disables the originating devices and then uses its events to
                     //       create simulated events from.
                     if (m_EventListeners.length > 0)
                     {
-                        DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
-                            new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
-
-                        // If a listener marks the event as handled, we don't process it further.
-                        if (m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressStateUpdates &&
-                            currentEventReadPtr->handled)
+                        if (DelegateHelpers.InvokeCallbacksSafeUntilHandled(ref m_EventListeners, currentEventPtr, device, k_InputOnEventMarker, "InputSystem.onEvent",
+                            m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressStateUpdates))
                         {
+                            currentEventReadPtr->handled = true;
+                            SuppressActionsForDevice(device);
                             m_InputEventStream.Advance(false);
                             continue;
                         }
+                    }
+
+                    if (m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressStateUpdates && currentEventPtr.handled)
+                    {
+                        SuppressActionsForDevice(device);
+                        m_InputEventStream.Advance(false);
+                        continue;
                     }
 
                     // Update metrics.
@@ -3484,8 +3492,6 @@ namespace UnityEngine.InputSystem
                         case StateEvent.Type:
                         case DeltaStateEvent.Type:
 
-                            var eventPtr = new InputEventPtr(currentEventReadPtr);
-
                             // Ignore the event if the last state update we received for the device was
                             // newer than this state event is. We don't allow devices to go back in time.
                             //
@@ -3496,7 +3502,7 @@ namespace UnityEngine.InputSystem
                             //       increasing timestamps across all such streams.
                             var deviceIsStateCallbackReceiver = device.hasStateCallbacks;
                             if (currentEventTimeInternal < device.m_LastUpdateTimeInternal &&
-                                !(deviceIsStateCallbackReceiver && device.stateBlock.format != eventPtr.stateFormat))
+                                !(deviceIsStateCallbackReceiver && device.stateBlock.format != currentEventPtr.stateFormat))
                             {
 #if UNITY_EDITOR
                                 m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
@@ -3520,14 +3526,14 @@ namespace UnityEngine.InputSystem
                                 m_ShouldMakeCurrentlyUpdatingDeviceCurrent = true;
                                 // NOTE: We leave it to the device to make sure the event has the right format. This allows the
                                 //       device to handle multiple different incoming formats.
-                                ((IInputStateCallbackReceiver)device).OnStateEvent(eventPtr);
+                                ((IInputStateCallbackReceiver)device).OnStateEvent(currentEventPtr);
 
                                 haveChangedStateOtherThanNoise = m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
                             }
                             else
                             {
                                 // If the state format doesn't match, ignore the event.
-                                if (device.stateBlock.format != eventPtr.stateFormat)
+                                if (device.stateBlock.format != currentEventPtr.stateFormat)
                                 {
 #if UNITY_EDITOR
                                     m_Diagnostics?.OnEventFormatMismatch(currentEventReadPtr, device);
@@ -3535,23 +3541,23 @@ namespace UnityEngine.InputSystem
                                     break;
                                 }
 
-                                haveChangedStateOtherThanNoise = UpdateState(device, eventPtr, updateType);
+                                haveChangedStateOtherThanNoise = UpdateState(device, currentEventPtr, updateType);
                             }
 
-                            totalEventBytesProcessed += eventPtr.sizeInBytes;
+                            totalEventBytesProcessed += currentEventPtr.sizeInBytes;
 
-                            device.m_CurrentProcessedEventBytesOnUpdate += eventPtr.sizeInBytes;
+                            device.m_CurrentProcessedEventBytesOnUpdate += currentEventPtr.sizeInBytes;
 
                             // Update timestamp on device.
                             // NOTE: We do this here and not in UpdateState() so that InputState.Change() will *NOT* change timestamps.
                             //       Only events should. If running play mode updates in editor, we want to defer to the play mode
                             //       callbacks to set the last update time to avoid dropping events only processed by the editor state.
-                            if (device.m_LastUpdateTimeInternal <= eventPtr.internalTime
+                            if (device.m_LastUpdateTimeInternal <= currentEventPtr.internalTime
 #if UNITY_EDITOR
                                 && !(updateType == InputUpdateType.Editor && runPlayerUpdatesInEditMode)
 #endif
                             )
-                                device.m_LastUpdateTimeInternal = eventPtr.internalTime;
+                                device.m_LastUpdateTimeInternal = currentEventPtr.internalTime;
 
                             // Make device current. Again, only do this when receiving events.
                             if (haveChangedStateOtherThanNoise)
@@ -3889,6 +3895,31 @@ namespace UnityEngine.InputSystem
         }
 
         private bool m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
+
+        private void SuppressActionsForDevice(InputDevice device)
+        {
+            if (m_InputEventHandledPolicy != InputEventHandledPolicy.SuppressStateUpdates || device == null)
+                return;
+
+            var deviceIndex = device.m_DeviceIndex;
+            if (m_SuppressActionsForDeviceUpdate == null || deviceIndex >= m_SuppressActionsForDeviceUpdate.Length)
+                Array.Resize(ref m_SuppressActionsForDeviceUpdate, deviceIndex + 1);
+            m_SuppressActionsForDeviceUpdate[deviceIndex] = InputUpdate.s_UpdateStepCount;
+        }
+
+        internal bool ShouldSuppressActionsForDevice(InputDevice device)
+        {
+            if (m_InputEventHandledPolicy != InputEventHandledPolicy.SuppressStateUpdates || device == null)
+                return false;
+
+            var deviceIndex = device.m_DeviceIndex;
+            if (m_SuppressActionsForDeviceUpdate == null || deviceIndex >= m_SuppressActionsForDeviceUpdate.Length)
+                return false;
+
+            var lastUpdate = (int)m_SuppressActionsForDeviceUpdate[deviceIndex];
+            var currentUpdate = (int)InputUpdate.s_UpdateStepCount;
+            return lastUpdate == currentUpdate || lastUpdate + 1 == currentUpdate;
+        }
 
         // This is a dirty hot fix to expose entropy from device back to input manager to make a choice if we want to make device current or not.
         // A proper fix would be to change IInputStateCallbackReceiver.OnStateEvent to return bool to make device current or not.
