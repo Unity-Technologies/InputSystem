@@ -1276,12 +1276,17 @@ namespace UnityEngine.InputSystem
 
         #endif
 
-        protected bool m_isStateKnown = false;
+        // Controls start as "known" - the unknown state feature is specifically for
+        // detecting stale state after focus loss with BackgroundBehavior.IgnoreFocus.
+        // When focus is lost, controls are marked as unknown until an event is received.
+        protected bool m_isStateKnown = true;
         public bool isStateKnown => m_isStateKnown;
 
         internal virtual void MarkStateKnownRecursively(bool isStateKnown)
         {
-            m_isStateKnown = isStateKnown;
+            // Use SetStateKnown to allow derived classes to perform additional work
+            // (e.g., InputControl<TValue> caches the default value when state becomes unknown)
+            SetStateKnown(isStateKnown);
 
             foreach (var inputControl in children)
                 inputControl.MarkStateKnownRecursively(isStateKnown);
@@ -1302,10 +1307,12 @@ namespace UnityEngine.InputSystem
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {
-        private TValue m_lastKnownValue;
         internal override void SetStateKnown(bool isStateKnown)
         {
-            m_lastKnownValue = m_CachedValue;
+            // When marking state as unknown, cache the default value so we can return it
+            // via ref readonly without allocations.
+            if (!isStateKnown)
+                m_DefaultValue = ReadDefaultValue();
             m_isStateKnown = isStateKnown;
         }
 
@@ -1387,19 +1394,13 @@ namespace UnityEngine.InputSystem
                 }
 #endif
 
+                // If the state is unknown (e.g., after focus loss with IgnoreFocus setting),
+                // return the default value until we receive an input event for this control.
+                // The control will be marked as "known" when WriteChangedControlStates processes
+                // an event that covers this control (either a full state event or a delta state event).
                 if (!isStateKnown)
                 {
-                    // TODO: Replace value check with timestamp check?
-                    if (!m_lastKnownValue.Equals(m_CachedValue))
-                    {
-                        // An interaction happened, so we know that the new state 
-                        SetStateKnown(true);
-                    }
-                    else
-                    {
-                        // We forcibly chnage the value to default.
-                        m_CachedValue = ReadDefaultValue();
-                    }
+                    return ref m_DefaultValue;
                 }
 
                 return ref m_CachedValue;
@@ -1750,6 +1751,7 @@ namespace UnityEngine.InputSystem
 
         private TValue m_CachedValue;
         private TValue m_UnprocessedCachedValue;
+        private TValue m_DefaultValue; // Cached default value for returning when state is unknown
 
         #if UNITY_EDITOR
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
