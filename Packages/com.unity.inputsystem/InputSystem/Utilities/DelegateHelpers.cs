@@ -92,27 +92,35 @@ namespace UnityEngine.InputSystem.Utilities
 
             marker.Begin();
             callbacks.LockForChanges();
-            for (var i = 0; i < callbacks.length; ++i)
+            var handled = false;
+            try
             {
-                try
+                for (var i = 0; i < callbacks.length; ++i)
                 {
-                    callbacks[i](eventPtr, device);
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogException(exception);
-                    Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
-                }
+                    try
+                    {
+                        callbacks[i](eventPtr, device);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogException(exception);
+                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
+                    }
 
-                if (stopOnHandled && eventPtr.handled)
-                {
-                    callbacks.UnlockForChanges();
-                    return true;
+                    if (stopOnHandled && eventPtr.handled)
+                    {
+                        handled = true;
+                        break;
+                    }
                 }
             }
-            callbacks.UnlockForChanges();
-            return false;
-            marker.End();
+            finally
+            {
+                callbacks.UnlockForChanges();
+                marker.End();
+            }
+
+            return handled;
         }
 
         public static bool InvokeCallbacksSafe_AnyCallbackReturnsTrue<TValue1, TValue2>(ref CallbackArray<Func<TValue1, TValue2, bool>> callbacks,
