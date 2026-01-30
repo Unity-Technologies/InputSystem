@@ -3405,8 +3405,8 @@ namespace UnityEngine.InputSystem
             if (s_RemoteConnection == null)
             {
                 #if !UNITY_EDITOR
-                s_RemoteConnection = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
-                s_RemoteConnection.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
+                //s_RemoteConnection = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
+                //s_RemoteConnection.Bind(PlayerConnection.instance, PlayerConnection.instance.isConnected);
                 #endif
             }
 
