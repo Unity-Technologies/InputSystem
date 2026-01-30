@@ -21,6 +21,7 @@ however, it has to be formatted properly to pass verification tests.
 - Align title font size with toolbar style in `Input Action` window.
 - Updated Action Properties headers to use colors consistent with GameObject component headers.
 - Fixed misaligned Virtual Cursor when changing resolution [ISXB-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1119)
+- Fixed handled input events from unpaired devices still triggering actions on the same physical press [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
 
 ### Added
 
