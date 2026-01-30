@@ -10,6 +10,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Scripting;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
@@ -1254,6 +1255,48 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(device.rightTrigger.ReadValue(), Is.EqualTo(0.0).Within(0.00001));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_HandledFirstEvent_DoesNotTriggerAction_OnSecondEventSameUpdate()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+        action.Enable();
+
+        var performedCount = 0;
+        action.performed += _ => ++performedCount;
+
+        var previousPolicy = InputSystem.s_Manager.inputEventHandledPolicy;
+        InputSystem.s_Manager.inputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
+
+        InputUser.listenForUnpairedDeviceActivity++;
+        var handledFirstEventId = 0;
+        Action<InputControl, InputEventPtr> onUnpaired = (control, eventPtr) =>
+        {
+            if (handledFirstEventId == 0)
+            {
+                handledFirstEventId = eventPtr.id;
+                eventPtr.handled = true;
+            }
+        };
+        InputUser.onUnpairedDeviceUsed += onUnpaired;
+
+        try
+        {
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
+            InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
+            InputSystem.Update();
+
+            Assert.That(performedCount, Is.EqualTo(0));
+        }
+        finally
+        {
+            InputUser.onUnpairedDeviceUsed -= onUnpaired;
+            InputUser.listenForUnpairedDeviceActivity--;
+            InputSystem.s_Manager.inputEventHandledPolicy = previousPolicy;
+        }
     }
 
     [Test]
