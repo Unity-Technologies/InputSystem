@@ -34,5 +34,4 @@ The following is a list of known limitations that the Input System currently has
 
 ## Features Supported by Old Input Manager
 
-* `MonoBehaviour` mouse methods (`OnMouseEnter`, `OnMouseDrag`, etc) will not be called by the Input System.
 * Unity Remote doesn't currently support the Input System. This is being worked on.

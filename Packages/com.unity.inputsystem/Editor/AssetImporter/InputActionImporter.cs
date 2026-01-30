@@ -328,8 +328,13 @@ namespace UnityEngine.InputSystem.Editor
         [MenuItem("Assets/Create/Input Actions")]
         public static void CreateInputAsset()
         {
+            #if UNITY_6000_4_OR_NEWER
+            ProjectWindowUtil.CreateAssetWithTextContent("New Actions." + InputActionAsset.Extension,
+                InputActionAsset.kDefaultAssetLayoutJson, InputActionAssetIconLoader.LoadAssetIcon());
+            #else
             ProjectWindowUtil.CreateAssetWithContent("New Actions." + InputActionAsset.Extension,
                 InputActionAsset.kDefaultAssetLayoutJson, InputActionAssetIconLoader.LoadAssetIcon());
+            #endif
         }
 
         // File extension of the associated asset

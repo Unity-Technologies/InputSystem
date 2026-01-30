@@ -1,7 +1,6 @@
 editors:
   - version: 2022.3
   - version: 6000.0
-  - version: 6000.2
   - version: 6000.3
   - version: 6000.4
   - version: trunk

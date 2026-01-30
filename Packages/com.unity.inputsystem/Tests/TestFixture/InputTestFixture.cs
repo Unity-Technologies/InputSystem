@@ -12,6 +12,9 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.InputSystem.XR;
+#if UNITY_6000_5_OR_NEWER
+using UnityEngine.Assemblies;
+#endif
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -241,7 +244,11 @@ namespace UnityEngine.InputSystem
             var type = Type.GetType(className);
             if (type == null)
             {
+#if UNITY_6000_5_OR_NEWER
+                foreach (var assembly in CurrentAssemblies.GetLoadedAssemblies())
+#else
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+#endif
                 {
                     type = assembly.GetType(className);
                     if (type != null)

@@ -507,8 +507,8 @@ namespace UnityEngine.InputSystem
                     nextChar = str[++posInStr];
                 if (nextChar == '*')
                 {
-                    ////TODO: make sure we don't end up with ** here
-
+                    while (posInStr + 1 < strLength && str[posInStr + 1] == '*')
+                        ++posInStr;
                     if (posInStr == strLength - 1)
                         return true; // Wildcard at end of string so rest is matched.
 
@@ -1031,7 +1031,7 @@ namespace UnityEngine.InputSystem
             return lastMatch;
         }
 
-        private enum PathComponentType
+        internal enum PathComponentType
         {
             Name,
             DisplayName,
@@ -1039,7 +1039,7 @@ namespace UnityEngine.InputSystem
             Layout
         }
 
-        private static bool MatchPathComponent(string component, string path, ref int indexInPath, PathComponentType componentType, int startIndexInComponent = 0)
+        internal static bool MatchPathComponent(string component, string path, ref int indexInPath, PathComponentType componentType, int startIndexInComponent = 0)
         {
             Debug.Assert(component != null, "Component string is null");
             Debug.Assert(path != null, "Path is null");
@@ -1072,10 +1072,13 @@ namespace UnityEngine.InputSystem
                         break;
                     }
 
-                    ////TODO: allow only single '*' and recognize '**'
                     // If we've reached a '*' in the path, skip character in name.
                     if (nextCharInPath == '*')
                     {
+                        // Collapse consecutive '*' so matching logic here only needs to handle a single '*'.
+                        while (indexInPath + 1 < pathLength && path[indexInPath + 1] == '*')
+                            ++indexInPath;
+
                         // But first let's see if we have something after the wildcard that matches the rest of the component.
                         // This could be when, for example, we hit "T" on matching "leftTrigger" against "*Trigger". We have to stop
                         // gobbling up characters for the wildcard when reaching "Trigger" in the component name.

@@ -11,6 +11,9 @@ using UnityEditor.Build.Reporting;
 using UnityEditor.Compilation;
 using UnityEditor.UnityLinker;
 using UnityEngine.InputSystem.Layouts;
+#if UNITY_6000_5_OR_NEWER
+using UnityEngine.Assemblies;
+#endif
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -40,7 +43,11 @@ namespace UnityEngine.InputSystem.Editor
             var currentAssemblyName = typeof(UnityEngine.InputSystem.InputSystem).Assembly.GetName().Name;
 
             var typesByAssemblies = new Dictionary<System.Reflection.Assembly, Type[]>();
+#if UNITY_6000_5_OR_NEWER
+            var assemblies = CurrentAssemblies.GetLoadedAssemblies();
+#else
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+#endif
             foreach (var assembly in assemblies)
             {
                 try

@@ -5,6 +5,9 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
+#if UNITY_6000_5_OR_NEWER
+using UnityEngine.Assemblies;
+#endif
 
 ////REVIEW: generalize this to something beyond just parameters?
 
@@ -50,7 +53,11 @@ namespace UnityEngine.InputSystem.Editor
             if (s_TypeLookupCache == null)
             {
                 s_TypeLookupCache = new Dictionary<Type, Type>();
+#if UNITY_6000_5_OR_NEWER
+                foreach (var assembly in CurrentAssemblies.GetLoadedAssemblies())
+#else
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+#endif
                 {
                     foreach (var typeInfo in assembly.DefinedTypes)
                     {
