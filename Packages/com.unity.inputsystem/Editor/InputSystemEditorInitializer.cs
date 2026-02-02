@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Networking.PlayerConnection;
 using UnityEditorInternal;
-using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 
@@ -159,15 +157,13 @@ namespace UnityEngine.InputSystem.Editor
         private static void SendEditorAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
             #if ENABLE_CLOUD_SERVICES_ANALYTICS
-                #if UNITY_2023_2_OR_NEWER
-            EditorAnalytics.SendAnalytic(analytic);
-                #else
-                    #if UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
-            var info = analytic.info;
-            EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
-            EditorAnalytics.SendEventWithLimit(info.Name, analytic);
-                    #endif
-                #endif
+            #if UNITY_2023_2_OR_NEWER
+                EditorAnalytics.SendAnalytic(analytic);
+            #elif UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
+                var info = analytic.info;
+                EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+                EditorAnalytics.SendEventWithLimit(info.Name, analytic);
+            #endif
             #endif
         }
 
