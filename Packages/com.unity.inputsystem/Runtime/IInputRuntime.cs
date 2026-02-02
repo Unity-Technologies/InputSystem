@@ -1,6 +1,8 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
+#if UNITY_ANALYTICS 
 using UnityEngine.Analytics;
+#endif
 using UnityEngine.InputSystem.Layouts;
 
 
@@ -113,7 +115,7 @@ namespace UnityEngine.InputSystem.LowLevel
         Action<bool> onPlayerFocusChanged { get; set; }
 
         /// <summary>
-        // Is true when the player or game view has focus.
+        /// Is true when the player or game view has focus.
         /// </summary>
         /// <seealso cref="Application.isFocused"/>
         bool isPlayerFocused { get; }
@@ -204,7 +206,15 @@ namespace UnityEngine.InputSystem.LowLevel
 
     internal static class InputRuntime
     {
+        /// <summary>
+        /// The runtime implementation used by the input system. Set by package initialization.
+        /// </summary>
         public static IInputRuntime s_Instance;
+        
+        /// <summary>
+        /// Current offset between input-system time and <see cref="Time.realtimeSinceStartup"/>.
+        /// Kept here for code paths that need to query it without an IInputRuntime instance.
+        /// </summary>
         public static double s_CurrentTimeOffsetToRealtimeSinceStartup;
     }
 
