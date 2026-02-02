@@ -61,8 +61,8 @@ namespace UnityEngine.InputSystem
         static readonly ProfilerMarker k_InputOnDeviceSettingsChangeMarker = new ProfilerMarker("InputSystem.onDeviceSettingsChange");
         static readonly ProfilerMarker k_InputOnEventMarker = new ProfilerMarker("InputSystem.onEvent");
         static readonly ProfilerMarker k_InputOnLayoutChangeMarker = new ProfilerMarker("InputSystem.onLayoutChange");
-        static readonly ProfilerMarker k_InputOnDeviceChangeMarker = new ProfilerMarker("InpustSystem.onDeviceChange");
-        static readonly ProfilerMarker k_InputOnActionsChangeMarker = new ProfilerMarker("InpustSystem.onActionsChange");
+        static readonly ProfilerMarker k_InputOnDeviceChangeMarker = new ProfilerMarker("InputSystem.onDeviceChange");
+        static readonly ProfilerMarker k_InputOnActionsChangeMarker = new ProfilerMarker("InputSystem.onActionsChange");
 
 
         public InputMetrics metrics
@@ -2609,7 +2609,7 @@ namespace UnityEngine.InputSystem
         {
             //
             // When we create the device description from the (passed from native) deviceDescriptor string in OnNativeDeviceDiscovered()
-            // we remove any escape characters from the capabilties field when we do InputDeviceDescription.FromJson() - this decoded
+            // we remove any escape characters from the capabilities field when we do InputDeviceDescription.FromJson() - this decoded
             // description is used to create the device.
             //
             // This means that the native and managed code can have slightly different representations of the capabilities field.
@@ -3511,7 +3511,7 @@ namespace UnityEngine.InputSystem
                                 // presses after a short time, like on most platforms. Unfortunately, on Android, the
                                 // last of these "presses" can be timestamped to be after the event of the key release.
                                 // If that happens, we'd skip the keyUp here, and the device state will have the key
-                                // "stuck" pressed. So, special case here to not skip keyboard events on Android. ISXB-475
+                                // "stuck" pressed. So, special case here not not skip keyboard events on Android. ISXB-475
                                 // N.B. Android seems to have similar issues with touch input (OnStateEvent, Touchscreen.cs)
                                 if (!(device is Keyboard))
 #endif
@@ -4142,7 +4142,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
             ////REVIEW: should this use the editor update ticks as quasi-frame-boundaries?
             // Updates go to the editor only if the game isn't playing or does not have focus.
-            // Otherwise we fall through to the logic that flips for the *next* dynamic and
+            // Otherwise, we fall through to the logic that flips for the *next* dynamic and
             // fixed updates.
             if (updateType == InputUpdateType.Editor)
             {
