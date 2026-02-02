@@ -62,7 +62,7 @@ namespace UnityEngine.InputSystem.LowLevel
                         {
                             // Always report the original exception first to confuse users less about what it the actual failure.
                             Debug.LogException(e);
-                            Debug.LogError($"{e.GetType().Name} during event processing of {updateType} update; resetting event buffer");
+                            Debug.LogError($"Exception {e.GetType().Name}: {e.Message} during event processing of {updateType} update; resetting event buffer");
                             buffer.Reset();
                         }
 
@@ -277,8 +277,8 @@ namespace UnityEngine.InputSystem.LowLevel
                 // to send an analytics event, because Analytics is already shut down
                 // at that point. So we use `EditorApplication.wantsToQuit`, and make sure
                 // to only use the first time. This is currently only used for analytics,
-                // and getting analytics before we actually shut downn in some cases is
-                // better then never.
+                // and getting analytics before we actually shut down in some cases is
+                // better than never.
 
                 OnShutdown();
                 m_DidCallOnShutdown = true;
