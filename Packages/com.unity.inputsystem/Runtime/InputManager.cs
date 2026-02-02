@@ -111,10 +111,7 @@ namespace UnityEngine.InputSystem
 
         public InputActionAsset actions
         {
-            get
-            {
-                return m_Actions;
-            }
+            get => m_Actions;
 
             set
             {
@@ -212,7 +209,7 @@ namespace UnityEngine.InputSystem
         /// The default setting of this property is <see cref="InputEventHandledPolicy.SuppressStateUpdates"/> which
         /// implies that events are completely suppressed which means that associated state will not be updated.
         /// Hence, any state dependent classes such as <see cref="InputAction"/> or associated interactions will
-        /// not be updated either. A side-effect of this setting is that succeeding events that are not suppressed
+        /// not be updated either. A side effect of this setting is that succeeding events that are not suppressed
         /// may trigger new unexpected events since they may trigger state changes due to monitoring instances not
         /// seeing previous changes.
         ///
@@ -284,7 +281,6 @@ namespace UnityEngine.InputSystem
         }
 
         ////TODO: add InputEventBuffer struct that uses NativeArray underneath
-        ////TODO: make InputEventTrace use NativeArray
         ////TODO: introduce an alternative that consumes events in bulk
         public event EventListener onEvent
         {
@@ -2617,7 +2613,7 @@ namespace UnityEngine.InputSystem
             // Managed: description.capabilities    string, unescaped
             //                                      eg "{"deviceName":"Oculus Quest", ..."
             //
-            // Native:  deviceDescriptor            string, containing a Json encoded "capabilities" name/value pair represented by an escaped Json string
+            // Native:  deviceDescriptor            string, containing a JSON encoded "capabilities" name/value pair represented by an escaped Json string
             //                                      eg "{\"deviceName\":\"Oculus Quest\", ..."
             //
             // To avoid a very costly escape-skipping character-by-character string comparison in JsonParser.Json.Equals() we
@@ -4169,8 +4165,7 @@ namespace UnityEngine.InputSystem
         // Domain reload survival logic. Also used for pushing and popping input system
         // state for testing.
 
-        // Stuff everything that we want to survive a domain reload into
-        // a m_SerializedState.
+        // Stuff everything that we want to survive a domain reload into an m_SerializedState.
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         [Serializable]
         internal struct DeviceState
