@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
 using Unity.Collections.LowLevel.Unsafe;
+#if UNITY_ANALYTICS
 using UnityEngine.Analytics;
+#endif
 using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
 
@@ -60,7 +62,7 @@ namespace UnityEngine.InputSystem.LowLevel
                         }
                         catch (Exception e)
                         {
-                            // Always report the original exception first to confuse users less about what it the actual failure.
+                            // Always report the original exception first so users can easily identify the actual failure.
                             Debug.LogException(e);
                             Debug.LogError($"Exception {e.GetType().Name}: {e.Message} during event processing of {updateType} update; resetting event buffer");
                             buffer.Reset();
@@ -78,6 +80,8 @@ namespace UnityEngine.InputSystem.LowLevel
                         {
                             eventBufferPtr->eventCount = 0;
                             eventBufferPtr->sizeInBytes = 0;
+                            eventBufferPtr->capacityInBytes = 0;
+                            eventBufferPtr->eventBuffer = (void*)0;
                         }
                     };
                 else
@@ -248,7 +252,7 @@ namespace UnityEngine.InputSystem.LowLevel
             set => m_RunInBackground = value;
         }
 
-        bool m_RunInBackground;
+        private bool m_RunInBackground;
 
         private Action m_ShutdownMethod;
         private InputUpdateDelegate m_OnUpdate;
@@ -263,7 +267,7 @@ namespace UnityEngine.InputSystem.LowLevel
         // In older version this is stored here and package override module/platform.
         private float m_PollingFrequency = 60.0f;
         #endif
-        private bool m_DidCallOnShutdown = false;
+        private bool m_DidCallOnShutdown;
         private void OnShutdown()
         {
             m_ShutdownMethod();
