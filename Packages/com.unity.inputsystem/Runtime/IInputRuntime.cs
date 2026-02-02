@@ -1,6 +1,6 @@
 using System;
 using Unity.Collections.LowLevel.Unsafe;
-#if UNITY_ANALYTICS 
+#if UNITY_ANALYTICS
 using UnityEngine.Analytics;
 #endif
 using UnityEngine.InputSystem.Layouts;
@@ -210,7 +210,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// The runtime implementation used by the input system. Set by package initialization.
         /// </summary>
         public static IInputRuntime s_Instance;
-        
+
         /// <summary>
         /// Current offset between input-system time and <see cref="Time.realtimeSinceStartup"/>.
         /// Kept here for code paths that need to query it without an IInputRuntime instance.

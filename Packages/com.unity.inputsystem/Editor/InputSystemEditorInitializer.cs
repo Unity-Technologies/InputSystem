@@ -158,11 +158,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             #if ENABLE_CLOUD_SERVICES_ANALYTICS
             #if UNITY_2023_2_OR_NEWER
-                EditorAnalytics.SendAnalytic(analytic);
+            EditorAnalytics.SendAnalytic(analytic);
             #elif UNITY_INPUT_SYSTEM_ENABLE_ANALYTICS || UNITY_2023_1_OR_NEWER
-                var info = analytic.info;
-                EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
-                EditorAnalytics.SendEventWithLimit(info.Name, analytic);
+            var info = analytic.info;
+            EditorAnalytics.RegisterEventWithLimit(info.Name, info.MaxEventsPerHour, info.MaxNumberOfElements, InputAnalytics.kVendorKey);
+            EditorAnalytics.SendEventWithLimit(info.Name, analytic);
             #endif
             #endif
         }
