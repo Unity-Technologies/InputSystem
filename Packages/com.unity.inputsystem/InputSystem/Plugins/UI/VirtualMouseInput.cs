@@ -14,8 +14,6 @@ using UnityEngine.InputSystem.Editor;
 
 ////TODO: add support for acceleration
 
-////TODO: automatically scale mouse speed to resolution such that it stays constant regardless of resolution
-
 ////TODO: make it work with PlayerInput such that it will automatically look up actions in the actual PlayerInput instance it is used with (based on the action IDs it has)
 
 ////REVIEW: should we default the SW cursor position to the center of the screen?
@@ -291,7 +289,10 @@ namespace UnityEngine.InputSystem.UI
 
             // Add mouse device.
             if (m_VirtualMouse == null)
+            {
                 m_VirtualMouse = (Mouse)InputSystem.AddDevice("VirtualMouse");
+                TryFindCanvas();
+            }
             else if (!m_VirtualMouse.added)
                 InputSystem.AddDevice(m_VirtualMouse);
 
@@ -370,6 +371,7 @@ namespace UnityEngine.InputSystem.UI
         private void TryFindCanvas()
         {
             m_Canvas = m_CursorGraphic?.GetComponentInParent<Canvas>();
+            m_CanvasScaler =  m_CursorGraphic?.GetComponentInParent<CanvasScaler>();
         }
 
         private void TryEnableHardwareCursor()
@@ -421,6 +423,14 @@ namespace UnityEngine.InputSystem.UI
             }
             else
             {
+                var resolutionXScale = 1f;
+                var resolutionYScale = 1f;
+                if (m_CanvasScaler != null)
+                {
+                    resolutionXScale = m_Canvas.pixelRect.xMax / m_CanvasScaler.referenceResolution.x;
+                    resolutionYScale = m_Canvas.pixelRect.yMax / m_CanvasScaler.referenceResolution.y;
+                }
+
                 var currentTime = InputState.currentTime;
                 if (Mathf.Approximately(0, m_LastStickValue.x) && Mathf.Approximately(0, m_LastStickValue.y))
                 {
@@ -430,7 +440,7 @@ namespace UnityEngine.InputSystem.UI
 
                 // Compute delta.
                 var deltaTime = (float)(currentTime - m_LastTime);
-                var delta = new Vector2(m_CursorSpeed * stickValue.x * deltaTime, m_CursorSpeed * stickValue.y * deltaTime);
+                var delta = new Vector2(m_CursorSpeed * resolutionXScale * stickValue.x * deltaTime, m_CursorSpeed * resolutionYScale * stickValue.y * deltaTime);
 
                 // Update position.
                 var currentPosition = m_VirtualMouse.position.value;
@@ -454,7 +464,9 @@ namespace UnityEngine.InputSystem.UI
                 if (m_CursorTransform != null &&
                     (m_CursorMode == CursorMode.SoftwareCursor ||
                      (m_CursorMode == CursorMode.HardwareCursorIfAvailable && m_SystemMouse == null)))
-                    m_CursorTransform.anchoredPosition = newPosition;
+                {
+                    m_CursorTransform.anchoredPosition = m_CanvasScaler == null ? newPosition : new Vector2(newPosition.x / resolutionXScale, newPosition.y / resolutionYScale);
+                }
 
                 m_LastStickValue = stickValue;
                 m_LastTime = currentTime;
@@ -508,6 +520,7 @@ namespace UnityEngine.InputSystem.UI
         [SerializeField] private InputActionProperty m_ScrollWheelAction;
 
         private Canvas m_Canvas; // Canvas that gives the motion range for the software cursor.
+        private CanvasScaler m_CanvasScaler;
         private Mouse m_VirtualMouse;
         private Mouse m_SystemMouse;
         private Action m_AfterInputUpdateDelegate;

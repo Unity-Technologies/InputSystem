@@ -10,11 +10,37 @@ however, it has to be formatted properly to pass verification tests.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Changed
+
+- Updated `m_ActionAssetInstanceID` in PlayerInputEditor.cs to use `EntityId` instead of `InstanceID`.
+- Consecutive wildcard characters ('*') used in input control-paths are now collapsed into a single wildcard when multiple consecutive wildcard characters are present.
+
 ### Fixed
 
-- Fixed warnings being generated on Unity 6.4 and 6.5. (ISX-2395).
+- Fixed the `Auto-Save` toggle button with some extra pixels to align the text in the window better.
+- Align title font size with toolbar style in `Input Action` window.
+- Updated Action Properties headers to use colors consistent with GameObject component headers.
+- Fixed misaligned Virtual Cursor when changing resolution [ISXB-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1119)
 - Fixed `buttonSouth` returning the state of the east button (and so on for all the compass named buttons) when using a Nintendo Switch Pro Controller on iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
 - Fixed `aButton` returning the state of the east button (and so on for all the letter named buttons) when using a Nintendo Switch Pro Controller on Standalone & iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
+
+### Added
+
+- Added `keywords` for InputSystem project settings window.
+
+## [1.18.0] - 2026-01-14
+
+### Changed
+- Updated documentation to reflect that the OnMouse MonoBehaviour events are now supported in Unity 6.4 and above.
+- Updated the supported devices documentation to clarify that touchscreens are supported on Linux.
+- Updated documentation to reflect PS5 controller support on Linux.
+
+### Fixed
+
+- Fixed add buttons use add icon in input actions window (ISX-2340)
+- Fixed warnings being generated on Unity 6.4 and 6.5. (ISX-2395).
+- Fixed extra empty lines being displayed in the control binding list when mouse buttons are pressed [ISXB-1677](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1677)
+- Fixed InputActionReference not being set when attempting to set it on a Prefab or ScriptableObject [ISXB-1787](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1787)
 
 ## [1.17.0] - 2025-11-25
 
@@ -81,6 +107,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed the compilation warnings when used with Unity 6.4 (ISX-2349).
 - Fixed an issue where `InputSystemUIInputModule.localMultiPlayerRoot` could not be set to `null` when using `MultiplayerEventSystem`. [ISXB-1610](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1610)
 - Fixed an issue in `Keyboard` where the sub-script operator would return a `null` key control for the deprecated key `Key.IMESelected`. Now, an aliased `KeyControl`mapping to the IMESelected bit is returned for compability reasons. It is still strongly advised to not rely on this key since `IMESelected` bit isn't strictly a key and will be removed from the `Key` enumeration type in a future major revision. [ISXB-1541](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1541).
+- Fixed an ArgumentOutOfRangeException that was thrown when pressing the undo shortcut while changing a control scheme name. [ISXB-1607](https://issuetracker.unity3d.com/issues/argumentoutofrangeexception-error-is-thrown-when-pressing-the-undo-shortcut-while-changing-the-control-scheme-name)
 - Fixed an issue where the onAnyButtonPress callback would be triggered multiple times during unrelated events when a button is held down. See [ISXB-1005](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1005).
 - Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
 - Fixed formatting issues on processor documentation page.
