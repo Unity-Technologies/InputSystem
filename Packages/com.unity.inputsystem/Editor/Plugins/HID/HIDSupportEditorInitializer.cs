@@ -1,9 +1,8 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem.Editor;
-using UnityEngine.InputSystem.HID.Editor;
 
-namespace UnityEngine.InputSystem.HID
+namespace UnityEngine.InputSystem.HID.Editor
 {
     /// <summary>
     /// Handles Editor-specific initialization for HID support.
