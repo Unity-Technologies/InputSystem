@@ -1,9 +1,7 @@
 {
     "name": "Unity.InputSystem",
     "rootNamespace": "",
-    "references": [
-        "Unity.ugui"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,

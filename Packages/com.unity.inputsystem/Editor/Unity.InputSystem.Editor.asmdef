@@ -3,7 +3,6 @@
     "rootNamespace": "",
     "references": [
         "Unity.InputSystem",
-        "Unity.ugui",
         "Unity.InputSystem.ForUI"
     ],
     "includePlatforms": [
