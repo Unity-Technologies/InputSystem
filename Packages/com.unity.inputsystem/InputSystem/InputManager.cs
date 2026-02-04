@@ -4109,7 +4109,7 @@ namespace UnityEngine.InputSystem
 
             // If we have enough ButtonControls being checked for wasPressedThisFrame/wasReleasedThisFrame,
             // use this path to find out which have actually changed here.
-            if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled || m_Devices[deviceIndex].m_UseCachePathForButtonPresses)
+            if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled || m_Devices[deviceIndex].m_UseCachePathForButtonPresses || !m_Devices[deviceIndex].isStateKnown)
             {
                 // if the buffers have just been flipped, and we're doing a full state update, then the state from the
                 // previous update is now in the back buffer, and we should be comparing to that when checking what

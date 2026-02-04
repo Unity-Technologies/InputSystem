@@ -1130,6 +1130,9 @@ namespace UnityEngine.InputSystem
             return string.Join("\n", output);
         }
 
+        internal readonly HashSet<InputControl> m_ControlWithUnknownState = new();
+        public override bool isStateKnown => m_ControlWithUnknownState.Count == 0;
+
         private unsafe void WriteChangedControlStatesInternal(void* statePtr,
             byte* deviceStatePtr, ControlBitRangeNode parentNode, uint startOffset)
         {
@@ -1156,6 +1159,13 @@ namespace UnityEngine.InputSystem
                         (byte*)statePtr - m_StateBlock.byteOffset, null))
                     {
                         control.MarkAsStale();
+
+                        // NEW: Mark as known when we observe a state change
+                        if (!control.isStateKnown)
+                        {
+                            control.SetStateKnown(true);
+                        }
+
                         if (control.isButton && ((ButtonControl)control).needsToCheckFramePress)
                             m_UpdatedButtons.Add(controlIndex);
                     }
@@ -1190,6 +1200,13 @@ namespace UnityEngine.InputSystem
                     (byte*)statePtr - m_StateBlock.byteOffset, null))
                 {
                     control.MarkAsStale();
+
+                    // NEW: Mark as known when we observe a state change
+                    if (!control.isStateKnown)
+                    {
+                        control.SetStateKnown(true);
+                    }
+
                     if (control.isButton && ((ButtonControl)control).needsToCheckFramePress)
                         m_UpdatedButtons.Add(controlIndex);
                 }

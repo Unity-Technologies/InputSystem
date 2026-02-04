@@ -1280,7 +1280,7 @@ namespace UnityEngine.InputSystem
         // detecting stale state after focus loss with BackgroundBehavior.IgnoreFocus.
         // When focus is lost, controls are marked as unknown until an event is received.
         protected bool m_isStateKnown = true;
-        public bool isStateKnown => m_isStateKnown;
+        public virtual bool isStateKnown => m_isStateKnown;
 
         internal virtual void MarkStateKnownRecursively(bool isStateKnown)
         {
@@ -1294,7 +1294,7 @@ namespace UnityEngine.InputSystem
 
         internal virtual void SetStateKnown(bool isStateKnown)
         {
-            m_isStateKnown = isStateKnown;
+            m_isStateKnown = true;
         }
     }
 
@@ -1307,13 +1307,34 @@ namespace UnityEngine.InputSystem
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {
-        internal override void SetStateKnown(bool isStateKnown)
+        internal override unsafe void SetStateKnown(bool value)
         {
-            // When marking state as unknown, cache the default value so we can return it
-            // via ref readonly without allocations.
-            if (!isStateKnown)
+            if (value == false && !synthetic)
+            {
+                // Read actual state from buffer, not cached value!
+                var currentValue = ReadUnprocessedValueFromState(currentStatePtr);
                 m_DefaultValue = ReadDefaultValue();
-            m_isStateKnown = isStateKnown;
+
+                if (!currentValue.Equals(m_DefaultValue))
+                {
+                    // Control is in non-default state - potentially stale
+                    m_isStateKnown = false;
+
+                    // Reset state buffer to default value
+                    WriteValueFromObjectIntoState(m_DefaultValue, currentStatePtr);
+                    MarkAsStale(); // Invalidate cache - nah useless as the cache is refresh every frame
+
+                    device?.m_ControlWithUnknownState.Add(this);
+                }
+            }
+            else
+            {
+                m_isStateKnown = true;
+                if (device != null && device.m_ControlWithUnknownState.Contains(this))
+                {
+                    device.m_ControlWithUnknownState.Remove(this);
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -1399,7 +1420,7 @@ namespace UnityEngine.InputSystem
                 // NOTE: Currently, there is no mechanism to automatically mark controls as "known"
                 // when events arrive, due to limitations in identifying which specific control
                 // triggered a full state event. See ISXB-1730 investigation for details.
-                if (!isStateKnown)
+                if (isStateKnown == false)
                 {
                     return ref m_DefaultValue;
                 }
