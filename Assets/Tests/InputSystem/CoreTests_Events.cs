@@ -1335,24 +1335,24 @@ partial class CoreTests
     // Step 3: Release button north and stick while no longer being suppressed.
     // Step 4: Press gamepad north and stick.
 
-    // Press event is detected in step 2 (false positive) with default interaction
+    // Press event is suppressed in step 1/2 with default interaction
     [TestCase(InputEventHandledPolicy.SuppressStateUpdates, // policy
         null, // interactions
-        new int[] { 0, 0, 1, 1, 2}, // started
-        new int[] { 0, 0, 1, 1, 2}, // performed
-        new int[] {0, 0, 0, 1, 1})] // cancelled
+        new int[] { 0, 0, 0, 0, 1}, // started
+        new int[] { 0, 0, 0, 0, 1}, // performed
+        new int[] {0, 0, 0, 0, 0})] // cancelled
     // Press event is not detected in step 1/2 with default interaction
     [TestCase(InputEventHandledPolicy.SuppressActionEventNotifications,
         null,
         new int[] { 0, 0, 0, 0, 1},
         new int[] { 0, 0, 0, 0, 1},
         new int[] {0, 0, 0, 1, 1})]
-    // Press event is detected in step 2 (false positive) with explicit press interaction
+    // Press event is suppressed in step 1/2 with explicit press interaction
     [TestCase(InputEventHandledPolicy.SuppressStateUpdates,
         "press",
-        new int[] { 0, 0, 1, 1, 2},
-        new int[] { 0, 0, 1, 1, 2},
-        new int[] {0, 0, 0, 1, 1})]
+        new int[] { 0, 0, 0, 0, 1},
+        new int[] { 0, 0, 0, 0, 1},
+        new int[] {0, 0, 0, 0, 0})]
     // Press event is not detected in step 1/2 (false positive) with explicit press interaction
     [TestCase(InputEventHandledPolicy.SuppressActionEventNotifications,
         "press",
@@ -1439,7 +1439,7 @@ partial class CoreTests
         Assert.That(action.WasPressedThisFrame, Is.EqualTo(performedThisFrame));
         releasedThisFrame = expectedCancelled[2] - expectedCancelled[1] > 0;
         Assert.That(action.WasReleasedThisFrame, Is.EqualTo(releasedThisFrame));
-        Assert.That(action.IsPressed, Is.True); // Note: This is not an event and hence not suppressed
+        Assert.That(action.IsPressed, Is.EqualTo(seesControlChangesUnderSuppression)); // Note: This is not an event and hence not suppressed
 
         Assert.That(Gamepad.current.buttonNorth.wasPressedThisFrame, Is.EqualTo(!seesControlChangesUnderSuppression));
         Assert.That(Gamepad.current.buttonNorth.wasReleasedThisFrame, Is.False);
