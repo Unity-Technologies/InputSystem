@@ -11,12 +11,20 @@ however, it has to be formatted properly to pass verification tests.
 ## [Unreleased] - yyyy-mm-dd
 
 ### Changed
-- Consecutive wildcard characters ('*') used in input control-paths are now collapsed into a single wildcard when multiple consecutive wildcard characters are present.
 
-### Added
+- Updated `m_ActionAssetInstanceID` in PlayerInputEditor.cs to use `EntityId` instead of `InstanceID`.
+- Consecutive wildcard characters ('*') used in input control-paths are now collapsed into a single wildcard when multiple consecutive wildcard characters are present.
 
 ### Fixed
 
+- Fixed the `Auto-Save` toggle button with some extra pixels to align the text in the window better.
+- Align title font size with toolbar style in `Input Action` window.
+- Updated Action Properties headers to use colors consistent with GameObject component headers.
+- Fixed misaligned Virtual Cursor when changing resolution [ISXB-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1119)
+
+### Added
+
+- Added `keywords` for InputSystem project settings window.
 
 ## [1.18.0] - 2026-01-14
 
