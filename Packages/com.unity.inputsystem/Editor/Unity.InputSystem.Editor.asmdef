@@ -3,7 +3,7 @@
     "rootNamespace": "",
     "references": [
         "Unity.InputSystem",
-        "Unity.InputSystem.ForUI"
+        "Unity.InputSystem.InputSystemForUI"
     ],
     "includePlatforms": [
         "Editor"

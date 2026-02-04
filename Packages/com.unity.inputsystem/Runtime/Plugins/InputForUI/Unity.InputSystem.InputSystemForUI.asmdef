@@ -1,5 +1,5 @@
 {
-    "name": "Unity.InputSystem.ForUI",
+    "name": "Unity.InputSystem.InputSystemForUI",
     "references": [
         "Unity.InputSystem"
     ],
