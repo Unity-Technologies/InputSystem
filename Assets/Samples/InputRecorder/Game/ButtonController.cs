@@ -16,6 +16,10 @@ public class ButtonController : MonoBehaviour
 
     private System.Collections.Generic.List<NoteObject> notesInLane = new System.Collections.Generic.List<NoteObject>();
 
+    private bool _isButtonHeld = false;
+    private float _buttonPressTime = 0f;
+    private const float MIN_HOLD_DURATION = 0.05f; // Minimum 50ms to count as a real release
+
     public float WorldXPosition => transform.position.x;
 
     private void Awake()
@@ -83,6 +87,9 @@ public class ButtonController : MonoBehaviour
 
     private void ProcessButtonPress()
     {
+        _isButtonHeld = true;
+        _buttonPressTime = Time.time;
+
         if (pressedTexture != null)
             meshR.material.mainTexture = pressedTexture;
 
@@ -109,7 +116,7 @@ public class ButtonController : MonoBehaviour
                 else if (note.noteType == NoteObject.NoteType.Hold && !note.IsHoldStarted())
                 {
                     float distance = Mathf.Abs(note.transform.position.x - WorldXPosition);
-                    if (distance <= 0.25f && distance < smallestHoldDistance)
+                    if (distance < smallestHoldDistance)
                     {
                         smallestHoldDistance = distance;
                         bestHoldNote = note;
@@ -118,7 +125,6 @@ public class ButtonController : MonoBehaviour
             }
         }
 
-        // Prioritize Normal notes over Hold notes
         NoteObject bestNoteToHit = bestNormalNote != null ? bestNormalNote : bestHoldNote;
 
         if (bestNoteToHit != null)
@@ -129,6 +135,15 @@ public class ButtonController : MonoBehaviour
 
     private void ProcessButtonRelease()
     {
+        float holdDuration = Time.time - _buttonPressTime;
+
+        if (holdDuration < MIN_HOLD_DURATION)
+        {
+            return;
+        }
+
+        _isButtonHeld = false;
+
         if (defaultTexture != null)
             meshR.material.mainTexture = defaultTexture;
 
@@ -160,24 +175,38 @@ public class ButtonController : MonoBehaviour
         NoteObject note = other.GetComponent<NoteObject>();
         if (note != null)
         {
+            // Check actual input device state using multiple methods
+            float rawInputValue = pressAction != null ? pressAction.action.ReadValue<float>() : 0f;
+            // Read raw values from input devices (works for both keyboard and UI/mouse input)
+            float mouseValue = Mouse.current != null ? Mouse.current.leftButton.ReadValue() : 0f;
+            float pointerValue = Pointer.current != null ? Pointer.current.press.ReadValue() : 0f;
+            bool actionPressed = pressAction != null && pressAction.action.IsPressed();
+            bool isButtonCurrentlyPressed = mouseValue > 0.5f || pointerValue > 0.5f || actionPressed || rawInputValue > 0.5f;
+
             notesInLane.Remove(note);
 
             if (note.gameObject.activeInHierarchy && note.CanBePressed)
             {
                 if (note.noteType == NoteObject.NoteType.Normal)
                 {
-                    GameManager.instance.NoteMissed(note); // Pass 'note'
+                    GameManager.instance.NoteMissed(note);
                 }
                 else if (note.noteType == NoteObject.NoteType.Hold)
                 {
-                    if (note.IsHoldStarted() && note.IsHolding())
+                    if (note.IsHoldStarted())
                     {
-                        GameManager.instance.NoteHoldPerfect(note); // Pass 'note'
-                        // note.gameObject.SetActive(false); Removed: NoteObject will handle deactivation
+                        if (isButtonCurrentlyPressed)
+                        {
+                            GameManager.instance.NoteHoldPerfect(note);
+                        }
+                        else
+                        {
+                            GameManager.instance.NoteHoldMissedEarly(note);
+                        }
                     }
-                    else if (!note.IsHoldStarted())
+                    else
                     {
-                        GameManager.instance.NoteMissed(note); // Pass 'note'
+                        GameManager.instance.NoteMissed(note); // Never started holding
                     }
                 }
             }
