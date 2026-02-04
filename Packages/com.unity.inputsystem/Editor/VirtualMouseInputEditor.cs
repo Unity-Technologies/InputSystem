@@ -1,9 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.UI;
 
-namespace UnityEngine.InputSystem.Editor
+namespace UnityEngine.InputSystem
 {
     [UnityEditor.CustomEditor(typeof(VirtualMouseInput))]
     public class VirtualMouseInputEditor : UnityEditor.Editor
