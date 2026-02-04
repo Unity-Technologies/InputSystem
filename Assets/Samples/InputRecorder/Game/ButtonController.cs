@@ -86,8 +86,10 @@ public class ButtonController : MonoBehaviour
         if (pressedTexture != null)
             meshR.material.mainTexture = pressedTexture;
 
-        NoteObject bestNoteToHit = null;
-        float smallestDistance = float.MaxValue;
+        NoteObject bestNormalNote = null;
+        NoteObject bestHoldNote = null;
+        float smallestNormalDistance = float.MaxValue;
+        float smallestHoldDistance = float.MaxValue;
 
         for (int i = notesInLane.Count - 1; i >= 0; i--)
         {
@@ -98,23 +100,26 @@ public class ButtonController : MonoBehaviour
                 if (note.noteType == NoteObject.NoteType.Normal)
                 {
                     float distance = Mathf.Abs(note.transform.position.x - WorldXPosition);
-                    if (distance < smallestDistance)
+                    if (distance < smallestNormalDistance)
                     {
-                        smallestDistance = distance;
-                        bestNoteToHit = note;
+                        smallestNormalDistance = distance;
+                        bestNormalNote = note;
                     }
                 }
                 else if (note.noteType == NoteObject.NoteType.Hold && !note.IsHoldStarted())
                 {
                     float distance = Mathf.Abs(note.transform.position.x - WorldXPosition);
-                    if (distance <= 0.25f)
+                    if (distance <= 0.25f && distance < smallestHoldDistance)
                     {
-                        bestNoteToHit = note;
-                        break;
+                        smallestHoldDistance = distance;
+                        bestHoldNote = note;
                     }
                 }
             }
         }
+
+        // Prioritize Normal notes over Hold notes
+        NoteObject bestNoteToHit = bestNormalNote != null ? bestNormalNote : bestHoldNote;
 
         if (bestNoteToHit != null)
         {

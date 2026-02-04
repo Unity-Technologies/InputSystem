@@ -177,7 +177,6 @@ public class GameManager : MonoBehaviour
         if (noteScroller != null)
             noteScroller.LoopResetScroller();
 
-        _songLoopResetTriggered = false;
         Debug.Log("Song loop detected! Resetting NoteScroller for next loop.");
     }
 
@@ -191,6 +190,10 @@ public class GameManager : MonoBehaviour
             {
                 _songLoopResetTriggered = true;
                 HandleLoopReset();
+            }
+            else if (timeRemainingInLoop > loopResetOffsetSeconds && _songLoopResetTriggered)
+            {
+                _songLoopResetTriggered = false;
             }
         }
     }
