@@ -127,7 +127,15 @@ namespace UnityEngine.InputSystem.Editor
             if (!string.Equals(path, m_CachedPath, StringComparison.Ordinal))
             {
                 m_CachedPath = path;
-                m_CachedDisplayName = InputControlPath.ToHumanReadableString(path);
+
+                if (string.IsNullOrEmpty(path))
+                {
+                    m_CachedDisplayName = string.Empty;
+                }
+                else
+                {
+                    m_CachedDisplayName = InputControlPath.ToHumanReadableString(path);
+                }
             }
 
             var displayName = m_CachedDisplayName;
