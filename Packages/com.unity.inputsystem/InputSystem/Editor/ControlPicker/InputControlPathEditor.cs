@@ -139,7 +139,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             var displayName = m_CachedDisplayName;
-            
+
             // Either show dropdown control that opens path picker or show path directly as
             // text, if manual path editing is toggled on.
             if (m_PickerState.manualPathEditMode)
@@ -225,7 +225,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private string m_CachedPath;
         private string m_CachedDisplayName;
-        
+
         private InputControlPickerDropdown m_PickerDropdown;
         private readonly InputControlPickerState m_PickerState;
 
