@@ -123,7 +123,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
-            // To cache per path value and only recompute when the string actually changes.
+            // Cache the display name per path value and only recompute when the string actually changes.
             if (!string.Equals(path, m_CachedPath, StringComparison.Ordinal))
             {
                 m_CachedPath = path;
