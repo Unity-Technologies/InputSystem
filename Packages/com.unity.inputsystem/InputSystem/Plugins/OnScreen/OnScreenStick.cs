@@ -252,7 +252,7 @@ namespace UnityEngine.InputSystem.OnScreen
             var stickSelected = false;
             foreach (var result in m_RaycastResults)
             {
-                if (!result.gameObject.transform.IsChildOf(transform)) continue;
+                if (result.gameObject != gameObject) continue;
 
                 stickSelected = true;
                 break;
