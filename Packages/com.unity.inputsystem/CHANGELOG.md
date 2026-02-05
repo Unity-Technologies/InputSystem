@@ -17,6 +17,7 @@ however, it has to be formatted properly to pass verification tests.
 
 ### Fixed
 
+- Fixed caching for InputControlPath display name.
 - Fixed the `Auto-Save` toggle button with some extra pixels to align the text in the window better.
 - Align title font size with toolbar style in `Input Action` window.
 - Updated Action Properties headers to use colors consistent with GameObject component headers.
