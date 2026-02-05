@@ -123,9 +123,15 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
-            ////TODO: this should be cached; generates needless GC churn
-            var displayName = InputControlPath.ToHumanReadableString(path);
+            // To cache per path value and only recompute when the string actually changes.
+            if (!string.Equals(path, m_CachedPath, StringComparison.Ordinal))
+            {
+                m_CachedPath = path;
+                m_CachedDisplayName = InputControlPath.ToHumanReadableString(path);
+            }
 
+            var displayName = m_CachedDisplayName;
+            
             // Either show dropdown control that opens path picker or show path directly as
             // text, if manual path editing is toggled on.
             if (m_PickerState.manualPathEditMode)
