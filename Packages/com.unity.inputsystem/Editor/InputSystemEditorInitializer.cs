@@ -25,7 +25,9 @@ namespace UnityEngine.InputSystem.Editor
             InputSystem.onSettingsChange += OnSettingsChanged;
             InputSystem.s_OnActionsChanging = ValidateAndTrackActions;
             InputSystem.s_ShouldEnableActions = ShouldEnableActions;
-
+            InputAnalytics.s_IsNewSystemBackendsEnabled = ShouldEnableActionsNewBackend;
+            InputAnalytics.s_IsOldSystemBackendsEnabled = ShouldEnableActionsOldBackend;
+            
             // Register analytics callbacks for InputActionSetupExtensions
             InputActionSetupExtensions.s_ApiUsageCallback = RegisterSetupApiUsage;
             InputActionSetupExtensions.s_SuppressAnalytics = SuppressSetupAnalytics;
@@ -330,6 +332,24 @@ namespace UnityEngine.InputSystem.Editor
         {
             // Abort if not in play-mode in editor
             return EditorApplication.isPlayingOrWillChangePlaymode;
+        }
+        
+        /// <summary>
+        /// ....
+        /// </summary>
+        internal static bool ShouldEnableActionsNewBackend()
+        {
+            // Abort if not in play-mode in editor
+            return EditorPlayerSettingHelpers.newSystemBackendsEnabled;
+        }
+        
+        /// <summary>
+        /// ....
+        /// </summary>
+        internal static bool ShouldEnableActionsOldBackend()
+        {
+            // Abort if not in play-mode in editor
+            return EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
         }
 
         private static void ShowRestartWarning()
