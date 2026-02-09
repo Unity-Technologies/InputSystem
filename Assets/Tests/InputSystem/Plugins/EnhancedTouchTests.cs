@@ -158,7 +158,10 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
 
         // And make sure we're not seeing the data in the editor.
-        runtime.PlayerFocusLost();
+        //runtime.PlayerFocusLost();
+        var focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        //InputSystem.Update(InputUpdateType.Dynamic);
         InputSystem.Update(InputUpdateType.Editor);
 
         Assert.That(Touch.activeTouches, Is.Empty);
@@ -171,7 +174,10 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(2));
 
         // Switch back to player.
-        runtime.PlayerFocusGained();
+        //runtime.PlayerFocusGained();
+        focusEvent = InputFocusEvent.Create(true, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        //InputSystem.Update(InputUpdateType.Dynamic);
         InputSystem.Update();
 
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
@@ -1160,7 +1166,9 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
         Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Began));
 
-        runtime.PlayerFocusLost();
+        //runtime.PlayerFocusLost();
+        var focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
 
         if (runInBackground)
         {
@@ -1171,7 +1179,9 @@ internal class EnhancedTouchTests : CoreTestsFixture
         else
         {
             // When not running in the background, the same thing happens but only on focus gain.
-            runtime.PlayerFocusGained();
+            //runtime.PlayerFocusGained();
+            focusEvent = InputFocusEvent.Create(true, currentTime);
+            InputSystem.QueueEvent(focusEvent.ToEventPtr());
             InputSystem.Update();
         }
 

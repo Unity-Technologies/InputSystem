@@ -2717,7 +2717,10 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        runtime.PlayerFocusLost();
+        //runtime.PlayerFocusLost();
+        var focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(keyboard.enabled, Is.True);
         Assert.That(mouse.enabled, Is.True);
@@ -3013,7 +3016,10 @@ partial class CoreTests
         Set(mouse.position, new Vector2(123, 234));
         Press(gamepad.buttonSouth);
 
-        runtime.PlayerFocusLost();
+        //runtime.PlayerFocusLost();
+        var focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(gamepad.enabled, Is.False);
 

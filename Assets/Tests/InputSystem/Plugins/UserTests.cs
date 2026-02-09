@@ -1268,7 +1268,10 @@ internal class UserTests : CoreTestsFixture
         ++InputUser.listenForUnpairedDeviceActivity;
         InputUser.onUnpairedDeviceUsed += (control, eventPtr) => Assert.Fail("Should not react!");
 
-        runtime.PlayerFocusLost();
+        //runtime.PlayerFocusLost();
+        var focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update(InputUpdateType.Dynamic);
 
         Press(gamepad.buttonSouth);
 

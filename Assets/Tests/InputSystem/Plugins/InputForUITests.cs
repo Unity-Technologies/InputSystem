@@ -715,11 +715,18 @@ public class InputForUITests : InputTestFixture
         currentTime += 1.0f;
         Update();
         currentTime += 1.0f;
-        runtime.PlayerFocusLost();
+        //runtime.PlayerFocusLost();
+        var focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+       // InputSystem.Update(InputUpdateType.Dynamic);
         currentTime += 1.0f;
         Set(mouse.position, outOfFocusPosition , queueEventOnly: true);
         currentTime += 1.0f;
-        runtime.PlayerFocusGained();
+        //runtime.PlayerFocusGained();
+        InputSystem.Update();
+        focusEvent = InputFocusEvent.Create(true, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+       
         currentTime += 1.0f;
         Set(mouse.position, focusPosition, queueEventOnly: true);
         currentTime += 1.0f;

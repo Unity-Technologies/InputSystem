@@ -1522,8 +1522,11 @@ partial class CoreTests
         Assert.That(device, Is.Not.Null);
 
         // Loose focus.
-        runtime.PlayerFocusLost();
-        InputSystem.Update();
+        //runtime.PlayerFocusLost();
+        var focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update(InputUpdateType.Dynamic);
+        //InputSystem.Update();
 
         // Disconnect.
         var inputEvent = DeviceRemoveEvent.Create(deviceId, runtime.currentTime);
@@ -1534,8 +1537,11 @@ partial class CoreTests
         Assert.That(InputSystem.devices, Is.Empty);
 
         // Regain focus.
-        runtime.PlayerFocusGained();
-        InputSystem.Update();
+        //runtime.PlayerFocusGained();
+        focusEvent = InputFocusEvent.Create(true, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update(InputUpdateType.Dynamic);
+        //InputSystem.Update();
 
         var newDeviceId = runtime.ReportNewInputDevice(deviceDesc);
         InputSystem.Update();
@@ -4604,7 +4610,13 @@ partial class CoreTests
         InputSystem.onDeviceChange += DeviceChangeCallback;
 
         var eventCount = 0;
-        InputSystem.onEvent += (eventPtr, _) => ++ eventCount;
+        InputSystem.onEvent += (eventPtr, _) =>
+        {
+            // Focus events will always be processed no matter the state
+            // Since the test relies on counting events based on state, dont count focus events
+            if(eventPtr.data->type != InputFocusEvent.Type)
+                ++eventCount;
+        };
 
         Assert.That(trackedDevice.enabled, Is.True);
         Assert.That(mouse.enabled, Is.True);
@@ -4647,7 +4659,10 @@ partial class CoreTests
         }
 
         // Lose focus.
-        runtime.PlayerFocusLost();
+        // runtime.PlayerFocusLost();
+        var focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(sensor.enabled, Is.False);
         Assert.That(disabledDevice.enabled, Is.False);
@@ -5068,7 +5083,10 @@ partial class CoreTests
         commands.Clear();
 
         // Regain focus.
-        runtime.PlayerFocusGained();
+        //runtime.PlayerFocusGained();
+        focusEvent = InputFocusEvent.Create(true, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(sensor.enabled, Is.False);
         Assert.That(disabledDevice.enabled, Is.False);
@@ -5318,7 +5336,11 @@ partial class CoreTests
         Assert.That(performedCount, Is.EqualTo(1));
 
         // Lose focus
-        runtime.PlayerFocusLost();
+        // runtime.PlayerFocusLost();
+        var focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update();
+
         Assert.That(gamepad.enabled, Is.False);
 
         // Queue an event while in the background. We don't want to see this event to be processed once focus
@@ -5329,7 +5351,9 @@ partial class CoreTests
         InputSystem.Update();
 
         // Gain focus
-        runtime.PlayerFocusGained();
+        //runtime.PlayerFocusGained();
+        focusEvent = InputFocusEvent.Create(true, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
 
         // Run update to try process events accordingly once focus is gained
         InputSystem.Update();

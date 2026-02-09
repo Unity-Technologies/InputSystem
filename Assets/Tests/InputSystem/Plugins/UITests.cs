@@ -4181,18 +4181,26 @@ internal partial class UITests : CoreTestsFixture
 
         scene.leftChildReceiver.events.Clear();
 
-        runtime.PlayerFocusLost();
+        //runtime.PlayerFocusLost();
+        var focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update(InputUpdateType.Dynamic);
+       
         if (canRunInBackground)
             Assert.That(clickCanceled, Is.EqualTo(0));
         else
             Assert.That(clickCanceled, Is.EqualTo(1));
         scene.eventSystem.SendMessage("OnApplicationFocus", false);
-
+        
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
         Assert.That(scene.eventSystem.hasFocus, Is.False);
         Assert.That(clicked, Is.False);
 
-        runtime.PlayerFocusGained();
+        //runtime.PlayerFocusGained();
+        focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update(InputUpdateType.Dynamic);
+
         scene.eventSystem.SendMessage("OnApplicationFocus", true);
 
         yield return null;
@@ -4221,11 +4229,17 @@ internal partial class UITests : CoreTestsFixture
 
         // Ensure that losing and regaining focus doesn't cause the next click to be ignored
         clicked = false;
-        runtime.PlayerFocusLost();
+        //runtime.PlayerFocusLost();
+        focusEvent = InputFocusEvent.Create(false, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update(InputUpdateType.Dynamic);
         scene.eventSystem.SendMessage("OnApplicationFocus", false);
         yield return null;
 
-        runtime.PlayerFocusGained();
+        //runtime.PlayerFocusGained();
+        focusEvent = InputFocusEvent.Create(true, currentTime);
+        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        InputSystem.Update(InputUpdateType.Dynamic);
         scene.eventSystem.SendMessage("OnApplicationFocus", true);
         yield return null;
 

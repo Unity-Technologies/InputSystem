@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <see cref="InputFocusEvent"/> is sent when an application gains or loses focus.
     /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 4)]
-    internal struct InputFocusEvent : IInputEventTypeInfo
+    internal unsafe struct InputFocusEvent : IInputEventTypeInfo
     {
         // Keep in sync with Input.cs in the input module
         public const int Type = 0x464f4355; //FOCU
@@ -27,15 +27,22 @@ namespace UnityEngine.InputSystem.LowLevel
         
         public FourCC typeStatic => Type;
 
-        public static unsafe InputFocusEvent* From(InputEventPtr eventPtr)
+        public static InputFocusEvent Create(bool focus, double time = -1)
         {
-            if (!eventPtr.valid)
-                throw new ArgumentNullException(nameof(eventPtr));
-            if (!eventPtr.IsA<InputFocusEvent>())
-                throw new InvalidCastException(string.Format("Cannot cast event with type '{0}' into FocusEvent",
-                    eventPtr.type));
+            var inputEvent = new InputFocusEvent
+            {
+                baseEvent = new InputEvent(Type, InputEvent.kBaseEventSize + 4, 0xfffff, time),
+                focus = focus
+            };
+            return inputEvent;
+        }
 
-            return (InputFocusEvent*)eventPtr.data;
+        public InputEventPtr ToEventPtr()
+        {
+            fixed (InputFocusEvent* ptr = &this)
+            {
+                return new InputEventPtr((InputEvent*)ptr);
+            }
         }
     }
 }
