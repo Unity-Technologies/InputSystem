@@ -335,7 +335,7 @@ namespace UnityEngine.InputSystem.Editor
         }
         
         /// <summary>
-        /// ....
+        /// Checks if the backends for the new input system should be enabled in the Editor (Editor-specific check for play mode and player settings)
         /// </summary>
         internal static bool ShouldEnableActionsNewBackend()
         {
@@ -344,7 +344,7 @@ namespace UnityEngine.InputSystem.Editor
         }
         
         /// <summary>
-        /// ....
+        /// Checks if the backends for the old input system should be enabled in the Editor (Editor-specific check for play mode and player settings)
         /// </summary>
         internal static bool ShouldEnableActionsOldBackend()
         {
