@@ -3889,6 +3889,8 @@ namespace UnityEngine.InputSystem
 
         private bool m_ShouldMakeCurrentlyUpdatingDeviceCurrent;
 
+        // Record the update step for a handled event so we can suppress actions for this device
+        // in this update and the immediately following one (action processing may occur next step).
         private void SuppressActionsForDevice(InputDevice device)
         {
             if (m_InputEventHandledPolicy != InputEventHandledPolicy.SuppressStateUpdates || device == null)
@@ -3900,6 +3902,8 @@ namespace UnityEngine.InputSystem
             m_SuppressActionsForDeviceUpdate[deviceIndex] = InputUpdate.s_UpdateStepCount;
         }
 
+        // Check whether actions for this device should be suppressed due to a handled event
+        // in the current or immediately previous update step.
         internal bool ShouldSuppressActionsForDevice(InputDevice device)
         {
             if (m_InputEventHandledPolicy != InputEventHandledPolicy.SuppressStateUpdates || device == null)
