@@ -155,7 +155,6 @@ namespace UnityEngine.InputSystem
                         devices = CollectRecognizedDevices(m_InputManager),
                         unrecognized_devices = CollectUnrecognizedDevices(m_InputManager),
 #if UNITY_EDITOR
-                        // new_enabled = EditorPlayerSettingHelpers.newSystemBackendsEnabled,
                         new_enabled = s_IsNewSystemBackendsEnabled?.Invoke() ?? false,
                         old_enabled = s_IsOldSystemBackendsEnabled?.Invoke() ?? false,
 #endif // UNITY_EDITOR
