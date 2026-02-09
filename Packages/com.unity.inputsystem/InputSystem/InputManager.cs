@@ -3463,14 +3463,7 @@ namespace UnityEngine.InputSystem
                     //       create simulated events from.
                     if (m_EventListeners.length > 0)
                     {
-                        if (DelegateHelpers.InvokeCallbacksSafeUntilHandled(ref m_EventListeners, currentEventPtr, device, k_InputOnEventMarker, "InputSystem.onEvent",
-                            m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressStateUpdates))
-                        {
-                            currentEventReadPtr->handled = true;
-                            SuppressActionsForDevice(device);
-                            m_InputEventStream.Advance(false);
-                            continue;
-                        }
+                        DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners, currentEventPtr, device, k_InputOnEventMarker, "InputSystem.onEvent");
                     }
 
                     if (m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressStateUpdates && currentEventPtr.handled)
