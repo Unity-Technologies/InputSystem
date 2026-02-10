@@ -3718,22 +3718,18 @@ namespace UnityEngine.InputSystem
         //
         internal static void TestHook_DisableActions()
         {
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // Note that in a test setup we might enter reset with project-wide actions already enabled but the
             // reset itself has pushed the action system state on the state stack. To avoid action state memory
             // problems we disable actions here and also request asset to be marked dirty and reimported.
             DisableActions(triggerSetupChanged: true);
             if (s_Manager != null)
                 s_Manager.actions = null;
-            #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         }
 
         internal static void TestHook_EnableActions()
         {
             // Note this is too early for editor ! actions is not setup yet.
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             EnableActions();
-            #endif
         }
 
 #endif // UNITY_INCLUDE_TESTS
