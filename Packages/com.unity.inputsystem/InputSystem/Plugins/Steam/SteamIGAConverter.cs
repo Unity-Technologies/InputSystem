@@ -9,23 +9,6 @@ using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Utilities;
 
-////TODO: motion data support
-
-////TODO: haptics support
-
-////TODO: ensure that no two actions have the same name even between maps
-
-////TODO: also need to build a layout based on SteamController that has controls representing the current set of actions
-////      (might need this in the runtime)
-
-////TODO: localization support (allow loading existing VDF file and preserving localization strings)
-
-////TODO: allow having actions that are ignored by Steam VDF export
-
-////TODO: support for getting displayNames/glyphs from Steam
-
-////TODO: polling in background
-
 namespace UnityEngine.InputSystem.Steam.Editor
 {
     /// <summary>

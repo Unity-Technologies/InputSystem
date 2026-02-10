@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -114,7 +114,12 @@ namespace UnityEngine.InputSystem.Editor
 
         public static int GetBindingIndexBeforeAction(SerializedProperty arrayProperty, int indexToInsert, SerializedProperty bindingArrayToInsertTo)
         {
-            Debug.Assert(indexToInsert >= 0 && indexToInsert <= arrayProperty.arraySize, "Invalid action index to insert bindings before.");
+            // Need to guard against this case, as there is different behaviour when pasting actions vs actionmaps
+            if (indexToInsert < 0)
+            {
+                return -1;
+            }
+            Debug.Assert(indexToInsert <= arrayProperty.arraySize, "Invalid action index to insert bindings before.");
             var offset = 1; //previous action offset
             while (indexToInsert - offset >= 0)
             {
@@ -147,12 +152,17 @@ namespace UnityEngine.InputSystem.Editor
             return actionMap.FindPropertyRelative(nameof(InputActionMap.m_Actions)).GetArrayElementAtIndex(actionIndex);
         }
 
-        public static SerializedInputAction GetActionInMap(InputActionsEditorState state, int mapIndex, string name)
+        public static SerializedInputAction? GetActionInMap(InputActionsEditorState state, int mapIndex, string name)
         {
-            return new SerializedInputAction(state.serializedObject
+            SerializedProperty property = state.serializedObject
                 ?.FindProperty(nameof(InputActionAsset.m_ActionMaps))?.GetArrayElementAtIndex(mapIndex)
                 ?.FindPropertyRelative(nameof(InputActionMap.m_Actions))
-                ?.FirstOrDefault(p => p.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue == name));
+                ?.FirstOrDefault(p => p.FindPropertyRelative(nameof(InputAction.m_Name)).stringValue == name);
+
+            // If the action is not found, return null.
+            if (property == null)
+                return null;
+            return new SerializedInputAction(property);
         }
 
         public static SerializedInputBinding GetCompositeOrBindingInMap(SerializedProperty actionMap, int bindingIndex)

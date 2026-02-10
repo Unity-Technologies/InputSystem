@@ -171,26 +171,22 @@ namespace UnityEngine.InputSystem.Utilities
 
         public static bool operator==(InternedString a, string b)
         {
-            return string.Compare(a.m_StringLowerCase, b.ToLower(CultureInfo.InvariantCulture),
-                StringComparison.InvariantCultureIgnoreCase) == 0;
+            return string.Compare(a.m_StringLowerCase, b, StringComparison.InvariantCultureIgnoreCase) == 0;
         }
 
         public static bool operator!=(InternedString a, string b)
         {
-            return string.Compare(a.m_StringLowerCase, b.ToLower(CultureInfo.InvariantCulture),
-                StringComparison.InvariantCultureIgnoreCase) != 0;
+            return string.Compare(a.m_StringLowerCase, b, StringComparison.InvariantCultureIgnoreCase) != 0;
         }
 
         public static bool operator==(string a, InternedString b)
         {
-            return string.Compare(a.ToLower(CultureInfo.InvariantCulture), b.m_StringLowerCase,
-                StringComparison.InvariantCultureIgnoreCase) == 0;
+            return string.Compare(a, b.m_StringLowerCase, StringComparison.InvariantCultureIgnoreCase) == 0;
         }
 
         public static bool operator!=(string a, InternedString b)
         {
-            return string.Compare(a.ToLower(CultureInfo.InvariantCulture), b.m_StringLowerCase,
-                StringComparison.InvariantCultureIgnoreCase) != 0;
+            return string.Compare(a, b.m_StringLowerCase, StringComparison.InvariantCultureIgnoreCase) != 0;
         }
 
         public static bool operator<(InternedString left, InternedString right)

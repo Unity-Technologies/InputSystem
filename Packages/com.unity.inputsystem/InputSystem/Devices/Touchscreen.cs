@@ -8,25 +8,6 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using Unity.Profiling;
 
-////TODO: property that tells whether a Touchscreen is multi-touch capable
-
-////TODO: property that tells whether a Touchscreen supports pressure
-
-////TODO: add support for screen orientation
-
-////TODO: touch is hardwired to certain memory layouts ATM; either allow flexibility or make sure the layouts cannot be changed
-
-////TODO: startTimes are baked *external* times; reset touch when coming out of play mode
-
-////TODO: detect and diagnose touchId=0 events
-
-////REVIEW: where should we put handset vibration support? should that sit on the touchscreen class? be its own separate device?
-
-////REVIEW: Given that Touchscreen is no use for polling, should we remove Touchscreen.current?
-
-////REVIEW: Should Touchscreen reset individual TouchControls to default(TouchState) after a touch has ended? This would allow
-////        binding to a TouchControl as a whole and the action would correctly cancel if the touch ends
-
 namespace UnityEngine.InputSystem.LowLevel
 {
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1028:EnumStorageShouldBeInt32", Justification = "byte to correspond to TouchState layout.")]

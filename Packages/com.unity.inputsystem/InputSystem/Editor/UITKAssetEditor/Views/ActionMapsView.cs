@@ -1,7 +1,8 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using CmdEvents = UnityEngine.InputSystem.Editor.InputActionsEditorConstants.CommandEvents;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
@@ -32,6 +33,7 @@ namespace UnityEngine.InputSystem.Editor
                 treeViewItem.EditTextFinished += treeViewItem.EditTextFinishedCallback;
                 treeViewItem.userData = i;
                 element.SetEnabled(!mapData.isDisabled);
+                treeViewItem.isDisabledActionMap = mapData.isDisabled;
 
                 ContextMenu.GetContextMenuForActionMapItem(this, treeViewItem, i);
             };
@@ -64,11 +66,11 @@ namespace UnityEngine.InputSystem.Editor
             CreateSelector(Selectors.GetActionMapNames, Selectors.GetSelectedActionMap, (actionMapNames, actionMap, state) => new ViewState(actionMap, actionMapNames, state.GetDisabledActionMaps(actionMapNames.ToList())));
 
             m_AddActionMapButton = root.Q<Button>("add-new-action-map-button");
+            m_AddActionMapButton.AddToClassList(EditorGUIUtility.isProSkin ? "add-button-dark-theme" : "add-button");
+
             m_AddActionMapButton.clicked += AddActionMap;
 
             ContextMenu.GetContextMenuForActionMapsEmptySpace(this, root.Q<VisualElement>("rclick-area-to-add-new-action-map"));
-            // Only bring up this context menu for the List when it's empty, so we can treat it like right-clicking the empty space:
-            ContextMenu.GetContextMenuForActionMapsEmptySpace(this, m_ListView, onlyShowIfListIsEmpty: true);
         }
 
         void OnDroppedHandler(int mapIndex)
@@ -90,7 +92,13 @@ namespace UnityEngine.InputSystem.Editor
                 if (actionMapData.HasValue)
                     m_ListView.SetSelection(viewState.actionMapData.IndexOf(actionMapData.Value));
             }
+            // UI toolkit doesn't behave the same on 6000.0 way when refreshing items
+            // On previous versions, we need to call Rebuild() to refresh the items since refreshItems() is less predicatable
+#if UNITY_6000_0_OR_NEWER
             m_ListView.RefreshItems();
+#else
+            m_ListView.Rebuild();
+#endif
             RenameNewActionMaps();
         }
 

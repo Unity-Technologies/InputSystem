@@ -27,12 +27,11 @@ The following is a list of known limitations that the Input System currently has
 * (Windows) Pen input will not work with Wacom devices if "Windows Ink" support is turned off.
 * (Windows) HID input is not currently supported in 32-bit players. This means that devices such as the PS4 controller will not work in 32-bit standalone players. Use the 64-bit standalone player instead.
 * (Android) We only support a single Touchscreen at the moment.
-* (Stadia) The Stadia controller is only supported __in__ the Stadia player at the moment. In the editor, use the generic `Gamepad` for bindings and use any Xbox or PS4 controller for testing.
 * Joy-Cons are only supported on Switch.
 * Sensors in the PS4 controller are currently only supported on PS4.
-  >NOTE: Support for NDA platforms is distributed as separate packages due to licensing restrictions. The packages, at this point, are made available separately to licensees for download and installation.
+    > [!NOTE]
+    > Support for NDA platforms is distributed as separate packages due to licensing restrictions. The packages, at this point, are made available separately to licensees for download and installation.
 
 ## Features Supported by Old Input Manager
 
-* `MonoBehaviour` mouse methods (`OnMouseEnter`, `OnMouseDrag`, etc) will not be called by the Input System.
 * Unity Remote doesn't currently support the Input System. This is being worked on.

@@ -1,15 +1,17 @@
-
+---
+uid: input-system-quickstart
+---
 # Quickstart Guide
 
-This page has a brief description of how to quickly start using the Input System. The Input System has [multiple workflows](Workflows.md) which you might prefer that offer different benefits. This quickstart guide shows a workflow which suits most common scenarios.
+This page has a brief description of how to quickly start using the Input System. The Input System has [multiple workflows](xref:input-system-workflows) which you might prefer that offer different benefits. This quickstart guide shows a workflow which suits most common scenarios.
 
-First, install the Input System package. For information on how to install the new Input System, see [Installation](Installation.md).
+First, install the Input System package. For information on how to install the new Input System, see [Installation](xref:input-system-installation).
 
 ## Create and assign the default project-wide actions
 
 The input system stores your input configuration in an **Actions Asset**. When you first install the input system package, you must create this Actions Asset.
 
-You can do this by going to by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**, then click the button labelled **Create and assign a default project-wide Action Asset**.
+You can do this by going to **Edit** > **Project Settings** > **Input System Package** > **Input Actions**, then click the button labelled **Create and assign a default project-wide Action Asset**.
 
 ![The Input Actions Settings window](Images/InputSettingsNoProjectWideAsset.png)
 
@@ -22,7 +24,7 @@ Once you have created and assigned some project-wide actions, the **Input Action
 
 You can use this window to view the Actions to find out their names, value types, and what their corresponding bindings. You can also edit, delete, or add new Actions here.
 
-[Read more about using the Input Action Settings Window.](ActionsEditor.md)
+[Read more about using the Input Action Settings Window.](xref:input-system-configuring-input)
 
 
 ## The default Action Maps and Actions
@@ -33,7 +35,7 @@ The Input System's default configuration comes with two Action Maps: "Player" an
 
 The "Player" Action Map defines several game-related actions such as "Move", "Look", "Jump" and "Attack" actions. The "UI" action map defines several user-interface-related actions such as "Navigate", "Submit" and "Cancel".
 
- Each each default action has bindings to several different types of Control. For example:
+ Each default action has bindings to several different types of Control. For example:
 
 - The "Move" action is bound to the "WSAD" keyboard keys and arrow keys, a gamepad stick, the primary 2D axis on an XR controller
 - The "Jump" action is bound to the space key, the "south" button on a gamepad, and the secondary button on an XR controller.
@@ -49,7 +51,7 @@ This workflow uses the following steps:
 
 1. Add the Input System "`using`" statement at the top of your script.
 2. Create variables to hold the Action references.
-3. In your Start method, find the and store the Action references.
+3. In your Start method, find and store the Action references.
 4. In your Update method, read the values from the Action references, and add your own code to respond accordingly.
 
 These steps are shown in the example script below:
@@ -89,6 +91,7 @@ public class Example : MonoBehaviour
 
 These actions named "Move" and "Jump" in this script work straight away with no configuration required because they match the names of some of the pre-configured defaults in the Input System package.
 
-> **Note**: Different types of Action have different value types, and so have different methods to access their value, which is why you see `.ReadValue<Vector2>()` used to read a 2D axis, and `.IsPressed()` to read a button state, in the example above.
-
-> **Note:** If you create more than one Action with same name in different Action Maps, you must specify the Action Map and the Action Name separated by a `/` character when using FindAction. For example: `InputSystem.actions.FindAction("Player/Move")`
+> [!NOTE]
+> Different types of Action have different value types, and so have different methods to access their value, which is why you see `.ReadValue<Vector2>()` used to read a 2D axis, and `.IsPressed()` to read a button state, in the example above.
+>
+> If you create more than one Action with same name in different Action Maps, you must specify the Action Map and the Action Name separated by a `/` character when using FindAction. For example: `InputSystem.actions.FindAction("Player/Move")`

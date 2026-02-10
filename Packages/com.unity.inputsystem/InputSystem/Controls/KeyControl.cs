@@ -12,8 +12,8 @@ namespace UnityEngine.InputSystem.Controls
     /// have symbols associated with them which may change depending on keyboard layout as well as in combination
     /// with other keys.
     ///
-    /// Note:
-    /// Unity input system key codes and input manager key codes are designed with game controls in mind.
+    /// > [!NOTE]
+    /// > Unity input system key codes and input manager key codes are designed with game controls in mind.
     ///
     /// This means the way they are assigned is intended to preserve the location of keys on keyboards,
     /// so that pressing a key in the same location on different keyboards should result in the same action
@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem.Controls
                 return m_ScanCode;
             }
         }
-
+        /// <inheritdoc/>
         protected override void RefreshConfiguration()
         {
             // Wipe our last cached set of data (if any).
@@ -77,17 +77,18 @@ namespace UnityEngine.InputSystem.Controls
                     return;
                 }
 
-                var textInfo = CultureInfo.InvariantCulture.TextInfo;
                 // We need to lower case first because ToTitleCase preserves upper casing.
                 // For example on Swedish Windows layout right shift display name is "HÖGER SKIFT".
                 // Just passing it to ToTitleCase won't change anything. But passing "höger skift" will return "Höger Skift".
-                var keyNameLowerCase = textInfo.ToLower(rawKeyName);
+                var keyNameLowerCase =  rawKeyName.ToLowerInvariant();
+
                 if (string.IsNullOrEmpty(keyNameLowerCase))
                 {
                     displayName = rawKeyName;
                     return;
                 }
 
+                var textInfo = CultureInfo.InvariantCulture.TextInfo;
                 displayName = textInfo.ToTitleCase(keyNameLowerCase);
             }
         }

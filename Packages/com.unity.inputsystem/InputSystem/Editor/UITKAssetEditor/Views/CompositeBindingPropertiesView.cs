@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +42,7 @@ namespace UnityEngine.InputSystem.Editor
 
             viewState.parameterListView.onChange = () =>
             {
-                Dispatch(Commands.UpdatePathNameAndValues(viewState.parameterListView.GetParameters(), viewState.selectedBindingPath));
+                Dispatch(Commands.UpdatePathNameAndValues(viewState.parameterListView.GetParameters(), viewState.selectedBindingPath), UIRebuildMode.None);
             };
             viewState.parameterListView.OnDrawVisualElements(rootElement);
         }

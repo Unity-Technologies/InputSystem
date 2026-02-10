@@ -3,7 +3,8 @@ uid: input-system-workflow-player-input
 ---
 # Workflow Overview - Actions and the PlayerInput Component
 
-<img src="Images/Workflow-PlayerInput.png">
+![The Input Device and Actions icons under the Binding header lead into the PlayerInput Component and from there into the icon representing your action code.](Images/Workflow-PlayerInput.png)
+
 
 The highest level of abstraction provided by the Input System is when you use [Actions](Actions.html) and the **Player Input component** together.
 
@@ -51,7 +52,8 @@ public class ExampleScript : MonoBehaviour
 }
 ```
 
-> __Note__: As a general rule, if you are using the PlayerInput workflow, you should read input through callbacks as described above, however if you need to access the input actions asset directly while using the PlayerInput component, you should access the [PlayerInput component's copy of the actions](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_actions), not `InputSystem.actions`.
+> [!NOTE]
+> As a general rule, if you are using the PlayerInput workflow, you should read input through callbacks as described above, however if you need to access the input actions asset directly while using the PlayerInput component, you should access the [PlayerInput component's copy of the actions](xref:UnityEngine.InputSystem.PlayerInput.actions), not `InputSystem.actions`.
 >
 > This is because the PlayerInput component performs device filtering to automatically assign devices to multiple players, so each instance has its own copy of the actions filtered for each player. If you bypass this by reading `InputSystem.actions` directly, the automatic device assignment won't work.
 

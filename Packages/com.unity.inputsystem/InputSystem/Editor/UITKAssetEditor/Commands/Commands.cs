@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -266,7 +266,8 @@ namespace UnityEngine.InputSystem.Editor
                         else
                             lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedBindingIndex: newIndex >= 0 ? newIndex : state.selectedBindingIndex));
 
-                        lastPastedElement.FindPropertyRelative("m_Action").stringValue = relatedAction.Value.name;
+                        if (lastPastedElement != null)
+                            lastPastedElement.FindPropertyRelative("m_Action").stringValue = relatedAction.Value.name;
                     }
                 }
 
@@ -453,7 +454,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
-                var action = Selectors.GetActionInMap(state, actionMapIndex, actionName).wrappedProperty;
+                var action = Selectors.GetActionInMap(state, actionMapIndex, actionName)?.wrappedProperty;
                 var actionIndex = action.GetIndexOfArrayElement();
                 var actionID = InputActionSerializationHelpers.GetId(action);
                 var isCut = state.IsActionCut(actionMapIndex, actionIndex);
@@ -595,7 +596,6 @@ namespace UnityEngine.InputSystem.Editor
                 // TODO It makes more sense to call back to editor since editor owns target object?
                 //InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
                 postSaveAction?.Invoke();
-                state.m_Analytics?.RegisterExplicitSave();
                 return state;
             };
         }
@@ -638,10 +638,17 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var actionMap = Selectors.GetActionMapAtIndex(state, actionMapIndex)?.wrappedProperty;
-                var action = Selectors.GetActionInMap(state, actionMapIndex, oldName).wrappedProperty;
-                InputActionSerializationHelpers.RenameAction(action, actionMap, newName);
-                state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics?.RegisterActionEdit();
+                var action = Selectors.GetActionInMap(state, actionMapIndex, oldName)?.wrappedProperty;
+                // In an Asset Editor workflow, the serialized property might not exist in case a new action is created
+                // that is yet to be named, and it's deleted before it's named.
+                // This is a particular case when ActionTreeView::DeleteItem triggers
+                // Focus callback -> OnEditTextFinished -> ChangeActionName.
+                if (action != null)
+                {
+                    InputActionSerializationHelpers.RenameAction(action, actionMap, newName);
+                    state.serializedObject.ApplyModifiedProperties();
+                    state.m_Analytics?.RegisterActionEdit();
+                }
                 return state;
             };
         }

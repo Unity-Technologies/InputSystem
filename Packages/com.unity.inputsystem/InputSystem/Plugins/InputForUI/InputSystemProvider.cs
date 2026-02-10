@@ -13,20 +13,23 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
     internal class InputSystemProvider : IEventProviderImpl
     {
-        Configuration m_Cfg;
-
         InputEventPartialProvider m_InputEventPartialProvider;
 
+        DefaultInputActions m_DefaultInputActions;
         InputActionAsset m_InputActionAsset;
 
-        InputActionReference m_PointAction;
-        InputActionReference m_MoveAction;
-        InputActionReference m_SubmitAction;
-        InputActionReference m_CancelAction;
-        InputActionReference m_LeftClickAction;
-        InputActionReference m_MiddleClickAction;
-        InputActionReference m_RightClickAction;
-        InputActionReference m_ScrollWheelAction;
+        // Note that these are plain action references instead since InputActionReference do
+        // not provide any value when this integration doesn't have any UI. If this integration
+        // later gets a UI replace these by InputActionReference and remember to check for e.g.
+        // m_ActionReference != null && m_ActionReference.action != null.
+        InputAction m_PointAction;
+        InputAction m_MoveAction;
+        InputAction m_SubmitAction;
+        InputAction m_CancelAction;
+        InputAction m_LeftClickAction;
+        InputAction m_MiddleClickAction;
+        InputAction m_RightClickAction;
+        InputAction m_ScrollWheelAction;
 
         InputAction m_NextPreviousAction;
 
@@ -86,9 +89,12 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_TouchState.Reset();
             m_SeenTouchEvents = false;
 
-            m_Cfg = Configuration.GetDefaultConfiguration();
-
+            SelectInputActionAsset();
             RegisterActions();
+
+            // TODO make it configurable as it is not part of default config
+            // The Next/Previous action is not part of the input actions asset
+            RegisterFixedActions();
 
             InputSystem.onActionsChange += OnActionsChange;
         }
@@ -96,9 +102,16 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         public void Shutdown()
         {
             UnregisterActions();
+            UnregisterFixedActions();
 
             m_InputEventPartialProvider.Shutdown();
             m_InputEventPartialProvider = null;
+
+            if (m_DefaultInputActions != null)
+            {
+                m_DefaultInputActions.Dispose();
+                m_DefaultInputActions = null;
+            }
 
             InputSystem.onActionsChange -= OnActionsChange;
         }
@@ -106,8 +119,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         public void OnActionsChange()
         {
             UnregisterActions();
-
-            m_Cfg = Configuration.GetDefaultConfiguration();
+            SelectInputActionAsset();
             RegisterActions();
         }
 
@@ -213,7 +225,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 case NavigationEvent.Direction.Right:
                 case NavigationEvent.Direction.Down:
                     if (m_MoveAction != null)
-                        return m_MoveAction.action.activeControl.device;
+                        return m_MoveAction.activeControl.device;
                     break;
                 case NavigationEvent.Direction.Next:
                 case NavigationEvent.Direction.Previous:
@@ -234,9 +246,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             if (m_MoveAction == null)
                 return (default, default);
 
-            var move = m_MoveAction.action.ReadValue<Vector2>();
+            var move = m_MoveAction.ReadValue<Vector2>();
             // Check if the action was "pressed" this frame to deal with repeating events
-            var axisWasPressed = m_MoveAction.action.WasPressedThisFrame();
+            var axisWasPressed = m_MoveAction.WasPressedThisFrame();
             return (move, axisWasPressed);
         }
 
@@ -303,7 +315,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         public uint playerCount => 1; // TODO
 
         // copied from UIElementsRuntimeUtility.cs
-        static Vector2 ScreenBottomLeftToPanelPosition(Vector2 position, int targetDisplay)
+        internal static Vector2 ScreenBottomLeftToPanelPosition(Vector2 position, int targetDisplay)
         {
             // Flip positions Y axis between input and UITK
             var screenHeight = Screen.height;
@@ -420,7 +432,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 m_SeenPenEvents = true;
 
             var positionISX = ctx.ReadValue<Vector2>();
-            var targetDisplay = asPointerDevice != null ? asPointerDevice.displayIndex.ReadValue() : (asTouchscreenDevice != null ? asTouchscreenDevice.displayIndex.ReadValue() : 0);
+            var targetDisplay = asPointerDevice != null ? asPointerDevice.displayIndex.ReadValue() : (asTouchscreenDevice != null ? asTouchscreenDevice.displayIndex.ReadValue() : (asPenDevice != null ? asPenDevice.displayIndex.ReadValue() : 0));
             var position = ScreenBottomLeftToPanelPosition(positionISX, targetDisplay);
             var delta = pointerState.LastPositionValid ? position - pointerState.LastPosition : Vector2.zero;
 
@@ -584,7 +596,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             }));
         }
 
-        void RegisterNextPreviousAction()
+        void RegisterFixedActions()
         {
             m_NextPreviousAction = new InputAction(name: "nextPreviousAction", type: InputActionType.Button);
             // TODO add more default bindings, or make them configurable
@@ -602,45 +614,29 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             }
         }
 
+        InputAction FindActionAndRegisterCallback(string actionNameOrId, Action<InputAction.CallbackContext> callback = null)
+        {
+            var action = m_InputActionAsset.FindAction(actionNameOrId);
+            if (action != null && callback != null)
+                action.performed += callback;
+            return action;
+        }
+
         void RegisterActions()
         {
-            m_InputActionAsset = m_Cfg.ActionAsset;
-
             // Invoke potential lister observing registration
             s_OnRegisterActions?.Invoke(m_InputActionAsset);
 
-            m_PointAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.PointAction));
-            m_MoveAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MoveAction));
-            m_SubmitAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.SubmitAction));
-            m_CancelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.CancelAction));
-            m_LeftClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.LeftClickAction));
-            m_MiddleClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.MiddleClickAction));
-            m_RightClickAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.RightClickAction));
-            m_ScrollWheelAction = InputActionReference.Create(m_InputActionAsset.FindAction(m_Cfg.ScrollWheelAction));
-
-            if (m_PointAction != null && m_PointAction.action != null)
-                m_PointAction.action.performed += OnPointerPerformed;
-
-            if (m_SubmitAction != null && m_SubmitAction.action != null)
-                m_SubmitAction.action.performed += OnSubmitPerformed;
-
-            if (m_CancelAction != null && m_CancelAction.action != null)
-                m_CancelAction.action.performed += OnCancelPerformed;
-
-            if (m_LeftClickAction != null && m_LeftClickAction.action != null)
-                m_LeftClickAction.action.performed += OnLeftClickPerformed;
-
-            if (m_MiddleClickAction != null && m_MiddleClickAction.action != null)
-                m_MiddleClickAction.action.performed += OnMiddleClickPerformed;
-
-            if (m_RightClickAction != null && m_RightClickAction.action != null)
-                m_RightClickAction.action.performed += OnRightClickPerformed;
-
-            if (m_ScrollWheelAction != null && m_ScrollWheelAction.action != null)
-                m_ScrollWheelAction.action.performed += OnScrollWheelPerformed;
+            m_PointAction = FindActionAndRegisterCallback(Actions.PointAction, OnPointerPerformed);
+            m_MoveAction = FindActionAndRegisterCallback(Actions.MoveAction); // No callback for this action
+            m_SubmitAction = FindActionAndRegisterCallback(Actions.SubmitAction, OnSubmitPerformed);
+            m_CancelAction = FindActionAndRegisterCallback(Actions.CancelAction, OnCancelPerformed);
+            m_LeftClickAction = FindActionAndRegisterCallback(Actions.LeftClickAction, OnLeftClickPerformed);
+            m_MiddleClickAction = FindActionAndRegisterCallback(Actions.MiddleClickAction, OnMiddleClickPerformed);
+            m_RightClickAction = FindActionAndRegisterCallback(Actions.RightClickAction, OnRightClickPerformed);
+            m_ScrollWheelAction = FindActionAndRegisterCallback(Actions.ScrollWheelAction, OnScrollWheelPerformed);
 
             // When adding new actions, don't forget to add them to UnregisterActions
-
             if (InputSystem.actions == null)
             {
                 // If we've not loaded a user-created set of actions, just enable the UI actions from our defaults.
@@ -648,87 +644,63 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             }
             else
                 m_InputActionAsset.Enable();
+        }
 
-            // TODO make it configurable as it is not part of default config
-            // The Next/Previous action is not part of the input actions asset
-            RegisterNextPreviousAction();
+        void UnregisterAction(ref InputAction action, Action<InputAction.CallbackContext> callback = null)
+        {
+            if (action != null && callback != null)
+                action.performed -= callback;
+            action = null;
         }
 
         void UnregisterActions()
         {
-            if (m_PointAction != null && m_PointAction.action != null)
-                m_PointAction.action.performed -= OnPointerPerformed;
-
-            if (m_SubmitAction != null && m_SubmitAction.action != null)
-                m_SubmitAction.action.performed -= OnSubmitPerformed;
-
-            if (m_CancelAction != null && m_CancelAction.action != null)
-                m_CancelAction.action.performed -= OnCancelPerformed;
-
-            if (m_LeftClickAction != null && m_LeftClickAction.action != null)
-                m_LeftClickAction.action.performed -= OnLeftClickPerformed;
-
-            if (m_MiddleClickAction != null && m_MiddleClickAction.action != null)
-                m_MiddleClickAction.action.performed -= OnMiddleClickPerformed;
-
-            if (m_RightClickAction != null && m_RightClickAction.action != null)
-                m_RightClickAction.action.performed -= OnRightClickPerformed;
-
-            if (m_ScrollWheelAction != null && m_ScrollWheelAction.action != null)
-                m_ScrollWheelAction.action.performed -= OnScrollWheelPerformed;
-
-            m_PointAction = null;
-            m_MoveAction = null;
-            m_SubmitAction = null;
-            m_CancelAction = null;
-            m_LeftClickAction = null;
-            m_MiddleClickAction = null;
-            m_RightClickAction = null;
-            m_ScrollWheelAction = null;
+            UnregisterAction(ref m_PointAction, OnPointerPerformed);
+            UnregisterAction(ref m_MoveAction); // No callback for this action
+            UnregisterAction(ref m_SubmitAction, OnSubmitPerformed);
+            UnregisterAction(ref m_CancelAction, OnCancelPerformed);
+            UnregisterAction(ref m_LeftClickAction, OnLeftClickPerformed);
+            UnregisterAction(ref m_MiddleClickAction, OnMiddleClickPerformed);
+            UnregisterAction(ref m_RightClickAction, OnRightClickPerformed);
+            UnregisterAction(ref m_ScrollWheelAction, OnScrollWheelPerformed);
 
             if (m_InputActionAsset != null)
                 m_InputActionAsset.Disable();
-
-            UnregisterFixedActions();
         }
 
-        public struct Configuration
+        void SelectInputActionAsset()
         {
-            public InputActionAsset ActionAsset;
-            public string PointAction;
-            public string MoveAction;
-            public string SubmitAction;
-            public string CancelAction;
-            public string LeftClickAction;
-            public string MiddleClickAction;
-            public string RightClickAction;
-            public string ScrollWheelAction;
+            // Only use default actions asset configuration if (ISX-1954):
+            // - Project-wide Input Actions have not been configured, OR
+            // - Project-wide Input Actions have been configured but contains no UI action map.
+            var projectWideInputActions = InputSystem.actions;
+            var useProjectWideInputActions =
+                projectWideInputActions != null &&
+                projectWideInputActions.FindActionMap("UI") != null;
 
-            public static Configuration GetDefaultConfiguration()
+            // Use InputSystem.actions (Project-wide Actions) if available, else use default asset if
+            // user didn't specifically set one, so that UI functions still work (ISXB-811).
+            if (useProjectWideInputActions)
+                m_InputActionAsset = InputSystem.actions;
+            else
             {
-                // Only use default actions asset configuration if (ISX-1954):
-                // - Project-wide Input Actions have not been configured, OR
-                // - Project-wide Input Actions have been configured but contains no UI action map.
-                var projectWideInputActions = InputSystem.actions;
-                var useProjectWideInputActions =
-                    projectWideInputActions != null &&
-                    projectWideInputActions.FindActionMap("UI") != null;
+                if (m_DefaultInputActions is null)
+                    m_DefaultInputActions = new DefaultInputActions();
 
-                // Use InputSystem.actions (Project-wide Actions) if available, else use default asset if
-                // user didn't specifically set one, so that UI functions still work (ISXB-811).
-                return new Configuration
-                {
-                    ActionAsset = useProjectWideInputActions ? InputSystem.actions : new DefaultInputActions().asset,
-                    PointAction = "UI/Point",
-                    MoveAction = "UI/Navigate",
-                    SubmitAction = "UI/Submit",
-                    CancelAction = "UI/Cancel",
-                    LeftClickAction = "UI/Click",
-                    MiddleClickAction = "UI/MiddleClick",
-                    RightClickAction = "UI/RightClick",
-                    ScrollWheelAction = "UI/ScrollWheel",
-                };
+                m_InputActionAsset = m_DefaultInputActions.asset;
             }
+        }
+
+        public static class Actions
+        {
+            public readonly static string PointAction = "UI/Point";
+            public readonly static string MoveAction = "UI/Navigate";
+            public readonly static string SubmitAction = "UI/Submit";
+            public readonly static string CancelAction = "UI/Cancel";
+            public readonly static string LeftClickAction = "UI/Click";
+            public readonly static string MiddleClickAction = "UI/MiddleClick";
+            public readonly static string RightClickAction = "UI/RightClick";
+            public readonly static string ScrollWheelAction = "UI/ScrollWheel";
         }
 
         internal static void SetOnRegisterActions(Action<InputActionAsset> callback)

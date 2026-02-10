@@ -46,6 +46,7 @@ namespace UnityEngine.InputSystem.Samples
                 {
                     s_LabelStyle = new GUIStyle();
                     s_LabelStyle.normal.textColor = Color.yellow;
+                    s_LabelStyle.fontSize = 20;
                 }
 
                 ////FIXME: why does CalcSize not calculate the rect width correctly?

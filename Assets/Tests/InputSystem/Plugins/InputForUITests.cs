@@ -11,11 +11,9 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Constraints;
 #if UNITY_EDITOR
-using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 #endif
 using UnityEngine.InputSystem.Plugins.InputForUI;
-using UnityEngine.TestTools;
 using Event = UnityEngine.InputForUI.Event;
 using EventProvider = UnityEngine.InputForUI.EventProvider;
 using Is = NUnit.Framework.Is;
@@ -537,10 +535,9 @@ public class InputForUITests : InputTestFixture
         LogAssert.NoUnexpectedReceived();
     }
 
-    [Ignore("We currently allow a PWA asset without an UI action map and rely on defaults instead. This allows users that do not want it or use something else to avoid using it.")]
-    [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if action map is missing.")]
+    [Test(Description = "Verifies that user-supplied project-wide actions do not generate warnings if action map is missing. We use default actions in this case.")]
     [Category(kTestCategory)]
-    public void ActionsWithoutUIMap_ShouldGenerateWarnings()
+    public void ActionsWithoutUIMap_ShouldNotGenerateWarnings()
     {
         var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
         asset.RemoveActionMap(asset.FindActionMap("UI", throwIfNotFound: true));
@@ -548,8 +545,21 @@ public class InputForUITests : InputTestFixture
         InputSystem.manager.actions = asset;
         Update();
 
+        LogAssert.NoUnexpectedReceived();
+    }
+
+    [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if the UI map is present but actions are missing.")]
+    [Category(kTestCategory)]
+    public void ActionsWithUIMap_MissingActions_ShouldGenerateWarnings()
+    {
+        var asset = ProjectWideActionsAsset.CreateDefaultAssetAtPath(kAssetPath);
+        asset.RemoveActionMap(asset.FindActionMap("UI", throwIfNotFound: true));
+        asset.AddActionMap(new InputActionMap("UI")); // An empty UI map should log warnings.
+
+        InputSystem.manager.actions = asset;
+        Update();
+
         var link = EditorHelpers.GetHyperlink(kAssetPath);
-        LogAssert.Expect(LogType.Warning, new Regex($"^InputActionMap with path 'UI' in asset '{link}' could not be found."));
         if (InputActionAssetVerifier.DefaultReportPolicy == InputActionAssetVerifier.ReportPolicy.ReportAll)
         {
             LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/Point' in asset '{link}' could not be found."));
@@ -561,8 +571,6 @@ public class InputForUITests : InputTestFixture
             LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/RightClick' in asset '{link}' could not be found."));
             LogAssert.Expect(LogType.Warning, new Regex($"^InputAction with path 'UI/ScrollWheel' in asset '{link}' could not be found."));
         }
-        // else: expect suppression of child errors
-        LogAssert.NoUnexpectedReceived();
     }
 
     [Test(Description = "Verifies that user-supplied project-wide input actions generates warnings if any required action is missing.")]
@@ -681,6 +689,72 @@ public class InputForUITests : InputTestFixture
         LogAssert.Expect(LogType.Warning,
             new Regex($"^InputAction with path '{actionPath}' in asset \"{kAssetPath}\" has 'expectedControlType' set to '{unexpectedControlType}'"));
         LogAssert.NoUnexpectedReceived();
+    }
+
+    [Test]
+    [Category("Actions")]
+    [Description("Tests that that only the latest event after focus is regained is able to trigger the action." +
+        "Depends on background behavior. " +
+        "Similar to CoreTests_Actions.Actions_DoNotGetTriggeredByOutOfFocusEventInEditor but with InputForUI nuances.")]
+    [TestCase(InputSettings.BackgroundBehavior.IgnoreFocus)]
+    [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices)]
+    [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)]
+    public void UIActions_DoNotGetTriggeredByOutOfFocusEventInEditor(InputSettings.BackgroundBehavior backgroundBehavior)
+    {
+        InputSystem.settings.backgroundBehavior = backgroundBehavior;
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        Vector2 focusPosition = new Vector2(800f, 600f);
+        Vector2 outOfFocusPosition = new Vector2(100f, 500f);
+
+        // Simulate moving the mouse, losing focus, moving out of focus, regaining focus, and moving again to emulate
+        // a device sync that happens when regaining focus in play mode.
+        Update();
+        currentTime += 1.0f;
+        Set(mouse.position, new Vector2(1.0f, 1.0f), queueEventOnly: true);
+        currentTime += 1.0f;
+        Update();
+        currentTime += 1.0f;
+        runtime.PlayerFocusLost();
+        currentTime += 1.0f;
+        Set(mouse.position, outOfFocusPosition , queueEventOnly: true);
+        currentTime += 1.0f;
+        runtime.PlayerFocusGained();
+        currentTime += 1.0f;
+        Set(mouse.position, focusPosition, queueEventOnly: true);
+        currentTime += 1.0f;
+
+        // We call specific updates to simulate editor behavior when regaining focus.
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.AreEqual(0, m_InputForUIEvents.Count);
+        InputSystem.Update();
+        // Calling the event provider update after we call InputSystem updates so that we trigger InputForUI events
+        EventProvider.NotifyUpdate();
+
+        // Convert the input coordinates to UI panel space. We only assume 1 display for the tests.
+        var focusPositionInUI = InputSystemProvider.ScreenBottomLeftToPanelPosition(focusPosition, 0);
+        var outOfFocusPositionInUI = InputSystemProvider.ScreenBottomLeftToPanelPosition(outOfFocusPosition, 0);
+
+
+        // If we don't ignore focus, we only expect one event (the last one after focus is regained).
+        Assert.AreEqual(backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus ? 1 : 2, m_InputForUIEvents.Count);
+
+        // There will be an out of focus event only if we are ignoring focus. Validate its position.
+        if (backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus)
+        {
+            Assert.That(GetNextRecordedUIEvent() is
+            {
+                type: Event.Type.PointerEvent,
+                asPointerEvent: { type: PointerEvent.Type.PointerMoved, eventSource: EventSource.Mouse, position: var outOfFocusVector2 },
+            } && Mathf.Approximately(outOfFocusVector2.y, outOfFocusPositionInUI.y) && Mathf.Approximately(outOfFocusVector2.x, outOfFocusPositionInUI.x));
+        }
+
+        // Validate that we only we get the event for the position after focus is regained. Make sure its position is correct.
+        Assert.That(GetNextRecordedUIEvent() is
+        {
+            type: Event.Type.PointerEvent,
+            asPointerEvent: { type: PointerEvent.Type.PointerMoved, eventSource: EventSource.Mouse, position: var focusPositionVector2 },
+        } && Mathf.Approximately(focusPositionVector2.y, focusPositionInUI.y) && Mathf.Approximately(focusPositionVector2.x, focusPositionInUI.x));
     }
 
 #endif // UNITY_EDITOR

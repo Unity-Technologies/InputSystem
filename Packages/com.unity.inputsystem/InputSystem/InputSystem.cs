@@ -28,27 +28,6 @@ using UnityEngine.Networking.PlayerConnection;
 using CustomBindingPathValidator = System.Func<string, System.Action>;
 #endif
 
-////TODO: allow aliasing processors etc
-
-////REVIEW: rename all references to "frame" to refer to "update" instead (e.g. wasPressedThisUpdate)?
-
-////TODO: add APIs to get to the state blocks (equivalent to what you currently get with e.g. InputSystem.devices[0].currentStatePtr)
-
-////FIXME: modal dialogs (or anything that interrupts normal Unity operation) are likely a problem for the system as is; there's a good
-////       chance the event queue will just get swamped; should be only the background queue though so I guess once it fills up we
-////       simply start losing input but it won't grow infinitely
-
-////REVIEW: make more APIs thread-safe?
-
-////REVIEW: it'd be great to be able to set up monitors from control paths (independently of actions; or should we just use actions?)
-
-////REVIEW: have InputSystem.onTextInput that's fired directly from the event processing loop?
-////        (and allow text input events that have no associated target device? this way we don't need a keyboard to get text input)
-
-////REVIEW: split lower-level APIs (anything mentioning events and state) off into InputSystemLowLevel API to make this API more focused?
-
-////TODO: release native allocations when exiting
-
 namespace UnityEngine.InputSystem
 {
     /// <summary>
@@ -877,7 +856,7 @@ namespace UnityEngine.InputSystem
         /// different names. When doing so, the first registration is considered as the "proper"
         /// name for the processor and all subsequent registrations will be considered aliases.
         ///
-        /// See the <a href="../manual/Processors.html">manual</a> for more details.
+        /// See the <a href="../manual/UsingProcessors.html">manual</a> for more details.
         /// </remarks>
         /// <seealso cref="InputProcessor{T}"/>
         /// <seealso cref="InputBinding.processors"/>
@@ -986,7 +965,7 @@ namespace UnityEngine.InputSystem
         /// different names. When doing so, the first registration is considered as the "proper"
         /// name for the processor and all subsequent registrations will be considered aliases.
         ///
-        /// See the <a href="../manual/Processors.html">manual</a> for more details.
+        /// See the <a href="../manual/UsingProcessors.html">manual</a> for more details.
         /// </remarks>
         /// <seealso cref="InputProcessor{T}"/>
         /// <seealso cref="InputBinding.processors"/>
@@ -1354,7 +1333,7 @@ namespace UnityEngine.InputSystem
         /// The unit is Hertz. A value of 120, for example, means that devices are sampled 120 times
         /// per second.
         ///
-        /// The default polling frequency is 60 Hz.
+        /// The default polling frequency is at least 60 Hz or what is suitable for the target device.
         ///
         /// For devices that are polled, the frequency setting will directly translate to changes in the
         /// <see cref="InputEvent.time"/> patterns. At 60 Hz, for example, timestamps for a specific,
@@ -3004,17 +2983,10 @@ namespace UnityEngine.InputSystem
 
         #region Actions
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        // EnteredEditMode  Occurs during the next update of the Editor application if it is in edit mode and was previously in play mode.
-        // ExitingEditMode  Occurs when exiting edit mode, before the Editor is in play mode.
-        // EnteredPlayMode  Occurs during the next update of the Editor application if it is in play mode and was previously in edit mode.
-        // ExitingPlayMode  Occurs when exiting play mode, before the Editor is in edit mode.
-        //
-        // Using the EnteredEditMode / EnteredPlayMode states to transition the actions' enabled
-        // state ensures that the they are active in all of these MonoBehavior methods:
-        //
-        //      Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
-        //
+
+        // This is called from InitializeInEditor() and InitializeInPlayer() to make sure
+        // project-wide actions are all active in they are active in all of these MonoBehavior methods:
+        // Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
         private static void EnableActions()
         {
 #if UNITY_EDITOR
@@ -3127,7 +3099,6 @@ namespace UnityEngine.InputSystem
             add => s_Manager.onActionsChange += value;
             remove => s_Manager.onActionsChange -= value;
         }
-#endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
         /// <summary>
         /// Event that is signalled when the state of enabled actions in the system changes or
@@ -3376,7 +3347,6 @@ namespace UnityEngine.InputSystem
 
         #endregion
 
-
         /// <summary>
         /// The current version of the input system package.
         /// </summary>
@@ -3586,12 +3556,10 @@ namespace UnityEngine.InputSystem
                     s_Manager.settings = settingsAsset;
                 }
 
-                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 // See if we have a saved actions object
                 var savedActions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
                 if (savedActions != null)
                     s_Manager.actions = savedActions;
-                #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
                 InputEditorUserSettings.Load();
 
@@ -3599,15 +3567,25 @@ namespace UnityEngine.InputSystem
             }
 
             Debug.Assert(settings != null);
-            Debug.Assert(EditorUtility.InstanceIDToObject(settings.GetInstanceID()) != null,
-                "InputSettings has lost its native object");
+            Debug.Assert(HasNativeObject(settings), "InputSettings has lost its native object");
 
             // If native backends for new input system aren't enabled, ask user whether we should
             // enable them (requires restart). We only ask once per session and don't ask when
             // running in batch mode.
+            // The warning is delayed to delay call (called a short while after the Asset are loaded, on Inspector update) to make sure it doesn't pop up while the editor is still loading or assets are not fully loaded -
+            // this would cancel the import of large assets that are dependent on the InputSystem package and import it as a dependency.
+            EditorApplication.delayCall += ShowRestartWarning;
+
+            RunInitialUpdate();
+
+            k_InputInitializeInEditorMarker.End();
+        }
+
+        private static void ShowRestartWarning()
+        {
             if (!s_DomainStateManager.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
-                !s_Manager.runtime.isInBatchMode)
+                !Application.isBatchMode)
             {
                 const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
                     "This means that no input from native devices will come through." +
@@ -3620,16 +3598,7 @@ namespace UnityEngine.InputSystem
                 }
             }
             s_DomainStateManager.newInputBackendsCheckedAsEnabled = true;
-
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            // Make sure project wide input actions are enabled.
-            // Note that this will always fail if entering play-mode within editor since not yet in play-mode.
-            EnableActions();
-            #endif
-
-            RunInitialUpdate();
-
-            k_InputInitializeInEditorMarker.End();
+            EditorApplication.delayCall -= ShowRestartWarning;
         }
 
         internal static void OnPlayModeChange(PlayModeStateChange change)
@@ -3649,9 +3618,7 @@ namespace UnityEngine.InputSystem
                 case PlayModeStateChange.EnteredPlayMode:
                     s_DomainStateManager.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
                     s_Manager.SyncAllDevicesAfterEnteringPlayMode();
-                    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-                    EnableActions();
-                    #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+
                     break;
 
                 case PlayModeStateChange.ExitingPlayMode:
@@ -3662,9 +3629,7 @@ namespace UnityEngine.InputSystem
                 ////REVIEW: is there any other cleanup work we want to before? should we automatically nuke
                 ////        InputDevices that have been created with AddDevice<> during play mode?
                 case PlayModeStateChange.EnteredEditMode:
-                    #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                     DisableActions(false);
-                    #endif
 
                     // Nuke all InputUsers.
                     InputUser.ResetGlobals();
@@ -3673,7 +3638,7 @@ namespace UnityEngine.InputSystem
                     InputActionState.DestroyAllActionMapStates();
 
                     // Clear the Action reference from all InputActionReference objects
-                    InputActionReference.ResetCachedAction();
+                    InputActionReference.InvalidateAll();
 
                     // Restore settings.
                     if (!string.IsNullOrEmpty(s_DomainStateManager.settings))
@@ -3689,6 +3654,16 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        // We have this function to hide away instanceId -> entityId migration that happened in Unity 6.3
+        public static bool HasNativeObject(Object obj)
+        {
+#if UNITY_6000_3_OR_NEWER
+            return EditorUtility.EntityIdToObject(obj.GetEntityId()) != null;
+#else
+            return EditorUtility.InstanceIDToObject(obj.GetInstanceID()) != null;
+#endif
+        }
+
         internal static void OnProjectChange()
         {
             ////TODO: use dirty count to find whether settings have actually changed
@@ -3698,7 +3673,9 @@ namespace UnityEngine.InputSystem
 
             // Also, if the asset holding our current settings got deleted, switch back to a
             // temporary settings object.
-            if (EditorUtility.InstanceIDToObject(s_Manager.settings.GetInstanceID()) == null)
+            // NOTE: We access m_Settings directly here to make sure we're not running into asserts
+            //       from the settings getter checking it has a valid object.
+            if (!HasNativeObject(s_Manager.settings))
             {
                 var newSettings = ScriptableObject.CreateInstance<InputSettings>();
                 newSettings.hideFlags = HideFlags.HideAndDontSave;
@@ -3728,10 +3705,8 @@ namespace UnityEngine.InputSystem
                 SetUpRemoting();
             #endif
 
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // This is the point where we initialise project-wide actions for the Player
             EnableActions();
-            #endif
         }
 
 #endif // UNITY_EDITOR
@@ -3824,7 +3799,7 @@ namespace UnityEngine.InputSystem
             WebGL.WebGLSupport.Initialize();
             #endif
 
-            #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_WSA
+            #if UNITY_EDITOR || UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_STANDALONE_LINUX || UNITY_WSA
             Switch.SwitchSupportHID.Initialize();
             #endif
 

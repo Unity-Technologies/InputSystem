@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem
         /// // A binding that belongs to the "Keyboard&amp;Mouse" and "Gamepad" group.
         /// new InputBinding
         /// {
-        ///     path = "*/{PrimaryAction},
+        ///     path = "*/{PrimaryAction}",
         ///     groups = "Keyboard&amp;Mouse;Gamepad"
         /// };
         /// </code>
@@ -281,7 +281,7 @@ namespace UnityEngine.InputSystem
         /// <code>
         /// new InputBinding
         /// {
-        ///     path = "*/{PrimaryAction},
+        ///     path = "*/{PrimaryAction}",
         ///     // Associate the binding both with the "KeyboardMouse" and
         ///     // the "Gamepad" group.
         ///     groups = "KeyboardMouse;Gamepad",
@@ -846,9 +846,9 @@ namespace UnityEngine.InputSystem
         internal bool Matches(ref InputBinding binding, MatchOptions options = default)
         {
             // Match name.
-            if (name != null)
+            if (!string.IsNullOrEmpty(name))
             {
-                if (binding.name == null
+                if (string.IsNullOrEmpty(binding.name)
                     || !StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(name, binding.name, Separator))
                     return false;
             }

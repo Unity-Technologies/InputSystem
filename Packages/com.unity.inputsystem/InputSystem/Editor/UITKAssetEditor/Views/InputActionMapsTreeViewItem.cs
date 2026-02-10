@@ -1,6 +1,4 @@
-// UITK TreeView is not supported in earlier versions
-// Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using System;
 using System.Threading.Tasks;
 using UnityEditor;
@@ -25,6 +23,8 @@ namespace UnityEngine.InputSystem.Editor
 
         private bool m_IsEditing;
         private static InputActionMapsTreeViewItem s_EditingItem = null;
+
+        internal bool isDisabledActionMap { get; set; }
 
         public InputActionMapsTreeViewItem()
         {
@@ -98,7 +98,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public void FocusOnRenameTextField()
         {
-            if (m_IsEditing)
+            if (m_IsEditing || isDisabledActionMap)
                 return;
             delegatesFocus = true;
 

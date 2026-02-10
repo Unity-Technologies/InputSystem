@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
@@ -10,7 +9,7 @@ using UnityEngine.UIElements;
 namespace UnityEngine.InputSystem.Interactions
 {
     /// <summary>
-    /// Performs the action if the control is pressed held for at least the set
+    /// Performs the action if the control is pressed and released within the set
     /// duration (which defaults to <see cref="InputSettings.defaultTapTime"/>)
     /// and then released.
     /// </summary>
@@ -41,6 +40,7 @@ namespace UnityEngine.InputSystem.Interactions
         private float releasePointOrDefault => pressPointOrDefault * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
 
         private double m_TapStartTime;
+        bool canceledFromTimerExpired;
 
         ////TODO: make sure 2d doesn't move too far
 
@@ -49,10 +49,15 @@ namespace UnityEngine.InputSystem.Interactions
             if (context.timerHasExpired)
             {
                 context.Canceled();
+                // Cache the fact that we canceled the interaction due to a timer expiration.
+                canceledFromTimerExpired = true;
                 return;
             }
 
-            if (context.isWaiting && context.ControlIsActuated(pressPointOrDefault))
+            // Check if the control is actuated but avoid starting the interaction if it was canceled due to a timeout.
+            // Otherwise, we would start the interaction again immediately after it is canceled due to timeout,
+            // particularly in analog controls such as Gamepad stick or triggers. (ISXB-627)
+            if (context.isWaiting && context.ControlIsActuated(pressPointOrDefault) && !canceledFromTimerExpired)
             {
                 m_TapStartTime = context.time;
                 // Set timeout slightly after duration so that if tap comes in exactly at the expiration
@@ -73,6 +78,12 @@ namespace UnityEngine.InputSystem.Interactions
                     ////REVIEW: does it matter to cancel right after expiration of 'duration' or is it enough to cancel on button up like here?
                     context.Canceled();
                 }
+            }
+
+            // Once the control is released, we allow the interaction to be started again.
+            if (!context.ControlIsActuated(releasePointOrDefault))
+            {
+                canceledFromTimerExpired = false;
             }
         }
 
@@ -102,21 +113,13 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-            if (!InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)) return;
-#endif
-            m_DurationSetting.OnGUI();
-            m_PressPointSetting.OnGUI();
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
             m_DurationSetting.OnDrawVisualElements(root, onChangedCallback);
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
         }
-
-#endif
 
         private CustomOrDefaultSetting m_DurationSetting;
         private CustomOrDefaultSetting m_PressPointSetting;

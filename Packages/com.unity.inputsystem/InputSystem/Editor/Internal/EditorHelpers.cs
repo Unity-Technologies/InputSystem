@@ -129,12 +129,7 @@ namespace UnityEngine.InputSystem.Editor
         // Maps path into a physical path.
         public static string GetPhysicalPath(string path)
         {
-            // Note that we can only get physical path for 2021.2 or newer
-#if UNITY_2021_2_OR_NEWER
             return FileUtil.GetPhysicalPath(path);
-#else
-            return path;
-#endif
         }
     }
 }

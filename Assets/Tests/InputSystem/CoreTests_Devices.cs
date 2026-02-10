@@ -21,7 +21,7 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 using UnityEngine.TestTools.Constraints;
-using Is = UnityEngine.TestTools.Constraints.Is;
+using Is = NUnit.Framework.Is;
 using Quaternion = UnityEngine.Quaternion;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 using Vector2 = UnityEngine.Vector2;
@@ -2674,10 +2674,59 @@ partial class CoreTests
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.IMESelected));
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(IMESelected: true));
         InputSystem.Update();
 
         Assert.That(keyboard.anyKey.isPressed, Is.False);
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    [Obsolete("Test obsolete IMESelected Key")]
+    public void Devices_ImeSelectedKeyOnKeyboard_SupportObsoleteIMESelectedKey()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.IMESelected));
+        InputSystem.Update();
+
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_ImeSelectedKeyOnKeyboard_IsBackwardCompatible()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var oldKeyboardStateWithIMESelected = new KeyboardState(Key.None);
+        // Hard coded state from previous version that have IMESelected setted
+        unsafe
+        {
+            oldKeyboardStateWithIMESelected.keys[0] = 0;
+            oldKeyboardStateWithIMESelected.keys[1] = 0;
+            oldKeyboardStateWithIMESelected.keys[2] = 0;
+            oldKeyboardStateWithIMESelected.keys[3] = 0;
+            oldKeyboardStateWithIMESelected.keys[4] = 0;
+            oldKeyboardStateWithIMESelected.keys[5] = 0;
+            oldKeyboardStateWithIMESelected.keys[6] = 0;
+            oldKeyboardStateWithIMESelected.keys[7] = 0;
+
+            oldKeyboardStateWithIMESelected.keys[8] = 0;
+            oldKeyboardStateWithIMESelected.keys[9] = 0;
+            oldKeyboardStateWithIMESelected.keys[10] = 0;
+            oldKeyboardStateWithIMESelected.keys[11] = 0;
+            oldKeyboardStateWithIMESelected.keys[12] = 0;
+            oldKeyboardStateWithIMESelected.keys[13] = 128;
+            oldKeyboardStateWithIMESelected.keys[14] = 0;
+            oldKeyboardStateWithIMESelected.keys[15] = 0;
+        }
+
+        InputSystem.QueueStateEvent(keyboard, oldKeyboardStateWithIMESelected);
+        InputSystem.Update();
+
+        Assert.That(keyboard.imeSelected.isPressed, Is.True);
     }
 
     [Test]
@@ -2798,15 +2847,6 @@ partial class CoreTests
         InputSystem.Update();
 
         Assert.That(keyboard.keyboardLayout, Is.EqualTo("new"));
-    }
-
-    [Test]
-    [Category("Devices")]
-    public void Devices_CanGetKeyCodeFromKeyboardKey()
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-
-        Assert.That(keyboard.aKey.keyCode, Is.EqualTo(Key.A));
     }
 
     [Test]
@@ -4097,12 +4137,10 @@ partial class CoreTests
     [Retry(2)] // Warm up JIT
     public void Devices_RemovingAndReaddingDevice_DoesNotAllocateMemory()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         // Prevent GC Allocations happening later in test
         InputSystem.actions?.Disable();
         InputActionState.DestroyAllActionMapStates();
-#endif
 
         var description =
             new InputDeviceDescription
@@ -4345,6 +4383,15 @@ partial class CoreTests
         Assert.That(InputSystem.pollingFrequency, Is.EqualTo(120).Within(0.000001));
     }
 
+    #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+    [Test]
+    [Category("Devices")]
+    public void Devices_PollingFrequencyIsAtLeast60HzByDefault()
+    {
+        Assert.That(InputSystem.pollingFrequency, Is.GreaterThanOrEqualTo(60));
+    }
+
+    #else
     [Test]
     [Category("Devices")]
     public void Devices_PollingFrequencyIs60HzByDefault()
@@ -4353,6 +4400,8 @@ partial class CoreTests
         // Make sure InputManager passed the frequency on to the runtime.
         Assert.That(runtime.pollingFrequency, Is.EqualTo(60).Within(0.000001));
     }
+
+    #endif
 
     [Test]
     [Category("Devices")]

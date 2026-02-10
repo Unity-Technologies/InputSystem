@@ -230,10 +230,16 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public float pollingFrequency
         {
+            #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+            get => NativeInputSystem.GetPollingFrequency();
+            #else
             get => m_PollingFrequency;
+            #endif
             set
             {
+                #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
                 m_PollingFrequency = value;
+                #endif
                 NativeInputSystem.SetPollingFrequency(value);
             }
         }
@@ -265,7 +271,12 @@ namespace UnityEngine.InputSystem.LowLevel
         #if UNITY_EDITOR
         private Action m_PlayerLoopInitialization;
         #endif
+        #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+        // From Unity 6000.3.0a2 (TODO Update comment and manifest before landing PR) this is handled by module
+        // and initial value is suggested by the platform based on its supported device set.
+        // In older version this is stored here and package override module/platform.
         private float m_PollingFrequency = 60.0f;
+        #endif
         private bool m_DidCallOnShutdown = false;
         private void OnShutdown()
         {
@@ -312,13 +323,9 @@ namespace UnityEngine.InputSystem.LowLevel
             get => NativeInputSystem.GetScrollWheelDeltaPerTick();
         }
 #endif
-
-        public bool isInBatchMode => Application.isBatchMode;
-
         #if UNITY_EDITOR
 
         public bool isInPlayMode => EditorApplication.isPlaying;
-        public bool isPaused => EditorApplication.isPaused;
         public bool isEditorActive => InternalEditorUtility.isApplicationActive;
 
         public Func<IntPtr, bool> onUnityRemoteMessage

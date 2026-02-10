@@ -43,9 +43,8 @@ internal class WebGLTests : CoreTestsFixture
         Assert.That(gamepad.leftTrigger.ReadUnprocessedValue(), Is.EqualTo(0.123).Within(0.0001));
         Assert.That(gamepad.rightTrigger.ReadUnprocessedValue(), Is.EqualTo(0.234).Within(0.0001));
 
-        AssertStickValues(gamepad.leftStick, new Vector2(0.345f, -0.456f), -0.456f, 0, 0, 0.345f);
-        AssertStickValues(gamepad.rightStick, new Vector2(0.567f, -0.678f), -0.678f, 0, 0, 0.567f);
-
+        AssertStickValues(gamepad.leftStick, new Vector2(0.345f, -0.456f), 0, 0.456f, 0, 0.345f);
+        AssertStickValues(gamepad.rightStick, new Vector2(0.567f, -0.678f), 0, 0.678f, 0, 0.567f);
 
         InputSystem.QueueStateEvent(gamepad, new WebGLGamepadState
         {
@@ -54,9 +53,8 @@ internal class WebGLTests : CoreTestsFixture
         });
         InputSystem.Update();
 
-        AssertStickValues(gamepad.leftStick, new Vector2(-0.345f, 0.456f), 0, -0.456f, 0.345f, 0);
-        AssertStickValues(gamepad.rightStick, new Vector2(-0.567f, 0.678f), 0, -0.678f, 0.567f, 0);
-
+        AssertStickValues(gamepad.leftStick, new Vector2(-0.345f, 0.456f), 0.456f, 0, 0.345f, 0);
+        AssertStickValues(gamepad.rightStick, new Vector2(-0.567f, 0.678f), 0.678f, 0, 0.567f, 0);
 
         // Test all buttons.
         AssertButtonPress(gamepad, new WebGLGamepadState().WithButton(GamepadButton.South), gamepad[GamepadButton.South]);

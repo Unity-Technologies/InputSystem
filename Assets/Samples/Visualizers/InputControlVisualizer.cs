@@ -138,12 +138,29 @@ namespace UnityEngine.InputSystem.Samples
             + "which of the controls to visualize.")]
         [InputControl, SerializeField] private string m_ControlPath;
         [Tooltip("If multiple controls match 'Control Path' at runtime, this property decides "
-            + "which control to visualize from the list of candidates. It is a zero-based index.")]
+            + "which control to visualize from the list of candidates. It is a zero-based index. " +
+            "This is ignored if using current device instead.")]
         [SerializeField] private int m_ControlIndex;
+
+        [Tooltip("If set, ignores control index and maps a control of the current device (if it exist) or none.")]
+        [SerializeField] private bool m_UseCurrentDevice;
 
         [NonSerialized] private InputControl m_Control;
 
         private static List<InputControlVisualizer> s_EnabledInstances;
+
+        private static InputControl ResolveCurrentControl(InputControlList<InputControl> candidates)
+        {
+            // Only accept control that belongs to the current device of the same device type as candidate control device type.
+            foreach (var candidate in candidates)
+            {
+                var currentDevice = GetCurrentDevice(candidate.device);
+                if (candidate.device == currentDevice)
+                    return candidate;
+            }
+
+            return null;
+        }
 
         private void ResolveControl()
         {
@@ -154,7 +171,9 @@ namespace UnityEngine.InputSystem.Samples
             using (var candidates = InputSystem.FindControls(m_ControlPath))
             {
                 var numCandidates = candidates.Count;
-                if (numCandidates > 1 && m_ControlIndex < numCandidates && m_ControlIndex >= 0)
+                if (m_UseCurrentDevice)
+                    m_Control = ResolveCurrentControl(candidates);
+                else if (numCandidates > 1 && m_ControlIndex < numCandidates && m_ControlIndex >= 0)
                     m_Control = candidates[m_ControlIndex];
                 else if (numCandidates > 0)
                     m_Control = candidates[0];
@@ -163,30 +182,52 @@ namespace UnityEngine.InputSystem.Samples
             SetupVisualizer();
         }
 
-        private void SetupVisualizer()
+        void Update()
         {
-            if (m_Control == null)
+            // There is currently no callback when current device changes so we will reattempt to resolve control
+            if (m_UseCurrentDevice)
             {
-                m_Visualizer = null;
-                return;
+                if (m_Control != null && m_Control.device != GetCurrentDevice(m_Control.device))
+                    m_Control = null;
+                if (m_Control == null)
+                    ResolveControl();
             }
+        }
 
-            switch (m_Visualization)
+        private static InputDevice GetCurrentDevice(InputDevice device)
+        {
+            if (device is Gamepad) return Gamepad.current;
+            if (device is Mouse) return Mouse.current;
+            if (device is Pen) return Pen.current;
+            if (device is Pointer) return Pointer.current; // should be last, because it's a base class for Mouse and Pen
+
+            throw new ArgumentException(
+                $"Expected device type that implements .current, but got '{device.name}' (deviceId: {device.deviceId}) instead ");
+        }
+
+        private static VisualizationHelpers.Visualizer CreateVisualizer(Mode mode, InputControl control, int historySamples)
+        {
+            switch (mode)
             {
                 case Mode.Value:
                 {
-                    var valueType = m_Control.valueType;
+                    // This visualization mode requires a control
+                    if (control == null)
+                        return null;
+
+                    VisualizationHelpers.Visualizer visualizer = null;
+                    var valueType = control.valueType;
                     if (valueType == typeof(Vector2))
-                        m_Visualizer = new VisualizationHelpers.Vector2Visualizer(m_HistorySamples);
+                        visualizer = new VisualizationHelpers.Vector2Visualizer(historySamples);
                     else if (valueType == typeof(float))
-                        m_Visualizer = new VisualizationHelpers.ScalarVisualizer<float>(m_HistorySamples)
+                        visualizer = new VisualizationHelpers.ScalarVisualizer<float>(historySamples)
                         {
                             ////TODO: pass actual min/max limits of control
                             limitMax = 1,
                             limitMin = 0
                         };
                     else if (valueType == typeof(int))
-                        m_Visualizer = new VisualizationHelpers.ScalarVisualizer<int>(m_HistorySamples)
+                        visualizer = new VisualizationHelpers.ScalarVisualizer<int>(historySamples)
                         {
                             ////TODO: pass actual min/max limits of control
                             limitMax = 1,
@@ -196,65 +237,64 @@ namespace UnityEngine.InputSystem.Samples
                     {
                         ////TODO: generic visualizer
                     }
-                    break;
+                    return visualizer;
                 }
 
                 case Mode.Events:
                 {
-                    var visualizer = new VisualizationHelpers.TimelineVisualizer(m_HistorySamples)
+                    var visualizer = new VisualizationHelpers.TimelineVisualizer(historySamples)
                     {
                         timeUnit = VisualizationHelpers.TimelineVisualizer.TimeUnit.Frames,
-                        historyDepth = m_HistorySamples,
+                        historyDepth = historySamples,
                         showLimits = true,
                         limitsY = new Vector2(0, 5) // Will expand upward automatically
                     };
-                    m_Visualizer = visualizer;
                     visualizer.AddTimeline("Events", Color.green,
                         VisualizationHelpers.TimelineVisualizer.PlotType.BarChart);
-                    break;
+                    return visualizer;
                 }
 
                 case Mode.MaximumLag:
                 {
-                    var visualizer = new VisualizationHelpers.TimelineVisualizer(m_HistorySamples)
+                    var visualizer = new VisualizationHelpers.TimelineVisualizer(historySamples)
                     {
                         timeUnit = VisualizationHelpers.TimelineVisualizer.TimeUnit.Frames,
-                        historyDepth = m_HistorySamples,
+                        historyDepth = historySamples,
                         valueUnit = new GUIContent("ms"),
                         showLimits = true,
                         limitsY = new Vector2(0, 6)
                     };
-                    m_Visualizer = visualizer;
                     visualizer.AddTimeline("MaxLag", Color.red,
                         VisualizationHelpers.TimelineVisualizer.PlotType.BarChart);
-                    break;
+                    return visualizer;
                 }
 
                 case Mode.Bytes:
                 {
-                    var visualizer = new VisualizationHelpers.TimelineVisualizer(m_HistorySamples)
+                    var visualizer = new VisualizationHelpers.TimelineVisualizer(historySamples)
                     {
                         timeUnit = VisualizationHelpers.TimelineVisualizer.TimeUnit.Frames,
                         valueUnit = new GUIContent("bytes"),
-                        historyDepth = m_HistorySamples,
+                        historyDepth = historySamples,
                         showLimits = true,
                         limitsY = new Vector2(0, 64)
                     };
-                    m_Visualizer = visualizer;
                     visualizer.AddTimeline("Bytes", Color.red,
                         VisualizationHelpers.TimelineVisualizer.PlotType.BarChart);
-                    break;
+                    return visualizer;
                 }
 
                 case Mode.DeviceCurrent:
-                {
-                    m_Visualizer = new VisualizationHelpers.CurrentDeviceVisualizer();
-                    break;
-                }
+                    return new VisualizationHelpers.CurrentDeviceVisualizer();
 
                 default:
-                    throw new NotImplementedException();
+                    throw new ArgumentOutOfRangeException(mode.ToString());
             }
+        }
+
+        private void SetupVisualizer()
+        {
+            m_Visualizer = CreateVisualizer(m_Visualization, m_Control, m_HistorySamples);
         }
 
         private static void OnDeviceChange(InputDevice device, InputDeviceChange change)

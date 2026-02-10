@@ -80,9 +80,30 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_ActionsProperty);
             var actionsWereChanged = false;
-            if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || CheckIfActionAssetChanged())
+
+            // Check for if we're using project-wide actions to raise a warning message.
+            if (m_ActionsProperty.objectReferenceValue != null)
             {
-                OnActionAssetChange();
+                InputActionAsset actions = m_ActionsProperty.objectReferenceValue as InputActionAsset;
+                if (actions == InputSystem.actions)
+                {
+                    EditorGUILayout.HelpBox("Project-wide actions asset is not recommended to be used with Player " +
+                        "Input because it is a singleton reference and all actions maps are enabled by default.\r\n" +
+                        "You should manually disable all action maps on Start() and " +
+                        "manually enable the default action map.",
+                        MessageType.Warning);
+                }
+            }
+
+            var assetChanged = CheckIfActionAssetChanged();
+            // initialize the editor component if the asset has changed or if it has not been initialized yet
+#if UNITY_6000_4_OR_NEWER
+            if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || assetChanged || m_ActionAssetEntityId == EntityId.None)
+#else
+            if (EditorGUI.EndChangeCheck() || !m_ActionAssetInitialized || assetChanged || m_ActionAssetInstanceID == 0)
+#endif
+            {
+                InitializeEditorComponent(assetChanged);
                 actionsWereChanged = true;
             }
 
@@ -259,16 +280,22 @@ namespace UnityEngine.InputSystem.Editor
         // One such case is when the user triggers a "Reset" on the component.
         bool CheckIfActionAssetChanged()
         {
-            if (m_ActionsProperty.objectReferenceValue != null)
-            {
-                var assetInstanceID = m_ActionsProperty.objectReferenceValue.GetInstanceID();
-                bool result = assetInstanceID != m_ActionAssetInstanceID;
-                m_ActionAssetInstanceID = (int)assetInstanceID;
-                return result;
-            }
+            var obj = m_ActionsProperty.objectReferenceValue;
+            if (obj == null)
+                return false;
 
-            m_ActionAssetInstanceID = -1;
-            return false;
+#if UNITY_6000_4_OR_NEWER
+            EntityId assetEntityId = obj.GetEntityId();
+            bool result = assetEntityId != m_ActionAssetEntityId && m_ActionAssetEntityId != EntityId.None;
+            m_ActionAssetEntityId = assetEntityId;
+            return result;
+#else
+            int assetInstanceID = obj.GetInstanceID();
+            // if the m_ActionAssetInstanceID is 0 the PlayerInputEditor has not been initialized yet, but the asset did not change
+            bool result = assetInstanceID != m_ActionAssetInstanceID && m_ActionAssetInstanceID != 0;
+            m_ActionAssetInstanceID = (int)assetInstanceID;
+            return result;
+#endif
         }
 
         private void DoHelpCreateAssetUI()
@@ -417,17 +444,21 @@ namespace UnityEngine.InputSystem.Editor
                 case PlayerNotifications.InvokeUnityEvents:
                 {
                     var playerInput = (PlayerInput)target;
-                    if (playerInput.m_DeviceLostEvent == null)
-                        playerInput.m_DeviceLostEvent = new PlayerInput.DeviceLostEvent();
-                    if (playerInput.m_DeviceRegainedEvent == null)
-                        playerInput.m_DeviceRegainedEvent = new PlayerInput.DeviceRegainedEvent();
-                    if (playerInput.m_ControlsChangedEvent == null)
-                        playerInput.m_ControlsChangedEvent = new PlayerInput.ControlsChangedEvent();
-                    serializedObject.Update();
 
-                    // Force action refresh.
-                    m_ActionAssetInitialized = false;
-                    Refresh();
+                    bool areEventsDirty = (playerInput.m_DeviceLostEvent == null) || (playerInput.m_DeviceRegainedEvent == null) || (playerInput.m_ControlsChangedEvent == null);
+
+                    playerInput.m_DeviceLostEvent ??= new PlayerInput.DeviceLostEvent();
+                    playerInput.m_DeviceRegainedEvent ??= new PlayerInput.DeviceRegainedEvent();
+                    playerInput.m_ControlsChangedEvent ??= new PlayerInput.ControlsChangedEvent();
+
+                    if (areEventsDirty)
+                    {
+                        serializedObject.Update();
+
+                        // Force action refresh.
+                        m_ActionAssetInitialized = false;
+                        Refresh();
+                    }
                     break;
                 }
             }
@@ -435,19 +466,21 @@ namespace UnityEngine.InputSystem.Editor
             m_NotificationBehaviorInitialized = true;
         }
 
-        private void OnActionAssetChange()
+        private void InitializeEditorComponent(bool assetChanged)
         {
             serializedObject.ApplyModifiedProperties();
             m_ActionAssetInitialized = true;
 
             var playerInput = (PlayerInput)target;
             var asset = (InputActionAsset)m_ActionsProperty.objectReferenceValue;
+
+            if (assetChanged)
+                m_SelectedDefaultActionMap = -1;
             if (asset == null)
             {
                 m_ControlSchemeOptions = null;
                 m_ActionMapOptions = null;
                 m_ActionNames = null;
-                m_SelectedDefaultActionMap = -1;
                 m_SelectedDefaultControlScheme = -1;
                 m_InvalidDefaultControlSchemeName = null;
                 return;
@@ -547,7 +580,7 @@ namespace UnityEngine.InputSystem.Editor
             var selectedDefaultActionMap = !string.IsNullOrEmpty(playerInput.defaultActionMap)
                 ? asset.FindActionMap(playerInput.defaultActionMap)
                 : null;
-            m_SelectedDefaultActionMap = asset.actionMaps.Count > 0 ? 1 : 0;
+            m_SelectedDefaultActionMap = (asset.actionMaps.Count > 0 && m_SelectedDefaultActionMap == -1) ? 1 : 0;
             var actionMaps = asset.actionMaps;
             m_ActionMapOptions = new GUIContent[actionMaps.Count + 1];
             m_ActionMapOptions[0] = new GUIContent(EditorGUIUtility.TrTextContent("<None>"));
@@ -623,7 +656,11 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
         [NonSerialized] private bool m_ActionAssetInitialized;
+#if UNITY_6000_4_OR_NEWER
+        [NonSerialized] private EntityId m_ActionAssetEntityId;
+#else
         [NonSerialized] private int m_ActionAssetInstanceID;
+#endif
     }
 }
 #endif // UNITY_EDITOR

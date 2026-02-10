@@ -1,6 +1,6 @@
 // UITK TreeView is not supported in earlier versions
 // Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && UNITY_6000_0_OR_NEWER
+#if UNITY_EDITOR && UNITY_6000_0_OR_NEWER
 
 using NUnit.Framework;
 using System;
@@ -15,6 +15,7 @@ using UnityEngine.UIElements;
 public class UIToolkitBaseTestWindow<T> where T : EditorWindow
 {
     protected T m_Window;
+    protected const double kDefaultTimeoutSecs = 10.0;
 
     #region setup and teardown
     [OneTimeSetUp]
@@ -124,7 +125,7 @@ public class UIToolkitBaseTestWindow<T> where T : EditorWindow
     /// Wait for UI toolkit scheduler to process the frame
     /// </summary>
     /// <param name="timeoutSecs">Maximum time to wait in seconds.</param>
-    protected IEnumerator WaitForSchedulerLoop(double timeoutSecs = 5.0)
+    protected IEnumerator WaitForSchedulerLoop(double timeoutSecs = kDefaultTimeoutSecs)
     {
         bool done = false;
         m_Window.rootVisualElement.schedule.Execute(() => done = true);
@@ -136,7 +137,7 @@ public class UIToolkitBaseTestWindow<T> where T : EditorWindow
     /// </summary>
     /// <param name="ve">VisualElement to be focused</param>
     /// <param name="timeoutSecs">Maximum time to wait in seconds.</param>
-    protected IEnumerator WaitForFocus(VisualElement ve, double timeoutSecs = 5.0)
+    protected IEnumerator WaitForFocus(VisualElement ve, double timeoutSecs = kDefaultTimeoutSecs)
     {
         return WaitUntil(() => ve.focusController.focusedElement == ve, "WaitForFocus", timeoutSecs);
     }
@@ -145,7 +146,7 @@ public class UIToolkitBaseTestWindow<T> where T : EditorWindow
     /// Wait for the windows to be not dirty
     /// </summary>
     /// <param name="timeoutSecs">Maximum time to wait in seconds.</param>
-    protected IEnumerator WaitForNotDirty(double timeoutSecs = 5.0)
+    protected IEnumerator WaitForNotDirty(double timeoutSecs = kDefaultTimeoutSecs)
     {
         return WaitUntil(() => m_Window.rootVisualElement.panel.isDirty == false, "WaitForNotDirty", timeoutSecs);
     }
@@ -156,7 +157,7 @@ public class UIToolkitBaseTestWindow<T> where T : EditorWindow
     /// <param name="action">Lambda to call between frame</param>
     /// <param name="assertMessage">Assert Message</param>
     /// <param name="timeoutSecs">Maximum time to wait in seconds.</param>
-    protected IEnumerator WaitUntil(Func<bool> action, string assertMessage, double timeoutSecs = 5.0)
+    protected IEnumerator WaitUntil(Func<bool> action, string assertMessage, double timeoutSecs = kDefaultTimeoutSecs)
     {
         var endTime = EditorApplication.timeSinceStartup + timeoutSecs;
         do

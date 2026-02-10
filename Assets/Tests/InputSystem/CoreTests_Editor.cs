@@ -2895,17 +2895,46 @@ partial class CoreTests
 
     private static void DisableProjectWideActions()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        // If the system has project-wide input actions they will also trigger enable/disable via
-        // play mode change triggers above. Hence we adjust extra variable to compensate of
-        // state allocated by project-wide actions.
+        // If the system has project-wide input actions they will start enabled once InputSystem.Reset() is called and
+        // be disabled entering EditMode. Hence, we adjust extra variable to compensate ofstate allocated by
+        // project-wide actions.
         if (InputSystem.actions)
         {
             Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
             InputSystem.actions.Disable();
             InputActionState.DestroyAllActionMapStates();
         }
-#endif
+    }
+
+    [Test]
+    [Category("Editor")]
+    public void Editor_InitializeInEditor_EnablesProjectWideActions()
+    {
+        if (InputSystem.actions != null)
+        {
+            // Asserts that project wide actions are enabled by default.
+            // Before the test is run, InputSystem.Reset() is called which will enable them.
+            // It can be interpreted as a mock of the behavior that happens when `InitializeInEditor()` is called.
+            Assert.That(InputSystem.actions.enabled, Is.True);
+
+            // Calling exit play mode callbacks will disable them
+            InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+            InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+
+            Assert.That(InputSystem.actions.enabled, Is.False);
+
+            // Calling enter play mode callbacks will not re-enable them per default. They are only
+            // enabled when `InputSystem.InitializeInEditor()` is called, which happens before these callbacks.
+            // Note: Project-wide actions are disabled at this point. These next lines are added to make sure we
+            // establish behavior that project-wide actions should be enabled only once
+            // `InputSystem.InitializeInEditor()` is called. Before this test was introduced, project-wide actions were
+            // enabled after entering play mode again which would lead to a different behavior than Player
+            // builds.
+            InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+            InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+
+            Assert.That(InputSystem.actions.enabled, Is.False);
+        }
     }
 
     [Test]
@@ -2921,6 +2950,12 @@ partial class CoreTests
 
         // Enter play mode.
         InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+
+        // This simulates enabling project-wide actions, which is done before just before entering play mode,
+        // called from InputSystem.InitializeInEditor().
+        if (InputSystem.actions)
+            InputSystem.actions.Enable();
+
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
 
         DisableProjectWideActions();
@@ -2937,7 +2972,8 @@ partial class CoreTests
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
         Assert.That(InputActionState.s_GlobalState.globalList.length, Is.Zero);
-        Assert.That(InputSystem.manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null); // Won't get removed, just cleared.
+        // Won't get removed, just cleared.        
+        Assert.That(InputSystem.manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null);
     }
 
     [Test]
@@ -3358,7 +3394,7 @@ partial class CoreTests
     {
         var codeProvider = CodeDomProvider.CreateProvider("CSharp");
         var cp = new CompilerParameters { CompilerOptions = options };
-        cp.ReferencedAssemblies.Add($"{EditorApplication.applicationContentsPath}/Managed/UnityEngine/UnityEngine.CoreModule.dll");
+        cp.ReferencedAssemblies.Add(typeof(UnityEngine.Vector2).Assembly.Location);
         cp.ReferencedAssemblies.Add("Library/ScriptAssemblies/Unity.InputSystem.dll");
 #if UNITY_2022_1_OR_NEWER
         // Currently there is are cross-references to netstandard, e.g. System.IEquatable<UnityEngine.Vector2>, System.IFormattable

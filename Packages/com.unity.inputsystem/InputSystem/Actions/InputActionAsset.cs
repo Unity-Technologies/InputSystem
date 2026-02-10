@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Utilities;
 
 ////TODO: make the FindAction logic available on any IEnumerable<InputAction> and IInputActionCollection via extension methods
@@ -275,6 +278,21 @@ namespace UnityEngine.InputSystem
                 return action;
             }
         }
+        /// <summary>
+        /// File‐format version constants for InputActionAsset JSON.
+        /// </summary>
+        static class JsonVersion
+        {
+            /// <summary>The original JSON version format for InputActionAsset.</summary>
+            public const int Version0 = 0;
+
+            /// <summary>Updated JSON version format for InputActionAsset.</summary>
+            /// <remarks>Changes representation of parameter values from being serialized by value to being serialized by value.</remarks>
+            public const int Version1 = 1;
+
+            /// <summary>The current version.</summary>
+            public const int Current  = Version1;
+        }
 
         /// <summary>
         /// Return a JSON representation of the asset.
@@ -296,8 +314,10 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="FromJson"/>
         public string ToJson()
         {
+            var hasContent = m_ActionMaps.LengthSafe() > 0 || m_ControlSchemes.LengthSafe() > 0;
             return JsonUtility.ToJson(new WriteFileJson
             {
+                version = hasContent ? JsonVersion.Current : JsonVersion.Version0,
                 name = name,
                 maps = InputActionMap.WriteFileJson.FromMaps(m_ActionMaps).maps,
                 controlSchemes = InputControlScheme.SchemeJson.ToJson(m_ControlSchemes),
@@ -379,6 +399,7 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(json));
 
             var parsedJson = JsonUtility.FromJson<ReadFileJson>(json);
+            MigrateJson(ref parsedJson);
             parsedJson.ToAsset(this);
         }
 
@@ -471,7 +492,7 @@ namespace UnityEngine.InputSystem
         /// in the asset.
         /// </summary>
         /// <param name="actionNameOrId">Name of the action as either a "map/action" combination (e.g. "gameplay/fire") or
-        /// a simple name. In the former case, the name is split at the '/' slash and the first part is used to find
+        /// a simple name (e.g. "fire"). In the former case, the name is split at the '/' slash and the first part is used to find
         /// a map with that name and the second part is used to find an action with that name inside the map. In the
         /// latter case, all maps are searched in order and the first action that has the given name in any of the maps
         /// is returned. Note that name comparisons are case-insensitive.
@@ -490,6 +511,10 @@ namespace UnityEngine.InputSystem
         /// is returned will be from the first map in <see cref="actionMaps"/> that has an action with the given name.
         /// An exception is if, of the multiple actions with the same name, some are enabled and some are disabled. In
         /// this case, the first action that is enabled is returned.
+        ///
+        /// If an action name contains a slash "/", e.g. "yaw/pitch" and there is also a map called "yaw" which
+        /// contains an action "pitch", the action "pitch" within the map "yaw" will be returned instead of the
+        /// action named "yaw/pitch".
         ///
         /// <example>
         /// <code>
@@ -533,28 +558,11 @@ namespace UnityEngine.InputSystem
 
             if (m_ActionMaps != null)
             {
-                // Check if we have a "map/action" path.
+                // Check if we have a "map/action" path. If we do we either has a "map/action" path or a simple
+                // action name containing a slash. We first attempt matching it to a "map/action" and only if that
+                // fails do we attempt to search for a "some/action" name.
                 var indexOfSlash = actionNameOrId.IndexOf('/');
-                if (indexOfSlash == -1)
-                {
-                    // No slash so it's just a simple action name. Return either first enabled action or, if
-                    // none are enabled, first action with the given name.
-                    InputAction firstActionFound = null;
-                    for (var i = 0; i < m_ActionMaps.Length; ++i)
-                    {
-                        var action = m_ActionMaps[i].FindAction(actionNameOrId);
-                        if (action != null)
-                        {
-                            if (action.enabled || action.m_Id == actionNameOrId) // Match by ID is always exact.
-                                return action;
-                            if (firstActionFound == null)
-                                firstActionFound = action;
-                        }
-                    }
-                    if (firstActionFound != null)
-                        return firstActionFound;
-                }
-                else
+                if (indexOfSlash >= 0)
                 {
                     // Have a path. First search for the map, then for the action.
                     var mapName = new Substring(actionNameOrId, 0, indexOfSlash);
@@ -583,6 +591,24 @@ namespace UnityEngine.InputSystem
                         break;
                     }
                 }
+
+                // Check if there is an action with the given name regardless of containing map.
+                // If multiple actions exist with the same identifier, the first enabled one is returned.
+                // If no enabled action exist, the first is returned.
+                InputAction firstActionFound = null;
+                for (var i = 0; i < m_ActionMaps.Length; ++i)
+                {
+                    var action = m_ActionMaps[i].FindAction(actionNameOrId);
+                    if (action != null)
+                    {
+                        if (action.enabled || action.m_Id == actionNameOrId) // Match by ID is always exact.
+                            return action;
+                        if (firstActionFound == null)
+                            firstActionFound = action;
+                    }
+                }
+                if (firstActionFound != null)
+                    return firstActionFound;
             }
 
             if (throwIfNotFound)
@@ -927,9 +953,7 @@ namespace UnityEngine.InputSystem
 
         [SerializeField] internal InputActionMap[] m_ActionMaps;
         [SerializeField] internal InputControlScheme[] m_ControlSchemes;
-        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         [SerializeField] internal bool m_IsProjectWide;
-        #endif
 
         ////TODO: make this persistent across domain reloads
         /// <summary>
@@ -945,6 +969,7 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct WriteFileJson
         {
+            public int version;
             public string name;
             public InputActionMap.WriteMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
@@ -960,6 +985,7 @@ namespace UnityEngine.InputSystem
         [Serializable]
         internal struct ReadFileJson
         {
+            public int version;
             public string name;
             public InputActionMap.ReadMapJson[] maps;
             public InputControlScheme.SchemeJson[] controlSchemes;
@@ -975,6 +1001,84 @@ namespace UnityEngine.InputSystem
                     foreach (var map in asset.m_ActionMaps)
                         map.m_Asset = asset;
             }
+        }
+
+        /// <summary>
+        /// If parsedJson.version is older than Current, rewrite every
+        /// action.processors entry to replace “enumName(Ordinal=…)” with
+        /// “enumName(Value=…)” and bump parsedJson.version.
+        /// </summary>
+        internal void MigrateJson(ref ReadFileJson parsedJson)
+        {
+            if (parsedJson.version >= JsonVersion.Version1)
+                return;
+            if ((parsedJson.maps?.Length ?? 0) > 0 && (parsedJson.version) < JsonVersion.Version1)
+            {
+                List<NameAndParameters> parsedList = null;
+                var converted = new List<NameAndParameters>(8);
+                var updatedParameters = new List<NamedValue>(4);
+                var enumValuesCache = new Dictionary<Type, Array>(8);
+
+                for (var mi = 0; mi < parsedJson.maps.Length; ++mi)
+                {
+                    var mapJson = parsedJson.maps[mi];
+                    for (var ai = 0; ai < mapJson.actions.Length; ++ai)
+                    {
+                        var actionJson = mapJson.actions[ai];
+                        var raw = actionJson.processors;
+                        if (string.IsNullOrEmpty(raw))
+                            continue;
+
+                        if (!NameAndParameters.ParseMultiple(raw, ref parsedList))
+                            continue;
+
+                        converted.Clear();
+
+                        for (int i = 0; i < parsedList.Count; ++i)
+                        {
+                            var nap = parsedList[i];
+                            var procType = InputSystem.TryGetProcessor(nap.name);
+                            if (nap.parameters.Count == 0 || procType == null)
+                            {
+                                converted.Add(nap);
+                                continue;
+                            }
+                            updatedParameters.Clear();
+                            for (int k = 0; k < nap.parameters.Count; ++k)
+                            {
+                                var param = nap.parameters[k];
+                                var updatedPar = param;
+
+                                var fieldInfo = procType.GetField(param.name, BindingFlags.Public | BindingFlags.Instance);
+                                if (fieldInfo != null && fieldInfo.FieldType.IsEnum)
+                                {
+                                    var index = param.value.ToInt32();
+                                    if (index >= 0)
+                                    {
+                                        if (!enumValuesCache.TryGetValue(fieldInfo.FieldType, out var values))
+                                        {
+                                            values = Enum.GetValues(fieldInfo.FieldType);
+                                            enumValuesCache[fieldInfo.FieldType] = values;
+                                        }
+                                        if (index < values.Length)
+                                        {
+                                            var convertedValue = Convert.ToInt32(values.GetValue(index));
+                                            updatedPar = NamedValue.From(param.name, convertedValue);
+                                        }
+                                    }
+                                }
+                                updatedParameters.Add(updatedPar);
+                            }
+                            converted.Add(NameAndParameters.Create(nap.name, updatedParameters));
+                        }
+                        actionJson.processors = NameAndParameters.ToSerializableString(converted);
+                        mapJson.actions[ai] = actionJson;
+                    }
+                    parsedJson.maps[mi] = mapJson;
+                }
+            }
+            // Bump the version so we never re-migrate
+            parsedJson.version = JsonVersion.Version1;
         }
     }
 }

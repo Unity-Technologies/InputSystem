@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,13 +57,12 @@ namespace UnityEngine.InputSystem.Editor
             var popupWindow = new PopupWindow
             {
                 text = "Add Control Scheme",
-                style = { position = new StyleEnum<Position>(Position.Absolute) }
+                style = { position = new StyleEnum<Position>(Position.Absolute), maxWidth = new StyleLength(new Length(100, LengthUnit.Percent)) }
             };
             popupWindow.contentContainer.Add(controlSchemeVisualElement);
             m_ModalWindow.Add(popupWindow);
             root.Add(m_ModalWindow);
             m_ModalWindow.StretchToParentSize();
-            m_ModalWindow.RegisterCallback<ClickEvent>(evt => CloseView());
             popupWindow.RegisterCallback<ClickEvent>(evt => evt.StopPropagation());
 
             m_ListView = controlSchemeVisualElement.Q<MultiColumnListView>(kControlSchemesListView);
@@ -109,7 +108,6 @@ namespace UnityEngine.InputSystem.Editor
         public override void RedrawUI(InputControlScheme viewState)
         {
             rootElement.Q<TextField>(kControlSchemeNameTextField).value = string.IsNullOrEmpty(m_NewName) ? viewState.name : m_NewName;
-
             m_ListView.itemsSource?.Clear();
             m_ListView.itemsSource = viewState.deviceRequirements.Count > 0 ?
                 viewState.deviceRequirements.Select(r => (r.controlPath, r.isOptional)).ToList() :
@@ -129,7 +127,7 @@ namespace UnityEngine.InputSystem.Editor
             CloseView();
         }
 
-        private void Cancel()
+        internal void Cancel()
         {
             // Reload the selected ControlScheme values from the SerilaizedProperty and throw away any changes
             Dispatch(ControlSchemeCommands.ResetSelectedControlScheme());

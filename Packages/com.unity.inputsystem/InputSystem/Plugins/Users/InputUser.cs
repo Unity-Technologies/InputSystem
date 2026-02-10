@@ -102,6 +102,7 @@ namespace UnityEngine.InputSystem.Users
         public uint id => m_Id;
 
         ////TODO: bring documentation for these back when user management is implemented on Xbox and PS
+        ////For now the docs are filtered out (see Documentation~/filter.yml)
         public InputUserAccountHandle? platformUserAccountHandle => s_GlobalState.allUserData[index].platformUserAccountHandle;
         public string platformUserAccountName => s_GlobalState.allUserData[index].platformUserAccountName;
         public string platformUserAccountId => s_GlobalState.allUserData[index].platformUserAccountId;
@@ -170,7 +171,7 @@ namespace UnityEngine.InputSystem.Users
         /// cref="ActivateControlScheme(InputControlScheme)"/> and related APIs like <see cref="controlScheme"/>
         /// and <see cref="controlSchemeMatch"/>).
         ///
-        /// Note that is generally does not make sense for users to share actions. Instead, each user should
+        /// Note that it generally does not make sense for users to share actions. Instead, each user should
         /// receive a set of actions private to the user.
         /// </remarks>
         /// <seealso cref="AssociateActionsWithUser(IInputActionCollection)"/>
@@ -767,6 +768,7 @@ namespace UnityEngine.InputSystem.Users
             return s_GlobalState.allUsers[userIndex];
         }
 
+        ////Doc is filtered out (see Documentation~/filter.yml)
         public static InputUser? FindUserByAccount(InputUserAccountHandle platformUserAccountHandle)
         {
             if (platformUserAccountHandle == default(InputUserAccountHandle))

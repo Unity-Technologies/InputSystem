@@ -8,7 +8,6 @@ using UnityEngine.UIElements;
 
 ////TODO: detect if new input backends are enabled and put UI in here to enable them if needed
 
-////TODO: keywords (2019.1+)
 #pragma warning disable CS0414
 namespace UnityEngine.InputSystem.Editor
 {
@@ -21,13 +20,12 @@ namespace UnityEngine.InputSystem.Editor
     {
         public const string kEditorBuildSettingsConfigKey = "com.unity.input.settings";
 
-        #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
-        // When Project Wide Actions are enabled we place this as a child node to main settings node.
         public const string kSettingsPath = InputSettingsPath.kSettingsRootPath + "/Settings";
-        #else
-        // When Project Wide Actions are not enabled we let this be the main settings node.
-        public const string kSettingsPath = "Project/Input System Package";
-        #endif
+
+        private static readonly string[] kInputSettingsKeywords =
+        {
+            "Input", "Action", "Controls", "Gamepad", "Keyboard", "Mouse", "Touch"
+        };
 
         public static void Open()
         {
@@ -39,11 +37,10 @@ namespace UnityEngine.InputSystem.Editor
         {
             return new InputSettingsProvider(kSettingsPath, SettingsScope.Project)
             {
-                #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 // We put this in a child node called "Settings" when Project-wide Actions is enabled.
                 // When not enabled it sits on the main package Settings node.
-                label = "Settings"
-                #endif
+                label = "Settings",
+                keywords = kInputSettingsKeywords
             };
         }
 
@@ -116,6 +113,9 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUI.BeginChangeCheck();
 
                 EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
+                if (InputSystem.settings?.updateMode == InputSettings.UpdateMode.ProcessEventsManually)
+                    CustomUpdateModeHelpBox();
+
                 var runInBackground = Application.runInBackground;
                 using (new EditorGUI.DisabledScope(!runInBackground))
                     EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
@@ -184,6 +184,22 @@ namespace UnityEngine.InputSystem.Editor
                 if (EditorGUI.EndChangeCheck())
                     Apply();
             }
+        }
+
+        private void CustomUpdateModeHelpBox()
+        {
+            var message =
+                "This is not recommended, the default update mode  is dynamic update and should only be changed for compelling reasons.\nPlease refer to the documentation.";
+            Uri link = new Uri(InputSystem.kDocUrl + "/manual/Settings.html#update-mode");
+            GUILayout.BeginHorizontal(EditorStyles.helpBox);
+            GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.ExpandWidth(false));
+            GUILayout.BeginVertical();
+            GUILayout.Label(message, EditorStyles.label);
+            if (GUILayout.Button("Read more", EditorStyles.linkLabel))
+                System.Diagnostics.Process.Start(link.AbsoluteUri);
+            EditorGUIUtility.AddCursorRect(GUILayoutUtility.GetLastRect(), MouseCursor.Link);
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
         }
 
         private static void ShowPlatformSettings()
