@@ -66,9 +66,7 @@ namespace UnityEngine.InputSystem
             }
             newInstance.m_Settings = settings;
 
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             newInstance.InitializeActions();
-            #endif // UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
 
             newInstance.InitializeData();
             newInstance.InstallRuntime(runtime);
@@ -80,9 +78,7 @@ namespace UnityEngine.InputSystem
 
             newInstance.ApplySettings();
 
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             newInstance.ApplyActions();
-            #endif
 
             newInstance.bindingsNeedResolving = true;
             return newInstance;
@@ -2073,15 +2069,15 @@ namespace UnityEngine.InputSystem
                     continue;
                 if (typeof(InputProcessor).IsAssignableFrom(type))
                 {
-                    RegisterProcessor(type);
+                    InputSystem.RegisterProcessor(type);
                 }
                 else if (typeof(IInputInteraction).IsAssignableFrom(type))
                 {
-                    RegisterInteraction(type);
+                    InputSystem.RegisterInteraction(type);
                 }
                 else if (typeof(InputBindingComposite).IsAssignableFrom(type))
                 {
-                    RegisterBindingComposite(type, null);
+                    InputSystem.RegisterBindingComposite(type, null);
                 }
             }
         }
@@ -3913,10 +3909,10 @@ namespace UnityEngine.InputSystem
         {
             return (eventType == StateEvent.Type || eventType == DeltaStateEvent.Type) &&
                 (updateType & InputUpdateType.Editor) == 0 &&
-                InputSystem.s_SystemObject.exitEditModeTime > 0 &&
-                eventTime >= InputSystem.s_SystemObject.exitEditModeTime &&
-                (eventTime < InputSystem.s_SystemObject.enterPlayModeTime ||
-                    InputSystem.s_SystemObject.enterPlayModeTime == 0);
+                InputSystem.domainStateManager.exitEditModeTime > 0 &&
+                eventTime >= InputSystem.domainStateManager.exitEditModeTime &&
+                (eventTime < InputSystem.domainStateManager.enterPlayModeTime ||
+                    InputSystem.domainStateManager.enterPlayModeTime == 0);
         }
 
         /// <summary>
