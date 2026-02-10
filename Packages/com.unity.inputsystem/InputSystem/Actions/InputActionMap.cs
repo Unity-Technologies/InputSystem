@@ -324,8 +324,6 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public InputActionMap()
         {
-            if (InputSystem.manager != null)
-                InputSystem.manager.bindingsNeedResolving = true;
         }
 
         /// <summary>
@@ -1996,10 +1994,6 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public void OnAfterDeserialize()
         {
-            // Indicate that there is at least one action map that has a change
-            if (InputSystem.manager != null)
-                InputSystem.manager.bindingsNeedResolving = true;
-
             m_State = null;
             m_MapIndexInState = InputActionState.kInvalidIndex;
             m_EnabledActionsCount = 0;
