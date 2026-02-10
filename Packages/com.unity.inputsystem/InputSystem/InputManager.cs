@@ -2240,8 +2240,6 @@ namespace UnityEngine.InputSystem
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private bool m_HasFocus;
-        //private bool m_DiscardOutOfFocusEvents;
-        private double m_FocusRegainedTime;
         private InputEventStream m_InputEventStream;
 
         // We want to sync devices when the editor comes back into focus. Unfortunately, there's no
@@ -3086,12 +3084,9 @@ namespace UnityEngine.InputSystem
                 //       device, it depends on the producer of these events to queue them in correct order.
                 //       Otherwise, once an event with a newer timestamp has been processed, events coming later
                 //       in the buffer and having older timestamps will get rejected.
-
                 var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
                 var timesliceEvents = (updateType == InputUpdateType.Fixed || updateType == InputUpdateType.BeforeRender) &&
-                    InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
-
-               
+                    InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;               
 
                 var processingStartTime = Stopwatch.GetTimestamp();
                 var totalEventLag = 0.0;
@@ -3099,12 +3094,8 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
                 var isPlaying = gameIsPlaying;
 #endif
-
-                // When we exit early, we may or may not flush the event buffer. It depends if we want to process events
-                // later once this method is called.
-                //var shouldExitEarly = eventBuffer.eventCount == 0 || ShouldExitEarlyFromEventProcessing(updateType);
-
-                if (eventBuffer.eventCount == 0)// || ShouldExitEarlyFromEventProcessing(currentEventType, updateType))
+                // we exit early as we have no events in the buffer
+                if (eventBuffer.eventCount == 0)
                 {
                     if (shouldProcessActionTimeouts)
                         ProcessStateChangeMonitorTimeouts();
@@ -3114,32 +3105,11 @@ namespace UnityEngine.InputSystem
                 }
 
 #if UNITY_EDITOR
-               
-
-                // In Play Mode, if we're in the background and not supposed to process events in this update
-               // if ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus)
-               //     && updateType != InputUpdateType.Editor
-               //     && currentEventType != InputFocusEvent.Type)
-               // {
-               //     if (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices ||
-               //         m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
-               //         return;
-               // }
-               //
-               // // Special case for IgnoreFocus behavior with AllDeviceInputAlwaysGoesToGameView in editor updates
-               // if ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus) &&
-               //     m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus &&
-               //     m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView &&
-               //     updateType == InputUpdateType.Editor)
-               //     return;
-
-
                 // When the game is playing and has focus, we never process input in editor updates.
                 // All we do is just switch to editor state buffers and then exit.
                 if ((gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor))
                     return;
 #endif
-
                 try
                 {
                     m_InputEventStream = new InputEventStream(ref eventBuffer, m_Settings.maxQueuedEventsPerUpdate);
@@ -3147,38 +3117,9 @@ namespace UnityEngine.InputSystem
 
                     InputEvent* skipEventMergingFor = null;
 
-                    // Determine if we should flush the event buffer which would imply we exit early and do not process
-                    // any of those events, ever.
-                 //   var shouldFlushEventBuffer = ShouldFlushEventBuffer();
-
-                    /*
-                             private bool ShouldFlushEventBuffer()
-        {
 #if UNITY_EDITOR
-                    //if we dont have focus and the editor behaviour is all input goes to gameview, which is the same behaviour as in a player
-                    // and we are not allowed to run in the background or the background behaviour is that we reset and disable all devices
-
-            // If out of focus and runInBackground is off and ExactlyAsInPlayer is on, discard input.
-            if (!gameHasFocus 
-                && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView
-                && (!m_Runtime.runInBackground || m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices))
-                return true;
-#else
-            // In player builds, flush if out of focus and not running in background
-            if (!gameHasFocus && !m_Runtime.runInBackground)
-                return true;
+                    var dropStatusEvents = ShouldDropStatusEvents(eventBuffer);
 #endif
-            return false;
-        }
-                     */
-
-
-#if UNITY_EDITOR
-                    var dropStatusEvents = ShouldDropStatusEvents(eventBuffer);//, ref shouldExitEarly);
-#endif
-
-
-
                     // Handle events.
                     while (m_InputEventStream.remainingEventCount > 0)
                     {
@@ -3215,19 +3156,6 @@ namespace UnityEngine.InputSystem
                            continue;
                         }
 #endif
-
-                        // if (shouldExitEarly)
-                        // {
-                        //     // Normally, we process action timeouts after first processing all events. If we have no
-                        //     // events, we still need to check timeouts.
-                        //     if (shouldProcessActionTimeouts)
-                        //         ProcessStateChangeMonitorTimeouts();
-                        //     InvokeAfterUpdateCallback(updateType);
-                        //    // if (shouldFlushEventBuffer)
-                        //    //     eventBuffer.Reset();
-                        //     m_CurrentUpdate = default;
-                        //     return;
-                        // }
 
                         Debug.Assert(!currentEventReadPtr->handled, "Event in buffer is already marked as handled");
 
@@ -3483,8 +3411,6 @@ namespace UnityEngine.InputSystem
                     throw;
                 }
 
-                //m_DiscardOutOfFocusEvents = false;
-
                 if (shouldProcessActionTimeouts)
                     ProcessStateChangeMonitorTimeouts();
 
@@ -3678,26 +3604,25 @@ namespace UnityEngine.InputSystem
                 m_HasFocus = focus;
                 return;
             }
-
-            var gameViewFocus = m_Settings.editorInputBehaviorInPlayMode;
 #endif
 
-            var runInBackground =
+           bool runInBackground =
 #if UNITY_EDITOR
-                // In the editor, the player loop will always be run even if the Game View does not have focus. This
-                // amounts to runInBackground being always true in the editor, regardless of what the setting in
-                // the Player Settings window is.
-                //
-                // If, however, "Game View Focus" is set to "Exactly As In Player", we force code here down the same
-                // path as in the player.
-                //if we are in editor, and the editor input behaviour is that everything that is pressed goes to the game view, or we are allowed to run in the background
-                (gameViewFocus != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView) || m_Runtime.runInBackground;
+            // In the editor, the player loop will always be run even if the Game View does not have focus. This
+            // amounts to runInBackground being always true in the editor, regardless of what the setting in
+            // the Player Settings window is.
+            //
+            // If, however, "Game View Focus" is set to "Exactly As In Player", we force code here down the same
+            // path as in the player.
+            //if we are in editor, and the editor input behaviour is that everything that is pressed goes to the game view, or we are allowed to run in the background
+            m_Settings.editorInputBehaviorInPlayMode != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView
+                || m_Runtime.runInBackground;
 #else
-                m_Runtime.runInBackground;
+            m_Runtime.runInBackground;
 #endif
-            //BackgroundBehavior.IgnoreFocus == ignore any state changes to the device and continue as is, so we can early out. as nothing needs to change
-            var backgroundBehavior = m_Settings.backgroundBehavior;
-            if (backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
+
+            // BackgroundBehavior.IgnoreFocus means we ignore any state changes to the device, so we can early out
+            if (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
             {
                 // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
                 // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
@@ -3712,75 +3637,31 @@ namespace UnityEngine.InputSystem
             // do we still need to do this here? as we are now always looping from onupdate
             m_CurrentUpdate = m_UpdateMask.GetUpdateTypeForPlayer();
 #endif
-
-            if (!focus)
+            // Cache original device count in case it changes while we are processing devices.
+            var deviceCount = m_DevicesCount;
+            for (var i = 0; i < m_DevicesCount; ++i)
             {
-                // We only react to loss of focus when we will keep running in the background. If not,
-                // we'll do nothing and just wait for focus to come back (where we then try to sync all devices).
-                 if (runInBackground)
-                  {
-                if (backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
+                var device = m_Devices[i];
+
+                if (focus)
+                    UpdateDeviceStateOnFocusGained(device, runInBackground);
+                else
+                    UpdateDeviceStateOnFocusLost(device, runInBackground);
+
+                if (m_DevicesCount != deviceCount)
                 {
-                    for (var i = 0; i < m_DevicesCount; ++i)
+                    // In case we invoked a callback that messed with our device array, adjust our index.
+                    var index = m_Devices.IndexOfReference(device, m_DevicesCount);
+                    if (index == -1)
                     {
-                        var device = m_Devices[i];
-                        if (!device.enabled)
-                            continue;
-
-                        // Disable the device. This will also soft-reset it.
-                        EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-
-                        // In case we invoked a callback that messed with our device array, adjust our index.
-                        var index = m_Devices.IndexOfReference(device, m_DevicesCount);
-                        if (index == -1)
-                            --i;
-                        else
-                            i = index;
+                        --i;
+                        deviceCount = m_DevicesCount;
                     }
-                }
-
-                if (backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices)
-                {
-                    for (var i = 0; i < m_DevicesCount; ++i)
+                    else
                     {
-                        // Determine whether to run this device in the background.
-                        var device = m_Devices[i];
-                        if (!device.enabled || ShouldRunDeviceInBackground(device))
-                            continue;
-
-                        // Disable the device. This will also soft-reset it.
-                        EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-
-                        // In case we invoked a callback that messed with our device array, adjust our index.
-                        var index = m_Devices.IndexOfReference(device, m_DevicesCount);
-                        if (index == -1)
-                            --i;
-                        else
-                            i = index;
+                        i = index;
+                        deviceCount = m_DevicesCount;
                     }
-
-                }
-            }
-            }
-            else
-            {
-                //m_DiscardOutOfFocusEvents = true;
-                m_FocusRegainedTime = m_Runtime.currentTime;
-                // On focus gain, reenable and sync devices.
-                for (var i = 0; i < m_DevicesCount; ++i)
-                {
-                    var device = m_Devices[i];
-
-                    // Re-enable the device if we disabled it on focus loss. This will also issue a sync.
-                    if (device.disabledWhileInBackground)
-                        EnableOrDisableDevice(device, true, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-                    // Try to sync. If it fails and we didn't run in the background, perform
-                    // a reset instead. This is to cope with backends that are unable to sync but
-                    // may still retain state which now may be outdated because the input device may
-                    // have changed state while we weren't running. So at least make the backend flush
-                    // its state (if any).
-                    else if (device.enabled && !runInBackground && !device.RequestSync())
-                        ResetDevice(device);
                 }
             }
 
@@ -3790,6 +3671,51 @@ namespace UnityEngine.InputSystem
 
             // We set this *after* the block above as defaultUpdateType is influenced by the setting.
             m_HasFocus = focus;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateDeviceStateOnFocusGained(InputDevice device, bool runInBackground)
+        {
+            // Re-enable the device if we disabled it on focus loss. This will also issue a sync.
+            if (device.disabledWhileInBackground)
+            {
+                EnableOrDisableDevice(device, true, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+            }            
+            else if (device.enabled && !runInBackground)
+            {
+                bool requestSync = device.RequestSync();
+                // Try to sync. If it fails and we didn't run in the background, perform
+                // a reset instead. This is to cope with backends that are unable to sync but
+                // may still retain state which now may be outdated because the input device may
+                // have changed state while we weren't running. So at least make the backend flush
+                // its state (if any).
+                if (!requestSync)
+                    ResetDevice(device);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void UpdateDeviceStateOnFocusLost(InputDevice device, bool runInBackground)
+        {
+            if (!device.enabled || !runInBackground)
+                return;
+
+            switch (m_Settings.backgroundBehavior)
+            {
+                case InputSettings.BackgroundBehavior.ResetAndDisableAllDevices:
+                    {
+                        // Disable the device. This will also soft-reset it.
+                        EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+                    }
+                    break;
+                case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
+                    {
+                        // Disable the device. This will also soft-reset it.
+                        if (!ShouldRunDeviceInBackground(device))
+                            EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+                    }
+                    break;
+            }
         }
 
         private void FinalizeUpdate(InputUpdateType updateType)
@@ -3805,27 +3731,6 @@ namespace UnityEngine.InputSystem
                 NativeInputSystem.DoSendMouseEvents(pointer.press.isPressed, pointer.press.wasPressedThisFrame, pointer.position.x.value, pointer.position.y.value);
 #endif
             m_CurrentUpdate = default;
-        }
-
-        /// <summary>
-        /// Determines if the event buffer should be flushed without processing events.
-        /// </summary>
-        /// <returns>True if the buffer should be flushed, false otherwise.</returns>
-        private bool ShouldFlushEventBuffer()
-        {
-#if UNITY_EDITOR
-            // If out of focus and runInBackground is off and ExactlyAsInPlayer is on, discard input.
-            if (!gameHasFocus &&
-                m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView
-                &&
-                (!m_Runtime.runInBackground || m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices))
-                return true;
-#else
-            // In player builds, flush if out of focus and not running in background
-            if (!gameHasFocus && !m_Runtime.runInBackground)
-                return true;
-#endif
-            return false;
         }
 
         /// <summary>
@@ -3942,18 +3847,6 @@ namespace UnityEngine.InputSystem
                 (eventTime < InputSystem.s_SystemObject.enterPlayModeTime ||
                     InputSystem.s_SystemObject.enterPlayModeTime == 0);
         }
-
-        /// <summary>
-        /// Checks if an event should be discarded because it occurred while out of focus, under specific settings.
-        /// </summary>
-      //  private bool ShouldDiscardOutOfFocusEvent(FourCC eventType, double eventTime)
-      //  {
-      //      // If we care about focus, check if the event occurred while out of focus based on its timestamp.
-      //      if ((gameHasFocus && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus))// && eventType == InputFocusEvent.Type)
-      //          return m_DiscardOutOfFocusEvents && eventTime < m_FocusRegainedTime;
-      //      return false;
-      //  }
-
 #endif
 
         bool AreMaximumEventBytesPerUpdateExceeded(uint totalEventBytesProcessed)
