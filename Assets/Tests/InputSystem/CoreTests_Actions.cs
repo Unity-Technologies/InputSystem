@@ -12581,4 +12581,67 @@ partial class CoreTests
         Assert.That(map.enabled, Is.True);
         Assert.That(map.FindAction("MyAction", true).enabled, Is.True);
     }
+
+    // Verifies that a multi-control-scheme project with a disconnected device that attempts to enable the associated
+    // actions via an action cancellation callback doesn't result in IndexOutOfBoundsException, and that the binding
+    // will be restored upon device reconnect. We use the same bindings as the associated ISXB issue to make sure
+    // we test the exact same scenario.
+    [Test, Description("https://jira.unity3d.com/browse/ISXB-1767")]
+    public void Actions_CanHandleDeviceDisconnectWithControlSchemesAndReconnect()
+    {
+        int started = 0;
+        int performed = 0;
+        int canceled = 0;
+
+        // Create an input action asset object.
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        // These control schemes are critical to this test. Without them the exception won't happen.
+        var keyboardScheme = actions.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
+        var gamepadScheme = actions.AddControlScheme("Gamepad").WithRequiredDevice<Gamepad>();
+
+        // Create a single action map since its sufficient for the scenario.
+        var map = actions.AddActionMap("map");
+
+        var action = map.AddAction(name: "Toggle", InputActionType.Button);
+        action.AddBinding("<Gamepad>/leftTrigger");
+        action.started += context => ++ started;
+        action.performed += context => ++ performed;
+        action.canceled += (context) =>
+        {
+            // In reported issue, map state is changed from cancellation callback.
+            map.Disable();
+            map.Enable();
+
+            // This is not part of the bug reported in ISXB-1767 but extends the test coverage since
+            // it makes sure Disable() is safe after logically skipped Enable().
+            map.Disable();
+            map.Enable();
+
+            ++canceled;
+        };
+
+        // Add a keyboard and a gamepad.
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Enable the map, press (and hold) the left trigger and assert action is firing.
+        map.Enable();
+        Press(gamepad.leftTrigger, queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(started, Is.EqualTo(1));
+
+        // Remove the gamepad device. This is consistent with event queue based removal (not kept on list).
+        InputSystem.RemoveDevice(gamepad);
+        InputSystem.Update();
+        Assert.That(canceled, Is.EqualTo(1));
+
+        // Reconnect the disconnected gamepad
+        InputSystem.AddDevice(gamepad);
+
+        // Interact again
+        Press(gamepad.leftTrigger, queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(started, Is.EqualTo(2));
+    }
 }
