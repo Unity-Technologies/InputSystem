@@ -622,7 +622,6 @@ namespace UnityEngine.InputSystem.UI
             /// </summary>
             HardwareCursorIfAvailable,
         }
-        
     }
 }
 #endif // PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI

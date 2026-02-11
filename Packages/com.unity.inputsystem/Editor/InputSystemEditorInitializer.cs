@@ -27,7 +27,7 @@ namespace UnityEngine.InputSystem.Editor
             InputSystem.s_ShouldEnableActions = ShouldEnableActions;
             InputAnalytics.s_IsNewSystemBackendsEnabled = ShouldEnableActionsNewBackend;
             InputAnalytics.s_IsOldSystemBackendsEnabled = ShouldEnableActionsOldBackend;
-            
+
             // Register analytics callbacks for InputActionSetupExtensions
             InputActionSetupExtensions.s_ApiUsageCallback = RegisterSetupApiUsage;
             InputActionSetupExtensions.s_SuppressAnalytics = SuppressSetupAnalytics;
@@ -333,7 +333,7 @@ namespace UnityEngine.InputSystem.Editor
             // Abort if not in play-mode in editor
             return EditorApplication.isPlayingOrWillChangePlaymode;
         }
-        
+
         /// <summary>
         /// Checks if the backends for the new input system should be enabled in the Editor (Editor-specific check for play mode and player settings)
         /// </summary>
@@ -342,7 +342,7 @@ namespace UnityEngine.InputSystem.Editor
             // Abort if not in play-mode in editor
             return EditorPlayerSettingHelpers.newSystemBackendsEnabled;
         }
-        
+
         /// <summary>
         /// Checks if the backends for the old input system should be enabled in the Editor (Editor-specific check for play mode and player settings)
         /// </summary>
