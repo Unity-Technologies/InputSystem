@@ -22,6 +22,7 @@ using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.Processors;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Rendering;
 using UnityEngine.TestTools;
 
 #pragma warning disable CS0649
@@ -2632,6 +2633,9 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_CanIconsForLayouts()
     {
+        if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null)
+            Assert.Ignore("Skipping icon test in headless/null graphics environment.");
+        
         const string kIconPath = "Packages/com.unity.inputsystem/Editor/Icons/";
         var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
         var scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
