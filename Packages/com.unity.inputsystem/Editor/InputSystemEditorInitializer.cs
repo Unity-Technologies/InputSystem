@@ -407,6 +407,14 @@ namespace UnityEngine.InputSystem.Editor
         /// </summary>
         internal static void OnPlayModeChange(PlayModeStateChange change)
         {
+            // Tests may call this directly without going through the full editor initialization path.
+            // Ensure we have a system object to store/restore transient editor state.
+            if (s_SystemObject == null)
+            {
+                s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
+                s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
+            }
+
             switch (change)
             {
                 case PlayModeStateChange.ExitingEditMode:
