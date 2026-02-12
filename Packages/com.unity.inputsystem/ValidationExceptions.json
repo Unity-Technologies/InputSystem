@@ -5,7 +5,22 @@
             "ExceptionMessage": "Breaking changes require a new major version.",
             "PackageVersion": "1.18.0",
             "__comments": "starting from 2022.3 ugui is not added to the project by default. We have some APIs that are conditional on ugui being present, so the API Validation thinks we are breaking API, but that is not the case."
-        }
+        },
+        {
+            "ValidationTest": "NDA Keyword Validation",
+            "ExceptionMessage": "File 'Runtime/Plugins/Switch/SwitchProControllerHID.cs' contains keyword pattern '(?<!(BuildTarget|BuildTargetGroup|BuildSettings|AddressablesPlatform|RuntimePlatform|TargetPlatform|OpCodes|GraphicsDeviceType))\\.switch\\W' which indicates it is specific to restricted targets '-Switch'. It must not be published",
+            "PackageVersion": "2.0.0"
+        },
+        {
+            "ValidationTest": "NDA Keyword Validation",
+            "ExceptionMessage": "using UnityEngine.InputSystem.Switch.LowLevel;",
+            "PackageVersion": "2.0.0"
+        },
+         {
+            "ValidationTest": "NDA Keyword Validation",
+            "ExceptionMessage": "The Input System support Switch Pro controllers on desktop computers via the [`SwitchProControllerHID`](../api/UnityEngine.InputSystem.Switch.SwitchProControllerHID.html) class, which implements basic gamepad functionality.",
+            "PackageVersion": "2.0.0"
+         }
     ],
     "WarningExceptions": []
 }
