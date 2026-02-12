@@ -150,7 +150,7 @@ namespace UnityEngine.InputSystem.Editor
             else
             {
                 // Dropdown that shows binding text and allows opening control picker.
-                if (EditorGUI.DropdownButton(bindingTextRect, new GUIContent(displayName), FocusType.Keyboard))
+                if (EditorGUI.DropdownButton(bindingTextRect, new GUIContent(m_CachedDisplayName), FocusType.Keyboard))
                 {
                     SetExpectedControlLayoutFromAttribute(serializedProperty);
                     ////TODO: for bindings that are part of composites, use the layout information from the [InputControl] attribute on the field
