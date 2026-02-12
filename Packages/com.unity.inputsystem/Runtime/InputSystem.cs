@@ -16,6 +16,7 @@ using UnityEngine.InputSystem.Utilities;
 using Unity.Profiling;
 
 using System.Linq;
+using UnityEngine.Networking.PlayerConnection;
 
 #if UNITY_EDITOR
 using CustomBindingPathValidator = System.Func<string, System.Action>;
