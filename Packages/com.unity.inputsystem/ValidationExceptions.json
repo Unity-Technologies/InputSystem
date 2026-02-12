@@ -23,6 +23,11 @@
         },
         {
           "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "The Input System support Switch Pro controllers on desktop computers via the [`SwitchProControllerHID`](../api/UnityEngine.InputSystem.Switch.SwitchProControllerHID.html) class, which implements basic gamepad functionality.",
+          "PackageVersion": "2.0.0"
+        },
+        {
+          "ValidationTest": "NDA Keyword Validation",
           "ExceptionMessage": "using UnityEngine.InputSystem.Switch.LowLevel;",
           "PackageVersion": "2.0.0"
         },
