@@ -664,7 +664,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             UnregisterAction(ref m_RightClickAction, OnRightClickPerformed);
             UnregisterAction(ref m_ScrollWheelAction, OnScrollWheelPerformed);
 
-            if (m_InputActionAsset != null)
+            if (m_InputActionAsset != null && m_InputActionAsset != InputSystem.actions)
                 m_InputActionAsset.Disable();
         }
 
