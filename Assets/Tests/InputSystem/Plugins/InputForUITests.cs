@@ -94,6 +94,33 @@ public class InputForUITests : InputTestFixture
 
     [Test]
     [Category(kTestCategory)]
+    public void Shutdown_DoesNotDisableProjectWideActionsAsset()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiMap = new InputActionMap("UI");
+        uiMap.AddAction("Point", InputActionType.PassThrough, "<Mouse>/position");
+        uiMap.AddAction("Navigate", InputActionType.PassThrough, "<Gamepad>/leftStick");
+        uiMap.AddAction("Submit", InputActionType.Button, "<Keyboard>/enter");
+        uiMap.AddAction("Cancel", InputActionType.Button, "<Keyboard>/escape");
+        uiMap.AddAction("Click", InputActionType.PassThrough, "<Mouse>/leftButton");
+        uiMap.AddAction("MiddleClick", InputActionType.PassThrough, "<Mouse>/middleButton");
+        uiMap.AddAction("RightClick", InputActionType.PassThrough, "<Mouse>/rightButton");
+        uiMap.AddAction("ScrollWheel", InputActionType.PassThrough, "<Mouse>/scroll");
+        asset.AddActionMap(uiMap);
+
+        InputSystem.s_Manager.actions = asset;
+
+        m_InputSystemProvider.Initialize();
+        Assert.That(asset.enabled, Is.True, "Project-wide actions should be enabled by provider initialization.");
+
+        m_InputSystemProvider.Shutdown();
+        Assert.That(asset.enabled, Is.True, "Project-wide actions must remain enabled after provider shutdown.");
+
+        Object.DestroyImmediate(asset);
+    }
+
+    [Test]
+    [Category(kTestCategory)]
     // Checks that mouse events are ignored when a touch is active.
     // This is to workaround the issue ISXB-269 on Windows.
     public void TouchIsPressedAndMouseEventsAreIgnored()
