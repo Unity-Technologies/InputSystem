@@ -323,6 +323,11 @@ namespace UnityEngine.InputSystem.Editor
                 // Track reference to enable including it in built Players
                 ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = value;
             }
+            else
+            {
+                // Clear build settings when project-wide actions are set to null
+                ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = null;
+            }
         }
 
         /// <summary>
