@@ -18,6 +18,12 @@ namespace UnityEngine.InputSystem
     {
         public static bool isConnected => s_State.connected;
 
+        /// <summary>
+        /// Used by tests that run with a test runtime; the editor sets the handler on the native runtime
+        /// at init, but the test runtime needs it installed explicitly.
+        /// </summary>
+        internal static Func<IntPtr, bool> GetMessageHandlerForTesting() => ProcessMessageFromUnityRemote;
+
         public static void Initialize()
         {
             InputRuntime.s_Instance.onUnityRemoteMessage = ProcessMessageFromUnityRemote;
