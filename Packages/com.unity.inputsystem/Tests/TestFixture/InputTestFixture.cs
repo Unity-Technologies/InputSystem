@@ -1009,7 +1009,7 @@ namespace UnityEngine.InputSystem
             // Guard against it so domain reload simulation doesn't NRE (NullReferenceException).
             InputSystemEditorInitializer.s_SystemObject?.OnBeforeSerialize();
             InputSystemEditorInitializer.s_SystemObject = null;
-            // InputSystem.InitializeInEditor(runtime);
+            InputSystemEditorInitializer.InitializeInEditor();
         }
 
         #endif

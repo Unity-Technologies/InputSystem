@@ -4303,7 +4303,13 @@ namespace UnityEngine.InputSystem
             m_HaveSentStartupAnalytics = state.haveSentStartupAnalytics;
             #endif
 
-            ////REVIEW: instead of accessing globals here, we could move this to when we re-create devices
+            // Restore available devices list so that GetUnsupportedDevices() and similar queries
+            // return the correct result before RestoreDevicesAfterDomainReload() runs.
+            /*if (state.availableDevices != null && state.availableDevices.Length > 0)
+            {
+                m_AvailableDevices = state.availableDevices;
+                m_AvailableDeviceCount = state.availableDevices.Length;
+            }*/
 
             // Update state.
             InputUpdate.Restore(state.updateState);
