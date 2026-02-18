@@ -3578,6 +3578,8 @@ namespace UnityEngine.InputSystem
 
             RunInitialUpdate();
 
+            EnableActions();
+
             k_InputInitializeInEditorMarker.End();
         }
 
