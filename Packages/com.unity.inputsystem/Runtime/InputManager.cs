@@ -1965,7 +1965,7 @@ namespace UnityEngine.InputSystem
             // Precompiled layouts.
             RegisterPrecompiledLayout<FastKeyboard>(FastKeyboard.metadata);
             RegisterPrecompiledLayout<FastTouchscreen>(FastTouchscreen.metadata);
-            // RegisterPrecompiledLayout<FastMouse>(FastMouse.metadata);
+            RegisterPrecompiledLayout<FastMouse>(FastMouse.metadata);
 
             // Register processors.
             processors.AddTypeRegistration("Invert", typeof(InvertProcessor));
