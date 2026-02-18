@@ -2972,7 +2972,7 @@ partial class CoreTests
         InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
         Assert.That(InputActionState.s_GlobalState.globalList.length, Is.Zero);
-        // Won't get removed, just cleared.        
+        // Won't get removed, just cleared.
         Assert.That(InputSystem.manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null);
     }
 
