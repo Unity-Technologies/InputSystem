@@ -1271,9 +1271,10 @@ namespace UnityEngine.InputSystem
             finally
             {
                 // Reset init data.
-                s_GlobalState.initPairWithDevicesCount = 0;
                 if (s_GlobalState.initPairWithDevices != null)
                     Array.Clear(s_GlobalState.initPairWithDevices, 0, s_GlobalState.initPairWithDevicesCount);
+                    
+                s_GlobalState.initPairWithDevicesCount = 0;
                 s_GlobalState.initControlScheme = null;
                 s_GlobalState.initPlayerIndex = -1;
                 s_GlobalState.initSplitScreenIndex = -1;
