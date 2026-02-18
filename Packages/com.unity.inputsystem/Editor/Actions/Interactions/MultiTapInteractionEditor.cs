@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
 
@@ -31,14 +32,21 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                return;
+
+            target.tapCount = EditorGUILayout.IntField(m_TapCountLabel, target.tapCount);
+            m_TapDelaySetting.OnGUI();
+            m_TapTimeSetting.OnGUI();
+            m_PressPointSetting.OnGUI();
         }
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-            var tapCountField = new IntegerField(tapLabel)
+            var tapCountField = new IntegerField(m_TapCountLabel.text)
             {
                 value = target.tapCount,
-                tooltip = tapTooltip
+                tooltip = m_TapCountLabel.tooltip
             };
             tapCountField.RegisterValueChangedCallback(evt =>
             {
@@ -52,8 +60,7 @@ namespace UnityEngine.InputSystem.Interactions
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
         }
 
-        private const string tapLabel = "Tap Count";
-        private const string tapTooltip = "How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.";
+        private readonly GUIContent m_TapCountLabel = new GUIContent("Tap Count", "How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.");
 
         private CustomOrDefaultSetting m_PressPointSetting;
         private CustomOrDefaultSetting m_TapTimeSetting;

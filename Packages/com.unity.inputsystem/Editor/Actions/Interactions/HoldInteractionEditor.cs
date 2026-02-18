@@ -25,6 +25,11 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                return;
+
+            m_PressPointSetting.OnGUI();
+            m_DurationSetting.OnGUI();
         }
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
