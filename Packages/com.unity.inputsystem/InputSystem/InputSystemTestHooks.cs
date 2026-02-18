@@ -66,7 +66,7 @@ namespace UnityEngine.InputSystem
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
-            InputSystem.manager.Dispose();
+            InputSystem.s_Manager?.Dispose();
             if (InputSystem.s_RemoteConnection != null)
                 Object.DestroyImmediate(InputSystem.s_RemoteConnection);
 
