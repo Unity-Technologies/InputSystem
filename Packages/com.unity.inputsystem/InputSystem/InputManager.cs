@@ -398,12 +398,13 @@ namespace UnityEngine.InputSystem
 #else
             true;
 #endif
+        private bool applicationHasFocus => (m_FocusState & FocusFlags.ApplicationFocus) != 0;
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
-                     m_RunPlayerUpdatesInEditMode || m_HasFocus || gameShouldGetInputRegardlessOfFocus;
+                     m_RunPlayerUpdatesInEditMode || applicationHasFocus || gameShouldGetInputRegardlessOfFocus;
 #else
-            m_HasFocus || gameShouldGetInputRegardlessOfFocus;
+            applicationHasFocus || gameShouldGetInputRegardlessOfFocus;
 #endif
 
         private bool gameShouldGetInputRegardlessOfFocus =>
@@ -1910,7 +1911,10 @@ namespace UnityEngine.InputSystem
             // we don't know which one the user is going to use. The user
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
-            m_HasFocus = Application.isFocused;
+
+            m_FocusState = Application.isFocused ? m_FocusState |= FocusFlags.ApplicationFocus
+                                                 : m_FocusState &= ~FocusFlags.ApplicationFocus;
+
 #if UNITY_EDITOR
             m_EditorIsActive = true;
             m_UpdateMask |= InputUpdateType.Editor;
@@ -2110,7 +2114,9 @@ namespace UnityEngine.InputSystem
             m_Runtime.onPlayerLoopInitialization = OnPlayerLoopInitialization;
             #endif
             m_Runtime.pollingFrequency = pollingFrequency;
-            m_HasFocus = m_Runtime.isPlayerFocused;
+
+            m_FocusState = m_Runtime.isPlayerFocused ? m_FocusState |= FocusFlags.ApplicationFocus
+                                                     : m_FocusState &= ~FocusFlags.ApplicationFocus;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -2239,7 +2245,7 @@ namespace UnityEngine.InputSystem
         private CallbackArray<Action> m_ActionsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
-        private bool m_HasFocus;
+        private FocusFlags m_FocusState;
         private InputEventStream m_InputEventStream;
 
         // We want to sync devices when the editor comes back into focus. Unfortunately, there's no
@@ -3135,7 +3141,7 @@ namespace UnityEngine.InputSystem
                         if (!gameHasFocus
                             && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView
                             && (!m_Runtime.runInBackground || m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
-                            && currentEventType != InputFocusEvent.Type)
+                            && currentEventType != new FourCC((int)InputFocusEvent.Type))
                         {
                             m_InputEventStream.Advance(false);
                             continue;
@@ -3213,7 +3219,7 @@ namespace UnityEngine.InputSystem
                         // If we can't find the device, ignore the event.
                         if (device == null)
                             device = TryGetDeviceById(currentEventReadPtr->deviceId);
-                        if (device == null && currentEventType != InputFocusEvent.Type)
+                        if (device == null && currentEventType != new FourCC((int)InputFocusEvent.Type))
                         {
 #if UNITY_EDITOR
                             ////TODO: see if this is a device we haven't created and if so, just ignore
@@ -3450,7 +3456,7 @@ namespace UnityEngine.InputSystem
                     ResetDevice(device, alsoResetDontResetControls: ((DeviceResetEvent*)currentEventReadPtr)->hardReset);
                     break;
 
-                case InputFocusEvent.Type:
+                case (int)InputFocusEvent.Type:
                     ProcessFocusEvent(currentEventReadPtr);
                     break;
             }
@@ -3594,14 +3600,14 @@ namespace UnityEngine.InputSystem
         private unsafe void ProcessFocusEvent(InputEvent* currentEventReadPtr)
         {
             var focusEventPtr = (InputFocusEvent*)currentEventReadPtr;
-            bool focus = focusEventPtr->focus;
+            FocusFlags focusState = focusEventPtr->focusFlags;
 
 #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();
 
             if (!m_Runtime.isInPlayMode)
             {
-                m_HasFocus = focus;
+                m_FocusState = focusState;
                 return;
             }
 #endif
@@ -3626,7 +3632,7 @@ namespace UnityEngine.InputSystem
             {
                 // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
                 // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
-                m_HasFocus = focus;
+                m_FocusState = focusState;
                 return;
             }
 
@@ -3643,7 +3649,7 @@ namespace UnityEngine.InputSystem
             {
                 var device = m_Devices[i];
 
-                if (focus)
+                if (focusEventPtr->hasApplicationFocus)
                     UpdateDeviceStateOnFocusGained(device, runInBackground);
                 else
                     UpdateDeviceStateOnFocusLost(device, runInBackground);
@@ -3670,7 +3676,7 @@ namespace UnityEngine.InputSystem
 #endif
 
             // We set this *after* the block above as defaultUpdateType is influenced by the setting.
-            m_HasFocus = focus;
+            m_FocusState = focusState;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3682,14 +3688,14 @@ namespace UnityEngine.InputSystem
                 EnableOrDisableDevice(device, true, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
             }            
             else if (device.enabled && !runInBackground)
-            {
+            {                 
                 bool requestSync = device.RequestSync();
                 // Try to sync. If it fails and we didn't run in the background, perform
                 // a reset instead. This is to cope with backends that are unable to sync but
                 // may still retain state which now may be outdated because the input device may
                 // have changed state while we weren't running. So at least make the backend flush
                 // its state (if any).
-                if (!requestSync)
+                if (!requestSync && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus)
                     ResetDevice(device);
             }
         }
@@ -3771,7 +3777,7 @@ namespace UnityEngine.InputSystem
             // In Play Mode, if we're in the background and not supposed to process events in this update
             if ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus)
                 && updateType != InputUpdateType.Editor
-                && currentEventType != InputFocusEvent.Type)
+                && currentEventType != new FourCC((int)InputFocusEvent.Type))
             {
                 if (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices ||
                     m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)

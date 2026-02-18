@@ -715,18 +715,11 @@ public class InputForUITests : InputTestFixture
         currentTime += 1.0f;
         Update();
         currentTime += 1.0f;
-        //runtime.PlayerFocusLost();
-        var focusEvent = InputFocusEvent.Create(false, currentTime);
-        InputSystem.QueueEvent(focusEvent.ToEventPtr());
-       // InputSystem.Update(InputUpdateType.Dynamic);
+        ScheduleFocusEvent(false);
         currentTime += 1.0f;
         Set(mouse.position, outOfFocusPosition , queueEventOnly: true);
         currentTime += 1.0f;
-        //runtime.PlayerFocusGained();
-        InputSystem.Update();
-        focusEvent = InputFocusEvent.Create(true, currentTime);
-        InputSystem.QueueEvent(focusEvent.ToEventPtr());
-       
+        ScheduleFocusEvent(true);
         currentTime += 1.0f;
         Set(mouse.position, focusPosition, queueEventOnly: true);
         currentTime += 1.0f;
@@ -734,7 +727,7 @@ public class InputForUITests : InputTestFixture
         // We call specific updates to simulate editor behavior when regaining focus.
         InputSystem.Update(InputUpdateType.Editor);
         Assert.AreEqual(0, m_InputForUIEvents.Count);
-        InputSystem.Update();
+        InputSystem.Update(InputUpdateType.Dynamic);
         // Calling the event provider update after we call InputSystem updates so that we trigger InputForUI events
         EventProvider.NotifyUpdate();
 

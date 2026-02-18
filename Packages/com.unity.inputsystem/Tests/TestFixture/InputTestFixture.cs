@@ -12,6 +12,7 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.InputSystem.XR;
+using UnityEngineInternal.Input;
 #if UNITY_6000_5_OR_NEWER
 using UnityEngine.Assemblies;
 #endif
@@ -834,6 +835,18 @@ namespace UnityEngine.InputSystem
 
             // If it's not a control that we know how to trigger - it's not implemented yet
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Utility function for manually scheduling an <see cref="InputFocusEvent"/>.
+        /// This is useful for testing how the system reacts to focus changes.
+        /// </summary>
+        public unsafe void ScheduleFocusEvent(bool focus)
+        {
+            // For now we only set application focus. In the future we want to add support for other focus as well
+            FocusFlags state = focus ? FocusFlags.ApplicationFocus : FocusFlags.None;
+            var evt = InputFocusEvent.Create(state, currentTime);
+            InputSystem.QueueEvent(new InputEventPtr((InputEvent*)&evt.baseEvent));
         }
 
         /// <summary>

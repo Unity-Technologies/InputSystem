@@ -19,6 +19,7 @@ using UnityEngine.Profiling;
 using UnityEngine.Scripting;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
+using UnityEngineInternal.Input;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 using UnityEngine.TestTools.Constraints;
 using Is = NUnit.Framework.Is;
@@ -1522,9 +1523,7 @@ partial class CoreTests
         Assert.That(device, Is.Not.Null);
 
         // Loose focus.
-        //runtime.PlayerFocusLost();
-        var focusEvent = InputFocusEvent.Create(false, currentTime);
-        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        ScheduleFocusEvent(false);
         InputSystem.Update(InputUpdateType.Dynamic);
         //InputSystem.Update();
 
@@ -1537,9 +1536,7 @@ partial class CoreTests
         Assert.That(InputSystem.devices, Is.Empty);
 
         // Regain focus.
-        //runtime.PlayerFocusGained();
-        focusEvent = InputFocusEvent.Create(true, currentTime);
-        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        ScheduleFocusEvent(true);
         InputSystem.Update(InputUpdateType.Dynamic);
         //InputSystem.Update();
 
@@ -4614,8 +4611,9 @@ partial class CoreTests
         {
             // Focus events will always be processed no matter the state
             // Since the test relies on counting events based on state, dont count focus events
-            if(eventPtr.data->type != InputFocusEvent.Type)
+            if(eventPtr.data->type != (FourCC)(int)InputFocusEvent.Type)
                 ++eventCount;
+
         };
 
         Assert.That(trackedDevice.enabled, Is.True);
@@ -4659,9 +4657,7 @@ partial class CoreTests
         }
 
         // Lose focus.
-        // runtime.PlayerFocusLost();
-        var focusEvent = InputFocusEvent.Create(false, currentTime);
-        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        ScheduleFocusEvent(false);
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(sensor.enabled, Is.False);
@@ -5083,9 +5079,7 @@ partial class CoreTests
         commands.Clear();
 
         // Regain focus.
-        //runtime.PlayerFocusGained();
-        focusEvent = InputFocusEvent.Create(true, currentTime);
-        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        ScheduleFocusEvent(true);
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(sensor.enabled, Is.False);
@@ -5293,13 +5287,10 @@ partial class CoreTests
                             "Sync Gamepad", "Sync Joystick",
                             "Sync TrackedDevice", "Sync TrackedDevice2",
                             "Sync Mouse", "Sync Mouse2", "Sync Mouse3",
-                            "Sync Keyboard", "Reset Joystick"
+                            "Sync Keyboard"
                         }));
-                        // Enabled devices that don't support syncs get reset.
-                        Assert.That(changes, Is.EquivalentTo(new[]
-                        {
-                            "SoftReset Mouse1", "SoftReset Mouse3", "HardReset Joystick", "SoftReset TrackedDevice2"
-                        }));
+                        // Enabled devices that don't support syncs dont get reset for Ignore Forcus as we do not want to cancel any actions.
+                        Assert.That(changes, Is.Empty);
                         break;
                     }
             }
@@ -5336,9 +5327,7 @@ partial class CoreTests
         Assert.That(performedCount, Is.EqualTo(1));
 
         // Lose focus
-        // runtime.PlayerFocusLost();
-        var focusEvent = InputFocusEvent.Create(false, currentTime);
-        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        ScheduleFocusEvent(false);
         InputSystem.Update();
 
         Assert.That(gamepad.enabled, Is.False);
@@ -5351,9 +5340,7 @@ partial class CoreTests
         InputSystem.Update();
 
         // Gain focus
-        //runtime.PlayerFocusGained();
-        focusEvent = InputFocusEvent.Create(true, currentTime);
-        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        ScheduleFocusEvent(true);
 
         // Run update to try process events accordingly once focus is gained
         InputSystem.Update();

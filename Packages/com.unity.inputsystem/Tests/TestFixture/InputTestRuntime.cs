@@ -233,22 +233,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public void InvokePlayerFocusChanged(bool newFocusState)
-        {
-            m_HasFocus = newFocusState;
-            onPlayerFocusChanged?.Invoke(newFocusState);
-        }
-
-        public void PlayerFocusLost()
-        {
-            InvokePlayerFocusChanged(false);
-        }
-
-        public void PlayerFocusGained()
-        {
-            InvokePlayerFocusChanged(true);
-        }
-
         public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.InvalidDeviceId)
         {
             lock (m_Lock)

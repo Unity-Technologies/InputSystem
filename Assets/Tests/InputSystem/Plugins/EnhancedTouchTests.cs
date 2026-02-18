@@ -158,14 +158,10 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
 
         // And make sure we're not seeing the data in the editor.
-        //runtime.PlayerFocusLost();
-        var focusEvent = InputFocusEvent.Create(false, currentTime);
-        InputSystem.QueueEvent(focusEvent.ToEventPtr());
-        //InputSystem.Update(InputUpdateType.Dynamic);
+        ScheduleFocusEvent(false);
         InputSystem.Update(InputUpdateType.Editor);
 
         Assert.That(Touch.activeTouches, Is.Empty);
-
         // Feed some data into editor state.
         BeginTouch(2, new Vector2(0.234f, 0.345f), queueEventOnly: true);
         InputSystem.Update(InputUpdateType.Editor);
@@ -174,10 +170,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(2));
 
         // Switch back to player.
-        //runtime.PlayerFocusGained();
-        focusEvent = InputFocusEvent.Create(true, currentTime);
-        InputSystem.QueueEvent(focusEvent.ToEventPtr());
-        //InputSystem.Update(InputUpdateType.Dynamic);
+        ScheduleFocusEvent(true);
         InputSystem.Update();
 
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
@@ -1166,9 +1159,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
         Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Began));
 
-        //runtime.PlayerFocusLost();
-        var focusEvent = InputFocusEvent.Create(false, currentTime);
-        InputSystem.QueueEvent(focusEvent.ToEventPtr());
+        ScheduleFocusEvent(false);
 
         if (runInBackground)
         {
@@ -1180,8 +1171,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         {
             // When not running in the background, the same thing happens but only on focus gain.
             //runtime.PlayerFocusGained();
-            focusEvent = InputFocusEvent.Create(true, currentTime);
-            InputSystem.QueueEvent(focusEvent.ToEventPtr());
+            ScheduleFocusEvent(true);
             InputSystem.Update();
         }
 
