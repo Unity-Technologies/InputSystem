@@ -273,34 +273,6 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         /// <summary>
-        /// Simulates domain reload recovery for tests: Reset, restore from serialized state, set saved device states.
-        /// Does not call RunInitialUpdate() so devices are not restored until layouts are re-registered or an update runs.
-        /// </summary>
-        internal static void SimulateDomainReloadRecoveryFromSerializedState()
-        {
-            InputSystem.Reset();
-
-            var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
-            if (existingSystemObjects != null && existingSystemObjects.Length > 0)
-            {
-                s_SystemObject = existingSystemObjects[0];
-                InputSystem.s_Manager.RestoreStateWithoutDevices(s_SystemObject.systemState.managerState);
-                InputDebuggerWindow.ReviveAfterDomainReload();
-
-                InputSystem.s_RemoteConnection = s_SystemObject.systemState.remoteConnection;
-                InputSystem.SetUpRemoting();
-                InputSystem.s_Remote.RestoreState(s_SystemObject.systemState.remotingState, InputSystem.s_Manager);
-
-                InputSystem.s_Manager.m_SavedDeviceStates = s_SystemObject.systemState.managerState.devices;
-                InputSystem.s_Manager.m_SavedAvailableDevices = s_SystemObject.systemState.managerState.availableDevices;
-
-                s_SystemObject.systemState = new InputSystem.State();
-            }
-            // Intentionally do not call RunInitialUpdate() so that devices are not restored yet.
-            // Tests expect InputSystem.devices to be empty until the layout is re-registered.
-        }
-
-        /// <summary>
         /// Editor-specific remoting setup that uses EditorApplication.delayCall
         /// </summary>
         private static void SetUpEditorRemoting()
