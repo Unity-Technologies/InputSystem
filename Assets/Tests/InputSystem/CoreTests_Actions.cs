@@ -1400,6 +1400,45 @@ partial class CoreTests
         }
     }
 
+    // Regression test for UUM-100125.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InitialStateCheckAfterConfigurationChange_DoesNotTriggerForInactiveTouch()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+        var action = new InputAction(type: InputActionType.Value, binding: "<Touchscreen>/primaryTouch/position");
+        action.Enable();
+
+        // Run the first initial state check from enabling the action.
+        InputSystem.Update();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            BeginTouch(1, new Vector2(123, 234));
+            EndTouch(1, new Vector2(345, 456));
+
+            Assert.That(touchscreen.primaryTouch.isInProgress, Is.False);
+            Assert.That(touchscreen.primaryTouch.position.ReadValue(), Is.Not.EqualTo(default(Vector2)));
+
+            trace.Clear();
+
+            // Configuration change causes full re-resolve and schedules initial state check.
+            InputSystem.QueueConfigChangeEvent(touchscreen);
+            InputSystem.Update();
+            InputSystem.Update();
+
+            // Full re-resolve may cancel the current action state. What must NOT happen is a synthetic
+            // Started/Performed pair from persisted inactive touch state.
+            Assert.AreEqual(1, trace.count);
+            foreach (var eventPtr in trace)
+            {
+                // The trace should only contain a Canceled event for the action.
+                Assert.AreEqual(InputActionPhase.Canceled, eventPtr.phase, 
+                    $"inactive touch state should not produce action callbacks, but received {eventPtr.phase}.");
+            }
+        }
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1192972/
     [Test]
     [Category("Actions")]
