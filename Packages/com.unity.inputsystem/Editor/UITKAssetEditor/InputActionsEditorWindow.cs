@@ -58,6 +58,9 @@ namespace UnityEngine.InputSystem.Editor
 
         private static bool OpenAsset(Object obj)
         {
+            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets))
+                return false;
+
             // Grab InputActionAsset.
             // NOTE: We defer checking out an asset until we save it. This allows a user to open an .inputactions asset and look at it
             //       without forcing a checkout.
