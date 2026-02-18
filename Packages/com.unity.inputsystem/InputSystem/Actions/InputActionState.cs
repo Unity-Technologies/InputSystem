@@ -4299,6 +4299,12 @@ namespace UnityEngine.InputSystem
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeGlobalActionState()
         {
+            // Appears we shouldn't really reset globals in case the domain reload is enabled.
+            // This is because in that case, we've just had the whole system init'ed via static ctors
+            // Moreover, later in GlobalInialize we skip initialization specifically in this case. 
+            if (!InputSystem.IsDomainReloadDisabledForPlayMode())
+                return;
+
             ResetGlobals();
             s_GlobalState = default;
         }

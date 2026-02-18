@@ -3437,7 +3437,7 @@ namespace UnityEngine.InputSystem
         // The rest here is internal stuff to manage singletons, survive domain reloads,
         // and to support the reset ability for tests.
 
-        private static bool IsDomainReloadDisabledForPlayMode()
+        internal static bool IsDomainReloadDisabledForPlayMode()
         {
             #if UNITY_EDITOR && !ENABLE_CORECLR
             if (!EditorSettings.enterPlayModeOptionsEnabled || (EditorSettings.enterPlayModeOptions & EnterPlayModeOptions.DisableDomainReload) == 0)
