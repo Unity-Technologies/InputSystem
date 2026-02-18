@@ -1,3 +1,7 @@
+---
+uid: input-system-default-project-wide-actions
+---
+
 # The default project-wide actions
 
 When you [create and assign default project-wide actions](./create-project-wide-actions.md) the Action Asset comes pre-configured with some default Actions such as "Move", "Jump", and more, which suit many common app and game scenarios. They are configured to read input from the most common types of input controller such as Keyboard, Mouse, Gamepad, Touchscreen, and extended reality (XR).

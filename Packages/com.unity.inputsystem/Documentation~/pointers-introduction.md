@@ -1,4 +1,8 @@
-# Introduction to pointer devices
+---
+uid: input-system-pointer-devices-intro
+---
+
+# Pointer devices introduction
 
 A pointer device tracks positions on a 2D surface. The Input System package supports the following types of pointer device:
 

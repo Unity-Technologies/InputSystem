@@ -1,3 +1,6 @@
+---
+uid: input-system-control-state-history
+---
 
 # Record control state history
 

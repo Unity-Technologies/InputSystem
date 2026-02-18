@@ -1,3 +1,6 @@
+---
+uid: input-system-set-callbacks-actions
+---
 
 # Set callbacks on actions
 

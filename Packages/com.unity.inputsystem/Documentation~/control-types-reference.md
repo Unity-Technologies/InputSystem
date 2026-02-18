@@ -1,3 +1,7 @@
+---
+uid: input-system-control-types-ref
+---
+
 # Control types reference
 
 The Input System provides the following types of controls. These are available to select in the drop-down menu when you [configure the control type of an action](./configure-control-type.md).

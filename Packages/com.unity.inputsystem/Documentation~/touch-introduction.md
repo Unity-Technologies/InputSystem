@@ -1,4 +1,8 @@
-# Introduction to touch devices
+---
+uid: input-system-touch-devices-intro
+---
+
+# Touch devices introduction
 
 You can receive and process touch input from touch devices with the following APIs:
 

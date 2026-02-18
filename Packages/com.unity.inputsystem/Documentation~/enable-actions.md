@@ -1,4 +1,8 @@
-# Enabling actions
+---
+uid: input-system-enable-actions
+---
+
+# Enable actions
 
 Actions have an **enabled** state, meaning you can enable or disable them to suit different situations.
 

@@ -1,3 +1,7 @@
+---
+uid: input-system-intro-controls
+---
+
 # Introduction to controls
 
 A **control** is a part of a [device](devices.md) that sends values to the Input System when [actuated](control-actuation.md). Devices usually have multiple controls integrated into a single physical object. On a gamepad device, each of the buttons and sticks are controls. On a keyboard device, each of the individual keys are controls. Controls can take many other forms unique to certain types of device such as the pressure and radius of a pen, or the three-dimensional orientation of an XR input device.

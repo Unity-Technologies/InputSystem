@@ -1,3 +1,7 @@
+---
+uid: input-system-control-actuation
+---
+
 # Control actuation
 
 Control actuation refers to whether or not a [control](controls.md) is currently being used by the user.

@@ -1,6 +1,7 @@
 ---
 uid: input-system-pointers
 ---
+
 # Pointer devices
 
 Pointer devices track positions on a 2D surface. Supported pointer devices include mice, touch input, and pens.

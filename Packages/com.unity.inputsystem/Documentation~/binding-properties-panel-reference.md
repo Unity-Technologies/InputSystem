@@ -1,3 +1,7 @@
+---
+uid: input-system-binding-properties-panel
+---
+
 # Binding Properties panel reference
 
 Use the Binding Properties panel to configure [bindings](bindings.md) and [composite bindings](composite-bindings.md), and their associated [interactions](interactions.md) and [processors](processors.md).

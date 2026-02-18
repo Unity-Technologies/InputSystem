@@ -1,4 +1,8 @@
-# Apply Interactions to Actions
+---
+uid: input-system-apply-interactions-actions
+---
+
+# Apply interactions to actions
 
 Applying Interactions directly to an Action is equivalent to applying them to all Bindings for the Action. You can use this instead of manually adding the same Interaction(s) to multiple Bindings.
 

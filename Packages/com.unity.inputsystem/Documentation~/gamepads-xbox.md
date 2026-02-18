@@ -1,3 +1,7 @@
+---
+uid: input-system-xbox-gamepads
+---
+
 # Xbox gamepads
 
 The Input System implements Xbox gamepads using the [`XInputController`](xref:UnityEngine.InputSystem.XInput.XInputController) class, which derives from [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad). On Windows and Universal Windows Platform, Unity uses the `XInput` API to connect to any type of supported XInput controller, including all Xbox One or Xbox 360-compatible controllers. These controllers are represented as an [`XInputController`](xref:UnityEngine.InputSystem.XInput.XInputController) instance. 

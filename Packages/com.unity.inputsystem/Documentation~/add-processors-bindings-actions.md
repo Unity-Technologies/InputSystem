@@ -1,3 +1,7 @@
+---
+uid: input-system-add-processors-bindings-actions
+---
+
 # Add processors to bindings and actions
 
 To add a processor to an [action](actions.md) or [binding](ActionBindings.md) via the Input Actions Editor:

@@ -1,4 +1,8 @@
-# Configure the UI input action map
+---
+uid: input-system-configure-ui-actions
+---
+
+# Configure UI Input Actions
 
 The default [project-wide actions asset](./about-project-wide-actions.md) comes with a built-in action map named **UI**, which contains all the actions required for UI interaction. To configure the bindings for these actions, use the [Actions Editor](./actions-editor.md). 
 

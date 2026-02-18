@@ -1,7 +1,8 @@
 ---
 uid: input-system-mouse
 ---
-# Mouse support
+
+# Mouse devices
 
 The Input System represents mouse input with the [`Mouse`](xref:UnityEngine.InputSystem.Mouse) device layout. Mice are based on the [pointer layout](devices-pointers.md).
 

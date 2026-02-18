@@ -1,6 +1,10 @@
-# API Overview
+---
+uid: input-system-action-api-overview
+---
 
-When scripting with Actions in the Input System, there are number of important API you can use, listed here:
+# Scripting with actions API overview
+
+When scripting with actions in the Input System, there are number of important APIs you can use, listed here.
 
 ## Namespace
 

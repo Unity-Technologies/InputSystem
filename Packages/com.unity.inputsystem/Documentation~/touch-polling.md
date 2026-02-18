@@ -1,4 +1,8 @@
-# Polling touch input
+---
+uid: input-system-polling-touch-input
+---
+
+# Touch polling
 
 The [`EnhancedTouch.Touch`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch) class provides a [polling API](polling-actions.md) for touch input similar to [`UnityEngine.Input.touches`](xref:UnityEngine.Input-touches). You can use it to query touches on a frame-by-frame basis.
 

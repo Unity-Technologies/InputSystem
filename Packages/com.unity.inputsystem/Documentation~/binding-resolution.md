@@ -1,3 +1,6 @@
+---
+uid: input-system-binding-resolution
+---
 
 # Binding resolution
 
@@ -5,7 +8,7 @@ Binding resolution refers to when the Input System looks up which actual control
 
 ## Why bindings are resolved
 
-Each [simple binding](./binding-types.md) has a [control path](./control-paths.md), which determines which [control](controls.md) (or controls) should be associated with the action. For [composite bindings](./composite-bindings-reference.md), each of the composites sub-bindings (or **parts**) has a control path.
+Each [simple binding](./binding-types.md) has a [control path](./control-paths.md), which determines which [control](controls.md) (or controls) should be associated with the action. For [composite bindings](./composite-bindings.md), each of the composites sub-bindings (or **parts**) has a control path.
 
 Control paths are stored as a string that describes where to find the relevant control or controls for the binding. For example, a control path "`<Gamepad>/buttonEast`" refers to the right action button on any connected gamepad.
 
@@ -23,7 +26,7 @@ Note that a single [binding control path](control-paths.md) can match multiple C
 
 * A Binding path can also contain wildcards, such as `<Gamepad>/button*`. This matches any control on any gamepad with a name starting with "button", which matches all the four action buttons on any connected gamepad. A different example: `*/{Submit}` matches any control tagged with the "Submit" [usage](controls.md#control-usages) on any device.
 
-If there are multiple bindings on the same action that all reference the same control(s), the control will effectively feed into the action multiple times. This is to allow, for example, a single control to produce different input on the same action by virtue of being bound in a different fashion ([composites](./composite-bindings-reference.md), [processors](./processors-on-actions.md), [interactions](./interactions.md), etc). However, regardless of how many times a control is bound on any given action, it will only appear once in the action's [array of `controls`](xref:UnityEngine.InputSystem.InputAction.controls).
+If there are multiple bindings on the same action that all reference the same control(s), the control will effectively feed into the action multiple times. This is to allow, for example, a single control to produce different input on the same action by virtue of being bound in a different fashion ([composites](./composite-bindings.md), [processors](./processors-on-actions.md), [interactions](./interactions.md), etc). However, regardless of how many times a control is bound on any given action, it will only appear once in the action's [array of `controls`](xref:UnityEngine.InputSystem.InputAction.controls).
 
 To query the Controls that an Action resolves to, you can use [`InputAction.controls`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls). You can also run this query if the Action is disabled.
 

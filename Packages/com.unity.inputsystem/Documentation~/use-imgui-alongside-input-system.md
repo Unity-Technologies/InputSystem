@@ -1,3 +1,7 @@
+---
+uid: input-system-imgui-alongside-input
+---
+
 # Use IMGUI alongside the Input System package
 
 The Input System package doesn't support [Immediate Mode GUI](https://docs.unity3d.com/Manual/GUIScriptingGuide.html) (IMGUI) methods at runtime. However, if you need to use IMGUI for your UI, you can use legacy Input Manager input for IMGUI, and the Input System package for your in-game input.

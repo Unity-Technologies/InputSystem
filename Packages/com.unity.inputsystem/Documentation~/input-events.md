@@ -2,7 +2,7 @@
 uid: input-system-input-events
 ---
 
-# Input Events 
+# Input events 
 
 The Input System is event-driven. All input is delivered as events, and you can generate custom input by injecting events. You can also observe all source input by listening in on the events flowing through the system.
 

@@ -1,3 +1,7 @@
+---
+uid: input-system-edit-bindings
+---
+
 # Add, duplicate or delete a binding
 
 Open the [Actions Editor window](actions-editor.md) to add, duplicate, or delete bindings.

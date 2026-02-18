@@ -1,4 +1,8 @@
-# Input Actions Editor reference
+---
+uid: input-system-actions-editor-window
+---
+
+# Input Actions Editor window reference
 
 The **Input Actions Editor** is an Editor window that displays action maps, actions, bindings, and their properties.
 

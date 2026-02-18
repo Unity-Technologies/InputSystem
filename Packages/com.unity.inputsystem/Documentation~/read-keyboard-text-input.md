@@ -1,3 +1,7 @@
+---
+uid: input-system-read-text-input
+---
+
 # Read text input
 
 To receive text input from a keyboard, set up a callback on the [`Keyboard.onTextInput`](xref:UnityEngine.InputSystem.Keyboard.onTextInput) event. This delivers character-by-character input as reported by the platform, including input from on-screen keyboards. As a best practice, don't manually translate text input from key presses by trying to string together the characters corresponding to the keys.

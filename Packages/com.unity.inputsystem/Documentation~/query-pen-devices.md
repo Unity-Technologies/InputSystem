@@ -1,3 +1,7 @@
+---
+uid: input-system-query-pen-devices
+---
+
 # Query pen devices in code
 
 To query the last used or last added pen, use [`Pen.current`](xref:UnityEngine.InputSystem.Pen.current).

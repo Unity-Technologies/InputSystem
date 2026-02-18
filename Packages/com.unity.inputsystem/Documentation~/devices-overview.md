@@ -1,3 +1,7 @@
+---
+uid: input-system-devices-types
+---
+
 # Types of input devices
 
 The Input package identifies and recognizes the following types of input devices:

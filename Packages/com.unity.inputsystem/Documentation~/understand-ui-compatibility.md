@@ -1,4 +1,9 @@
+---
+uid: input-system-ui-sys-comp
+---
+
 # Understand UI system compatibility
+
 Unity has [three major UI solutions](https://docs.unity3d.com/Manual/UIToolkits.html). The Input System package's compatibility and workflow with these solutions varies depending on which UI solution you are using, and which version of Unity you are using. 
 
 The three main UI systems are: 

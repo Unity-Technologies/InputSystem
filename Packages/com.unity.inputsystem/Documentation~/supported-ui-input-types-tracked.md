@@ -1,3 +1,7 @@
+---
+uid: input-system-tracked-ui-support
+---
+
 # Tracked input UI support
 
 Input from [tracked devices](../api/UnityEngine.InputSystem.TrackedDevice.html) such as [XR controllers](../api/UnityEngine.InputSystem.XR.XRController.html) and [HMDs](../api/UnityEngine.InputSystem.XR.XRHMD.html) behaves like [pointer-type input](supported-ui-input-types-pointer.md), but the Input System uses raycasting to translate the world-space device position and orientation sourced from [`trackedDevicePosition`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html#UnityEngine_InputSystem_UI_InputSystemUIInputModule_trackedDevicePosition) and [`trackedDeviceOrientation`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html#UnityEngine_InputSystem_UI_InputSystemUIInputModule_trackedDeviceOrientation) into a screen-space position.

@@ -1,3 +1,6 @@
+---
+uid: input-system-about-action-assets
+---
 
 # About action assets
 

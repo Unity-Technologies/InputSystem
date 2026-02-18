@@ -1,3 +1,7 @@
+---
+uid: input-system-empty-action-asset
+---
+
 # Create an empty action asset
 
 Usually you only need one Action Asset, assigned as the project-wide actions. The input package provides a convenient way to [create a set of useful default actions and assign them as project-wide](assign-project-wide-actions.md) which is the most common and recommended workflow. In other cases, you might want to start with an empty actions asset, or create more than one actions asset.

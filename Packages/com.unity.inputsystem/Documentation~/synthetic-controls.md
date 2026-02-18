@@ -1,3 +1,7 @@
+---
+uid: input-system-synthetic-controls
+---
+
 # Synthetic controls
 
 A synthetic control is a control that doesn't correspond to an actual physical control on a device (for example the `left`, `right`, `up`, and `down` child controls on a [`StickControl`](../api/UnityEngine.InputSystem.Controls.StickControl.html)). These controls synthesize input from other, actual physical controls and present it in a different way (in this example, they allow you to treat the individual directions of a stick as buttons).

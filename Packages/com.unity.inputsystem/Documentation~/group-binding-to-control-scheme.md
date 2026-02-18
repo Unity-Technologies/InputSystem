@@ -1,4 +1,8 @@
-# Group Bindings to Control Schemes
+---
+uid: input-system-binding-control-schemes
+---
+
+# Group bindings to control schemes
 
 [Control schemes](control-schemes.md) allow you to group types of bindings together according to their control type, so that you can enable or disable groups of bindings. For example, for games that support both gamepads and keyboard & mouse, you might want to enable all keyboard and mouse bindings if the user presses any keyboard button or uses the mouse.
 

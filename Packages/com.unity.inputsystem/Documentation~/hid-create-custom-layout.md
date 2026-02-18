@@ -1,3 +1,7 @@
+---
+uid: input-system-custom-device-layout
+---
+
 # Create a custom device layout
 
 You can override auto-generated layouts to resolve issues such as when controls don't receive proper names specific to the device, or if a control doesn't work as expected.

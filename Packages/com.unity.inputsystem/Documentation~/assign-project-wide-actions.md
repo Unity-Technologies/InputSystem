@@ -1,4 +1,8 @@
-# Assign project-wide actions
+---
+uid: input-system-existing-project-wide
+---
+
+# Assign an existing action asset as project-wide
 
 To assign an existing Actions Asset as project-wide, do one of the following:
 

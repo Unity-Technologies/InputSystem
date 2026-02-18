@@ -1,3 +1,7 @@
+---
+uid: input-system-bind-touch-input
+---
+
 # Bind touch input to an action
 
 You can use touch input with [Actions](Actions.md), like any other pointer device. To use actions with touch devices:

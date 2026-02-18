@@ -1,4 +1,8 @@
-# Optimizing controls
+---
+uid: input-system-optimize-controls
+---
+
+# Optimize controls
 
 The [recommended workflow](Workflows.md) is sufficiently optimized for most scenarios. However in some specialized situations when reading values directly from controls, you can make small performance gains by implementing some of the following techniques.
 

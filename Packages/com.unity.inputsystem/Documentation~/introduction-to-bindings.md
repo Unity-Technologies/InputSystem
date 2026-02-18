@@ -1,3 +1,7 @@
+---
+uid: input-system-bindings-intro
+---
+
 # Introduction to bindings
 
 ![](Images/ConceptsOverview.png)

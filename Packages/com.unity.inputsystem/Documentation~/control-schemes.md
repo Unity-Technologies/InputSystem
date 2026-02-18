@@ -1,4 +1,8 @@
-# Editing Control Schemes
+---
+uid: input-system-control-schemes
+---
+
+# Control schemes
 
 Input Action Assets can have multiple [Control Schemes](ActionBindings.md#control-schemes), which let you enable or disable different sets of Bindings for your Actions for different types of Devices.
 

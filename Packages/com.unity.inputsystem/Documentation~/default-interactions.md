@@ -1,4 +1,8 @@
-# Default Interactions
+---
+uid: input-system-default-interactions
+---
+
+# Default interactions
 
 Different Action types have different default Interactions. For example, the following diagram shows the behavior of the built-in Interactions for a simple button press.
 

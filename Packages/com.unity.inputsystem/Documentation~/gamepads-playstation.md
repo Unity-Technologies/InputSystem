@@ -1,3 +1,7 @@
+---
+uid: input-system-playstation-gamepads
+---
+
 # PlayStation gamepads
 
 The Input System implements PlayStation gamepads as different derived types of the [`DualShockGamepad`](xref:UnityEngine.InputSystem.DualShock.DualShockGamepad) base class, which derives from [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad):

@@ -1,3 +1,7 @@
+---
+uid: input-system-control-for-binding
+---
+
 # Select a control for a binding
 
 The [control path](control-paths.md) identifies the control (or controls) that a binding is bound to, such as a button or stick on a gamepad, or a specific keyboard key.

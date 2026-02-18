@@ -1,3 +1,7 @@
+---
+uid: input-system-about-respond-input
+---
+
 # About responding to input
 
 The Input System offers various ways to respond to input at runtime, from the recommended workflow using [actions](Actions.md) and [bindings](bindings.md), to more direct techniques such as reading device controls directly.

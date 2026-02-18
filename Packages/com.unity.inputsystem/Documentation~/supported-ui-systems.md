@@ -1,3 +1,7 @@
+---
+uid: input-system-supported-ui-sys
+---
+
 # Supported UI systems
 
 Understand the support and compatibility between the Input System and Unity's UI systems.

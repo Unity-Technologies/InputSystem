@@ -1,3 +1,7 @@
+---
+uid: input-system-screen-custom-control
+---
+
 # Create a custom on-screen control
 
 To create custom [input controls](Controls.md), you can extend [`OnScreenControl`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html).

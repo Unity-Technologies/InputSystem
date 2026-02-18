@@ -1,3 +1,7 @@
+---
+uid: input-system-control-state
+---
+
 # Control state
 
 A control's **state** is the current value stored by the Input System based on the control's [actuation](control-actuation.md).

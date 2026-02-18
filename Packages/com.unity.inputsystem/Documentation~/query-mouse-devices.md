@@ -1,3 +1,7 @@
+---
+uid: input-system-query-mouse-devices
+---
+
 # Query and control mouse devices in code
 
 You can use the `Mouse` class to control how mouse devices work with your application.

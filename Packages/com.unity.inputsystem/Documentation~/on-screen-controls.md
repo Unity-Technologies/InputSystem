@@ -1,7 +1,7 @@
 ---
 uid: input-system-on-screen
 ---
-# On-screen controls
+# Create on-screen controls
 
 Simulate input devices with UI widgets that the user interacts with on the screen.
 

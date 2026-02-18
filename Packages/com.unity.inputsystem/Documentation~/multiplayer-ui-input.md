@@ -1,3 +1,7 @@
+---
+uid: input-system-multiplayer-ui-input
+---
+
 # Multiplayer UI input
 
 Configure multiple UI instances, so that multiple players can share a single screen and individually interact with the UI.

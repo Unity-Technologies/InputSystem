@@ -1,3 +1,7 @@
+---
+uid: input-system-binding-types
+---
+
 # Binding types
 
 You can configure how bindings map to actions with binding types. The following binding types are available:
@@ -13,4 +17,4 @@ Some examples of composite bindings are:
 
 - A **modifier** composite binding, where one control represents the main binding, and a second control represents a modifier key which changes the effect of the main binding - such as holding down the control key on a keyboard before also pressing a letter key. In this scenario, the two separate key bindings are simple bindings grouped together into the composite modifier binding.
 
-For a full list of composite binding types, refer to [Composite bindings](composite-bindings-reference.md).
+For a full list of composite binding types, refer to [Composite bindings](composite-bindings.md).

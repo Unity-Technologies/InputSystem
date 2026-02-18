@@ -1,4 +1,8 @@
-# Restrict binding resolution to specific devices
+---
+uid:  input-system-restrict-binding-resolution
+---
+
+# Restrict binding resolution to a specific device
 
 By default, actions [resolve their bindings](./binding-resolution.md) against all devices present that the Input System is aware of (that is, those listed in [`InputSystem.devices`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_devices)). For example, if there are two gamepads connected, a binding to `<Gamepad>/buttonSouth` picks up both gamepads and allows the action to be performed from either gamepad.
 

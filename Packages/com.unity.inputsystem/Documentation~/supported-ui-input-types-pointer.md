@@ -1,3 +1,7 @@
+---
+uid: input-system-pointer-ui-support
+---
+
 # Pointer input UI support
 
 A pointer is a position from which clicks and scrolls can trigger to interact with UI elements at the pointer's position. Pointer-type input comes from the following actions:

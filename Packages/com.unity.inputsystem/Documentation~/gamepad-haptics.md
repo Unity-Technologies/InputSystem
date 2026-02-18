@@ -1,3 +1,7 @@
+---
+uid: input-system-gamepad-haptics
+---
+
 # Gamepad haptics
 
 The [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) class implements the [`IDualMotorRumble`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) interface that allows you to control the left and right motor speeds. In most common gamepads, the left motor emits a low-frequency rumble, and the right motor emits a high-frequency rumble.

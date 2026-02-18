@@ -1,4 +1,8 @@
-# Simulate touch input
+---
+uid: input-system-simulate-touch
+---
+
+# Simulate touches
 
 You can simulate touch input from [pointer devices](pointers-introduction.md) such as [mouse](devices-mouse.md) and [pen](devices-pen.md) devices in the following ways:
 

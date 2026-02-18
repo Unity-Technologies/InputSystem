@@ -1,3 +1,7 @@
+---
+uid: input-system-query-sensors
+---
+
 # Query sensors in code
 
 To determine whether a particular sensor is present, you can use its `.current` getter.

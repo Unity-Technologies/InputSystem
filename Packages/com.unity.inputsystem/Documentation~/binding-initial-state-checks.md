@@ -1,3 +1,7 @@
+---
+uid: input-system-binding-initial-state-checks
+---
+
 # Binding initial state checks
 
 After an action is [enabled](enable-actions.md), it will start reacting to input as it comes in. However, at the time the action is enabled, one or more of the controls that are [bound](./add-duplicate-delete-binding.md) to an action may already have a non-default state, for example if a user was currently pressing a button or pushing a thumb stick.

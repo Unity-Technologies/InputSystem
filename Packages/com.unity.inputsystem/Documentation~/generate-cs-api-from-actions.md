@@ -1,4 +1,8 @@
-# Type-safe C# API Generation
+---
+uid: input-system-api-from-actions
+---
+
+# Generate C# API from actions
 
 Input Action Assets allow you to **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. 
 

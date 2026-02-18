@@ -1,3 +1,7 @@
+---
+uid: input-system-control-paths
+---
+
 # Control paths
 
 Control paths represent the way to describe a control or group of controls on a device, when [binding](bindings.md) them to an [action](actions.md).

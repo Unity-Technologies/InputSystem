@@ -1,4 +1,8 @@
-# Corresponding old and new API 
+---
+uid: input-system-old-new-apis
+---
+
+# Corresponding old and new APIs 
 
 Below is a list comparing the API from the old Input Manager with the corresponding API for the new Input System package.
 All of the new Input System package APIs listed below are in the `UnityEngine.InputSystem` namespace. The namespace is omitted here for brevity.

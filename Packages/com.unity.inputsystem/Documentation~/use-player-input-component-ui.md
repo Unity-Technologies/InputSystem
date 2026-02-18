@@ -4,7 +4,6 @@ uid: input-system-use-player-input-component-ui
 
 # Use the Player Input component with UI
 
-
 The `PlayerInput` component can work together with an [`InputSystemUIInputModule`](UISupport.md#setting-up-ui-input) to drive the [UI system](UISupport.md).
 
 To set this up, assign a reference to a `InputSystemUIInputModule` component in the [`UI Input Module`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_uiInputModule) field of the `PlayerInput` component. The `PlayerInput` and `InputSystemUIInputModule` components should be configured to work with the same [`InputActionAsset`](actions.md) for this to work.

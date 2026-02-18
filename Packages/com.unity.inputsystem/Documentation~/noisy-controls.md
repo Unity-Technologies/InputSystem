@@ -1,3 +1,7 @@
+---
+uid: input-system-noisy-controls
+---
+
 # Noisy controls
 
 Noisy controls are those that can change value without any actual or intentional user interaction required. For example, they gyroscope sensor in a cellphone provides noisy input data because even if the cellphone is at rest, there are usually fluctuations in the control's value readings. Another example are orientation readings from a head-mounted display.

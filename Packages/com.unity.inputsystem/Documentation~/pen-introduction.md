@@ -1,4 +1,8 @@
-# Introduction to pen devices
+---
+uid: input-system-pen-devices-intro
+---
+
+# Pen devices introduction
 
 The Input System supports pen devices on tablets and desktops, such as the various Wacom tablets. It also supports styluses on mobile devices, such as the stylus on the Samsung Note, the Apple Pencil on iOS, or the Surface Pen on the Microsoft Surface line of notebooks.
 

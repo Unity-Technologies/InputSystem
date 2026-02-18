@@ -1,3 +1,7 @@
+---
+uid: input-system-screen-stick-control
+---
+
 # Create an on-screen stick control
 
 To create an on-screen stick:

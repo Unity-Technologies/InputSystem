@@ -1,3 +1,7 @@
+---
+uid: input-system-project-wide-assets
+---
+
 # Create and assign a default project-wide actions asset
 
 Follow these steps to create an actions asset that contains the built-in [default actions](./TheDefaultActions.md), and assign them as project-wide.

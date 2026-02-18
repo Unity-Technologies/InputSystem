@@ -1,4 +1,8 @@
-# Configure Action type
+---
+uid: input-system-conf-action-type
+---
+
+# Configure action type
 
 The action type influences how the Input System processes state changes for the action, and relates to whether this action represents a discrete on/off button-style interaction or a value that can change gradually over time.
 

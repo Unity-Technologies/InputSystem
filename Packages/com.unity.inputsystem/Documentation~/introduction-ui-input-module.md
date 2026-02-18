@@ -1,3 +1,7 @@
+---
+uid: input-system-ui-module-intro
+---
+
 # Introduction to the UI Input Module
 
 The UI Input Module passes actions from your Input System to your UI, alongside some other UI-related input settings. 

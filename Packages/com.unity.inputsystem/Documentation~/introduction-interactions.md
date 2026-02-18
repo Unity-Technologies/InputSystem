@@ -1,3 +1,7 @@
+---
+uid: input-system-interactions-intro
+---
+
 # Introduction to interactions
 
 An Interaction represents a specific pattern of [control actuation](control-actuation.md) that determines how an action is started, performed, or canceled.

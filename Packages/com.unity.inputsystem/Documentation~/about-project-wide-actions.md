@@ -1,7 +1,7 @@
 ---
-uid: project-wide-actions
+uid: input-system-project-wide-actions
 ---
-# Project-Wide Actions
+# About project-wide actions
 
 You can assign an individual Action Asset to be available "project-wide", which means the actions within that asset are available more conveniently through the Input System API without needing to set up references to the asset.
 

@@ -1,3 +1,7 @@
+---
+uid: input-system-read-devices-directly
+---
+
 # Read devices directly
 
 The input system allows you to directly read the state of a device's controls, which can be useful in some situations. This isn't generally the recommended workflow because it bypasses many of the Input Systems useful features, such as [actions](Actions.md) and [bindings](bindings.md).

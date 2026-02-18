@@ -1,4 +1,8 @@
-# Using a custom class to create a layout
+---
+uid: input-system-custom-class-layout
+---
+
+# Use a custom class to create a layout
 
 You can create your own [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice) class and state layouts in C# to create a custom layout as follows:
 

@@ -1,4 +1,8 @@
-# Write custom Interactions
+---
+uid: input-system-custom-interactions
+---
+
+# Write custom interactions
 
 You can write a custom Interaction and use it the same way you use built-in Interactions. 
 

@@ -1,3 +1,7 @@
+---
+uid: input-system-ui-module-type-support
+---
+
 # Supported input types in the UI Input Module
 
 The UI Input Module supports three types of input action: pointer, navigation, and tracked. For each input type, the UI Input Module sources and combines input from a specific set of actions.

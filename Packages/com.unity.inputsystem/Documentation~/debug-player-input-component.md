@@ -4,7 +4,7 @@ uid: input-system-debug-player-input-component
 
 # Debug the Player Input component
 
-When the Editor is in Play mode, each PlayerInput component instance displays a **Debug** section, as shown below.
+When the Editor is in Play mode, each Player Input component instance displays a **Debug** section, as shown below.
 
 ![The debug section of the PlayerInput component](images/PlayerInputUserDeviceDebug.png)
 

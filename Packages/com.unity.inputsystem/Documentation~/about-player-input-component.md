@@ -7,7 +7,7 @@ uid: input-system-about-player-input-component
 ![PlayerInput](Images/PlayerInput.png)<br/>
 *Above, the Player Input component displayed in the inspector.*
 
-### Connecting actions to methods or callbacks
+## Connecting actions to methods or callbacks
 
 The **Player Input** component represents a single player, and the connection between that player's associated device, Actions, and methods or callbacks.
 

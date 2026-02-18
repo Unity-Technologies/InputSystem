@@ -1,4 +1,9 @@
-# UI Action Map reference
+---
+uid: input-system-default-ui-map-ref
+---
+
+# Default UI Action Map reference
+
 The default [project-wide actions asset](./about-project-wide-actions.md) has a default configuration for UI input.
 
 |**Action**|**Action Type**|**Control Type**|**Description**|

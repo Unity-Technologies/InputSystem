@@ -1,7 +1,10 @@
+---
+uid: input-system-binding-conflicts
+---
 
 # Binding conflicts
 
-A binding conflict is when an [action](./actions.md) with more than one [control](./controls.md) [bound](./bindings.md) to it recieves values from multiple controls.
+A binding conflict is when an [action](./actions.md) with more than one [control](./controls.md) [bound](./bindings.md) to it receives values from multiple controls.
 
 ## Conflict situations
 
@@ -27,7 +30,7 @@ For a **Button** or **Value** [action type](./configure-action-type.md), there c
 
 When an action is bound to multiple controls, the active control at any point is the one with the greatest level of ["actuation"](./control-actuation.md) (the one with the largest value returned from [`EvaluateMagnitude`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_EvaluateMagnitude_)). If a different control exceeds the actuation level of the current active control, it becomes the active control.
 
-For [composite bindings](./composite-bindings-reference.md), magnitudes of the composite as a whole rather than for individual controls are tracked. However, [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl) will still track individual Controls from the composite.
+For [composite bindings](./composite-bindings.md), magnitudes of the composite as a whole rather than for individual controls are tracked. However, [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl) will still track individual Controls from the composite.
 
 ## Multiple input sequences (such as keyboard shortcuts)
 
@@ -37,8 +40,8 @@ Inputs used in combinations with other inputs can also lead to ambiguities. If, 
 
 The way the Input System handles this, is that Bindings are processed in the order of decreasing complexity. This metric is derived automatically from the Binding:
 
-* A binding that is *not* part of a [composite](composite-bindings-reference.md) is assigned a complexity of 1.
-* A binding that *is* part of a [composite](composite-bindings-reference.md) is assigned a complexity equal to the number of part bindings in the composite.
+* A binding that is *not* part of a [composite](composite-bindings.md) is assigned a complexity of 1.
+* A binding that *is* part of a [composite](composite-bindings.md) is assigned a complexity equal to the number of part bindings in the composite.
 
 In our example, this means that a **one-modifier composite** binding to **Shift** + **B** has a higher complexity than a Binding to  **B** and gets processed first.
 

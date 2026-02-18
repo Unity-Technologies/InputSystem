@@ -1,4 +1,8 @@
-# Virtual Mouse for UI cursor control
+---
+uid: input-system-virtual-mouse
+---
+
+# Use a Virtual Mouse for UI cursor control
 
 Use a virtual mouse to allow gamepads and joysticks to control pointer inputs.
 
@@ -8,7 +12,7 @@ Use a virtual mouse to allow gamepads and joysticks to control pointer inputs.
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |
 |**[Introduction to Virtual Mouse for UI cursor control](introduction-virtual-mouse.md)**|Use a Virtual Mouse component to set up navigation-based input for the UI. |
-|**[Configure a Virtual Mouse for UI input](configure-virtual-mouse-input.md)**|Add and configure a Virtual Mouse component to your project.|
+|**[Configure a Virtual Mouse](configure-virtual-mouse-input.md)**|Add and configure a Virtual Mouse component to your project.|
 
         	
         	

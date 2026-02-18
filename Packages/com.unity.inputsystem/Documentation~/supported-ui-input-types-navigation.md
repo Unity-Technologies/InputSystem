@@ -1,4 +1,8 @@
-## Navigation input UI support
+---
+uid: input-system-nav-ui-support
+---
+
+# Navigation input UI support
 
 Navigation-type input controls the current selection based on motion read from the [`move`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html#UnityEngine_InputSystem_UI_InputSystemUIInputModule_move) action. Additionally, input from
 [`submit`](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html#UnityEngine_InputSystem_UI_InputSystemUIInputModule_submit) will trigger `ISubmitHandler` on the currently selected object and

@@ -1,4 +1,8 @@
-# Supported sensors
+---
+uid: input-system-supported-sensors-ref
+---
+
+# Supported sensors reference
 
 Each sensor device implements a single control which represents the data read by the sensor. The following sensors are available:
 

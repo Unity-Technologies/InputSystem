@@ -1,4 +1,8 @@
-# Introduction to gamepads
+---
+uid: input-system-gamepads-intro
+---
+
+# Gamepads introduction
 
 A gamepad is defined as a device with two thumbsticks, a D-pad, and four face buttons. Additionally, gamepads usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle.
 

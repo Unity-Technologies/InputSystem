@@ -1,3 +1,7 @@
+---
+uid: input-system-multiplayer-ui-config
+---
+
 # Configure multiplayer UI input
 
 To enable multiplayer UI input:

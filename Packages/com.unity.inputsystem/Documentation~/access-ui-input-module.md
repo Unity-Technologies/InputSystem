@@ -1,3 +1,7 @@
+---
+uid: input-system-access-ui-component
+---
+
 # Access the UI Input Module component
 
 The UI Input Module is a component that passes input actions from the Input System to the UI in your scene. 

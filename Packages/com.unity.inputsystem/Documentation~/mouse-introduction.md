@@ -1,4 +1,8 @@
-# Introduction to mouse devices
+---
+uid: input-system-mouse-intro
+---
+
+# Mouse devices introduction
 
 The Input System represents mouse input with the [`MouseState`](xref:UnityEngine.InputSystem.LowLevel.MouseState) [device layout](layouts.md) that the [`Mouse`](xref:UnityEngine.InputSystem.Mouse) class implements. 
 

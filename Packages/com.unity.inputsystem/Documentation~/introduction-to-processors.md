@@ -1,3 +1,7 @@
+---
+uid: input-system-intro-processors
+---
+
 # Introduction to processors
 
 Input processors apply processing to input values, and return the result. The Input System’s [built-in processors](built-in-processors.md) can apply value clamping, scaling, normalization, inversion, and deadzones. You can also create [custom processors](write-custom-processors.md) to apply additional data processing to input values.

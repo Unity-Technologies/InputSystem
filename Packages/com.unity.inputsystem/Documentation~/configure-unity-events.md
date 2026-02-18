@@ -14,14 +14,15 @@ You can use the following properties to configure `PlayerInput`:
 |[`Camera`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_camera)|The individual camera associated with the player. This is only required when employing [split-screen](PlayerInputManager.md#split-screen) setups and has no effect otherwise.|
 |[`Behavior`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_notificationBehavior)|How the `PlayerInput` component notifies game code about things that happen with the player. See documentation on [notification behaviors](#notification-behaviors).|
 
-### Actions
+## Actions
 
 To receive input, each player must have an associated set of Input Actions.
 
-#### Specifying the Actions to use
+### Specifying the Actions to use
+
 The simplest workflow is to use the project-wide actions defined in the [Input Actions editor](ActionsEditor.md). However, the Player Input component also allows you to use an [Actions Asset](ActionAssets.md) to specify the actions that should be used by any instance of the component. If you set the **Actions** field to **Actions Asset**, the inspector displays a field into which you can assign an actions asset, and a **Create Actions** button which allows you to create a new actions asset. When you create these via the Player Input inspector's __Create Actions__ button, the Input System creates a default set of Actions. However, the Player Input component places no restrictions on the arrangement of Actions.
 
-#### Enabling and disabling Actions
+### Enabling and disabling Actions
 
 The Player Input component automatically handles enabling and disabling Actions, and also handles installing [callbacks](RespondingToActions.md#responding-to-actions-using-callbacks) on the Actions. When multiple Player Input components use the same Actions, the components automatically create [private copies of the Actions](RespondingToActions.md#using-actions-with-multiple-players). This is why, when writing input code that works with the PlayerInput component, you should not use `InputSystem.actions` because this references the "singleton" copy of the actions rather than the specific private copy associated with the PlayerInput instance you are coding for.
 
@@ -33,7 +34,7 @@ When `PlayerInput` is disabled, it automatically disables the currently active A
 
 See the [notification behaviors](#notification-behaviors) section below for how to be notified when player triggers an Action.
 
-### When using **Send Messages** or **Broadcast Messages**
+## When using **Send Messages** or **Broadcast Messages**
 
 When the [notification behavior](#notification-behaviors) of `PlayerInput` is set to **Send Messages** or **Broadcast Messages**, you can set your app to respond to Actions by defining methods in components like so:
 
@@ -63,7 +64,7 @@ public class MyPlayerScript : MonoBehaviour
 
 The component must be on the same `GameObject` if you are using `Send Messages`, or on the same or any child `GameObject` if you are using `Broadcast Messages`.
 
-### When using **Invoke Unity Events**
+## When using **Invoke Unity Events**
 
 When the [notification behavior](#notification-behaviors) of `PlayerInput` is set to `Invoke Unity Events`, each Action has to be routed to a target method. The methods have the same format as the [`started`, `performed`, and `canceled` callbacks](RespondingToActions.md#action-callbacks) on [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html).
 

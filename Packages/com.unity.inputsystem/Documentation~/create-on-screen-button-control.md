@@ -1,3 +1,7 @@
+---
+uid: input-system-screen-button-control
+---
+
 # Create an on-screen button control
 
 To create an on-screen button:

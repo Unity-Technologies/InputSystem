@@ -1,4 +1,8 @@
-# Apply Interactions to Bindings
+---
+uid: input-system-apply-interactions-bindings
+---
+
+# Apply interactions to bindings
 
 When you create Bindings for your [Actions](actions.md), you can choose to add Interactions to the Bindings via the Editor, or via code.
 

@@ -1,3 +1,7 @@
+---
+uid: input-system-action-properties-panel
+---
+
 # Action Properties panel reference
 
 Use the Action Properties panel to configure actions, and their associated [interactions](interactions.md) and [processors](processors.md).

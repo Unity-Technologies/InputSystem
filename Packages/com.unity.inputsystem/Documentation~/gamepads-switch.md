@@ -1,3 +1,7 @@
+---
+uid: input-system-switch-gamepads
+---
+
 # Switch gamepads
 
 The Input System supports Switch Pro controllers on desktop computers via the [`SwitchProControllerHID`](xref:UnityEngine.InputSystem.Switch.SwitchProControllerHID.html) class, which implements basic gamepad functionality.

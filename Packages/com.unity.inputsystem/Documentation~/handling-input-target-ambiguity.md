@@ -1,3 +1,7 @@
+---
+uid: input-system-target-ambiguity
+---
+
 # Handling input target ambiguity
 
 Understand how to manage ambiguities between input for your application's user interface (UI), and input for other parts of your application.

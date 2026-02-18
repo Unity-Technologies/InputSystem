@@ -1,4 +1,9 @@
-# Configure a Virtual Mouse for UI input
+---
+uid: input-system-virtual-mouse-config
+---
+
+# Configure a Virtual Mouse
+
 To configure the Virtual Mouse component with the Unity UI system:
 
 1. Create a UI GameObject with an **Image** component. This GameObject is the mouse pointer. It can help to rename it "_Pointer_".

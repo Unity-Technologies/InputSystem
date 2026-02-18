@@ -1,3 +1,7 @@
+---
+uid: input-system-query-gamepads
+---
+
 # Query and control gamepads in code
 
 You can use the methods in the Gamepad class to access information about the gamepads connected to your application.

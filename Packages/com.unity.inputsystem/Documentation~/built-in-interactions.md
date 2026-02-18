@@ -1,4 +1,8 @@
-# Built-in Interactions
+---
+uid: input-system-built-in-interactions
+---
+
+# Built-in interactions
 
 The Input System package comes with a set of built-in Interactions, which you can use on Actions and Bindings:
 

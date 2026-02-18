@@ -1,3 +1,7 @@
+---
+uid: input-system-custom-processors
+---
+
 # Write custom processors
 
 You can write custom processors to use with [bindings](ActionBindings.md), [actions](actions.md) and [controls](controls.md) in your Project. Custom processors are available in the UI and code in the same way as the [built-in processors](built-in-processors.md). 

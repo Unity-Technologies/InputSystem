@@ -1,14 +1,15 @@
 ---
 uid: input-system-interactions
 ---
+
 # Interactions
 
-Use Interactions to interpret specific input patterns from Controls that define Action behavior.
+Use interactions to interpret specific input patterns from controls that define action behavior.
 
-|Topic|Description|
-|-----|-----------|
-|[Introduction to interactions](introduction-interactions.md)| Use Interactions on Bindings and Actions to read control input patterns and trigger Actions.|
-|[Apply interactions to Bindings](apply-interactions-bindings.md)| Apply Interactions to individual Bindings.|
-|[Apply Interactions to Actions](apply-interactions-actions.md)| Apply Interactions to Actions, and all the Bindings associated with that Action. |
-|[Predefined interactions](predefined-interactions.md)| Use the Input System's default and built-in Interactions on your Actions and Bindings.|
-|[Write custom interactions](write-custom-interactions.md)| Write your own custom Interactions for your Actions and Bindings.|
+| **Topic** | **Description** |
+| :--- | :--- |
+| [**Introduction to interactions**](introduction-interactions.md) | Use interactions on bindings and actions to read control input patterns and trigger Actions. |
+| [**Apply interactions to bindings**](apply-interactions-bindings.md) | Apply interactions to individual bindings. |
+| [**Apply interactions to actions**](apply-interactions-actions.md) | Apply Interactions to actions, and all the bindings associated with that action. |
+| [**Predefined interactions**](predefined-interactions.md) | Use the Input System's default and built-in interactions on your actions and bindings. |
+| [**Write custom interactions**](write-custom-interactions.md) | Write your own custom interactions for your actions and bindings. |

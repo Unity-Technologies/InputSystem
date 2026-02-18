@@ -1,7 +1,8 @@
 ---
 uid: input-system-supported-devices
 ---
-# Platform support reference
+
+# Supported devices reference
 
 This section outlines the types of devices that each platform supports. The devices are divided into the following categories:
 

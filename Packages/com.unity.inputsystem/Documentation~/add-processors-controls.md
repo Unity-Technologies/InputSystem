@@ -1,3 +1,7 @@
+---
+uid: input-system-add-processors-controls
+---
+
 # Add processors to controls
 
 The Input System automatically adds processors to a Control during device creation if they're specified in the Control's [layout](layouts.md). 

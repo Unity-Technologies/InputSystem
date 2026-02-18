@@ -1,4 +1,8 @@
-# See and Record input event flow 
+---
+uid: input-system-see-record-flow
+---
+
+# See and record input event flow 
 
 To record events flowing through the system, use this code:
 

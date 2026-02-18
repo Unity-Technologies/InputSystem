@@ -4,6 +4,15 @@ uid: input-system-player-input-manager
 
 # The Player Input Manager component
 
->NOTE: The Input System package comes with a sample called `Simple Multiplayer` which you can install from the package manager UI in the Unity editor. The sample demonstrates how to use [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) to set up a simple local multiplayer scenario.
+Set up local multiplayer games, where multiple players share a single screen and multiple controllers.
 
-The [`Player Input`](player-input-component.md) system facilitates setting up local multiplayer games, where multiple players share a single screen and multiple controllers. You can set this up using the [`PlayerInputManager`](../api/UnityEngine.InputSystem.PlayerInputManager.html) component, which automatically manages the creation and lifetime of `PlayerInput` instances as players join and leave the game.
+| **Topic** | **Description** |
+| :--- | :--- |
+| [Get started with the Player Input Manager component](get-started-player-input-mananger-component.md) | Use the `PlayerInputManager` component to set up local multiplayer games. |
+| [Configure the Player Input Manager](configure-player-input-manager-component.md) | A reference for the Player Input Manager component. |
+| [Set up split-screen local multiplayer](set-up-split-screen-local-multiplayer.md) | Use the `Split-Screen` option to automatically split the available screen space between the active players. |
+
+## Additional resources
+
+* [Local multiplayer scenarios](local-multiplayer-scenarios.md)
+* [Set up PlayerInput Component for local multiplayer](set-up-player-input-component-local-multiplayer.md)

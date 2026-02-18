@@ -1,3 +1,7 @@
+---
+uid: input-system-control-scheme-devices-menu
+---
+
 # Control Scheme and Devices menu reference
 
 Use the Control Scheme and Device drop-down menus to manage [control schemes](control-schemes.md) and [devices](devices.md), and to filter their view in the Input Actions Editor.

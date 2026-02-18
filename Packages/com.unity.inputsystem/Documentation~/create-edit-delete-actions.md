@@ -1,7 +1,9 @@
+---
+uid: input-system-edit-actions
+---
+# Create, edit and delete actions
 
-# Create, Edit and Delete Actions
-
-The simplest way to create, edit or delete actions is to use the [Input Actions editor](ActionsEditor.md) in the Project Settings window. This is the primary recommended workflow and suitable for most scenarios.
+The simplest way to create, edit, or delete actions is to use the [Input Actions editor](ActionsEditor.md) in the Project Settings window. This is the primary recommended workflow and suitable for most scenarios.
 
 However there are many other ways to work with actions which might suit less common scenarios. For example, by [loading actions from JSON data](load-actions-from-json.md), or [creating actions entirely in code](configure-input-directly-from-code.md).
 
