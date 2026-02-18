@@ -50,6 +50,8 @@ namespace UnityEngine.InputSystem
                 case (byte)MessageType.Hello:
                     if (s_State.connected)
                         break;
+                    if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport))
+                        break;
 
                     // Install handlers.
                     s_State.deviceChangeHandler = OnDeviceChange;
