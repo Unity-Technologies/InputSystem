@@ -3,3 +3,13 @@ uid: input-system-user-management-about
 ---
 
 # About user management
+
+The Input System supports multi-user management through the [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) class. This comprises both user account management features on platforms that have these capabilities built into them (such as Xbox and PS4), as well as features to manage Device allocations to one or more local users.
+
+>__Note__: The user management API is quite low-level in nature. The stock functionality of Player Input Manager component (see [Player Input Manager](PlayerInputManager.md)) provides an easier way to set up user management. The API described here is useful when you want more control over user management.
+
+In the Input System, each [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) represents a human interacting with the application. For example, you can have multiple users playing a game together on a single computer or device (local multiplayer), where each user has one or more [paired Input Devices](#device-pairing).
+
+The [`PlayerInputManager`](PlayerInputManager.md) class uses [`InputUser`](../api/UnityEngine.InputSystem.Users.InputUser.html) internally to handle users.
+
+>__Note__: In the editor, all `InputUser` instances are automatically removed when exiting play mode thus also removing any device pairings. In essence, `InputUser` is considered a player-only API.

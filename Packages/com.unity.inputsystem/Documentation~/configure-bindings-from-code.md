@@ -26,7 +26,7 @@ Each Binding has the following properties:
 To query the Bindings to a particular Action, you can use [`InputAction.bindings`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_bindings). To query a flat list of Bindings for all Actions in an Action Map, you can use [`InputActionMap.bindings`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_bindings).
 
 
-### Erasing Bindings
+## Erasing Bindings
 
 You can erase a binding by calling [`Erase`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax.html#UnityEngine_InputSystem_InputActionSetupExtensions_BindingSyntax_Erase_) on the [binding accessor](../api/UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax.html).
 
@@ -45,7 +45,7 @@ playerInput.actions["move"].ChangeCompositeBinding("WASD").Erase();
 playerInput.actions.FindActionMap("gameplay").ChangeBinding(0).Erase();
 ```
 
-### Adding Bindings
+## Adding Bindings
 
 New bindings can be added to an Action using [`AddAction`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.html#UnityEngine_InputSystem_InputActionSetupExtensions_AddBinding_UnityEngine_InputSystem_InputAction_System_String_System_String_System_String_System_String_) or [`AddCompositeBinding`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.html#UnityEngine_InputSystem_InputActionSetupExtensions_AddCompositeBinding_UnityEngine_InputSystem_InputAction_System_String_System_String_System_String_).
 
@@ -62,7 +62,7 @@ playerInput.actions["move"]
         .With("Right", "<Keyboard>/d");
 ```
 
-### Setting parameters
+## Setting parameters
 
 A Binding may, either through itself or through its associated Action, lead to [processor](Processors.md), [interaction](Interactions.md), and/or [composite](#composite-bindings) objects being created. These objects can have parameters you can configure through in the [Binding properties view](ActionsEditor.md#bindings) of the Action editor or through the API. This configuration will give parameters their default value.
 
@@ -172,14 +172,7 @@ look.ApplyParameterOverride("scaleVector2:y", 0.5f, new InputBinding("<Mouse>/de
 
 >NOTE: Parameter overrides are *not* persisted along with an asset.
 
-
-
-
-
-
-
-
-# Composite Bindings
+## Composite Bindings
 
 To create composites in code, you can use the [`AddCompositeBinding`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.html#UnityEngine_InputSystem_InputActionSetupExtensions_AddCompositeBinding_UnityEngine_InputSystem_InputAction_System_String_System_String_System_String_) syntax.
 
@@ -321,7 +314,6 @@ In addition, you can set the following parameters on a 3D vector Composite:
 
 ### One Modifier
 
-
 A Composite that requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+1". Implemented in the [`OneModifierComposite`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 
 The result is a value of the same type as the controls bound to the [`binding`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html#UnityEngine_InputSystem_Composites_OneModifierComposite_binding) part.
@@ -349,7 +341,6 @@ The button with one modifier Composite has two part Bindings.
 This Composite has no parameters.
 
 ### Two Modifiers
-
 
 A Composite that requires the user to hold down two "modifier" buttons in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+CTRL+1". Implemented in the [`TwoModifiersComposite`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 

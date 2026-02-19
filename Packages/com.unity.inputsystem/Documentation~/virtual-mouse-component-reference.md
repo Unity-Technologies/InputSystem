@@ -1,7 +1,10 @@
+---
+uid: input-system-virtual-mouse-comp
+---
+
 # Virtual Mouse component reference
 
 Use the Virtual Mouse component to create a simulated mouse device in your application.
-
 
 ## Cursor
 
