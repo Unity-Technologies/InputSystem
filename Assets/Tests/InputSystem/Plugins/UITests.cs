@@ -2736,25 +2736,30 @@ internal partial class UITests : CoreTestsFixture
         UnityEngine.InputForUI.EventProvider.NotifyUpdate();
 #endif
 
+        // Pre-compute positions and profiler name outside the lambda to avoid GC allocations from string literals and property accessors.
+        var pos1 = scene.From640x480ToScreen(100, 100);
+        var pos2 = scene.From640x480ToScreen(200, 200);
+        const string kProfilerRegion = "UI_ClickDraggingDoesNotAllocateGCMemory";
+
         // Now for real.
         Assert.That(() =>
         {
-            Profiler.BeginSample("UI_ClickDraggingDoesNotAllocateGCMemory");
-            Set(mouse.position, scene.From640x480ToScreen(100, 100));
+            Profiler.BeginSample(kProfilerRegion);
+            Set(mouse.position, pos1);
             scene.eventSystem.InvokeUpdate();
             Press(mouse.leftButton);
             scene.eventSystem.InvokeUpdate();
-            Set(mouse.position, scene.From640x480ToScreen(200, 200));
+            Set(mouse.position, pos2);
             scene.eventSystem.InvokeUpdate();
             Release(mouse.leftButton);
             scene.eventSystem.InvokeUpdate();
 
             // And just for kicks, do it the opposite way, too.
-            Set(mouse.position, scene.From640x480ToScreen(200, 200));
+            Set(mouse.position, pos2);
             scene.eventSystem.InvokeUpdate();
             Press(mouse.leftButton);
             scene.eventSystem.InvokeUpdate();
-            Set(mouse.position, scene.From640x480ToScreen(100, 100));
+            Set(mouse.position, pos1);
             scene.eventSystem.InvokeUpdate();
             Release(mouse.leftButton);
             scene.eventSystem.InvokeUpdate();
