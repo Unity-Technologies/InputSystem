@@ -333,12 +333,12 @@ partial class CoreTests
         InputSystem.AddDevice<Keyboard>(); // just to make sure keyboard stays as-is
 
         currentTime = 1;
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
 
         runtime.ReportInputDeviceRemoved(device);
 
         currentTime = 2;
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
 
         InputSystem.Update();
 
@@ -2632,7 +2632,7 @@ partial class CoreTests
     [Category("Editor")]
     public void Editor_CanIconsForLayouts()
     {
-        const string kIconPath = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/";
+        const string kIconPath = "Packages/com.unity.inputsystem/Editor/Icons/";
         var skinPrefix = EditorGUIUtility.isProSkin ? "d_" : "";
         var scale = Mathf.Clamp((int)EditorGUIUtility.pixelsPerPoint, 0, 4);
         var scalePostFix = scale > 1 ? $"@{scale}x" : "";
@@ -2822,10 +2822,10 @@ partial class CoreTests
 
         // We need to actually pass time and have a non-zero start time for this to work.
         currentTime = 1;
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
         InputSystem.QueueStateEvent(mouse, new MouseState { position = new Vector2(234, 345) });
         currentTime = 2;
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
 
         InputSystem.Update();
 
@@ -2915,8 +2915,8 @@ partial class CoreTests
             Assert.That(InputSystem.actions.enabled, Is.True);
 
             // Calling exit play mode callbacks will disable them
-            InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
-            InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+            InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+            InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
             Assert.That(InputSystem.actions.enabled, Is.False);
 
@@ -2927,8 +2927,8 @@ partial class CoreTests
             // `InputSystem.InitializeInEditor()` is called. Before this test was introduced, project-wide actions were
             // enabled after entering play mode again which would lead to a different behavior than Player
             // builds.
-            InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
-            InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+            InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+            InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
 
             Assert.That(InputSystem.actions.enabled, Is.False);
         }
@@ -2946,14 +2946,14 @@ partial class CoreTests
         InputSystem.AddDevice<Gamepad>();
 
         // Enter play mode.
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
 
         // This simulates enabling project-wide actions, which is done before just before entering play mode,
         // called from InputSystem.InitializeInEditor().
         if (InputSystem.actions)
             InputSystem.actions.Enable();
 
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
 
         DisableProjectWideActions();
 
@@ -2965,8 +2965,8 @@ partial class CoreTests
         Assert.That(InputSystem.s_Manager.m_StateChangeMonitors[0].count, Is.EqualTo(1));
 
         // Exit play mode.
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
         Assert.That(InputActionState.s_GlobalState.globalList.length, Is.Zero);
         // Won't get removed, just cleared.
@@ -2980,8 +2980,8 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Enter play mode.
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
 
         var user = InputUser.PerformPairingWithDevice(gamepad);
         ++InputUser.listenForUnpairedDeviceActivity;
@@ -2991,8 +2991,8 @@ partial class CoreTests
         Assert.That(InputUser.all, Has.Count.EqualTo(1));
 
         // Exit play mode.
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
         Assert.That(user.valid, Is.False);
         Assert.That(InputUser.all, Has.Count.Zero);
@@ -3017,7 +3017,7 @@ partial class CoreTests
 
         Assert.That(gamepad.enabled, Is.False);
 
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
 
         Assert.That(gamepad.enabled, Is.True);
         Assert.That(gamepad.disabledWhileInBackground, Is.False);
@@ -3087,15 +3087,15 @@ partial class CoreTests
         AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out var assetGuid, out long _);
 
         // Enter play mode.
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
 
         asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
         action?.Invoke(asset);
 
         // Exit play mode.
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.EnteredEditMode);
 
         var actualAsset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(m_TestAssetPath);
         Assert.That(actualAsset.ToJson(), Is.EqualTo(originalJson), message);

@@ -663,7 +663,7 @@ namespace UnityEngine.InputSystem
         public void CancelTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, TouchPhase.Canceled, position, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Canceled, position, 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
         public void CancelTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
@@ -1005,9 +1005,11 @@ namespace UnityEngine.InputSystem
             // have no proper way of simulating domain reloads ATM. So we directly call various
             // internal methods here in a sequence similar to what we'd get during a domain reload.
 
-            InputSystem.s_SystemObject.OnBeforeSerialize();
-            InputSystem.s_SystemObject = null;
-            InputSystem.InitializeInEditor(runtime);
+            // Some editor test runs may not have created the system object yet.
+            // Guard against it so domain reload simulation doesn't NRE (NullReferenceException).
+            InputSystemEditorInitializer.s_SystemObject?.OnBeforeSerialize();
+            InputSystemEditorInitializer.s_SystemObject = null;
+            InputSystemEditorInitializer.InitializeInEditor();
         }
 
         #endif

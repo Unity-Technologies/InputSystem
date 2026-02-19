@@ -268,13 +268,8 @@ partial class CoreTests
     public void Remote_CanConnectInputSystemsOverEditorPlayerConnection()
     {
 #if UNITY_EDITOR
-        // In the editor, RemoteInputPlayerConnection is a scriptable singleton. Creating multiple instances of it
-        // will cause an error messages - but will work nevertheless, so we expect those errors to let us run the test.
-        // We call RemoteInputPlayerConnection.instance once to make sure that we an instance is created, and we get
-        // a deterministic number of two errors.
-        var instance = RemoteInputPlayerConnection.instance;
-        UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "ScriptableSingleton already exists. Did you query the singleton in a constructor?");
-        UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "ScriptableSingleton already exists. Did you query the singleton in a constructor?");
+        // Ensure the singleton is initialized deterministically in editor.
+        _ = RemoteInputPlayerConnection.instance;
 #endif
         var connectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
         var connectionToPlayer = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();

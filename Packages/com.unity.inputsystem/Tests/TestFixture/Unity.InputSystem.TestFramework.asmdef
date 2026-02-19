@@ -1,9 +1,11 @@
 {
     "name": "Unity.InputSystem.TestFramework",
+    "rootNamespace": "",
     "references": [
         "Unity.InputSystem",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "Unity.InputSystem.Editor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -13,13 +15,15 @@
         "nunit.framework.dll"
     ],
     "autoReferenced": false,
-    "defineConstraints": ["UNITY_TESTS_FRAMEWORK"],
+    "defineConstraints": [
+        "UNITY_TESTS_FRAMEWORK"
+    ],
     "versionDefines": [
         {
             "name": "com.unity.test-framework",
             "expression": "",
             "define": "UNITY_TESTS_FRAMEWORK"
         }
-    ],   
-    "versionDefines": []
+    ],
+    "noEngineReferences": false
 }

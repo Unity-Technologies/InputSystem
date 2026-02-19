@@ -405,6 +405,7 @@ namespace UnityEngine.InputSystem
         #if UNITY_EDITOR
         public bool isInPlayMode { get; set; } = true;
         public bool isEditorActive { get; set; } = true;
+        public bool isEditorPaused { get; set; }
         public Func<IntPtr, bool> onUnityRemoteMessage
         {
             get => m_UnityRemoteMessageHandler;
@@ -424,7 +425,7 @@ namespace UnityEngine.InputSystem
             unityRemoteGyroUpdateInterval = interval;
         }
 
-        public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
+        public Action<int> onPlayModeChanged { get; set; }
         public Action onProjectChange { get; set; }
         #endif
 

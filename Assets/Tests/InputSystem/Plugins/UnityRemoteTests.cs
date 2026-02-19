@@ -10,6 +10,12 @@ using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 internal class UnityRemoteTests : CoreTestsFixture
 {
+    public override void Setup()
+    {
+        base.Setup();
+        runtime.onUnityRemoteMessage = UnityRemoteSupport.GetMessageHandlerForTesting();
+    }
+
     public override void TearDown()
     {
         UnityRemoteSupport.ResetGlobalState();
