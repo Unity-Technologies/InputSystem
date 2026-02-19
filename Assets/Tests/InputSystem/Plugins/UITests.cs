@@ -2736,12 +2736,10 @@ internal partial class UITests : CoreTestsFixture
         UnityEngine.InputForUI.EventProvider.NotifyUpdate();
 #endif
 
-        var kProfilerRegion = "UI_ClickDraggingDoesNotAllocateGCMemory";
-
         // Now for real.
         Assert.That(() =>
         {
-            Profiler.BeginSample(kProfilerRegion);
+            Profiler.BeginSample("UI_ClickDraggingDoesNotAllocateGCMemory");
             Set(mouse.position, scene.From640x480ToScreen(100, 100));
             scene.eventSystem.InvokeUpdate();
             Press(mouse.leftButton);
