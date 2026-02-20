@@ -1989,122 +1989,122 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.uiModule.m_PointerStates.length, Is.Zero);
     }
 
-    // https://fogbugz.unity3d.com/f/cases/1190150/
-//     [UnityTest]
-//     [Category("UI")]
-//     public IEnumerator UI_CanUseTouchSimulationWithUI()
-//     {
-//         var mouse = InputSystem.AddDevice<Mouse>();
-//
-//         var scene = CreateTestUI();
-//         scene.uiModule.AssignDefaultActions();
-//         TouchSimulation.Enable();
-//
-//         // https://fogbugz.unity3d.com/f/cases/1330014/
-//         // Scale the left button down on X just a little bit so as to give us some space where we can hit nothing.
-//         // This makes sure that if the code ends up putting something at (0,0), it'll hit nothing.
-//         ((RectTransform)scene.leftGameObject.transform).localScale = new Vector3(0.95f, 1, 1);
-//
-//         try
-//         {
-//             yield return null;
-//             scene.leftChildReceiver.events.Clear();
-//
-//             InputSystem.QueueStateEvent(mouse, new MouseState
-//             {
-//                 position = scene.From640x480ToScreen(180, 180)
-//             }.WithButton(MouseButton.Left));
-//             InputSystem.Update();
-//
-//             yield return null;
-//
-//             Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.Touch));
-//             Assert.That(scene.uiModule.m_PointerIds.length, Is.EqualTo(1));
-//             Assert.That(scene.leftChildReceiver.events,
-//                 EventSequence(
-//                     AllEvents("pointerType", UIPointerType.Touch),
-//                     AllEvents("touchId", 1),
-//                     AllEvents("position", scene.From640x480ToScreen(180, 180)),
-//                     OneEvent("type", EventType.PointerEnter)
-// #if UNITY_2021_2_OR_NEWER
-//                     , OneEvent("type", EventType.PointerMove)
-// #endif
-//                     , OneEvent("type", EventType.PointerDown)
-//                     , OneEvent("type", EventType.InitializePotentialDrag)
-//                 )
-//             );
-//
-//             scene.leftChildReceiver.events.Clear();
-//
-//             Release(mouse.leftButton);
-//             yield return null;
-//
-//             // Touch pointer record lingers for one frame.
-//
-//             Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.Touch));
-//             Assert.That(scene.uiModule.m_PointerIds.length, Is.EqualTo(1));
-//             Assert.That(scene.leftChildReceiver.events,
-//                 EventSequence(
-//                     AllEvents("pointerType", UIPointerType.Touch),
-//                     AllEvents("touchId", 1),
-//                     AllEvents("position", scene.From640x480ToScreen(180, 180)),
-//                     OneEvent("type", EventType.PointerUp),
-//                     OneEvent("type", EventType.PointerClick)
-//                 )
-//             );
-//
-//             scene.leftChildReceiver.events.Clear();
-//
-//             yield return null;
-//
-//             Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.None));
-//             Assert.That(scene.uiModule.m_PointerIds.length, Is.Zero);
-//             Assert.That(scene.leftChildReceiver.events,
-//                 EventSequence(
-//                     AllEvents("pointerType", UIPointerType.Touch),
-//                     AllEvents("touchId", 1),
-//                     AllEvents("position", scene.From640x480ToScreen(180, 180)),
-//                     OneEvent("type", EventType.PointerExit)
-//                 )
-//             );
-//
-//             scene.leftChildReceiver.events.Clear();
-//
-//             yield return null;
-//             Press(mouse.leftButton);
-//             yield return null;
-//
-//             Assert.That(scene.leftChildReceiver.events,
-//                 EventSequence(
-//                     AllEvents("pointerType", UIPointerType.Touch),
-//                     AllEvents("touchId", 2),
-//                     AllEvents("position", scene.From640x480ToScreen(180, 180)),
-//                     OneEvent("type", EventType.PointerEnter),
-//                     OneEvent("type", EventType.PointerDown),
-//                     OneEvent("type", EventType.InitializePotentialDrag)
-//                 )
-//             );
-//
-//             scene.leftChildReceiver.events.Clear();
-//
-//             Release(mouse.leftButton);
-//             yield return null;
-//
-//             Assert.That(scene.leftChildReceiver.events,
-//                 EventSequence(
-//                     AllEvents("pointerType", UIPointerType.Touch),
-//                     AllEvents("touchId", 2),
-//                     AllEvents("position", scene.From640x480ToScreen(180, 180)),
-//                     OneEvent("type", EventType.PointerUp),
-//                     OneEvent("type", EventType.PointerClick)
-//                 )
-//             );
-//         }
-//         finally
-//         {
-//             TouchSimulation.Disable();
-//         }
-//     }
+    //https://fogbugz.unity3d.com/f/cases/1190150/
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanUseTouchSimulationWithUI()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+
+        var scene = CreateTestUI();
+        scene.uiModule.AssignDefaultActions();
+        TouchSimulation.Enable();
+
+        // https://fogbugz.unity3d.com/f/cases/1330014/
+        // Scale the left button down on X just a little bit so as to give us some space where we can hit nothing.
+        // This makes sure that if the code ends up putting something at (0,0), it'll hit nothing.
+        ((RectTransform)scene.leftGameObject.transform).localScale = new Vector3(0.95f, 1, 1);
+
+        try
+        {
+            yield return null;
+            scene.leftChildReceiver.events.Clear();
+
+            InputSystem.QueueStateEvent(mouse, new MouseState
+            {
+                position = scene.From640x480ToScreen(180, 180)
+            }.WithButton(MouseButton.Left));
+            InputSystem.Update();
+
+            yield return null;
+
+            Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.Touch));
+            Assert.That(scene.uiModule.m_PointerIds.length, Is.EqualTo(1));
+            Assert.That(scene.leftChildReceiver.events,
+                EventSequence(
+                    AllEvents("pointerType", UIPointerType.Touch),
+                    AllEvents("touchId", 1),
+                    AllEvents("position", scene.From640x480ToScreen(180, 180)),
+                    OneEvent("type", EventType.PointerEnter)
+#if UNITY_2021_2_OR_NEWER
+                    , OneEvent("type", EventType.PointerMove)
+#endif
+                    , OneEvent("type", EventType.PointerDown)
+                    , OneEvent("type", EventType.InitializePotentialDrag)
+                )
+            );
+
+            scene.leftChildReceiver.events.Clear();
+
+            Release(mouse.leftButton);
+            yield return null;
+
+            // Touch pointer record lingers for one frame.
+
+            Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.Touch));
+            Assert.That(scene.uiModule.m_PointerIds.length, Is.EqualTo(1));
+            Assert.That(scene.leftChildReceiver.events,
+                EventSequence(
+                    AllEvents("pointerType", UIPointerType.Touch),
+                    AllEvents("touchId", 1),
+                    AllEvents("position", scene.From640x480ToScreen(180, 180)),
+                    OneEvent("type", EventType.PointerUp),
+                    OneEvent("type", EventType.PointerClick)
+                )
+            );
+
+            scene.leftChildReceiver.events.Clear();
+
+            yield return null;
+
+            Assert.That(scene.uiModule.m_CurrentPointerType, Is.EqualTo(UIPointerType.None));
+            Assert.That(scene.uiModule.m_PointerIds.length, Is.Zero);
+            Assert.That(scene.leftChildReceiver.events,
+                EventSequence(
+                    AllEvents("pointerType", UIPointerType.Touch),
+                    AllEvents("touchId", 1),
+                    AllEvents("position", scene.From640x480ToScreen(180, 180)),
+                    OneEvent("type", EventType.PointerExit)
+                )
+            );
+
+            scene.leftChildReceiver.events.Clear();
+
+            yield return null;
+            Press(mouse.leftButton);
+            yield return null;
+
+            Assert.That(scene.leftChildReceiver.events,
+                EventSequence(
+                    AllEvents("pointerType", UIPointerType.Touch),
+                    AllEvents("touchId", 2),
+                    AllEvents("position", scene.From640x480ToScreen(180, 180)),
+                    OneEvent("type", EventType.PointerEnter),
+                    OneEvent("type", EventType.PointerDown),
+                    OneEvent("type", EventType.InitializePotentialDrag)
+                )
+            );
+
+            scene.leftChildReceiver.events.Clear();
+
+            Release(mouse.leftButton);
+            yield return null;
+
+            Assert.That(scene.leftChildReceiver.events,
+                EventSequence(
+                    AllEvents("pointerType", UIPointerType.Touch),
+                    AllEvents("touchId", 2),
+                    AllEvents("position", scene.From640x480ToScreen(180, 180)),
+                    OneEvent("type", EventType.PointerUp),
+                    OneEvent("type", EventType.PointerClick)
+                )
+            );
+        }
+        finally
+        {
+            TouchSimulation.Disable();
+        }
+    }
 
     [UnityTest]
     [Category("UI")]
