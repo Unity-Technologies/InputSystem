@@ -3994,9 +3994,7 @@ internal partial class UITests : CoreTestsFixture
             ////FIXME: as of a time of writing, this line is broken on trunk due to the bug in UITK
             // The bug is https://fogbugz.unity3d.com/f/cases/1323488/
             // just adding a define as a safeguard measure to reenable it when trunk goes to next version cycle
-#if UNITY_2021_3_OR_NEWER
             Assert.That(scrollView.verticalScroller.value, Is.GreaterThan(0));
-#endif
 
             // Try a button press with the gamepad.
             // NOTE: The current version of UITK does not focus the button automatically. Fix for that is in the pipe.
@@ -4767,7 +4765,6 @@ internal partial class UITests : CoreTestsFixture
                 pointerType = extendedEventData.pointerType,
                 trackedDeviceOrientation = extendedEventData.trackedDeviceOrientation,
                 trackedDevicePosition = extendedEventData.trackedDevicePosition,
-#if UNITY_2021_1_OR_NEWER
                 pressure = eventData.pressure,
                 tangentialPressure = eventData.tangentialPressure,
                 altitudeAngle = eventData.altitudeAngle,
@@ -4775,7 +4772,6 @@ internal partial class UITests : CoreTestsFixture
                 twist = eventData.twist,
                 radius = eventData.radius,
                 radiusVariance = eventData.radiusVariance,
-#endif
 #if UNITY_2022_3_OR_NEWER
                 displayIndex = eventData.displayIndex,
 #endif
