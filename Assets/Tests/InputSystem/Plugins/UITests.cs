@@ -397,13 +397,7 @@ internal partial class UITests : CoreTestsFixture
         }
         yield return null;
 
-        const int kHaveMovementEvents =
-#if UNITY_2021_2_OR_NEWER
-            1
-#else
-            0
-#endif
-        ;
+        const int kHaveMovementEvents = 1;
 
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo((isTouch ? 3 : 1) + kHaveMovementEvents));
         Assert.That(scene.parentReceiver.events, Has.Count.EqualTo(1 + kHaveMovementEvents));
@@ -484,7 +478,6 @@ internal partial class UITests : CoreTestsFixture
             // Touch has no ability to point without pressing so pointer enter event is followed
             // right by pointer down event.
 
-#if UNITY_2021_2_OR_NEWER
             // PointerMove.
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].type, Is.EqualTo(EventType.PointerMove));
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
@@ -512,7 +505,6 @@ internal partial class UITests : CoreTestsFixture
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerPressRaycast.gameObject, Is.Null);
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerPressRaycast.screenPosition,
                 Is.EqualTo(default(Vector2)).Using(Vector2EqualityComparer.Instance));
-#endif
 
             // PointerDown.
             Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].type, Is.EqualTo(EventType.PointerDown));
@@ -739,7 +731,6 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerCurrentRaycast.screenPosition", secondScreenPosition),
 
                 // PointerMove.
-#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 OneEvent("dragging", false),
                 // Again, pointer movement is processed exclusively "from" the left button.
@@ -753,7 +744,6 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("lastPress", clickButton == PointerEventData.InputButton.Left ? null : scene.leftGameObject),
                 OneEvent("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
                 OneEvent("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
-#endif
 
                 // BeginDrag.
                 OneEvent("type", EventType.BeginDrag),
@@ -786,12 +776,7 @@ internal partial class UITests : CoreTestsFixture
         );
 
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
-        Assert.That(scene.parentReceiver.events,
-            EventSequence(
-#if UNITY_2021_2_OR_NEWER
-                OneEvent("type", EventType.PointerMove)
-#endif
-            )
+        Assert.That(scene.parentReceiver.events, EventSequence(OneEvent("type", EventType.PointerMove))
         );
 
         scene.leftChildReceiver.events.Clear();
@@ -817,12 +802,7 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.True);
         // Should not have seen pointer enter/exit on parent (we only moved from one of its
         // children to another) but *should* have seen a move event.
-        Assert.That(scene.parentReceiver.events,
-            EventSequence(
-#if UNITY_2021_2_OR_NEWER
-                OneEvent("type", EventType.PointerMove)
-#endif
-            )
+        Assert.That(scene.parentReceiver.events, EventSequence(OneEvent("type", EventType.PointerMove))
         );
 
         if (isTracked)
@@ -923,10 +903,8 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
                 AllEvents("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
 
-                OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
-                , OneEvent("type", EventType.PointerMove)
-#endif
+                OneEvent("type", EventType.PointerEnter), 
+                OneEvent("type", EventType.PointerMove)
             )
         );
 
@@ -2019,12 +1997,10 @@ internal partial class UITests : CoreTestsFixture
                     AllEvents("pointerType", UIPointerType.Touch),
                     AllEvents("touchId", 1),
                     AllEvents("position", scene.From640x480ToScreen(180, 180)),
-                    OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
-                    , OneEvent("type", EventType.PointerMove)
-#endif
-                    , OneEvent("type", EventType.PointerDown)
-                    , OneEvent("type", EventType.InitializePotentialDrag)
+                    OneEvent("type", EventType.PointerEnter),
+                    OneEvent("type", EventType.PointerMove),
+                    OneEvent("type", EventType.PointerDown),
+                    OneEvent("type", EventType.InitializePotentialDrag)
                 )
             );
 
@@ -2161,9 +2137,8 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice2.deviceId),
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.leftGameObject, Vector3.left)),
-                OneEvent("type", EventType.PointerEnter)
-                , OneEvent("type", EventType.PointerMove)
-#endif
+                OneEvent("type", EventType.PointerEnter),
+                OneEvent("type", EventType.PointerMove)
             )
         );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -2221,9 +2196,7 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice1.deviceId),
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject)),
-#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
-#endif
                 OneEvent("type", EventType.PointerExit)
             )
         );
@@ -2233,10 +2206,8 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice1.deviceId),
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject)),
-                OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
-                , OneEvent("type", EventType.PointerMove)
-#endif
+                OneEvent("type", EventType.PointerEnter),
+                OneEvent("type", EventType.PointerMove)
             )
         );
 
@@ -2253,9 +2224,7 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice2.deviceId),
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject, Vector3.right)),
-#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
-#endif
                 OneEvent("type", EventType.PointerExit)
             )
         );
@@ -2266,9 +2235,7 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject, Vector3.right)),
                 OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
-#endif
             )
         );
     }
@@ -2591,13 +2558,8 @@ internal partial class UITests : CoreTestsFixture
 
         var raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(raycastResult.isValid, Is.True);
-
-        //2021.2 added an additional move event.
-#if UNITY_2021_2_OR_NEWER
+        
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
-#else
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-#endif
         Assert.That(scene.leftChildReceiver.events[0].pointerData, Is.Not.Null);
 
         var eventRaycastResult = scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast;
@@ -4162,9 +4124,7 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
                 OneEvent("type", EventType.PointerEnter),
-#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
-#endif
                 OneEvent("type", EventType.PointerDown),
                 OneEvent("type", EventType.InitializePotentialDrag)
             )
@@ -4627,9 +4587,7 @@ internal partial class UITests : CoreTestsFixture
         PointerUp,
         PointerEnter,
         PointerExit,
-#if UNITY_2021_2_OR_NEWER
         PointerMove,
-#endif
         Select,
         Deselect,
         InitializePotentialDrag,
@@ -4644,11 +4602,8 @@ internal partial class UITests : CoreTestsFixture
     }
 
     private class UICallbackReceiver : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerEnterHandler,
-#if UNITY_2021_2_OR_NEWER
-        IPointerMoveHandler,
-#endif
-        IPointerExitHandler, IPointerUpHandler, IMoveHandler, ISelectHandler, IDeselectHandler, IInitializePotentialDragHandler,
-        IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, ISubmitHandler, ICancelHandler, IScrollHandler
+        IPointerMoveHandler, IPointerExitHandler, IPointerUpHandler, IMoveHandler, ISelectHandler, IDeselectHandler,
+        IInitializePotentialDragHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, ISubmitHandler, ICancelHandler, IScrollHandler
     {
         public struct Event
         {
@@ -4700,14 +4655,11 @@ internal partial class UITests : CoreTestsFixture
             events.Add(new Event(EventType.PointerUp, ClonePointerEventData(eventData)));
         }
 
-#if UNITY_2021_2_OR_NEWER
         public void OnPointerMove(PointerEventData eventData)
         {
             events.Add(new Event(EventType.PointerMove, ClonePointerEventData(eventData)));
         }
-
-#endif
-
+        
         public void OnMove(AxisEventData eventData)
         {
             events.Add(new Event(EventType.Move, CloneAxisEventData(eventData)));
