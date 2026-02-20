@@ -147,7 +147,7 @@ partial class CoreTests
         }.ToJson());
         InputSystem.Update();
 
-        m_StateManager.SaveAndReset(false, null);
+        m_StateManager.SaveAndReset(enableRemoting: false, runtime: null);
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(0));
 
