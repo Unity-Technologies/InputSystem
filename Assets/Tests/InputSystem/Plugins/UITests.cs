@@ -31,9 +31,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
-#if UNITY_2021_2_OR_NEWER
 using UnityEngine.UIElements;
-#endif
 
 #pragma warning disable CS0649
 ////TODO: app focus handling
@@ -852,7 +850,6 @@ internal partial class UITests : CoreTestsFixture
                 // press positions on the moves will be zero.
 
                 // PointerMove.
-#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 OneEvent("button", PointerEventData.InputButton.Left),
                 OneEvent("pointerEnter", scene.leftGameObject),
@@ -867,7 +864,6 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("dragging", clickButton == PointerEventData.InputButton.Left ? true : false),
                 OneEvent("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
                 OneEvent("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
-#endif
 
                 // PointerExit.
                 OneEvent("type", EventType.PointerExit),
@@ -1892,7 +1888,6 @@ internal partial class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
 
-#if UNITY_2021_2_OR_NEWER
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerMove).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
@@ -1900,7 +1895,6 @@ internal partial class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
-#endif
 
         // Pointer 3
         Assert.That(scene.rightChildReceiver.events,
@@ -2149,10 +2143,8 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice1.deviceId),
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.leftGameObject)),
-                OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
-                , OneEvent("type", EventType.PointerMove)
-#endif
+                OneEvent("type", EventType.PointerEnter),
+                OneEvent("type", EventType.PointerMove)
             )
         );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -2170,7 +2162,6 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.leftGameObject, Vector3.left)),
                 OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
 #endif
             )
