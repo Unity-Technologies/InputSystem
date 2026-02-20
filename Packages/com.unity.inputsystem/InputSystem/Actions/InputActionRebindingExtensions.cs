@@ -2898,6 +2898,6 @@ namespace UnityEngine.InputSystem
         }
 
         private int m_DeferredCount;
-        public bool bindingsNeedResolving; // TODO Revisit: Was previously static, but based on changes by Alex+Tim might no longer be needed?!
+        public bool bindingsNeedResolving;
     }
 }
