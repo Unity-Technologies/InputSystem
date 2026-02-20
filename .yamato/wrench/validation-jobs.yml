@@ -841,7 +841,7 @@ validate_-_inputsystem_-_6000_5_-_macos:
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
-  - command: unity-downloader-cli -u trunk -c editor --path .Editor --fast
+  - command: unity-downloader-cli -u 6000.5/staging -c editor --path .Editor --fast
     timeout: 10
     retries: 3
   - command: upm-pvp create-test-project test-inputsystem --packages "upm-ci~/packages/*.tgz" --filter "com.unity.inputsystem com.unity.inputsystem.tests" --unity .Editor
@@ -910,7 +910,7 @@ validate_-_inputsystem_-_6000_5_-_ubuntu:
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
-  - command: unity-downloader-cli -u trunk -c editor --path .Editor --fast
+  - command: unity-downloader-cli -u 6000.5/staging -c editor --path .Editor --fast
     timeout: 10
     retries: 3
   - command: upm-pvp create-test-project test-inputsystem --packages "upm-ci~/packages/*.tgz" --filter "com.unity.inputsystem com.unity.inputsystem.tests" --unity .Editor
@@ -979,7 +979,7 @@ validate_-_inputsystem_-_6000_5_-_windows:
   - command: 7z x -aoa wrench-localapv.zip
   - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
   - command: python PythonScripts/print_machine_info.py
-  - command: unity-downloader-cli -u trunk -c editor --path .Editor --fast
+  - command: unity-downloader-cli -u 6000.5/staging -c editor --path .Editor --fast
     timeout: 10
     retries: 3
   - command: upm-pvp create-test-project test-inputsystem --packages "upm-ci~/packages/*.tgz" --filter "com.unity.inputsystem com.unity.inputsystem.tests" --unity .Editor
@@ -996,6 +996,213 @@ validate_-_inputsystem_-_6000_5_-_windows:
     timeout: 10
     retries: 0
   - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:%YAMATO_SOURCE_DIR%/Packages;" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Windows_6000.5;flags:inputsystem_Windows_6000.5" '
+    timeout: 20
+    retries: 1
+  after:
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
+  artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
+    Crash Dumps:
+      paths:
+      - CrashDumps/**
+    packages:
+      paths:
+      - upm-ci~/packages/**/*
+    pvp-results:
+      paths:
+      - upm-ci~/pvp/**/*
+      browsable: onDemand
+    UTR:
+      paths:
+      - '*.log'
+      - '*.xml'
+      - artifacts/**/*
+      - test-inputsystem/Logs/**
+      - test-inputsystem/Library/*.log
+      - test-inputsystem/*.log
+      - test-inputsystem/Builds/*.log
+      - build/test-results/**
+      browsable: onDemand
+  dependencies:
+  - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
+  variables:
+    UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
+    UPMPVP_CONTEXT_WRENCH: 1.3.0.0
+  metadata:
+    Job Maintainers: '#rm-packageworks'
+    Wrench: 1.3.0.0
+  labels:
+  - Packages:inputsystem
+
+# PVP Editor and Playmode tests for Validate - inputsystem - 6000.6 - macos (6000.6 - MacOS).
+validate_-_inputsystem_-_6000_6_-_macos:
+  name: Validate - inputsystem - 6000.6 - macos
+  agent:
+    image: package-ci/macos-13:default
+    type: Unity::VM::osx
+    flavor: b1.xlarge
+  commands:
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-3-0_3978eda62a03e3dbc469ab77590d20f8832032d8e0b586550597b7f590baefec.zip -o wrench-localapv.zip
+  - command: 7z x -aoa wrench-localapv.zip
+  - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
+  - command: python PythonScripts/print_machine_info.py
+  - command: unity-downloader-cli -u trunk -c editor --path .Editor --fast
+    timeout: 10
+    retries: 3
+  - command: upm-pvp create-test-project test-inputsystem --packages "upm-ci~/packages/*.tgz" --filter "com.unity.inputsystem com.unity.inputsystem.tests" --unity .Editor
+    timeout: 10
+    retries: 1
+  - command: echo No internal packages to add.
+  - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
+    timeout: 20
+    retries: 0
+  - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 5
+    retries: 0
+  - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 10
+    retries: 0
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_MacOS_6000.6;flags:inputsystem_MacOS_6000.6" '
+    timeout: 20
+    retries: 1
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
+  artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
+    Crash Dumps:
+      paths:
+      - CrashDumps/**
+    packages:
+      paths:
+      - upm-ci~/packages/**/*
+    pvp-results:
+      paths:
+      - upm-ci~/pvp/**/*
+      browsable: onDemand
+    UTR:
+      paths:
+      - '*.log'
+      - '*.xml'
+      - artifacts/**/*
+      - test-inputsystem/Logs/**
+      - test-inputsystem/Library/*.log
+      - test-inputsystem/*.log
+      - test-inputsystem/Builds/*.log
+      - build/test-results/**
+      browsable: onDemand
+  dependencies:
+  - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
+  variables:
+    UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
+    UPMPVP_CONTEXT_WRENCH: 1.3.0.0
+  metadata:
+    Job Maintainers: '#rm-packageworks'
+    Wrench: 1.3.0.0
+  labels:
+  - Packages:inputsystem
+
+# PVP Editor and Playmode tests for Validate - inputsystem - 6000.6 - ubuntu (6000.6 - Ubuntu).
+validate_-_inputsystem_-_6000_6_-_ubuntu:
+  name: Validate - inputsystem - 6000.6 - ubuntu
+  agent:
+    image: package-ci/ubuntu-22.04:v4
+    type: Unity::VM
+    flavor: b1.large
+  commands:
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-3-0_3978eda62a03e3dbc469ab77590d20f8832032d8e0b586550597b7f590baefec.zip -o wrench-localapv.zip
+  - command: 7z x -aoa wrench-localapv.zip
+  - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
+  - command: python PythonScripts/print_machine_info.py
+  - command: unity-downloader-cli -u trunk -c editor --path .Editor --fast
+    timeout: 10
+    retries: 3
+  - command: upm-pvp create-test-project test-inputsystem --packages "upm-ci~/packages/*.tgz" --filter "com.unity.inputsystem com.unity.inputsystem.tests" --unity .Editor
+    timeout: 10
+    retries: 1
+  - command: echo No internal packages to add.
+  - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
+    timeout: 20
+    retries: 0
+  - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 5
+    retries: 0
+  - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 10
+    retries: 0
+  - command: 'UnifiedTestRunner --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Ubuntu_6000.6;flags:inputsystem_Ubuntu_6000.6" '
+    timeout: 20
+    retries: 1
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
+  artifacts:
+    Coverage:
+      paths:
+      - upm-ci~/CodeCoverage/**
+    Crash Dumps:
+      paths:
+      - CrashDumps/**
+    packages:
+      paths:
+      - upm-ci~/packages/**/*
+    pvp-results:
+      paths:
+      - upm-ci~/pvp/**/*
+      browsable: onDemand
+    UTR:
+      paths:
+      - '*.log'
+      - '*.xml'
+      - artifacts/**/*
+      - test-inputsystem/Logs/**
+      - test-inputsystem/Library/*.log
+      - test-inputsystem/*.log
+      - test-inputsystem/Builds/*.log
+      - build/test-results/**
+      browsable: onDemand
+  dependencies:
+  - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
+  variables:
+    UPMPVP_ACK_UPMPVP_DOES_NO_API_VALIDATION: 1
+    UPMPVP_CONTEXT_WRENCH: 1.3.0.0
+  metadata:
+    Job Maintainers: '#rm-packageworks'
+    Wrench: 1.3.0.0
+  labels:
+  - Packages:inputsystem
+
+# PVP Editor and Playmode tests for Validate - inputsystem - 6000.6 - windows (6000.6 - Windows).
+validate_-_inputsystem_-_6000_6_-_windows:
+  name: Validate - inputsystem - 6000.6 - windows
+  agent:
+    image: package-ci/win10:default
+    type: Unity::VM
+    flavor: b1.large
+  commands:
+  - command: curl https://artifactory.prd.it.unity3d.com/artifactory/stevedore-unity-internal/wrench-localapv/1-3-0_3978eda62a03e3dbc469ab77590d20f8832032d8e0b586550597b7f590baefec.zip -o wrench-localapv.zip
+  - command: 7z x -aoa wrench-localapv.zip
+  - command: pip install semver requests --index-url https://artifactory-slo.bf.unity3d.com/artifactory/api/pypi/pypi/simple
+  - command: python PythonScripts/print_machine_info.py
+  - command: unity-downloader-cli -u trunk -c editor --path .Editor --fast
+    timeout: 10
+    retries: 3
+  - command: upm-pvp create-test-project test-inputsystem --packages "upm-ci~/packages/*.tgz" --filter "com.unity.inputsystem com.unity.inputsystem.tests" --unity .Editor
+    timeout: 10
+    retries: 1
+  - command: echo No internal packages to add.
+  - command: upm-pvp test --unity .Editor --packages "upm-ci~/packages/*.tgz" --results upm-ci~/pvp
+    timeout: 20
+    retries: 0
+  - command: upm-pvp require "pkgprom-promote -PVP-29-2 rme" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 5
+    retries: 0
+  - command: upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json" --results upm-ci~/pvp --exemptions upm-ci~/pvp/failures.json
+    timeout: 10
+    retries: 0
+  - command: 'UnifiedTestRunner.exe --testproject=test-inputsystem --editor-location=.Editor --clean-library --reruncount=1 --clean-library-on-rerun --artifacts-path=artifacts --suite=Editor --suite=Playmode "--ff={ops.upmpvpevidence.enable=true}" --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem,+Unity.InputSystem.DocCodeSamples,+Unity.InputSystem.ForUI,+Unity.InputSystem.IntegrationTests,+Unity.InputSystem.TestFramework;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:%YAMATO_SOURCE_DIR%/Packages;" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Windows_6000.6;flags:inputsystem_Windows_6000.6" '
     timeout: 20
     retries: 1
   after:
