@@ -1989,7 +1989,7 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.uiModule.m_PointerStates.length, Is.Zero);
     }
 
-    //https://fogbugz.unity3d.com/f/cases/1190150/
+    // https://fogbugz.unity3d.com/f/cases/1190150/
     [UnityTest]
     [Category("UI")]
     public IEnumerator UI_CanUseTouchSimulationWithUI()

@@ -27,8 +27,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (kind == Data.Kind.Invalid)
                 throw new ArgumentException(nameof(kind));
-
-
+            
             Initialize(kind);
         }
 
