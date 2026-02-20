@@ -903,7 +903,7 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
                 AllEvents("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
 
-                OneEvent("type", EventType.PointerEnter), 
+                OneEvent("type", EventType.PointerEnter),
                 OneEvent("type", EventType.PointerMove)
             )
         );
@@ -2558,7 +2558,7 @@ internal partial class UITests : CoreTestsFixture
 
         var raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(raycastResult.isValid, Is.True);
-        
+
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
         Assert.That(scene.leftChildReceiver.events[0].pointerData, Is.Not.Null);
 
@@ -4657,7 +4657,7 @@ internal partial class UITests : CoreTestsFixture
         {
             events.Add(new Event(EventType.PointerMove, ClonePointerEventData(eventData)));
         }
-        
+
         public void OnMove(AxisEventData eventData)
         {
             events.Add(new Event(EventType.Move, CloneAxisEventData(eventData)));
