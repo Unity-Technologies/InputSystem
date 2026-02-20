@@ -838,14 +838,14 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Utility function for manually scheduling an <see cref="InputFocusEvent"/>.
+        /// Utility function for manually scheduling an InputFocusEvent.
         /// This is useful for testing how the system reacts to focus changes.
         /// </summary>
         public unsafe void ScheduleFocusEvent(bool focus)
         {
             // For now we only set application focus. In the future we want to add support for other focus as well
             FocusFlags state = focus ? FocusFlags.ApplicationFocus : FocusFlags.None;
-            var evt = InputFocusEvent.Create(state, currentTime);
+            var evt = InputFocusEvent.Create(state);
             InputSystem.QueueEvent(new InputEventPtr((InputEvent*)&evt.baseEvent));
         }
 

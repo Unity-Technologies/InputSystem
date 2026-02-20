@@ -3110,12 +3110,6 @@ namespace UnityEngine.InputSystem
                     return;
                 }
 
-#if UNITY_EDITOR
-                // When the game is playing and has focus, we never process input in editor updates.
-                // All we do is just switch to editor state buffers and then exit.
-                if ((gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor))
-                    return;
-#endif
                 try
                 {
                     m_InputEventStream = new InputEventStream(ref eventBuffer, m_Settings.maxQueuedEventsPerUpdate);
@@ -3134,6 +3128,16 @@ namespace UnityEngine.InputSystem
                         var currentEventType = currentEventReadPtr->type;
 
 #if UNITY_EDITOR
+
+                        // When the game is playing and has focus, we never process input in editor updates.
+                        // All we do is just switch to editor state buffers and then exit.
+                        if (gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor
+                            && currentEventType != new FourCC((int)InputFocusEvent.Type))
+                        {
+                            m_InputEventStream.Advance(true);
+                            continue;
+                        }
+
                         //if we dont have focus and the editor behaviour is all input goes to gameview, which is the same behaviour as in a player
                         // and we are not allowed to run in the background or the background behaviour is that we reset and disable all devices
 
@@ -3798,19 +3802,13 @@ namespace UnityEngine.InputSystem
         /// Determines if status events should be dropped and modifies early exit behavior accordingly.
         /// </summary>
         /// <param name="eventBuffer">The current event buffer</param>
-        /// <param name="canEarlyOut">Reference to the early exit flag that may be modified</param>
         /// <returns>True if status events should be dropped, false otherwise.</returns>
-        private bool ShouldDropStatusEvents(InputEventBuffer eventBuffer)//, ref bool canEarlyOut)
+        private bool ShouldDropStatusEvents(InputEventBuffer eventBuffer)
         {
             // If the game is not playing but we're sending all input events to the game,
             // the buffer can just grow unbounded. So, in that case, set a flag to say we'd
             // like to drop status events, and do not early out.
-            if (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)))
-            {
-               // canEarlyOut = false;
-                return true;
-            }
-            return false;
+            return (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)));
         }
 
         /// <summary>
@@ -3823,14 +3821,7 @@ namespace UnityEngine.InputSystem
         private bool ShouldDiscardEventInEditor(FourCC eventType, double eventTime, InputUpdateType updateType)
         {
             // Check if this is an event that occurred during edit mode transition
-            if (ShouldDiscardEditModeTransitionEvent(eventType, eventTime, updateType))
-                return true;
-
-           // // Check if this is an out-of-focus event that should be discarded
-           // if (ShouldDiscardOutOfFocusEvent(eventType, eventTime))
-           //     return true;
-
-            return false;
+            return ShouldDiscardEditModeTransitionEvent(eventType, eventTime, updateType);
         }
 
         /// <summary>
