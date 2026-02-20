@@ -569,7 +569,7 @@ partial class CoreTests
     [TestCase(InputSystemComponent.InputSystemUIInputModule, typeof(InputSystemUIInputModule))]
     [TestCase(InputSystemComponent.StandaloneInputModule, typeof(StandaloneInputModule))]
     [TestCase(InputSystemComponent.VirtualMouseInput, typeof(VirtualMouseInput))]
-    //[TestCase(InputSystemComponent.TouchSimulation, typeof(TouchSimulation))]
+    [TestCase(InputSystemComponent.TouchSimulation, typeof(TouchSimulation))]
     [TestCase(InputSystemComponent.OnScreenButton, typeof(OnScreenButton))]
     [TestCase(InputSystemComponent.OnScreenStick, typeof(OnScreenStick))]
     [Category("Analytics")]
