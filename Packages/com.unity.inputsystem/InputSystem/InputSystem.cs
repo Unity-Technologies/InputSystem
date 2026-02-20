@@ -67,13 +67,13 @@ namespace UnityEngine.InputSystem
 
         static InputSystem()
         {
-            GlobalInitialize(true);
+            GlobalInitialize(calledFromCtor: true);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RuntimeInitialize()
         {
-            GlobalInitialize(false);
+            GlobalInitialize(calledFromCtor: false);
         }
 
         #region Layouts
