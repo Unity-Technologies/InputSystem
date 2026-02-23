@@ -1099,7 +1099,7 @@ internal class CorePerformanceTests : CoreTestsFixture
     }
 
 #endif
-    
+
     // All the profiler markers in the package code.
     // Needed for the tests below.
     string[] allInputSystemProfilerMarkers =
