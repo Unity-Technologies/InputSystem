@@ -806,7 +806,7 @@ namespace UnityEngine.InputSystem
         /// Associating a camera with a player is necessary only when using split-screen (see <see cref="PlayerInputManager.splitScreen"/>).
         /// </remarks>
         public
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         // camera property is deprecated and only available in Editor.
 #if !UNITY_6000_5_OR_NEWER
         new
