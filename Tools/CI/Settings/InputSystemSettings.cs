@@ -125,7 +125,19 @@ public class InputSystemSettings : AnnotatedSettingsBase
                     "com.unity.xr.visionos",
                     "com.unity.charactercontroller"
                 }
-            }
+            },
+            {
+                new Editor("6000.6",  ""),
+                new HashSet<string>()
+                {
+                    "com.unity.polyspatial",
+                    "com.unity.polyspatial.visionos",
+                    "com.unity.polyspatial.extensions",
+                    "com.unity.polyspatial.xr",
+                    "com.unity.xr.visionos",
+                    "com.unity.charactercontroller"
+                }
+            },
         };
 
         InputSystemPackage.CoverageCommands.Enabled = true;

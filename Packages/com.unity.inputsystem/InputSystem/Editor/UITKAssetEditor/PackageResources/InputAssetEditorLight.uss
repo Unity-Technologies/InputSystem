@@ -1,4 +1,5 @@
 :root {
     --input-editor-colors-properties-foldout: #DFDFDF;
     --input-editor-colors-properties-foldout-border: #808080;
+    --input-editor-colors-properties-foldout-toggle-hover: #e6e6e6;
 }
