@@ -3592,7 +3592,7 @@ namespace UnityEngine.InputSystem
                     "\n\nNote: Changing the active input handling requires to restart the Editor.";
 
                 bool userChoseEnableAndRestart;
-#if UNITY_6000_0_OR_NEWER
+#if UNITY_6000_3_OR_NEWER
                 userChoseEnableAndRestart = EditorUtility.DisplayDialog(
                     "Native Device Inputs Not Enabled",
                     dialogText,
