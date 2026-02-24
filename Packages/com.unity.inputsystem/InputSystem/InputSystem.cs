@@ -3590,7 +3590,7 @@ namespace UnityEngine.InputSystem
                 const string dialogText = "The new Input System Package is installed, but not configured to enable native device input, such as keyboard, mouse, or gamepad actions. " +
                     "\n\nThe Active Input Handling parameter must be set to \"Input System Package (New)\", under Project Settings > Player." +
                     "\n\nNote: Changing the active input handling requires to restart the Editor.";
-                
+
                 bool userChoseEnableAndRestart;
 #if UNITY_6000_0_OR_NEWER
                 userChoseEnableAndRestart = EditorUtility.DisplayDialog(
@@ -3603,8 +3603,8 @@ namespace UnityEngine.InputSystem
 #else
                 userChoseEnableAndRestart = EditorUtility.DisplayDialog(
                     "Native Device Inputs Not Enabled",
-                    dialogText, 
-                    "Enable & Restart", 
+                    dialogText,
+                    "Enable & Restart",
                     "Don't Enable");
 #endif
                 if (userChoseEnableAndRestart)
