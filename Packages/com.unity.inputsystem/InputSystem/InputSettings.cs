@@ -912,7 +912,8 @@ namespace UnityEngine.InputSystem
             /// when the focus returns. This is the expected behavior, not a bug. 
             /// If you need a reliable state after focus changes, use ResetAndDisableNonBackgroundDevices (default) or ResetAndDisableAllDevices.
             /// </summary>
-            IgnoreFocus = 2,}
+            IgnoreFocus = 2,
+        }
 
         /// <summary>
         /// Determines how player focus is handled with respect to input when we are in play mode in the editor.
