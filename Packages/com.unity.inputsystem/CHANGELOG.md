@@ -5,10 +5,18 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-Due to package verification, the latest version below is the unpublished version and the date is meaningless.
-however, it has to be formatted properly to pass verification tests.
-
 ## [Unreleased] - yyyy-mm-dd
+
+### Fixed
+
+- Improved New Input System warning dialog, Native Device Inputs Not Enabled [UUM-132151].
+
+### Changed
+
+### Added
+
+
+## [1.19.0] - 2026-02-24
 
 ### Changed
 
