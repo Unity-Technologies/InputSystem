@@ -5,13 +5,15 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-Due to package verification, the latest version below is the unpublished version and the date is meaningless.
-however, it has to be formatted properly to pass verification tests.
-
 ## [Unreleased] - yyyy-mm-dd
+
+
+
+## [1.19.0] - 2026-02-24
 
 ### Changed
 
+- Reverted the deprecation of the USE_IMGUI_EDITOR_FOR_ASSETS feature option (ISX-2397).
 - Updated `m_ActionAssetInstanceID` in PlayerInputEditor.cs to use `EntityId` instead of `InstanceID`.
 - Consecutive wildcard characters ('*') used in input control-paths are now collapsed into a single wildcard when multiple consecutive wildcard characters are present.
 
