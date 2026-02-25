@@ -3594,7 +3594,7 @@ namespace UnityEngine.InputSystem
                 bool userChoseEnableAndRestart;
 #if UNITY_6000_3_OR_NEWER
                 userChoseEnableAndRestart = EditorUtility.DisplayDialog(
-                    "Native Device Inputs Not Enabled",
+                    "Input System native platform backend not enabled",
                     dialogText,
                     "Enable & Restart",
                     "Don't Enable",
