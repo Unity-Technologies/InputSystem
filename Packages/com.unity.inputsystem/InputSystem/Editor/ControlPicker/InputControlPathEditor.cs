@@ -124,7 +124,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Cache the display name per path value and only recompute when the string actually changes.
-            if (!string.Equals(path, m_CachedPath, StringComparison.Ordinal))
+            if (!string.Equals(path, m_CachedPath, StringComparison.InvariantCultureIgnoreCase))
             {
                 m_CachedPath = path;
                 m_CachedDisplayName = InputControlPath.ToHumanReadableString(path);
