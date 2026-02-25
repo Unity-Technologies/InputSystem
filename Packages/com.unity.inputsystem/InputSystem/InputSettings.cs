@@ -889,9 +889,13 @@ namespace UnityEngine.InputSystem
 
             /// <summary>
             /// Ignore all changes in focus and leave devices untouched. This also disables focus checks in <see cref="UI.InputSystemUIInputModule"/>.
+            /// This mode doesn't disable devices when the application loses focus. It also doesn't reset or sync device state on focus changes. 
+            /// As a result, input controls may retain a stale state after focus transitions. 
+            /// For example, if a key is held when the application loses focus and released while unfocused, the Input System still reports that key as pressed
+            /// when the focus returns. This is the expected behavior, not a bug. 
+            /// If you need a reliable state after focus changes, use ResetAndDisableNonBackgroundDevices (default) or ResetAndDisableAllDevices.
             /// </summary>
-            IgnoreFocus = 2,
-        }
+            IgnoreFocus = 2,}
 
         /// <summary>
         /// Determines how player focus is handled with respect to input when we are in play mode in the editor.
