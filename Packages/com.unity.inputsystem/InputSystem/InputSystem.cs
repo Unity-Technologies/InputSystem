@@ -3602,7 +3602,7 @@ namespace UnityEngine.InputSystem
                     "RestartInstalledInputHandlingWarning");
 #else
                 userChoseEnableAndRestart = EditorUtility.DisplayDialog(
-                    "Native Device Inputs Not Enabled",
+                    "Input System native platform backend not enabled",
                     dialogText,
                     "Enable & Restart",
                     "Don't Enable");
