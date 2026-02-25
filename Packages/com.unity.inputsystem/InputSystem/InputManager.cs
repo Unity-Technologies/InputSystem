@@ -181,12 +181,12 @@ namespace UnityEngine.InputSystem
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
 
+                if (m_Settings == value)
+                    return;
+
                 // Delete the "temporary" settings if necessary
                 if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
                     ScriptableObject.DestroyImmediate(m_Settings);
-
-                if (m_Settings == value)
-                    return;
 
                 m_Settings = value;
                 ApplySettings();
