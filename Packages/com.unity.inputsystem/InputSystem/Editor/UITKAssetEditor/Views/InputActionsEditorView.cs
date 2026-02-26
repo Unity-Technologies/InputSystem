@@ -23,7 +23,6 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ToolbarButton m_SaveButton;
 
         private readonly Action m_SaveAction;
-        private readonly bool m_IsProjectSettings;
 
         private ControlSchemesView m_ControlSchemesView;
 
@@ -32,7 +31,6 @@ namespace UnityEngine.InputSystem.Editor
             : base(root, stateContainer)
         {
             m_SaveAction = saveAction;
-            m_IsProjectSettings = isProjectSettings;
 
             var mainEditorAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 InputActionsEditorConstants.PackagePath +
