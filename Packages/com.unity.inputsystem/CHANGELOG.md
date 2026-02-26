@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
+
+- Improved New Input System warning dialog, Native Device Inputs Not Enabled [UUM-132151].
+
+### Changed
+
+### Added
 
 
 ## [1.19.0] - 2026-02-24
