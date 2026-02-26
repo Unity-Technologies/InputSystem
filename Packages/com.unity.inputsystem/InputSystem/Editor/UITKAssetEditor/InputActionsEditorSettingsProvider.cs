@@ -187,6 +187,17 @@ namespace UnityEngine.InputSystem.Editor
             EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 
+        private void OnSaveAssetRequested()
+        {
+            var asset = GetAsset();
+            if (asset == null)
+                return;
+            if (m_View != null && m_View.IsControlSchemeViewActive())
+                return;
+            ProjectWideActionsAsset.Verify(asset);
+            EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
+        }
+
         private void CreateUI()
         {
             var projectSettingsAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
@@ -253,7 +264,7 @@ namespace UnityEngine.InputSystem.Editor
             if (hasAsset)
             {
                 m_StateContainer = new StateContainer(m_State, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset)));
-                m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, null);
+                m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, OnSaveAssetRequested);
                 m_StateContainer.Initialize(m_RootVisualElement.Q("action-editor"));
             }
         }

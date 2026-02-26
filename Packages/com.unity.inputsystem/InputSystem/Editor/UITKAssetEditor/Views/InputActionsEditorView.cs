@@ -23,6 +23,7 @@ namespace UnityEngine.InputSystem.Editor
         private readonly ToolbarButton m_SaveButton;
 
         private readonly Action m_SaveAction;
+        private readonly bool m_IsProjectSettings;
 
         private ControlSchemesView m_ControlSchemesView;
 
@@ -31,6 +32,7 @@ namespace UnityEngine.InputSystem.Editor
             : base(root, stateContainer)
         {
             m_SaveAction = saveAction;
+            m_IsProjectSettings = isProjectSettings;
 
             var mainEditorAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 InputActionsEditorConstants.PackagePath +
@@ -53,7 +55,7 @@ namespace UnityEngine.InputSystem.Editor
             m_DevicesToolbar.SetEnabled(false);
 
             m_SaveButton = root.Q<ToolbarButton>(name: saveButtonId);
-            m_SaveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
+            m_SaveButton.SetEnabled(m_IsProjectSettings || InputEditorUserSettings.autoSaveInputActionAssets == false);
             m_SaveButton.clicked += OnSaveButton;
 
             var autoSaveToggle = root.Q<ToolbarToggle>(name: autoSaveToggleId);
@@ -149,7 +151,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             SetUpControlSchemesMenu(viewState);
             SetUpDevicesMenu(viewState);
-            m_SaveButton.SetEnabled(InputEditorUserSettings.autoSaveInputActionAssets == false);
+            m_SaveButton.SetEnabled(m_IsProjectSettings || InputEditorUserSettings.autoSaveInputActionAssets == false);
         }
 
         private string SetupControlSchemeName(string name)
