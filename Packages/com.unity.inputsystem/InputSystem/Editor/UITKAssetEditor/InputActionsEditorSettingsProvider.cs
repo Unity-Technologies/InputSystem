@@ -183,7 +183,8 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
-            InputActionsEditorWindow.Save(AssetDatabase.GetAssetPath(asset), asset);
+            ProjectWideActionsAsset.Verify(asset);     // Ignore verification result for save
+            EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
         }
 
         private void CreateUI()
