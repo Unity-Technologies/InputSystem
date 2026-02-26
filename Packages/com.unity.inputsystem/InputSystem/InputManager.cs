@@ -3237,7 +3237,7 @@ namespace UnityEngine.InputSystem
                         // In the editor, we may need to bump events from editor updates into player updates
                         // and vice versa.
 #if UNITY_EDITOR
-                        if (isPlaying && !gameHasFocus)
+                        if (isPlaying && !gameHasFocus && currentEventType != new FourCC((int)InputFocusEvent.Type))
                         {
                             if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode
                                 .PointersAndKeyboardsRespectGameViewFocus &&
