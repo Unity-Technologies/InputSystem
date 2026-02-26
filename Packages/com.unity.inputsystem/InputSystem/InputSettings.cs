@@ -857,7 +857,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// Limitations:
-        ////
+        ///
         /// Receiving input while the application is not in the foreground is platform and device-dependent, and should not be relied upon.
         /// IgnoreFocus does not grant the ability to receive input in the background; it only prevents the Input System from resetting/disabling devices on focus changes.
         ///
