@@ -719,11 +719,6 @@ namespace UnityEngine.InputSystem
             if (string.IsNullOrEmpty(featureName))
                 throw new ArgumentNullException(nameof(featureName));
 
-            if (featureName == InputFeatureNames.kUseIMGUIEditorForAssets)
-            {
-                throw new ArgumentException($"The {InputFeatureNames.kUseIMGUIEditorForAssets} feature flag is no longer supported.");
-            }
-
             if (m_FeatureFlags == null)
                 m_FeatureFlags = new HashSet<string>();
 
@@ -964,8 +959,14 @@ namespace UnityEngine.InputSystem
         }
 
 #if UNITY_EDITOR
-        [Obsolete("useIMGUIEditorForAssets is obsolete and will be removed in a future release.")]
-        public bool useIMGUIEditorForAssets => false;
+        /// <summary>
+        /// Determines if we should render the UI with IMGUI even if an UI Toolkit UI is available.
+        ///
+        /// This should be used when writing a custom <see cref="InputParameterEditor"/> to :
+        /// * support inspector view which only work in IMGUI for now.
+        /// * prevent the UI to be rendered in IMGUI and UI Toolkit in the Input Actions Editor window.
+        /// </summary>
+        public bool useIMGUIEditorForAssets => UnityEditor.EditorGUI.indentLevel > 0 || IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets);
 #endif
 
         private static bool CompareFloats(float a, float b)

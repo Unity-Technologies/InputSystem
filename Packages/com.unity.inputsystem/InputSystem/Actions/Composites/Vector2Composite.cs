@@ -5,6 +5,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
 
 #if UNITY_EDITOR
+using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
 #endif
@@ -191,20 +192,24 @@ namespace UnityEngine.InputSystem.Composites
     #if UNITY_EDITOR
     internal class Vector2CompositeEditor : InputParameterEditor<Vector2Composite>
     {
-        private const string label = "Mode";
-        private const string tooltipText = "How to synthesize a Vector2 from the inputs. Digital "
+        private GUIContent m_ModeLabel = new GUIContent("Mode",
+            "How to synthesize a Vector2 from the inputs. Digital "
             + "treats part bindings as buttons (on/off) whereas Analog preserves "
-            + "floating-point magnitudes as read from controls.";
+            + "floating-point magnitudes as read from controls.");
 
         public override void OnGUI()
         {
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                return;
+
+            target.mode = (Vector2Composite.Mode)EditorGUILayout.EnumPopup(m_ModeLabel, target.mode);
         }
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-            var modeField = new EnumField(label, target.mode)
+            var modeField = new EnumField(m_ModeLabel.text, target.mode)
             {
-                tooltip = tooltipText
+                tooltip = m_ModeLabel.tooltip
             };
 
             modeField.RegisterValueChangedCallback(evt =>

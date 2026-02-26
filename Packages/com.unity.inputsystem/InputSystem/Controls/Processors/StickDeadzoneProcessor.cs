@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Scripting;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
@@ -81,6 +82,11 @@ namespace UnityEngine.InputSystem.Processors
 
         public override void OnGUI()
         {
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                return;
+
+            m_MinSetting.OnGUI();
+            m_MaxSetting.OnGUI();
         }
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
