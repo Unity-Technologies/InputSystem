@@ -183,19 +183,7 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             }
 
-            ProjectWideActionsAsset.Verify(asset);     // Ignore verification result for save
-            EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
-        }
-
-        private void OnSaveAssetRequested()
-        {
-            var asset = GetAsset();
-            if (asset == null)
-                return;
-            if (m_View != null && m_View.IsControlSchemeViewActive())
-                return;
-            ProjectWideActionsAsset.Verify(asset);
-            EditorHelpers.SaveAsset(AssetDatabase.GetAssetPath(asset), asset.ToJson());
+            InputActionsEditorWindow.Save(AssetDatabase.GetAssetPath(asset), asset);
         }
 
         private void CreateUI()
@@ -264,7 +252,8 @@ namespace UnityEngine.InputSystem.Editor
             if (hasAsset)
             {
                 m_StateContainer = new StateContainer(m_State, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset)));
-                m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, OnSaveAssetRequested);
+                m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, () => InputActionsEditorWindow.Save(AssetDatabase.GetAssetPath(asset), asset));
+
                 m_StateContainer.Initialize(m_RootVisualElement.Q("action-editor"));
             }
         }
