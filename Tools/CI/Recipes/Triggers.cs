@@ -5,7 +5,6 @@ using RecipeEngine.Api.Recipes;
 using RecipeEngine.Api.Triggers;
 using InputSystem.Cookbook.Settings;
 using RecipeEngine.Api.Triggers.Recurring;
-using RecipeEngine.Modules.Wrench.Models;
 
 namespace InputSystem.Cookbook.Recipes;
 
@@ -26,8 +25,6 @@ public class Triggers: RecipeBase
     IEnumerable<Dependency> allMobilePerformanceTests = new MobilePerformanceTests().AsDependencies().Where( d => !d.JobId.Contains("TvOS"));
     // Run performance build jobs on TvOS for all Unity versions.
     IEnumerable<Dependency> allTvOSPerformanceBuildJobs = new MobilePerformanceBuildJobs().AsDependencies().Where(d=> d.JobId.Contains("TvOS"));
-    
-    IEnumerable<Dependency> allValidationJobsForPackage = InputSystemSettings.Instance.Wrench.WrenchJobs[InputSystemSettings.InputSystemPackageName][JobTypes.Validation];
     
     protected override ISet<Job> LoadJobs()
         => Combine.Collections(GetTriggers()).SelectJobs();
@@ -53,20 +50,13 @@ public class Triggers: RecipeBase
                 .WithDependencies(allMobileFunctionalTests)
                 .WithDependencies(allTvOSFunctionalBuildJobs)
                 .WithDependencies(new Dependency("wrench/promotion-jobs", "publish_dry_run_inputsystem"))
-                .WithDependencies(new Dependency("wrench/api-validation-jobs", "all_api_validation_jobs"))
                 .WithPullRequestTrigger(pr => pr.ExcludeDraft().And().WithTargetBranch(InputSystemSettings.BranchName).And().WithoutChanges("**/*.md"), true, CancelLeftoverJobs.Always),
 
             JobBuilder.Create("Nightly trigger")
                 .WithDependencies(allStandaloneIl2CppFunctionalTests.Where(d => d.JobId.Contains("Ubuntu")))
                 .WithDependencies(new Dependency("triggers", "all_performance_tests"))
-                .WithScheduleTrigger(Schedule.RunDaily(InputSystemSettings.BranchName)),
-            
-            JobBuilder.Create("Documentation trigger")
-                .WithDependencies(allValidationJobsForPackage.Where(d => d.JobId.Contains("ubuntu")))
-                .WithPullRequestTrigger(pr => pr.ExcludeDraft().And().WithTargetBranch(InputSystemSettings.BranchName)
-                    .And().WithChanges("**/*.md")
-                    .Or().WithChanges("Documentation~/**"), true, CancelLeftoverJobs.Always),
-        ];
+                .WithScheduleTrigger(Schedule.RunDaily(InputSystemSettings.BranchName))
+            ];
         return builders;
     }
 }

@@ -10,7 +10,15 @@
             "ValidationTest": "API Validation",
             "ExceptionMessage": "New assembly \"Unity.InputSystem.TestFramework\" may only be added in a new minor or major version.",
             "PackageVersion": "1.19.1"
+        },
+        {
+            "ValidationTest": "API Validation",
+            "ExceptionMessage": "Additions require a new minor or major version.",
+            "PackageVersion": "1.19.1"
         }
+    ],
+    "WarningExceptions": []
+}
     ],
     "WarningExceptions": []
 }
