@@ -25,7 +25,7 @@ all_preview_apv_jobs:
   - path: .yamato/wrench/preview-a-p-v.yml#preview_apv_-_6000_6_-_win10
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 2022.3 manifest (MacOS).
 preview_apv_-_2022_3_-_macos13:
@@ -80,10 +80,10 @@ preview_apv_-_2022_3_-_macos13:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 2022.3 manifest (Ubuntu).
 preview_apv_-_2022_3_-_ubuntu1804:
@@ -138,10 +138,10 @@ preview_apv_-_2022_3_-_ubuntu1804:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 2022.3 manifest (Windows).
 preview_apv_-_2022_3_-_win10:
@@ -197,10 +197,10 @@ preview_apv_-_2022_3_-_win10:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.0 manifest (MacOS).
 preview_apv_-_6000_0_-_macos13:
@@ -255,10 +255,10 @@ preview_apv_-_6000_0_-_macos13:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.0 manifest (Ubuntu).
 preview_apv_-_6000_0_-_ubuntu2204:
@@ -313,10 +313,10 @@ preview_apv_-_6000_0_-_ubuntu2204:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.0 manifest (Windows).
 preview_apv_-_6000_0_-_win10:
@@ -372,10 +372,10 @@ preview_apv_-_6000_0_-_win10:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.3 manifest (MacOS).
 preview_apv_-_6000_3_-_macos13:
@@ -430,10 +430,10 @@ preview_apv_-_6000_3_-_macos13:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.3 manifest (Ubuntu).
 preview_apv_-_6000_3_-_ubuntu2204:
@@ -488,10 +488,10 @@ preview_apv_-_6000_3_-_ubuntu2204:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.3 manifest (Windows).
 preview_apv_-_6000_3_-_win10:
@@ -547,10 +547,10 @@ preview_apv_-_6000_3_-_win10:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.4 manifest (MacOS).
 preview_apv_-_6000_4_-_macos13:
@@ -605,10 +605,10 @@ preview_apv_-_6000_4_-_macos13:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.4 manifest (Ubuntu).
 preview_apv_-_6000_4_-_ubuntu2204:
@@ -663,10 +663,10 @@ preview_apv_-_6000_4_-_ubuntu2204:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.4 manifest (Windows).
 preview_apv_-_6000_4_-_win10:
@@ -722,10 +722,10 @@ preview_apv_-_6000_4_-_win10:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.5 manifest (MacOS).
 preview_apv_-_6000_5_-_macos13:
@@ -780,10 +780,10 @@ preview_apv_-_6000_5_-_macos13:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.5 manifest (Ubuntu).
 preview_apv_-_6000_5_-_ubuntu2204:
@@ -838,10 +838,10 @@ preview_apv_-_6000_5_-_ubuntu2204:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.5 manifest (Windows).
 preview_apv_-_6000_5_-_win10:
@@ -897,10 +897,10 @@ preview_apv_-_6000_5_-_win10:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.6 manifest (MacOS).
 preview_apv_-_6000_6_-_macos13:
@@ -955,10 +955,10 @@ preview_apv_-_6000_6_-_macos13:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.6 manifest (Ubuntu).
 preview_apv_-_6000_6_-_ubuntu2204:
@@ -1013,10 +1013,10 @@ preview_apv_-_6000_6_-_ubuntu2204:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
 # Functional tests for dependents found in the latest 6000.6 manifest (Windows).
 preview_apv_-_6000_6_-_win10:
@@ -1072,8 +1072,8 @@ preview_apv_-_6000_6_-_win10:
     UNITY_LICENSING_SERVER_DELETE_NUL: 0
     UNITY_LICENSING_SERVER_DELETE_ULF: 0
     UNITY_LICENSING_SERVER_TOOLSET: pro
-    UPMPVP_CONTEXT_WRENCH: 2.1.2.0
+    UPMPVP_CONTEXT_WRENCH: 2.2.1.0
   metadata:
     Job Maintainers: '#rm-packageworks'
-    Wrench: 2.1.2.0
+    Wrench: 2.2.1.0
 
