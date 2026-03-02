@@ -24,6 +24,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private string m_AssetJson;
         private bool m_IsDirty;
+        private bool m_IsEditorQuitting;
 
         private StateContainer m_StateContainer;
         private InputActionsEditorView m_View;
@@ -313,11 +314,21 @@ namespace UnityEngine.InputSystem.Editor
         private void OnEnable()
         {
             analytics.Begin();
+            EditorApplication.wantsToQuit += OnWantsToQuit;
         }
 
         private void OnDisable()
         {
             analytics.End();
+            EditorApplication.wantsToQuit -= OnWantsToQuit;
+        }
+
+        private bool OnWantsToQuit()
+        {
+            // Here the user will be prompted
+            bool isAllowedToQuit = OnDestroyIsApplicationAllowedToQuit(false);
+            m_IsEditorQuitting = isAllowedToQuit;
+            return m_IsEditorQuitting;
         }
 
         private void OnFocus()
@@ -342,39 +353,48 @@ namespace UnityEngine.InputSystem.Editor
             analytics.RegisterEditorFocusOut();
         }
 
-        private void HandleOnDestroy()
+        private bool OnDestroyIsApplicationAllowedToQuit(bool rebuildUIOnCancel)
         {
             // Do we have unsaved changes that we need to ask the user to save or discard?
             if (!m_IsDirty)
-                return;
+                return true;
 
             // Get target asset path from GUID, if this fails file no longer exists and we need to abort.
             var assetPath = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
             if (string.IsNullOrEmpty(assetPath))
-                return;
+                return true;
 
-            // Prompt user with a dialog
-            var result = Dialog.InputActionAsset.ShowSaveChanges(assetPath);
-            switch (result)
+            if (!m_IsEditorQuitting)
             {
-                case Dialog.Result.Save:
-                    Save(isAutoSave: false);
-                    break;
-                case Dialog.Result.Cancel:
-                    // Cancel editor quit. (open new editor window with the edited asset)
-                    ReshowEditorWindowWithUnsavedChanges();
-                    break;
-                case Dialog.Result.Discard:
-                    // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(result));
+                // Prompt user with a dialog
+                var result = Dialog.InputActionAsset.ShowSaveChanges(assetPath);
+                switch (result)
+                {
+                    case Dialog.Result.Save:
+                        Save(isAutoSave: false);
+                        return true;
+                    case Dialog.Result.Cancel:
+                        if (rebuildUIOnCancel)
+                        {
+                            // Cancel editor quit. (open new editor window with the edited asset)
+                            ReshowEditorWindowWithUnsavedChanges();
+                        }
+
+                        return false;
+                    case Dialog.Result.Discard:
+                        // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
+                        return true;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(result));
+                }
             }
+
+            return true;
         }
 
         private void OnDestroy()
         {
-            HandleOnDestroy();
+            OnDestroyIsApplicationAllowedToQuit(true);
 
             // Clean-up
             CleanupStateContainer();
