@@ -159,7 +159,7 @@ namespace UnityEngine.InputSystem
                 // We can no longer rely on checking the curent focus state, due to this check being used pre-update
                 // to determine in which update type to process input, and focus being updated in Update.
                 // The solution here would be to make update calls explicitly specify the update type and no longer use this property.
-                if (!m_RunPlayerUpdatesInEditMode && !gameIsPlaying)
+                if (!m_RunPlayerUpdatesInEditMode && (!gameIsPlaying || !gameHasFocus))
                     return InputUpdateType.Editor;
                 #endif
 
@@ -1581,7 +1581,6 @@ namespace UnityEngine.InputSystem
                             (int)deviceStateBlockSize,
                             (byte*)resetMaskPtr + stateBlock.byteOffset);
                     }
-
                     UpdateState(device, defaultUpdateType, statePtr, 0, deviceStateBlockSize, currentTime,
                         new InputEventPtr((InputEvent*)stateEventPtr));
                 }
@@ -3109,7 +3108,7 @@ namespace UnityEngine.InputSystem
                     if (shouldProcessActionTimeouts)
                         ProcessStateChangeMonitorTimeouts();
                     InvokeAfterUpdateCallback(updateType);
-                    m_CurrentUpdate = default;
+                    m_CurrentUpdate = InputUpdateType.None;
                     return;
                 }
 
@@ -3131,7 +3130,18 @@ namespace UnityEngine.InputSystem
                         var currentEventType = currentEventReadPtr->type;
 
 #if UNITY_EDITOR
-
+                        var possibleFocusEvent = m_InputEventStream.Peek();
+                        if (possibleFocusEvent != null)
+                        {
+                            if (possibleFocusEvent->type == new FourCC((int)InputFocusEvent.Type) && !gameShouldGetInputRegardlessOfFocus)
+                            {
+                                // If the next event is a focus event and we're not supposed to get input in the current update type, skip current event.
+                                // This ensures that we don't end up with a half process event due to swapping buffers
+                                // such as InputActionPhase.Started not being finished by a InputActionPhase.Performed and ending up in a pressed state in the previous update type
+                                m_InputEventStream.Advance(false);
+                                continue;
+                            }
+                        }
                         // When the game is playing and has focus, we never process input in editor updates.
                         // All we do is just switch to editor state buffers and then exit.
                         if (gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor
@@ -3160,7 +3170,6 @@ namespace UnityEngine.InputSystem
                             m_InputEventStream.Advance(true);
                             continue;
                         }
-                           
 #else
                         // In player builds, flush if out of focus and not running in background
                         if (!gameHasFocus && !m_Runtime.runInBackground && currentEventType != InputFocusEvent.Type)
@@ -3608,15 +3617,13 @@ namespace UnityEngine.InputSystem
         {
             var focusEventPtr = (InputFocusEvent*)currentEventReadPtr;
             FocusFlags focusState = focusEventPtr->focusFlags;
+            m_FocusState = focusState;
 
 #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();
 
             if (!m_Runtime.isInPlayMode)
-            {
-                m_FocusState = focusState;
                 return;
-            }
 #endif
 
            bool runInBackground =
@@ -3635,21 +3642,11 @@ namespace UnityEngine.InputSystem
 #endif
 
             // BackgroundBehavior.IgnoreFocus means we ignore any state changes to the device, so we can early out
+            // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
+            // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
             if (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
-            {
-                // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
-                // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
-                m_FocusState = focusState;
                 return;
-            }
 
-#if UNITY_EDITOR
-            // Set the current update type while we process the focus changes to make sure we
-            // feed into the right buffer. No need to do this in the player as it doesn't have
-            // the editor/player confusion.
-            // do we still need to do this here? as we are now always looping from onupdate
-            m_CurrentUpdate = m_UpdateMask.GetUpdateTypeForPlayer();
-#endif
             // Cache original device count in case it changes while we are processing devices.
             var deviceCount = m_DevicesCount;
             for (var i = 0; i < m_DevicesCount; ++i)
@@ -3677,13 +3674,6 @@ namespace UnityEngine.InputSystem
                     }
                 }
             }
-
-#if UNITY_EDITOR
-            m_CurrentUpdate = InputUpdateType.None;
-#endif
-
-            // We set this *after* the block above as defaultUpdateType is influenced by the setting.
-            m_FocusState = focusState;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

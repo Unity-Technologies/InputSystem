@@ -1268,16 +1268,17 @@ internal class UserTests : CoreTestsFixture
         ++InputUser.listenForUnpairedDeviceActivity;
         InputUser.onUnpairedDeviceUsed += (control, eventPtr) => Assert.Fail("Should not react!");
 
-        // We now have to queue the press event but not process it, and explicitly update in Editor.
-        // This is due to scheduled focus events are not being processed in pre-update.
-        // When calling an empty Update(), it will use the default defaultUpdateType with to determine which update type to use.
-        // However in pre-update the focus will not have switched to false yet, so the original focus check in defaultUpdateType is no longer correct.
-        // which would cause it to schedule a dynamic update instead. We solve this by only queueing the press event and then explicitly updating with Editor update type,
-        // which will process the scheduled focus event and switch the focus to false before processing the button press.
+        // We now have to run a dynamic update before the press, to make sure the focus state is up to date.
+        // This is due to scheduled focus events are not being processed in pre-update, and not running an update before the press would result in the incorrect state.
+        // When calling an empty Update(), it will use the default defaultUpdateType to determine which update type to use.
+        // However in pre-update the focus will not have switched to false yet if not running a dynamic update before, so the focus check in defaultUpdateType is no longer correct.
+        // which would cause it to schedule a dynamic update instead. We solve this by first processing the focus event before pressing the button,
+        // which will then make it correctly swap to an editor update type when doing the button press.
+        // Another way to make this test pass, is to queue the button press and then explicitly call an editor update and process both events
         // The way to solve this is to remove defaultUpdateType and split the editor/player loops or to make sure we do not call any Update() without update type, so we do not use defaultUpdateType.
         ScheduleFocusEvent(false);
-        Press(gamepad.buttonSouth, queueEventOnly : true);
-        InputSystem.Update(InputUpdateType.Editor);
+        InputSystem.Update(InputUpdateType.Dynamic);
+        Press(gamepad.buttonSouth);
 
         Assert.That(gamepad.buttonSouth.isPressed, Is.True);
     }
