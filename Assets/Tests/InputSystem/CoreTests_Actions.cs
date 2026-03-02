@@ -12506,17 +12506,20 @@ partial class CoreTests
 
         // Now when enabling actionMap ..
         actionMap.Enable();
-        // On the following update we will trigger OnBeforeUpdate which will rise started/performed
-        // from InputActionState.OnBeforeInitialUpdate as controls are "actuated"
+        // Inactive touches (ended before action was enabled) must NOT produce started/performed from
+        // OnBeforeInitialUpdate. Their persisted state (position, touchId) is non-default due to
+        // dontReset, but only TouchControl.isInProgress should be considered for initial-state check. 
+        // Related to UUM-100125 and Actions_InitialStateCheckAfterConfigurationChange_DoesNotTriggerForInactiveTouch.
         InputSystem.Update();
-        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 0)); // started+performed arrive from OnBeforeUpdate
+        Assert.That(values.Count, Is.EqualTo(0));
         values.Clear();
 
-        // Now subsequent touches should not be ignored
         BeginTouch(200, new Vector2(1, 1));
-        Assert.That(values.Count, Is.EqualTo(1));
-        Assert.That(values[0].InputId, Is.EqualTo(200));
-        Assert.That(values[0].Position, Is.EqualTo(new Vector2(1, 1)));
+        // If prepopulated, action was never actuated (synthetic initial-check is suppressed), 
+        // so BeginTouch fires started+performed (2 events).
+        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 1));
+        Assert.That(values[values.Count - 1].InputId, Is.EqualTo(200));
+        Assert.That(values[values.Count - 1].Position, Is.EqualTo(new Vector2(1, 1)));
     }
 
     // FIX: This test is currently checking if shortcut support is enabled by testing that the unwanted behaviour exists.
