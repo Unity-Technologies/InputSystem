@@ -152,11 +152,14 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                if (m_CurrentUpdate != default)
+                if (m_CurrentUpdate != InputUpdateType.None)
                     return m_CurrentUpdate;
 
-                #if UNITY_EDITOR
-                if (!m_RunPlayerUpdatesInEditMode && (!gameIsPlaying || !gameHasFocus))
+#if UNITY_EDITOR
+                // We can no longer rely on checking the curent focus state, due to this check being used pre-update
+                // to determine in which update type to process input, and focus being updated in Update.
+                // The solution here would be to make update calls explicitly specify the update type and no longer use this property.
+                if (!m_RunPlayerUpdatesInEditMode && !gameIsPlaying)
                     return InputUpdateType.Editor;
                 #endif
 
