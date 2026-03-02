@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.Scripting;
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
@@ -87,6 +88,11 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                return;
+
+            m_DurationSetting.OnGUI();
+            m_PressPointSetting.OnGUI();
         }
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)

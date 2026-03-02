@@ -17,11 +17,15 @@ all_functional_tests:
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_5_-_macos
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_5_-_ubuntu
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_5_-_windows
+  - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_6_-_macos
+  - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_6_-_ubuntu
+  - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_6_-_windows
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_2022_3_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_0_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_3_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_4_-_tvos
   - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_5_-_tvos
+  - path: .yamato/input-system-mobile-functional-build-jobs.yml#inputsystem-mobilefunctionalbuildjobs_-_6000_6_-_tvos
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_il2cpp
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_android_-_mono
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_2022_3_-_ios
@@ -37,6 +41,9 @@ all_functional_tests:
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_5_-_android_-_il2cpp
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_5_-_android_-_mono
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_5_-_ios
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_6_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_6_-_android_-_mono
+  - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_6_-_ios
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_2022_3_-_macos
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_2022_3_-_ubuntu
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_2022_3_-_windows
@@ -52,6 +59,9 @@ all_functional_tests:
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_5_-_macos
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_5_-_ubuntu
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_5_-_windows
+  - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_6_-_macos
+  - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_6_-_ubuntu
+  - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_6_-_windows
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2022_3_-_macos
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_2022_3_-_windows
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_0_-_macos
@@ -62,6 +72,8 @@ all_functional_tests:
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_4_-_windows
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_5_-_macos
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_5_-_windows
+  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_6_-_macos
+  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_6_-_windows
   - path: .yamato/wrench/promotion-jobs.yml#publish_dry_run_inputsystem
   triggers:
     expression: |-
@@ -88,11 +100,15 @@ all_performance_tests:
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_5_-_macos
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_5_-_ubuntu
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_5_-_windows
+  - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_6_-_macos
+  - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_6_-_ubuntu
+  - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_6_-_windows
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_2022_3_-_tvos
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_0_-_tvos
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_3_-_tvos
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_4_-_tvos
   - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_5_-_tvos
+  - path: .yamato/input-system-mobile-performance-build-jobs.yml#inputsystem-mobileperformancebuildjobs_-_6000_6_-_tvos
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_2022_3_-_android_-_il2cpp
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_2022_3_-_android_-_mono
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_2022_3_-_ios
@@ -108,6 +124,9 @@ all_performance_tests:
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_6000_5_-_android_-_il2cpp
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_6000_5_-_android_-_mono
   - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_6000_5_-_ios
+  - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_6000_6_-_android_-_il2cpp
+  - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_6000_6_-_android_-_mono
+  - path: .yamato/input-system-mobile-performance-tests.yml#inputsystem-mobileperformancetests_-_6000_6_-_ios
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_2022_3_-_macos
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_2022_3_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_2022_3_-_windows
@@ -123,6 +142,9 @@ all_performance_tests:
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_5_-_macos
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_5_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_5_-_windows
+  - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_6_-_macos
+  - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_6_-_ubuntu
+  - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_6_-_windows
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_2022_3_-_macos
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_2022_3_-_ubuntu
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_2022_3_-_windows
@@ -138,6 +160,9 @@ all_performance_tests:
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_5_-_macos
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_5_-_ubuntu
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_5_-_windows
+  - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_6_-_macos
+  - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_6_-_ubuntu
+  - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_6_-_windows
 nightly_trigger:
   name: Nightly trigger
   dependencies:
@@ -146,6 +171,7 @@ nightly_trigger:
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_3_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_4_-_ubuntu
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_5_-_ubuntu
+  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_6_-_ubuntu
   - path: .yamato/triggers.yml#all_performance_tests
   triggers:
     recurring:

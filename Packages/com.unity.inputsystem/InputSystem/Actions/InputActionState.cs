@@ -1153,6 +1153,13 @@ namespace UnityEngine.InputSystem
                 if (IsControlEnabled(controlIndex))
                     continue;
 
+                // We might end up here if an action map is enabled from e.g. an event processing callback such as
+                // InputAction.cancel event handler (ISXB-1767). In this case we must skip controls associated with
+                // a device that is not connected to the system (Have deviceIndex < 0). We check this here to not
+                // cause side effects if aborting later in the call-chain.
+                if (!controls[controlIndex].device.added)
+                    continue;
+
                 var bindingIndex = controlIndexToBindingIndex[controlIndex];
                 var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
 
@@ -1474,8 +1481,18 @@ namespace UnityEngine.InputSystem
                     if (m_OnBeforeUpdateHooked)
                         bindingStatePtr->initialStateCheckPending = false;
 
-                    // Store magnitude. We do this once and then only read it from here.
                     var control = controls[controlIndex];
+
+                    // We might end up here if an action map is enabled from e.g. an event processing callback such as
+                    // InputAction.cancel event handler (ISXB-1767). In this case we must skip controls associated with
+                    // a device that is not connected to the system (Have deviceIndex < 0). We check this here to not
+                    // cause side effects if aborting later in the call-chain.
+                    if (control == null || !controls[controlIndex].device.added)
+                    {
+                        return;
+                    }
+
+                    // Store magnitude. We do this once and then only read it from here.
                     trigger.magnitude = control.CheckStateIsAtDefault() ? 0f : control.magnitude;
                     controlMagnitudes[controlIndex] = trigger.magnitude;
 
