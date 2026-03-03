@@ -855,6 +855,23 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Determines how the applications behaves when running in the background. See <see cref="backgroundBehavior"/>.
         /// </summary>
+        /// <remarks>
+        /// Limitations:
+        ///
+        /// Receiving input while the application is not in the foreground is platform and device-dependent, and should not be relied upon.
+        /// IgnoreFocus does not grant the ability to receive input in the background; it only prevents the Input System from resetting/disabling devices on focus changes.
+        ///
+        /// Specifically:
+        ///
+        /// Keyboard: InputSystem doesn't receive events while unfocused.
+        /// Even on platforms where OS-level hooks could technically capture background keyboard input, Unity doesn't forward it to the managed Input System.
+        ///
+        /// Mouse: Only receives events when the cursor is hovering over the application window.
+        ///
+        /// XR HMDs: May continue receiving tracking data while unfocused, depending on the XR runtime.
+        /// These devices report canRunInBackground == true and are the primary use case for ResetAndDisableNonBackgroundDevices,
+        /// which leaves them untouched while resetting everything else.
+        /// </remarks>
         /// <seealso href="https://docs.unity3d.com/ScriptReference/Application-isFocused.html"/>
         /// <seealso href="https://docs.unity3d.com/ScriptReference/Application-runInBackground.html"/>
         /// <seealso cref="backgroundBehavior"/>
@@ -889,6 +906,11 @@ namespace UnityEngine.InputSystem
 
             /// <summary>
             /// Ignore all changes in focus and leave devices untouched. This also disables focus checks in <see cref="UI.InputSystemUIInputModule"/>.
+            /// This mode doesn't disable devices when the application loses focus. It also doesn't reset or sync device state on focus changes.
+            /// As a result, input controls may retain a stale state after focus transitions.
+            /// For example, if a key is held when the application loses focus and released while unfocused, the Input System still reports that key as pressed
+            /// when the focus returns. This is the expected behavior, not a bug.
+            /// If you need a reliable state after focus changes, use ResetAndDisableNonBackgroundDevices (default) or ResetAndDisableAllDevices.
             /// </summary>
             IgnoreFocus = 2,
         }

@@ -41,10 +41,6 @@ public abstract class BaseRecipe: RecipeBase
             var supportedVersions = package.SupportedEditorVersions;
             foreach (var version in supportedVersions)
             {
-                // Skip tests on 2021.3 as it is longer supported
-                if (version == "2021.3")
-                    continue;
-
                 builders.Add(ProduceJob(package, platform, version));
             }
         }
@@ -82,7 +78,7 @@ public abstract class BaseRecipe: RecipeBase
     /// </summary>
     /// <param name="package"> The package that the job should target.</param>
     /// <returns>The system types.</returns>
-    public virtual IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => package.EditorPlatforms.Values;
+    public virtual IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => package.UnityEditors[0].EditorPlatforms;
 
     protected virtual string GetName() => Name;
     protected string GetJobName(string editorVersion, SystemType systemType)
