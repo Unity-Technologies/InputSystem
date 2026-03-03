@@ -719,9 +719,9 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 #endif
         }
 
-        internal static GlobalState s_GlobalState;
+        internal static GlobalState s_GlobalState = new GlobalState { historyLengthPerFinger = 64 };
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void InitializeGlobalTouchState()
         {
             // Touch GlobalState doesn't require Dispose operations
