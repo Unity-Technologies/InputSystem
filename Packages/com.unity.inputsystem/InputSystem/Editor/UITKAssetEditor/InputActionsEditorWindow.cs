@@ -281,24 +281,17 @@ namespace UnityEngine.InputSystem.Editor
         private void Save(bool isAutoSave)
         {
             var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
-            var asset = GetEditedAsset();
+            var projectWideActions = InputSystem.actions;
+            if (projectWideActions != null && path == AssetDatabase.GetAssetPath(projectWideActions))
+                ProjectWideActionsAsset.Verify(GetEditedAsset());
 
-            if (Save(path, asset))
+            if (InputActionAssetManager.SaveAsset(path, GetEditedAsset().ToJson()))
                 TryUpdateFromAsset();
 
             if (isAutoSave)
                 analytics.RegisterAutoSave();
             else
                 analytics.RegisterExplicitSave();
-        }
-
-        internal static bool Save(string path, InputActionAsset asset)
-        {
-            var projectWideActions = InputSystem.actions;
-            if (projectWideActions != null && path == AssetDatabase.GetAssetPath(projectWideActions))
-                ProjectWideActionsAsset.Verify(asset);
-
-            return InputActionAssetManager.SaveAsset(path, asset.ToJson());
         }
 
         private bool HasContentChanged()
