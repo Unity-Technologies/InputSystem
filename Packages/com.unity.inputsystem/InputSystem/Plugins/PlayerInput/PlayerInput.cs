@@ -1365,7 +1365,7 @@ namespace UnityEngine.InputSystem
             public string initControlScheme;
             public bool destroyIfDeviceSetupUnsuccessful;
         }
-        private static GlobalState s_GlobalState;
+        private static GlobalState s_GlobalState = new GlobalState { initPlayerIndex = -1, initSplitScreenIndex = -1 };
 
         // For sanity purposes, GlobalState is private with properties accessing specific fields
         internal static int allActivePlayersCount => s_GlobalState.allActivePlayersCount;
@@ -1375,6 +1375,9 @@ namespace UnityEngine.InputSystem
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeGlobalPlayerState()
         {
+             if (!InputSystem.IsDomainReloadDisabledForPlayMode())
+                return;
+
             // Touch GlobalState doesn't require Dispose operations
             s_GlobalState = new PlayerInput.GlobalState
             {
