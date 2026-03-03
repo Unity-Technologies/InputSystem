@@ -35,6 +35,7 @@ partial class CoreTests
     [TestCase(InputFeatureNames.kParanoidReadValueCachingChecks)]
     [TestCase(InputFeatureNames.kDisableUnityRemoteSupport)]
     [TestCase(InputFeatureNames.kRunPlayerUpdatesInEditMode)]
+    [TestCase(InputFeatureNames.kUseIMGUIEditorForAssets)]
     public void Settings_ShouldStoreSettingsAndFeatureFlags(string featureName)
     {
         using (var settings = Scoped.Object(InputSettings.CreateInstance<InputSettings>()))

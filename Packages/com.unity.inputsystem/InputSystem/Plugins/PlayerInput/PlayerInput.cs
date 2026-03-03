@@ -808,7 +808,9 @@ namespace UnityEngine.InputSystem
         public
 #if UNITY_EDITOR
         // camera property is deprecated and only available in Editor.
+#if !UNITY_6000_5_OR_NEWER
         new
+#endif
         #endif
         Camera camera
         {

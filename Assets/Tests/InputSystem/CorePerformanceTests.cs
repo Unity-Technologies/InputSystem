@@ -1100,8 +1100,6 @@ internal class CorePerformanceTests : CoreTestsFixture
 
 #endif
 
-    #if UNITY_2022_3_OR_NEWER
-
     // All the profiler markers in the package code.
     // Needed for the tests below.
     string[] allInputSystemProfilerMarkers =
@@ -1263,6 +1261,4 @@ internal class CorePerformanceTests : CoreTestsFixture
 
         EnhancedTouchSupport.Disable();
     }
-
-    #endif
 }

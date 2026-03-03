@@ -136,6 +136,13 @@ public class CustomCompositeEditor : InputParameterEditor<CustomComposite>
 {
     public override void OnGUI()
     {
+        // Using the 'target' property, we can access an instance of our composite.
+        var currentValue = target.scaleFactor;
+
+        // The easiest way to lay out our UI is to simply use EditorGUILayout.
+        // We simply assign the changed value back to the 'target' object. The input
+        // system will automatically detect a change in value.
+        target.scaleFactor = EditorGUILayout.Slider(m_ScaleFactorLabel, currentValue, 0, 2);
     }
 
     public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
