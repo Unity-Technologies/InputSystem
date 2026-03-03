@@ -3080,21 +3080,26 @@ namespace UnityEngine.InputSystem
                 var timesliceEvents = (updateType == InputUpdateType.Fixed || updateType == InputUpdateType.BeforeRender) &&
                     InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
+                // we exit early as we have no events in the buffer
+                if (eventBuffer.eventCount == 0)
+                {
+                    // Normally, we process action timeouts after first processing all events. If we have no
+                    // events, we still need to check timeouts.
+                    if (shouldProcessActionTimeouts)
+                        ProcessStateChangeMonitorTimeouts();
+
+                    InvokeAfterUpdateCallback(updateType);
+                    m_CurrentUpdate = InputUpdateType.None;
+                    return;
+                }
+
                 var processingStartTime = Stopwatch.GetTimestamp();
                 var totalEventLag = 0.0;
 
 #if UNITY_EDITOR
                 var isPlaying = gameIsPlaying;
+                var dropStatusEvents = ShouldDropStatusEvents(eventBuffer);
 #endif
-                // we exit early as we have no events in the buffer
-                if (eventBuffer.eventCount == 0)
-                {
-                    if (shouldProcessActionTimeouts)
-                        ProcessStateChangeMonitorTimeouts();
-                    InvokeAfterUpdateCallback(updateType);
-                    m_CurrentUpdate = InputUpdateType.None;
-                    return;
-                }
 
                 try
                 {
@@ -3103,9 +3108,6 @@ namespace UnityEngine.InputSystem
 
                     InputEvent* skipEventMergingFor = null;
 
-#if UNITY_EDITOR
-                    var dropStatusEvents = ShouldDropStatusEvents(eventBuffer);
-#endif
                     // Handle events.
                     while (m_InputEventStream.remainingEventCount > 0)
                     {
