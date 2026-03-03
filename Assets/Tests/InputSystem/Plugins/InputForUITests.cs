@@ -37,6 +37,7 @@ public class InputForUITests : InputTestFixture
     readonly List<Event> m_InputForUIEvents = new List<Event>();
     private int m_CurrentInputEventToCheck;
     InputSystemProvider m_InputSystemProvider;
+    private bool m_ClearedMockProvider;
 
     private InputActionAsset storedActions;
 
@@ -45,6 +46,7 @@ public class InputForUITests : InputTestFixture
     {
         base.Setup();
         m_CurrentInputEventToCheck = 0;
+        m_ClearedMockProvider = false;
 
         storedActions = InputSystem.actions;
 
@@ -59,7 +61,8 @@ public class InputForUITests : InputTestFixture
     public override void TearDown()
     {
         EventProvider.Unsubscribe(InputForUIOnEvent);
-        EventProvider.ClearMockProvider();
+        if (!m_ClearedMockProvider)
+            EventProvider.ClearMockProvider();
         m_InputForUIEvents.Clear();
 
         InputSystem.s_Manager.actions = storedActions;
@@ -113,7 +116,8 @@ public class InputForUITests : InputTestFixture
         m_InputSystemProvider.Initialize();
         Assert.That(asset.enabled, Is.True, "Project-wide actions should be enabled by provider initialization.");
 
-        m_InputSystemProvider.Shutdown();
+        EventProvider.ClearMockProvider();
+        m_ClearedMockProvider = true;
         Assert.That(asset.enabled, Is.True, "Project-wide actions must remain enabled after provider shutdown.");
 
         Object.DestroyImmediate(asset);
