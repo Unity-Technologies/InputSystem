@@ -942,9 +942,8 @@ namespace UnityEngine.InputSystem
         public InternedString TryFindMatchingControlLayout(ref InputDeviceDescription deviceDescription, int deviceId = InputDevice.InvalidDeviceId)
         {
             InternedString layoutName = new InternedString(string.Empty);
-            try
+            using (k_InputTryFindMatchingControllerMarker.Auto())
             {
-                k_InputTryFindMatchingControllerMarker.Begin();
                 ////TODO: this will want to take overrides into account
 
                 // See if we can match by description.
@@ -1005,12 +1004,8 @@ namespace UnityEngine.InputSystem
                     }
                     m_DeviceFindLayoutCallbacks.UnlockForChanges();
                 }
+                return layoutName;
             }
-            finally
-            {
-                k_InputTryFindMatchingControllerMarker.End();
-            }
-            return layoutName;
         }
 
         private InternedString FindOrRegisterDeviceLayoutForType(Type type)
@@ -1358,49 +1353,42 @@ namespace UnityEngine.InputSystem
         public InputDevice AddDevice(InputDeviceDescription description, bool throwIfNoLayoutFound,
             string deviceName = null, int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
-            k_InputAddDeviceMarker.Begin();
-            // Look for matching layout.
-            var layout = TryFindMatchingControlLayout(ref description, deviceId);
-
-            // If no layout was found, bail out.
-            if (layout.IsEmpty())
+            using (k_InputAddDeviceMarker.Auto())
             {
-                if (throwIfNoLayoutFound)
+                // Look for matching layout.
+                var layout = TryFindMatchingControlLayout(ref description, deviceId);
+
+                // If no layout was found, bail out.
+                if (layout.IsEmpty())
                 {
-                    k_InputAddDeviceMarker.End();
-                    throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
+                    if (throwIfNoLayoutFound)
+                    {
+                        throw new ArgumentException($"Cannot find layout matching device description '{description}'", nameof(description));
+                    }
+
+                    // If it's a device coming from the runtime, disable it.
+                    if (deviceId != InputDevice.InvalidDeviceId)
+                    {
+                        var command = DisableDeviceCommand.Create();
+                        m_Runtime.DeviceCommand(deviceId, ref command);
+                    }
+                    return null;
                 }
 
-                // If it's a device coming from the runtime, disable it.
-                if (deviceId != InputDevice.InvalidDeviceId)
-                {
-                    var command = DisableDeviceCommand.Create();
-                    m_Runtime.DeviceCommand(deviceId, ref command);
-                }
-
-                k_InputAddDeviceMarker.End();
-                return null;
+                var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
+                device.m_Description = description;
+                return device;
             }
-
-            var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
-            device.m_Description = description;
-            k_InputAddDeviceMarker.End();
-            return device;
         }
 
         public InputDevice AddDevice(InputDeviceDescription description, InternedString layout, string deviceName = null,
             int deviceId = InputDevice.InvalidDeviceId, InputDevice.DeviceFlags deviceFlags = 0)
         {
-            try
+            using (k_InputAddDeviceMarker.Auto())
             {
-                k_InputAddDeviceMarker.Begin();
                 var device = AddDevice(layout, deviceId, deviceName, description, deviceFlags);
                 device.m_Description = description;
                 return device;
-            }
-            finally
-            {
-                k_InputAddDeviceMarker.End();
             }
         }
 
@@ -2058,40 +2046,38 @@ namespace UnityEngine.InputSystem
 
             m_CustomTypesRegistered = true;
 
-            k_InputRegisterCustomTypesMarker.Begin();
-
-            var inputSystemAssembly = typeof(InputProcessor).Assembly;
-            var inputSystemName = inputSystemAssembly.GetName().Name;
+            using (k_InputRegisterCustomTypesMarker.Auto())
+            {
+                var inputSystemAssembly = typeof(InputProcessor).Assembly;
+                var inputSystemName = inputSystemAssembly.GetName().Name;
 #if UNITY_6000_5_OR_NEWER
-            var assemblies = CurrentAssemblies.GetLoadedAssemblies();
+                var assemblies = CurrentAssemblies.GetLoadedAssemblies();
 #else
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 #endif
-            foreach (var assembly in assemblies)
-            {
-                try
+                foreach (var assembly in assemblies)
                 {
-                    // exclude InputSystem assembly which should be loaded first
-                    if (assembly == inputSystemAssembly) continue;
-
-                    // Only register types from assemblies that reference InputSystem
-                    foreach (var referencedAssembly in assembly.GetReferencedAssemblies())
+                    try
                     {
-                        if (referencedAssembly.Name == inputSystemName)
+                        // exclude InputSystem assembly which should be loaded first
+                        if (assembly == inputSystemAssembly) continue;
+
+                        // Only register types from assemblies that reference InputSystem
+                        foreach (var referencedAssembly in assembly.GetReferencedAssemblies())
                         {
-                            RegisterCustomTypes(assembly.GetTypes());
-                            break;
+                            if (referencedAssembly.Name == inputSystemName)
+                            {
+                                RegisterCustomTypes(assembly.GetTypes());
+                                break;
+                            }
                         }
                     }
-                }
-                catch (ReflectionTypeLoadException)
-                {
-                    // Ignore exception
+                    catch (ReflectionTypeLoadException)
+                    {
+                        // Ignore exception
+                    }
                 }
             }
-
-            k_InputRegisterCustomTypesMarker.End();
-
             return true; // Signal that custom types were extracted and registered.
         }
 
@@ -3037,9 +3023,7 @@ namespace UnityEngine.InputSystem
             using (k_InputUpdateProfilerMarker.Auto())
             {
                 if (m_InputEventStream.isOpen)
-                {
                     throw new InvalidOperationException("Already have an event buffer set! Was OnUpdate() called recursively?");
-                }
 
                 // Restore devices before checking update mask. See InputSystem.RunInitialUpdate().
                 RestoreDevicesAfterDomainReloadIfNecessary();
@@ -3094,7 +3078,7 @@ namespace UnityEngine.InputSystem
                 //       in the buffer and having older timestamps will get rejected.
                 var currentTime = updateType == InputUpdateType.Fixed ? m_Runtime.currentTimeForFixedUpdate : m_Runtime.currentTime;
                 var timesliceEvents = (updateType == InputUpdateType.Fixed || updateType == InputUpdateType.BeforeRender) &&
-                    InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;               
+                    InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
                 var processingStartTime = Stopwatch.GetTimestamp();
                 var totalEventLag = 0.0;
@@ -3135,8 +3119,8 @@ namespace UnityEngine.InputSystem
                         {
                             if (possibleFocusEvent->type == new FourCC((int)InputFocusEvent.Type) && !gameShouldGetInputRegardlessOfFocus)
                             {
-                                // If the next event is a focus event and we're not supposed to get input in the current update type, skip current event.
-                                // This ensures that we don't end up with a half process event due to swapping buffers
+                                // If the next event is a focus event and we're not supposed to get input of the current update type in the next one, drop current event.
+                                // This ensures that we don't end up with a half processed events due to swapping buffers between editor and player,
                                 // such as InputActionPhase.Started not being finished by a InputActionPhase.Performed and ending up in a pressed state in the previous update type
                                 m_InputEventStream.Advance(false);
                                 continue;
@@ -3171,8 +3155,8 @@ namespace UnityEngine.InputSystem
                             continue;
                         }
 #else
-                        // In player builds, flush if out of focus and not running in background
-                        if (!gameHasFocus && !m_Runtime.runInBackground && currentEventType != InputFocusEvent.Type)
+                        // In player builds, drop events if out of focus and not running in background, unless it is a focus event.
+                        if (!gameHasFocus && !m_Runtime.runInBackground && currentEventType != new FourCC((int)InputFocusEvent.Type))
                         {
                            m_InputEventStream.Advance(false);
                            continue;
@@ -3428,7 +3412,7 @@ namespace UnityEngine.InputSystem
                 catch (Exception)
                 {
                     // We need to restore m_InputEventStream to a sound state
-                    // to avoid failing recursive OnUpdate check next frame.                
+                    // to avoid failing recursive OnUpdate check next frame.
                     m_InputEventStream.CleanUpAfterException();
                     throw;
                 }
@@ -3437,7 +3421,7 @@ namespace UnityEngine.InputSystem
                     ProcessStateChangeMonitorTimeouts();
 
                 FinalizeUpdate(updateType);
-            }
+            }//k_InputUpdateProfilerMarker
         }
 
         private unsafe void ProcessEvent(InputDevice device, InputUpdateType updateType, InputEvent* currentEventReadPtr, ref uint totalEventBytesProcessed)
@@ -4351,74 +4335,73 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         internal void RestoreDevicesAfterDomainReload()
         {
-            k_InputRestoreDevicesAfterReloadMarker.Begin();
-
-            using (InputDeviceBuilder.Ref())
+            using (k_InputRestoreDevicesAfterReloadMarker.Auto())
             {
-                DeviceState[] retainedDeviceStates = null;
-                var deviceStates = m_SavedDeviceStates;
-                var deviceCount = m_SavedDeviceStates.LengthSafe();
-                m_SavedDeviceStates = null; // Prevent layout matcher registering themselves on the fly from picking anything off this list.
-                for (var i = 0; i < deviceCount; ++i)
+                using (InputDeviceBuilder.Ref())
                 {
-                    ref var deviceState = ref deviceStates[i];
-
-                    var device = TryGetDeviceById(deviceState.deviceId);
-                    if (device != null)
-                        continue;
-
-                    var layout = TryFindMatchingControlLayout(ref deviceState.description,
-                        deviceState.deviceId);
-                    if (layout.IsEmpty())
+                    DeviceState[] retainedDeviceStates = null;
+                    var deviceStates = m_SavedDeviceStates;
+                    var deviceCount = m_SavedDeviceStates.LengthSafe();
+                    m_SavedDeviceStates = null; // Prevent layout matcher registering themselves on the fly from picking anything off this list.
+                    for (var i = 0; i < deviceCount; ++i)
                     {
-                        var previousLayout = new InternedString(deviceState.layout);
-                        if (m_Layouts.HasLayout(previousLayout))
-                            layout = previousLayout;
-                    }
-                    if (layout.IsEmpty() || !RestoreDeviceFromSavedState(ref deviceState, layout))
-                        ArrayHelpers.Append(ref retainedDeviceStates, deviceState);
-                }
+                        ref var deviceState = ref deviceStates[i];
 
-                // See if we can make sense of an available device now that we couldn't make sense of
-                // before. This can be the case if there's new layout information that wasn't available
-                // before.
-                if (m_SavedAvailableDevices != null)
-                {
-                    m_AvailableDevices = m_SavedAvailableDevices;
-                    m_AvailableDeviceCount = m_SavedAvailableDevices.LengthSafe();
-                    for (var i = 0; i < m_AvailableDeviceCount; ++i)
-                    {
-                        var device = TryGetDeviceById(m_AvailableDevices[i].deviceId);
+                        var device = TryGetDeviceById(deviceState.deviceId);
                         if (device != null)
                             continue;
 
-                        if (m_AvailableDevices[i].isRemoved)
-                            continue;
-
-                        var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description,
-                            m_AvailableDevices[i].deviceId);
-                        if (!layout.IsEmpty())
+                        var layout = TryFindMatchingControlLayout(ref deviceState.description,
+                            deviceState.deviceId);
+                        if (layout.IsEmpty())
                         {
-                            try
+                            var previousLayout = new InternedString(deviceState.layout);
+                            if (m_Layouts.HasLayout(previousLayout))
+                                layout = previousLayout;
+                        }
+                        if (layout.IsEmpty() || !RestoreDeviceFromSavedState(ref deviceState, layout))
+                            ArrayHelpers.Append(ref retainedDeviceStates, deviceState);
+                    }
+
+                    // See if we can make sense of an available device now that we couldn't make sense of
+                    // before. This can be the case if there's new layout information that wasn't available
+                    // before.
+                    if (m_SavedAvailableDevices != null)
+                    {
+                        m_AvailableDevices = m_SavedAvailableDevices;
+                        m_AvailableDeviceCount = m_SavedAvailableDevices.LengthSafe();
+                        for (var i = 0; i < m_AvailableDeviceCount; ++i)
+                        {
+                            var device = TryGetDeviceById(m_AvailableDevices[i].deviceId);
+                            if (device != null)
+                                continue;
+
+                            if (m_AvailableDevices[i].isRemoved)
+                                continue;
+
+                            var layout = TryFindMatchingControlLayout(ref m_AvailableDevices[i].description,
+                                m_AvailableDevices[i].deviceId);
+                            if (!layout.IsEmpty())
                             {
-                                AddDevice(layout, m_AvailableDevices[i].deviceId,
-                                    deviceDescription: m_AvailableDevices[i].description,
-                                    deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
-                            }
-                            catch (Exception)
-                            {
-                                // Just ignore. Simply means we still can't really turn the device into something useful.
+                                try
+                                {
+                                    AddDevice(layout, m_AvailableDevices[i].deviceId,
+                                        deviceDescription: m_AvailableDevices[i].description,
+                                        deviceFlags: m_AvailableDevices[i].isNative ? InputDevice.DeviceFlags.Native : 0);
+                                }
+                                catch (Exception)
+                                {
+                                    // Just ignore. Simply means we still can't really turn the device into something useful.
+                                }
                             }
                         }
                     }
+
+                    // Done. Discard saved arrays.
+                    m_SavedDeviceStates = retainedDeviceStates;
+                    m_SavedAvailableDevices = null;
                 }
-
-                // Done. Discard saved arrays.
-                m_SavedDeviceStates = retainedDeviceStates;
-                m_SavedAvailableDevices = null;
             }
-
-            k_InputRestoreDevicesAfterReloadMarker.End();
         }
 
         // We have two general types of devices we need to care about when recreating devices

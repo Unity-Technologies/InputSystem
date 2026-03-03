@@ -12,25 +12,26 @@ namespace UnityEngine.InputSystem.Utilities
         {
             if (callbacks.length == 0)
                 return;
-            marker.Begin();
-            callbacks.LockForChanges();
-            for (var i = 0; i < callbacks.length; ++i)
+            using (marker.Auto())
             {
-                try
+                callbacks.LockForChanges();
+                for (var i = 0; i < callbacks.length; ++i)
                 {
-                    callbacks[i]();
+                    try
+                    {
+                        callbacks[i]();
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogException(exception);
+                        if (context != null)
+                            Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
+                        else
+                            Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
+                    }
                 }
-                catch (Exception exception)
-                {
-                    Debug.LogException(exception);
-                    if (context != null)
-                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
-                    else
-                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
-                }
+                callbacks.UnlockForChanges();
             }
-            callbacks.UnlockForChanges();
-            marker.End();
         }
 
         public static void InvokeCallbacksSafe<TValue>(ref CallbackArray<Action<TValue>> callbacks, TValue argument, string callbackName, object context = null)
@@ -62,25 +63,26 @@ namespace UnityEngine.InputSystem.Utilities
         {
             if (callbacks.length == 0)
                 return;
-            marker.Begin();
-            callbacks.LockForChanges();
-            for (var i = 0; i < callbacks.length; ++i)
+            using (marker.Auto())
             {
-                try
+                callbacks.LockForChanges();
+                for (var i = 0; i < callbacks.length; ++i)
                 {
-                    callbacks[i](argument1, argument2);
+                    try
+                    {
+                        callbacks[i](argument1, argument2);
+                    }
+                    catch (Exception exception)
+                    {
+                        Debug.LogException(exception);
+                        if (context != null)
+                            Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
+                        else
+                            Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
+                    }
                 }
-                catch (Exception exception)
-                {
-                    Debug.LogException(exception);
-                    if (context != null)
-                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks of '{context}'");
-                    else
-                        Debug.LogError($"{exception.GetType().Name} while executing '{callbackName}' callbacks");
-                }
+                callbacks.UnlockForChanges();
             }
-            callbacks.UnlockForChanges();
-            marker.End();
         }
 
         public static bool InvokeCallbacksSafe_AnyCallbackReturnsTrue<TValue1, TValue2>(ref CallbackArray<Func<TValue1, TValue2, bool>> callbacks,
