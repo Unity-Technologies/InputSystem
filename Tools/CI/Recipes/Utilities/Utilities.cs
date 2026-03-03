@@ -11,7 +11,9 @@ internal static class Utilities
     
     public static bool IsEditorPlatform(Platform platform)
     {
-        return InputSystemSettings.Instance.InputSystemPackage.EditorPlatforms.ContainsKey(platform.System);
+        return InputSystemSettings.Instance.InputSystemPackage.UnityEditors
+            .Any(ue => ue.EditorPlatforms.Items.Any(ep => ep.Value.System == platform.System));
+        
     }
     
     public static string GetEditorDownloadCommand(string unityBranch, Platform platform, string? backend=null)
