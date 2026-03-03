@@ -84,7 +84,7 @@
         },
         "PVP-40-1": {
           "errors": [
-            "CHANGELOG.md: line 11: header must match regex: ^\\[(?<version>.*)\\]( - (?<date>\\d{4}-\\d{2}-\\d{2}))?$"
+            "CHANGELOG.md: line 8: header must match regex: ^\\[(?<version>.*)\\]( - (?<date>\\d{4}-\\d{2}-\\d{2}))?$"
           ]
         },
         "PVP-91-3": {
