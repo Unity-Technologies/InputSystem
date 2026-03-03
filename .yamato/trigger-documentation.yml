@@ -1,9 +1,10 @@
 tests_for_doc_changes:
   name: Tests for Documentation Changes
   dependencies:
-    - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2022_3_-_windows
-    - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_0_-_windows
-    - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_2_-_windows
+    - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2022_3_-_win10
+    - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_0_-_win10
+    - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_3_-_win10
+    - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_6_-_win10
   triggers:
     cancel_old_ci: true
     expression: pull_request.(target eq "develop" AND changes.all match "**/*.md")

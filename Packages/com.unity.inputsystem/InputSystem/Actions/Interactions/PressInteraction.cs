@@ -1,9 +1,12 @@
 using System;
 using System.ComponentModel;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.Scripting;
 #if UNITY_EDITOR
+using UnityEditor;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 #endif
 
 ////TODO: protect against the control *hovering* around the press point; this should not fire the press repeatedly; probably need a zone around the press point
@@ -210,15 +213,21 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnGUI()
         {
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                return;
+
+            EditorGUILayout.HelpBox(s_HelpBoxText);
+            target.behavior = (PressBehavior)EditorGUILayout.EnumPopup(s_PressBehaviorLabel, target.behavior);
+            m_PressPointSetting.OnGUI();
         }
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-            root.Add(new HelpBox(helpLabel, HelpBoxMessageType.None));
+            root.Add(new HelpBox(s_HelpBoxText.text, HelpBoxMessageType.None));
 
-            var behaviourDropdown = new EnumField(triggerLabel, target.behavior)
+            var behaviourDropdown = new EnumField(s_PressBehaviorLabel.text, target.behavior)
             {
-                tooltip = triggerTooltip
+                tooltip = s_PressBehaviorLabel.tooltip
             };
             behaviourDropdown.RegisterValueChangedCallback(evt =>
             {
@@ -232,13 +241,14 @@ namespace UnityEngine.InputSystem.Interactions
 
         private CustomOrDefaultSetting m_PressPointSetting;
 
-        private const string helpLabel = "Note that the 'Press' interaction is only "
+        private static readonly GUIContent s_HelpBoxText = EditorGUIUtility.TrTextContent("Note that the 'Press' interaction is only "
             + "necessary when wanting to customize button press behavior. For default press behavior, simply set the action type to 'Button' "
-            + "and use the action without interactions added to it.";
-        private const string triggerLabel = "Trigger Behavior";
-        private const string triggerTooltip = "Determines how button presses trigger the action. By default (PressOnly), the action is performed on press. "
+            + "and use the action without interactions added to it.");
+
+        private static readonly GUIContent s_PressBehaviorLabel = EditorGUIUtility.TrTextContent("Trigger Behavior",
+            "Determines how button presses trigger the action. By default (PressOnly), the action is performed on press. "
             + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and "
-            + "canceled on release.";
+            + "canceled on release.");
     }
     #endif
 }
