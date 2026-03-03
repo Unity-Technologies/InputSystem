@@ -1878,7 +1878,7 @@ namespace UnityEngine.InputSystem.Users
 
         private static GlobalState s_GlobalState;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void InitializeGlobalUserState()
         {
             ResetGlobals();
