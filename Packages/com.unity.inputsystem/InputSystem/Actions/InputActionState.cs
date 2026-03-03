@@ -1356,14 +1356,12 @@ namespace UnityEngine.InputSystem
             // UUM-100125
             // Touch controls intentionally preserve state such as position even when no touch is currently active.
             // During binding re-resolution this can make inactive touches look actuated and cause invalid triggers.
-            if (control is TouchControl touchControl)
+            for (var current = control; current != null; current = current.parent)
             {
-                return !touchControl.isInProgress;
-            }
-
-            if (control.parent is TouchControl parentTouchControl)
-            {
-                return !parentTouchControl.isInProgress;
+                if (current is TouchControl touchControl)
+                {
+                    return !touchControl.isInProgress;
+                }
             }
 
             return false;
