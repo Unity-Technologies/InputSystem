@@ -278,12 +278,6 @@ namespace UnityEngine.InputSystem.Editor
             return m_State.serializedObject.targetObject as InputActionAsset;
         }
 
-        /// <summary>
-        /// Saves an InputActionAsset to disk. Use this from both the editor window and the project settings provider.
-        /// </summary>
-        /// <param name="path">Asset path to save to.</param>
-        /// <param name="asset">The asset to save.</param>
-        /// <returns>True if the asset was written to disk, false if unchanged or save failed.</returns>
         internal static bool Save(string path, InputActionAsset asset)
         {
             var projectWideActions = InputSystem.actions;
