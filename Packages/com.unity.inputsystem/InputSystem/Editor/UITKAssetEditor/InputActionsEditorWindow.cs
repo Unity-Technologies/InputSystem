@@ -278,15 +278,6 @@ namespace UnityEngine.InputSystem.Editor
             return m_State.serializedObject.targetObject as InputActionAsset;
         }
 
-        internal static bool Save(string path, InputActionAsset asset)
-        {
-            var projectWideActions = InputSystem.actions;
-            if (projectWideActions != null && path == AssetDatabase.GetAssetPath(projectWideActions))
-                ProjectWideActionsAsset.Verify(asset);
-
-            return InputActionAssetManager.SaveAsset(path, asset.ToJson());
-        }
-
         private void Save(bool isAutoSave)
         {
             var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
@@ -299,6 +290,15 @@ namespace UnityEngine.InputSystem.Editor
                 analytics.RegisterAutoSave();
             else
                 analytics.RegisterExplicitSave();
+        }
+
+        internal static bool Save(string path, InputActionAsset asset)
+        {
+            var projectWideActions = InputSystem.actions;
+            if (projectWideActions != null && path == AssetDatabase.GetAssetPath(projectWideActions))
+                ProjectWideActionsAsset.Verify(asset);
+
+            return InputActionAssetManager.SaveAsset(path, asset.ToJson());
         }
 
         private bool HasContentChanged()
