@@ -3442,8 +3442,10 @@ namespace UnityEngine.InputSystem
             #if UNITY_EDITOR && !ENABLE_CORECLR
             if (!EditorSettings.enterPlayModeOptionsEnabled || (EditorSettings.enterPlayModeOptions & EnterPlayModeOptions.DisableDomainReload) == 0)
                 return false;
-            #endif
             return true;
+            #else
+            return false;
+            #endif
         }
 
         private static void GlobalInitialize(bool calledFromCtor)
