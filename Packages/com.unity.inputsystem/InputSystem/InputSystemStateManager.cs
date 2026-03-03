@@ -82,11 +82,19 @@ namespace UnityEngine.InputSystem
         public void OnBeforeSerialize()
         {
             // Save current system state.
-            systemState.manager = InputSystem.manager;
-            systemState.remote = InputSystem.remoting;
+            if (InputSystem.s_Manager != null)
+            {
+                systemState.manager = InputSystem.s_Manager;
+                systemState.managerState = InputSystem.s_Manager.SaveState();
+            }
+        
+            if (InputSystem.s_Remote != null)
+            {
+                systemState.remote = InputSystem.s_Remote;
+                systemState.remotingState = InputSystem.s_Remote.SaveState();
+            }            
+
             systemState.remoteConnection = InputSystem.remoteConnection;
-            systemState.managerState = InputSystem.manager.SaveState();
-            systemState.remotingState = InputSystem.remoting.SaveState();
             systemState.userSettings = InputEditorUserSettings.s_Settings;
         }
 

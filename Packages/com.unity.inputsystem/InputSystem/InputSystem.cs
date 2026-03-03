@@ -3381,8 +3381,8 @@ namespace UnityEngine.InputSystem
         public static InputMetrics metrics => s_Manager.metrics;
 
         internal static InputManager manager => s_Manager;
-        private static InputManager s_Manager;
-        private static InputRemoting s_Remote;
+        internal static InputManager s_Manager;
+        internal static InputRemoting s_Remote;
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         private static RemoteInputPlayerConnection s_RemoteConnection;
