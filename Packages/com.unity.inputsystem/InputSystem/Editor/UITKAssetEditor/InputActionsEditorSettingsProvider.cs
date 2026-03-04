@@ -179,7 +179,7 @@ namespace UnityEngine.InputSystem.Editor
             // Since at that point it stops being a separate window that steals focus.
             // (See case ISXB-1713)
             var projectSettingsWindowIsOpen = m_IsActivated;
-            if ((!InputEditorUserSettings.autoSaveInputActionAssets && !projectSettingsWindowIsOpen) || m_View.IsControlSchemeViewActive())
+            if (m_View.IsControlSchemeViewActive())
             {
                 return;
             }
