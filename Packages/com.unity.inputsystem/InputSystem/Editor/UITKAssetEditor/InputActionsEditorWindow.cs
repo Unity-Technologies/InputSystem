@@ -329,7 +329,7 @@ namespace UnityEngine.InputSystem.Editor
         private bool OnWantsToQuit()
         {
             // Here the user will be prompted
-            bool isAllowedToQuit = OnDestroyIsApplicationAllowedToQuit(false);
+            bool isAllowedToQuit = HandleOnDestroyIfApplicationIsAllowedToQuit(false);
             m_IsEditorQuitting = isAllowedToQuit;
             return m_IsEditorQuitting;
         }
@@ -356,7 +356,11 @@ namespace UnityEngine.InputSystem.Editor
             analytics.RegisterEditorFocusOut();
         }
 
-        private bool OnDestroyIsApplicationAllowedToQuit(bool rebuildUIOnCancel)
+        /// <summary>
+        /// Shows a dialog when trying to close an input asset without saving changes.
+        /// </summary>
+        /// <returns> Returns true if you should allow the Unity Editor to close. </returns>
+        private bool HandleOnDestroyIfApplicationIsAllowedToQuit(bool rebuildUIOnCancel)
         {
             // Do we have unsaved changes that we need to ask the user to save or discard?
             if (!m_IsDirty)
@@ -397,7 +401,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private void OnDestroy()
         {
-            OnDestroyIsApplicationAllowedToQuit(true);
+            HandleOnDestroyIfApplicationIsAllowedToQuit(true);
 
             // Clean-up
             CleanupStateContainer();
