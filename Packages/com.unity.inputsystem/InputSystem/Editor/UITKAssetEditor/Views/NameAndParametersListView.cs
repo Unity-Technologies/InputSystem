@@ -171,6 +171,8 @@ namespace UnityEngine.InputSystem.Editor
             var foldout = container.Q<Foldout>("Foldout");
             foldout.text = parameterListView.name;
             parameterListView.OnDrawVisualElements(foldout);
+
+            foldout.Add(new IMGUIContainer(parameterListView.OnGUI));
         }
     }
 }
