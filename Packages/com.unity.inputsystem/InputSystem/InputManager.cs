@@ -33,8 +33,8 @@ namespace UnityEngine.InputSystem
 {
     using DeviceChangeListener = Action<InputDevice, InputDeviceChange>;
     using DeviceStateChangeListener = Action<InputDevice, InputEventPtr>;
-    using LayoutChangeListener = Action<string, InputControlLayoutChange>;
     using EventListener = Action<InputEventPtr, InputDevice>;
+    using LayoutChangeListener = Action<string, InputControlLayoutChange>;
     using UpdateListener = Action;
 
     /// <summary>
@@ -1903,7 +1903,7 @@ namespace UnityEngine.InputSystem
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
 
             m_FocusState = Application.isFocused ? m_FocusState |= FocusFlags.ApplicationFocus
-                                                 : m_FocusState &= ~FocusFlags.ApplicationFocus;
+                : m_FocusState &= ~FocusFlags.ApplicationFocus;
 
 #if UNITY_EDITOR
             m_EditorIsActive = true;
@@ -2053,7 +2053,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_6000_5_OR_NEWER
                 var assemblies = CurrentAssemblies.GetLoadedAssemblies();
 #else
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 #endif
                 foreach (var assembly in assemblies)
                 {
@@ -2104,7 +2104,7 @@ namespace UnityEngine.InputSystem
             m_Runtime.pollingFrequency = pollingFrequency;
 
             m_FocusState = m_Runtime.isPlayerFocused ? m_FocusState |= FocusFlags.ApplicationFocus
-                                                     : m_FocusState &= ~FocusFlags.ApplicationFocus;
+                : m_FocusState &= ~FocusFlags.ApplicationFocus;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -3046,7 +3046,6 @@ namespace UnityEngine.InputSystem
                     m_HaveSentStartupAnalytics = true;
                 }
 #endif
-
                 // Update metrics.
                 ++m_Metrics.totalUpdateCount;
 
@@ -3093,339 +3092,381 @@ namespace UnityEngine.InputSystem
                     return;
                 }
 
-                var processingStartTime = Stopwatch.GetTimestamp();
-                var totalEventLag = 0.0;
-
-#if UNITY_EDITOR
-                var isPlaying = gameIsPlaying;
-                var dropStatusEvents = ShouldDropStatusEvents(eventBuffer);
-#endif
-
-                try
-                {
-                    m_InputEventStream = new InputEventStream(ref eventBuffer, m_Settings.maxQueuedEventsPerUpdate);
-                    var totalEventBytesProcessed = 0U;
-
-                    InputEvent* skipEventMergingFor = null;
-
-                    // Handle events.
-                    while (m_InputEventStream.remainingEventCount > 0)
-                    {
-                        InputDevice device = null;
-                        var currentEventReadPtr = m_InputEventStream.currentEventPtr;
-                        var currentEventType = currentEventReadPtr->type;
-
-#if UNITY_EDITOR
-                        var possibleFocusEvent = m_InputEventStream.Peek();
-                        if (possibleFocusEvent != null)
-                        {
-                            if (possibleFocusEvent->type == new FourCC((int)InputFocusEvent.Type) && !gameShouldGetInputRegardlessOfFocus)
-                            {
-                                // If the next event is a focus event and we're not supposed to get input of the current update type in the next one, drop current event.
-                                // This ensures that we don't end up with a half processed events due to swapping buffers between editor and player,
-                                // such as InputActionPhase.Started not being finished by a InputActionPhase.Performed and ending up in a pressed state in the previous update type
-                                m_InputEventStream.Advance(false);
-                                continue;
-                            }
-                        }
-                        // When the game is playing and has focus, we never process input in editor updates.
-                        // All we do is just switch to editor state buffers and then exit.
-                        if (gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor
-                            && currentEventType != new FourCC((int)InputFocusEvent.Type))
-                        {
-                            m_InputEventStream.Advance(true);
-                            continue;
-                        }
-
-                        //if we dont have focus and the editor behaviour is all input goes to gameview, which is the same behaviour as in a player
-                        // and we are not allowed to run in the background or the background behaviour is that we reset and disable all devices
-
-                        // If out of focus and runInBackground is off and ExactlyAsInPlayer is on, discard input.
-                        if (!gameHasFocus
-                            && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView
-                            && (!m_Runtime.runInBackground || m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
-                            && currentEventType != new FourCC((int)InputFocusEvent.Type))
-                        {
-                            m_InputEventStream.Advance(false);
-                            continue;
-                        }
-
-                        // Check various PlayMode specific early exit conditions
-                        if (ShouldExitEarlyBasedOnBackgroundBehavior(currentEventType, updateType))
-                        {
-                            m_InputEventStream.Advance(true);
-                            continue;
-                        }
-#else
-                        // In player builds, drop events if out of focus and not running in background, unless it is a focus event.
-                        if (!gameHasFocus && !m_Runtime.runInBackground && currentEventType != new FourCC((int)InputFocusEvent.Type))
-                        {
-                           m_InputEventStream.Advance(false);
-                           continue;
-                        }
-#endif
-
-                        Debug.Assert(!currentEventReadPtr->handled, "Event in buffer is already marked as handled");
-
-                        // In before render updates, we only take state events and only those for devices
-                        // that have before render updates enabled.
-                        if (updateType == InputUpdateType.BeforeRender)
-                        {
-                            while (m_InputEventStream.remainingEventCount > 0)
-                            {
-                                Debug.Assert(!currentEventReadPtr->handled,
-                                    "Iterated to event in buffer that is already marked as handled");
-
-                                device = TryGetDeviceById(currentEventReadPtr->deviceId);
-                                if (device != null && device.updateBeforeRender &&
-                                    (currentEventReadPtr->type == StateEvent.Type ||
-                                     currentEventReadPtr->type == DeltaStateEvent.Type))
-                                    break;
-
-                                currentEventReadPtr = m_InputEventStream.Advance(leaveEventInBuffer: true);
-                            }
-                        }
-
-                        if (m_InputEventStream.remainingEventCount == 0)
-                            break;
-
-                        var currentEventTimeInternal = currentEventReadPtr->internalTime;
-
-#if UNITY_EDITOR
-                        if (dropStatusEvents)
-                        {
-                            // If the type here is a status event, ask advance not to leave the event in the buffer.  Otherwise, leave it there.
-                            if (currentEventType == StateEvent.Type || currentEventType == DeltaStateEvent.Type || currentEventType == IMECompositionEvent.Type)
-                                m_InputEventStream.Advance(false);
-                            else
-                                m_InputEventStream.Advance(true);
-
-                            continue;
-                        }
-
-                        // Decide to skip events based on timing or focus state
-                        if (ShouldDiscardEventInEditor(currentEventType, currentEventTimeInternal, updateType))
-                        {
-                            m_InputEventStream.Advance(false);
-                            continue;
-                        }
-#endif
-
-                        // If we're timeslicing, check if the event time is within limits.
-                        if (timesliceEvents && currentEventTimeInternal >= currentTime)
-                        {
-                            m_InputEventStream.Advance(true);
-                            continue;
-                        }
-
-                        // If we can't find the device, ignore the event.
-                        if (device == null)
-                            device = TryGetDeviceById(currentEventReadPtr->deviceId);
-                        if (device == null && currentEventType != new FourCC((int)InputFocusEvent.Type))
-                        {
-#if UNITY_EDITOR
-                            ////TODO: see if this is a device we haven't created and if so, just ignore
-                            m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
-#endif
-
-                            m_InputEventStream.Advance(false);
-                            continue;
-                        }
-
-                        // In the editor, we may need to bump events from editor updates into player updates
-                        // and vice versa.
-#if UNITY_EDITOR
-                        if (isPlaying && !gameHasFocus && currentEventType != new FourCC((int)InputFocusEvent.Type))
-                        {
-                            if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode
-                                .PointersAndKeyboardsRespectGameViewFocus &&
-                                m_Settings.backgroundBehavior !=
-                                InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
-                            {
-                                var isPointerOrKeyboard = device is Pointer || device is Keyboard;
-                                if (updateType != InputUpdateType.Editor)
-                                {
-                                    // Let everything but pointer and keyboard input through.
-                                    // If the event is from a pointer or keyboard, leave it in the buffer so it can be dealt with
-                                    // in a subsequent editor update. Otherwise, take it out.
-                                    if (isPointerOrKeyboard)
-                                    {
-                                        m_InputEventStream.Advance(true);
-                                        continue;
-                                    }
-                                }
-                                else
-                                {
-                                    // Let only pointer and keyboard input through.
-                                    if (!isPointerOrKeyboard)
-                                    {
-                                        m_InputEventStream.Advance(true);
-                                        continue;
-                                    }
-                                }
-                            }
-                        }
-#endif
-
-                        // If device is disabled, we let the event through only in certain cases.
-                        // Removal and configuration change events should always be processed.
-                        if (device != null && !device.enabled &&
-                            currentEventType != DeviceRemoveEvent.Type &&
-                            currentEventType != DeviceConfigurationEvent.Type &&
-                            (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime |
-                                                     InputDevice.DeviceFlags.DisabledWhileInBackground)) != 0)
-                        {
-#if UNITY_EDITOR
-                            // If the device is disabled in the backend, getting events for them
-                            // is something that indicates a problem in the backend so diagnose.
-                            if ((device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) != 0)
-                                m_Diagnostics?.OnEventForDisabledDevice(currentEventReadPtr, device);
-#endif
-
-                            m_InputEventStream.Advance(false);
-                            continue;
-                        }
-
-                        // Check if the device wants to merge successive events.
-                        if (device != null && !settings.disableRedundantEventsMerging && device.hasEventMerger && currentEventReadPtr != skipEventMergingFor)
-                        {
-                            // NOTE: This relies on events in the buffer being consecutive for the same device. This is not
-                            //       necessarily the case for events coming in from the background event queue where parallel
-                            //       producers may create interleaved input sequences. This will be fixed once we have the
-                            //       new buffering scheme for input events working in the native runtime.
-
-                            var nextEvent = m_InputEventStream.Peek();
-                            // If there is next event after current one.
-                            if ((nextEvent != null)
-                                // And if next event is for the same device.
-                                && (currentEventReadPtr->deviceId == nextEvent->deviceId)
-                                // And if next event is in the same timeslicing slot.
-                                && (timesliceEvents ? (nextEvent->internalTime < currentTime) : true)
-                            )
-                            {
-                                // Then try to merge current event into next event.
-                                if (((IEventMerger)device).MergeForward(currentEventReadPtr, nextEvent))
-                                {
-                                    // And if succeeded, skip current event, as it was merged into next event.
-                                    m_InputEventStream.Advance(false);
-                                    continue;
-                                }
-
-                                // If we can't merge current event with next one for any reason, we assume the next event
-                                // carries crucial entropy (button changed state, phase changed, counter changed, etc).
-                                // Hence semantic meaning for current event is "can't merge current with next because next is different".
-                                // But semantic meaning for next event is "next event carries important information and should be preserved",
-                                // from that point of view next event should not be merged with current nor with _next after next_ event.
-                                //
-                                // For example, given such stream of events:
-                                // Mouse       Mouse       Mouse       Mouse       Mouse       Mouse       Mouse
-                                // Event no1   Event no2   Event no3   Event no4   Event no5   Event no6   Event no7
-                                // Time 1      Time 2      Time 3      Time 4      Time 5      Time 6      Time 7
-                                // Pos(10,20)  Pos(12,21)  Pos(13,23)  Pos(14,24)  Pos(16,25)  Pos(17,27)  Pos(18,28)
-                                // Delta(1,1)  Delta(2,1)  Delta(1,2)  Delta(1,1)  Delta(2,1)  Delta(1,2)  Delta(1,1)
-                                // BtnLeft(0)  BtnLeft(0)  BtnLeft(0)  BtnLeft(1)  BtnLeft(1)  BtnLeft(1)  BtnLeft(1)
-                                //
-                                // if we then merge without skipping next event here:
-                                //                         Mouse                                           Mouse
-                                //                         Event no3                                       Event no7
-                                //                         Time 3                                          Time 7
-                                //                         Pos(13,23)                                      Pos(18,28)
-                                //                         Delta(4,4)                                      Delta(5,5)
-                                //                         BtnLeft(0)                                      BtnLeft(1)
-                                //
-                                // As you can see, the event no4 containing mouse button press was lost,
-                                // and with it we lose the important information of timestamp of mouse button press.
-                                //
-                                // With skipping merging next event we will get:
-                                //                         Mouse       Mouse                               Mouse
-                                //                         Time 3      Time 4                              Time 7
-                                //                         Event no3   Event no4                           Event no7
-                                //                         Pos(13,23)  Pos(14,24)                          Pos(18,28)
-                                //                         Delta(3,3)  Delta(1,1)                          Delta(4,4)
-                                //                         BtnLeft(0)  BtnLeft(1)                          BtnLeft(1)
-                                //
-                                // And no4 is preserved, with the exact timestamp of button press.
-                                skipEventMergingFor = nextEvent;
-                            }
-                        }
-
-                        // Give the device a chance to do something with data before we propagate it to event listeners.
-                        if (device != null && device.hasEventPreProcessor)
-                        {
-#if UNITY_EDITOR
-                            var eventSizeBeforePreProcessor = currentEventReadPtr->sizeInBytes;
-#endif
-                            var shouldProcess = ((IEventPreProcessor)device).PreProcessEvent(currentEventReadPtr);
-#if UNITY_EDITOR
-                            if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
-                            {
-                                throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
-                            }
-#endif
-                            if (!shouldProcess)
-                            {
-                                // Skip event if PreProcessEvent considers it to be irrelevant.
-                                m_InputEventStream.Advance(false);
-                                continue;
-                            }
-                        }
-
-                        // Give listeners a shot at the event.
-                        // NOTE: We call listeners also for events where the device is disabled. This is crucial for code
-                        //       such as TouchSimulation that disables the originating devices and then uses its events to
-                        //       create simulated events from.
-                        if (m_EventListeners.length > 0)
-                        {
-                            DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
-                                new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
-
-                            // If a listener marks the event as handled, we don't process it further.
-                            if (m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressStateUpdates &&
-                                currentEventReadPtr->handled)
-                            {
-                                m_InputEventStream.Advance(false);
-                                continue;
-                            }
-                        }
-
-                        // Update metrics.
-                        if (currentEventTimeInternal <= currentTime)
-                            totalEventLag += currentTime - currentEventTimeInternal;
-                        ++m_Metrics.totalEventCount;
-                        m_Metrics.totalEventBytes += (int)currentEventReadPtr->sizeInBytes;
-
-                        ProcessEvent(device, updateType, currentEventReadPtr, ref totalEventBytesProcessed);
-
-                        m_InputEventStream.Advance(leaveEventInBuffer: false);
-
-                        // Discard events in case the maximum event bytes per update has been exceeded
-                        if (AreMaximumEventBytesPerUpdateExceeded(totalEventBytesProcessed))
-                            break;
-                    }
-
-                    m_Metrics.totalEventProcessingTime +=
-                        ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
-                    m_Metrics.totalEventLagTime += totalEventLag;
-
-                    ResetCurrentProcessedEventBytesForDevices();
-
-                    m_InputEventStream.Close(ref eventBuffer);
-                }
-                catch (Exception)
-                {
-                    // We need to restore m_InputEventStream to a sound state
-                    // to avoid failing recursive OnUpdate check next frame.
-                    m_InputEventStream.CleanUpAfterException();
-                    throw;
-                }
+                ProcessEventBuffer(updateType, ref eventBuffer, currentTime, timesliceEvents);
 
                 if (shouldProcessActionTimeouts)
                     ProcessStateChangeMonitorTimeouts();
 
                 FinalizeUpdate(updateType);
-            }//k_InputUpdateProfilerMarker
+            } // k_InputUpdateProfilerMarker
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private unsafe void ProcessEventBuffer(InputUpdateType updateType, ref InputEventBuffer eventBuffer, double currentTime, bool timesliceEvents)
+        {
+            var processingStartTime = Stopwatch.GetTimestamp();
+            var totalEventLag = 0.0;
+
+#if UNITY_EDITOR
+            var isPlaying = gameIsPlaying;
+            var dropStatusEvents = ShouldDropStatusEvents(eventBuffer);
+#endif
+            try
+            {
+                m_InputEventStream = new InputEventStream(ref eventBuffer, m_Settings.maxQueuedEventsPerUpdate);
+                var totalEventBytesProcessed = 0U;
+                InputEvent* skipEventMergingFor = null;
+                var focusEventType = new FourCC((int)InputFocusEvent.Type);
+
+                // Handle events.
+                while (m_InputEventStream.remainingEventCount > 0)
+                {
+                    InputDevice device = null;
+                    var currentEventReadPtr = m_InputEventStream.currentEventPtr;
+                    var currentEventType = currentEventReadPtr->type;
+
+                    Debug.Assert(!currentEventReadPtr->handled, "Event in buffer is already marked as handled");
+
+                    // In before render updates, we only take state events and only those for devices
+                    // that have before render updates enabled.
+                    if (updateType == InputUpdateType.BeforeRender)
+                        ProcessBeforeRenderStateEvents(out device, out currentEventReadPtr);
+
+                    if (m_InputEventStream.remainingEventCount == 0)
+                        break;
+
+                    var currentEventTimeInternal = currentEventReadPtr->internalTime;
+
+#if UNITY_EDITOR
+                    if (SkipEventDueToEditorBehaviour(updateType, currentEventType, dropStatusEvents, currentEventTimeInternal))
+                        continue;
+#else
+                    // In player builds, drop events if out of focus and not running in background, unless it is a focus event.
+                    if (!gameHasFocus && !m_Runtime.runInBackground && currentEventType != focusEventType)
+                    {
+                        m_InputEventStream.Advance(false);
+                        continue;
+                    }
+#endif
+                    // If we're timeslicing, check if the event time is within limits.
+                    if (timesliceEvents && currentEventTimeInternal >= currentTime)
+                    {
+                        m_InputEventStream.Advance(true);
+                        continue;
+                    }
+
+                    // If we can't find the device, ignore the event.
+                    if (device == null)
+                        device = TryGetDeviceById(currentEventReadPtr->deviceId);
+                    if (device == null && currentEventType != focusEventType)
+                    {
+#if UNITY_EDITOR
+                        ////TODO: see if this is a device we haven't created and if so, just ignore
+                        m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
+#endif
+                        m_InputEventStream.Advance(false);
+                        continue;
+                    }
+
+#if UNITY_EDITOR
+                    // In the editor, route keyboard/pointer events between Editor/Player updates if required.
+                    if (ShouldDeferEventBetweenEditorAndPlayerUpdates(updateType, currentEventType, device))
+                        continue;
+#endif
+                    // If device is disabled, we let the event through only in certain cases.
+                    // Removal and configuration change events should always be processed.
+                    if (device != null && !device.enabled &&
+                        currentEventType != DeviceRemoveEvent.Type &&
+                        currentEventType != DeviceConfigurationEvent.Type &&
+                        (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime |
+                                                 InputDevice.DeviceFlags.DisabledWhileInBackground)) != 0)
+                    {
+#if UNITY_EDITOR
+                        // If the device is disabled in the backend, getting events for them
+                        // is something that indicates a problem in the backend so diagnose.
+                        if ((device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) != 0)
+                            m_Diagnostics?.OnEventForDisabledDevice(currentEventReadPtr, device);
+#endif
+
+                        m_InputEventStream.Advance(false);
+                        continue;
+                    }
+
+                    // Check if the device wants to merge successive events.
+                    if (device != null && !settings.disableRedundantEventsMerging && device.hasEventMerger && currentEventReadPtr != skipEventMergingFor)
+                    {
+                        if (MergeWithNextEvent(device, currentEventReadPtr, timesliceEvents, currentTime, ref skipEventMergingFor))
+                            continue;
+                    }
+
+                    // Give the device a chance to do something with data before we propagate it to event listeners.
+                    if (device != null && device.hasEventPreProcessor)
+                    {
+#if UNITY_EDITOR
+                        var eventSizeBeforePreProcessor = currentEventReadPtr->sizeInBytes;
+#endif
+                        var shouldProcess = ((IEventPreProcessor)device).PreProcessEvent(currentEventReadPtr);
+#if UNITY_EDITOR
+                        if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
+                        {
+                            throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
+                        }
+#endif
+                        if (!shouldProcess)
+                        {
+                            // Skip event if PreProcessEvent considers it to be irrelevant.
+                            m_InputEventStream.Advance(false);
+                            continue;
+                        }
+                    }
+
+                    // Give listeners a shot at the event.
+                    // NOTE: We call listeners also for events where the device is disabled. This is crucial for code
+                    //       such as TouchSimulation that disables the originating devices and then uses its events to
+                    //       create simulated events from.
+                    if (m_EventListeners.length > 0)
+                    {
+                        DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
+                            new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
+
+                        // If a listener marks the event as handled, we don't process it further.
+                        if (m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressStateUpdates &&
+                            currentEventReadPtr->handled)
+                        {
+                            m_InputEventStream.Advance(false);
+                            continue;
+                        }
+                    }
+
+                    // Update metrics.
+                    if (currentEventTimeInternal <= currentTime)
+                        totalEventLag += currentTime - currentEventTimeInternal;
+                    ++m_Metrics.totalEventCount;
+                    m_Metrics.totalEventBytes += (int)currentEventReadPtr->sizeInBytes;
+
+                    ProcessEvent(device, updateType, currentEventReadPtr, ref totalEventBytesProcessed);
+
+                    m_InputEventStream.Advance(leaveEventInBuffer: false);
+
+                    // Discard events in case the maximum event bytes per update has been exceeded
+                    if (AreMaximumEventBytesPerUpdateExceeded(totalEventBytesProcessed))
+                        break;
+                }
+
+                m_Metrics.totalEventProcessingTime +=
+                    ((double)(Stopwatch.GetTimestamp() - processingStartTime)) / Stopwatch.Frequency;
+                m_Metrics.totalEventLagTime += totalEventLag;
+
+                ResetCurrentProcessedEventBytesForDevices();
+
+                m_InputEventStream.Close(ref eventBuffer);
+            }
+            catch (Exception)
+            {
+                // We need to restore m_InputEventStream to a sound state
+                // to avoid failing recursive OnUpdate check next frame.
+                m_InputEventStream.CleanUpAfterException();
+                throw;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private unsafe void ProcessBeforeRenderStateEvents(out InputDevice device, out InputEvent* currentEventPtr)
+        {
+            device = null;
+            currentEventPtr = m_InputEventStream.currentEventPtr;
+
+            // Process before render state events
+            while (m_InputEventStream.remainingEventCount > 0)
+            {
+                Debug.Assert(!currentEventPtr->handled,
+                    "Iterated to event in buffer that is already marked as handled");
+
+                device = TryGetDeviceById(currentEventPtr->deviceId);
+                if (device != null && device.updateBeforeRender &&
+                    (currentEventPtr->type == StateEvent.Type ||
+                     currentEventPtr->type == DeltaStateEvent.Type))
+                    break;
+
+                currentEventPtr = m_InputEventStream.Advance(leaveEventInBuffer: true);
+            }
+        }
+
+        // Handles editor-specific focus/background early-out behavior and advances the stream accordingly.
+        // Returns true if event should be skipped (stream advanced), false otherwise.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private unsafe bool SkipEventDueToEditorBehaviour(InputUpdateType updateType, FourCC currentEventType, bool dropStatusEvents, double currentEventTimeInternal)
+        {
+            var possibleFocusEvent = m_InputEventStream.Peek();
+            if (possibleFocusEvent != null)
+            {
+                if (possibleFocusEvent->type == new FourCC((int)InputFocusEvent.Type) && !gameShouldGetInputRegardlessOfFocus)
+                {
+                    // If the next event is a focus event and we're not supposed to get input of the current update type in the next one, drop current event.
+                    // This ensures that we don't end up with a half processed events due to swapping buffers between editor and player,
+                    // such as InputActionPhase.Started not being finished by a InputActionPhase.Performed and ending up in a pressed state in the previous update type
+                    m_InputEventStream.Advance(false);
+                    return true;
+                }
+            }
+            // When the game is playing and has focus, we never process input in editor updates.
+            // All we do is just switch to editor state buffers and then exit.
+            if (gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor
+                && currentEventType != new FourCC((int)InputFocusEvent.Type))
+            {
+                m_InputEventStream.Advance(true);
+                return true;
+            }
+
+            //if we dont have focus and the editor behaviour is all input goes to gameview, which is the same behaviour as in a player
+            // and we are not allowed to run in the background or the background behaviour is that we reset and disable all devices
+            // If out of focus and runInBackground is off and ExactlyAsInPlayer is on, discard input.
+            if (!gameHasFocus
+                && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView
+                && (!m_Runtime.runInBackground || m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
+                && currentEventType != new FourCC((int)InputFocusEvent.Type))
+            {
+                m_InputEventStream.Advance(false);
+                return true;
+            }
+
+            // Check various PlayMode specific early exit conditions
+            if (ShouldExitEarlyBasedOnBackgroundBehavior(currentEventType, updateType))
+            {
+                m_InputEventStream.Advance(true);
+                return true;
+            }
+
+            if (dropStatusEvents)
+            {
+                // If the type here is a status event, ask advance not to leave the event in the buffer.  Otherwise, leave it there.
+                if (currentEventType == StateEvent.Type || currentEventType == DeltaStateEvent.Type || currentEventType == IMECompositionEvent.Type)
+                    m_InputEventStream.Advance(false);
+                else
+                    m_InputEventStream.Advance(true);
+
+                return true;
+            }
+
+            // Decide to skip events based on timing
+            if (ShouldDiscardEventInEditor(currentEventType, currentEventTimeInternal, updateType))
+            {
+                m_InputEventStream.Advance(false);
+                return true;
+            }
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private unsafe bool ShouldDeferEventBetweenEditorAndPlayerUpdates(InputUpdateType updateType, FourCC currentEventType, InputDevice device)
+        {
+            var focusEventType = new FourCC((int)InputFocusEvent.Type);
+
+            // If the event is a focus event, we want to let it through so that we can properly update our internal state of whether we have focus or not.
+            // This is crucial for making sure that we don't end up in a state where we have focus but are still dropping events because we haven't processed the focus event yet.
+            if (!(gameIsPlaying && !gameHasFocus) || currentEventType == focusEventType)
+                return false;
+
+            // In the editor, we may need to bump events from editor updates into player updates and vice versa.
+            if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.PointersAndKeyboardsRespectGameViewFocus
+                && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
+            {
+                var isPointerOrKeyboard = device is Pointer || device is Keyboard;
+                // In player update, defer pointer/keyboard events to editor update.
+                if (updateType != InputUpdateType.Editor)
+                {
+                    // Let everything but pointer and keyboard input through.
+                    // If the event is from a pointer or keyboard, leave it in the buffer so it can be dealt with
+                    // in a subsequent editor update. Otherwise, take it out.
+                    if (isPointerOrKeyboard)
+                    {
+                        m_InputEventStream.Advance(true);
+                        return true;
+                    }
+                }
+                else
+                {
+                    // In editor update, defer non-pointer/keyboard events to player update
+                    // and let only pointer and keyboard input through.
+                    if (!isPointerOrKeyboard)
+                    {
+                        m_InputEventStream.Advance(true);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private unsafe bool MergeWithNextEvent(InputDevice device, InputEvent* currentEventReadPtr, bool timesliceEvents, double currentTime,
+            ref InputEvent* skipEventMergingFor)
+        {
+            // NOTE: This relies on events in the buffer being consecutive for the same device. This is not
+            //       necessarily the case for events coming in from the background event queue where parallel
+            //       producers may create interleaved input sequences. This will be fixed once we have the
+            //       new buffering scheme for input events working in the native runtime.
+
+            var nextEvent = m_InputEventStream.Peek();
+            // If there is no next event after current one, early out.
+            if (nextEvent == null)
+                return false;
+
+            // if next event is for a different device, we cannot merge, so early out.
+            if (currentEventReadPtr->deviceId != nextEvent->deviceId)
+                return false;
+
+            // if next event is not in the same timeslicing slot, early out.
+            if (timesliceEvents && !(nextEvent->internalTime < currentTime))
+                return false;
+
+            // Then try to merge current event into next event.
+            if (((IEventMerger)device).MergeForward(currentEventReadPtr, nextEvent))
+            {
+                // And if succeeded, skip current event, as it was merged into next event.
+                m_InputEventStream.Advance(false);
+                return true;
+            }
+
+            // If we can't merge current event with next one for any reason, we assume the next event
+            // carries crucial entropy (button changed state, phase changed, counter changed, etc).
+            // Hence semantic meaning for current event is "can't merge current with next because next is different".
+            // But semantic meaning for next event is "next event carries important information and should be preserved",
+            // from that point of view next event should not be merged with current nor with _next after next_ event.
+            //
+            // For example, given such stream of events:
+            // Mouse       Mouse       Mouse       Mouse       Mouse       Mouse       Mouse
+            // Event no1   Event no2   Event no3   Event no4   Event no5   Event no6   Event no7
+            // Time 1      Time 2      Time 3      Time 4      Time 5      Time 6      Time 7
+            // Pos(10,20)  Pos(12,21)  Pos(13,23)  Pos(14,24)  Pos(16,25)  Pos(17,27)  Pos(18,28)
+            // Delta(1,1)  Delta(2,1)  Delta(1,2)  Delta(1,1)  Delta(2,1)  Delta(1,2)  Delta(1,1)
+            // BtnLeft(0)  BtnLeft(0)  BtnLeft(0)  BtnLeft(1)  BtnLeft(1)  BtnLeft(1)  BtnLeft(1)
+            //
+            // if we then merge without skipping next event here:
+            //                         Mouse                                           Mouse
+            //                         Event no3                                       Event no7
+            //                         Time 3                                          Time 7
+            //                         Pos(13,23)                                      Pos(18,28)
+            //                         Delta(4,4)                                      Delta(5,5)
+            //                         BtnLeft(0)                                      BtnLeft(1)
+            //
+            // As you can see, the event no4 containing mouse button press was lost,
+            // and with it we lose the important information of timestamp of mouse button press.
+            //
+            // With skipping merging next event we will get:
+            //                         Mouse       Mouse                               Mouse
+            //                         Time 3      Time 4                              Time 7
+            //                         Event no3   Event no4                           Event no7
+            //                         Pos(13,23)  Pos(14,24)                          Pos(18,28)
+            //                         Delta(3,3)  Delta(1,1)                          Delta(4,4)
+            //                         BtnLeft(0)  BtnLeft(1)                          BtnLeft(1)
+            //
+            // And no4 is preserved, with the exact timestamp of button press.
+            skipEventMergingFor = nextEvent;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private unsafe void ProcessEvent(InputDevice device, InputUpdateType updateType, InputEvent* currentEventReadPtr, ref uint totalEventBytesProcessed)
         {
             var currentEventType = currentEventReadPtr->type;
@@ -3437,7 +3478,7 @@ namespace UnityEngine.InputSystem
                 case DeltaStateEvent.Type:
                     ProcessStateEvent(device, updateType, currentEventReadPtr, ref totalEventBytesProcessed);
                     break;
-                
+
                 case TextEvent.Type:
                     ProcessTextEvent(device, currentEventReadPtr);
                     break;
@@ -3612,19 +3653,19 @@ namespace UnityEngine.InputSystem
                 return;
 #endif
 
-           bool runInBackground =
+            bool runInBackground =
 #if UNITY_EDITOR
-            // In the editor, the player loop will always be run even if the Game View does not have focus. This
-            // amounts to runInBackground being always true in the editor, regardless of what the setting in
-            // the Player Settings window is.
-            //
-            // If, however, "Game View Focus" is set to "Exactly As In Player", we force code here down the same
-            // path as in the player.
-            //if we are in editor, and the editor input behaviour is that everything that is pressed goes to the game view, or we are allowed to run in the background
-            m_Settings.editorInputBehaviorInPlayMode != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView
+                // In the editor, the player loop will always be run even if the Game View does not have focus. This
+                // amounts to runInBackground being always true in the editor, regardless of what the setting in
+                // the Player Settings window is.
+                //
+                // If, however, "Game View Focus" is set to "Exactly As In Player", we force code here down the same
+                // path as in the player.
+                //if we are in editor, and the editor input behaviour is that everything that is pressed goes to the game view, or we are allowed to run in the background
+                m_Settings.editorInputBehaviorInPlayMode != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView
                 || m_Runtime.runInBackground;
 #else
-            m_Runtime.runInBackground;
+                m_Runtime.runInBackground;
 #endif
 
             // BackgroundBehavior.IgnoreFocus means we ignore any state changes to the device, so we can early out
@@ -3669,9 +3710,9 @@ namespace UnityEngine.InputSystem
             if (device.disabledWhileInBackground)
             {
                 EnableOrDisableDevice(device, true, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-            }            
+            }
             else if (device.enabled && !runInBackground)
-            {                 
+            {
                 bool requestSync = device.RequestSync();
                 // Try to sync. If it fails and we didn't run in the background, perform
                 // a reset instead. This is to cope with backends that are unable to sync but
@@ -3692,18 +3733,18 @@ namespace UnityEngine.InputSystem
             switch (m_Settings.backgroundBehavior)
             {
                 case InputSettings.BackgroundBehavior.ResetAndDisableAllDevices:
-                    {
-                        // Disable the device. This will also soft-reset it.
-                        EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-                    }
-                    break;
+                {
+                    // Disable the device. This will also soft-reset it.
+                    EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+                }
+                break;
                 case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
-                    {
-                        // Disable the device. This will also soft-reset it.
-                        if (!ShouldRunDeviceInBackground(device))
-                            EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-                    }
-                    break;
+                {
+                    // Disable the device. This will also soft-reset it.
+                    if (!ShouldRunDeviceInBackground(device))
+                        EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+                }
+                break;
             }
         }
 
@@ -3823,6 +3864,7 @@ namespace UnityEngine.InputSystem
                 (eventTime < InputSystem.s_SystemObject.enterPlayModeTime ||
                     InputSystem.s_SystemObject.enterPlayModeTime == 0);
         }
+
 #endif
 
         bool AreMaximumEventBytesPerUpdateExceeded(uint totalEventBytesProcessed)
