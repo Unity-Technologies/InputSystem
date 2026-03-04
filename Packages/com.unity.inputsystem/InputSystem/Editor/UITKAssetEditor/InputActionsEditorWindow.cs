@@ -258,8 +258,26 @@ namespace UnityEngine.InputSystem.Editor
             rootVisualElement.Clear();
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
+
+            if (IsProjectSettingsWindowInputAsset())
+            {
+                var helpBox = new HelpBox(
+                    "This asset is assigned as the Project-wide Input Actions in Project Settings. Changes here affect input for the entire project.",
+                    HelpBoxMessageType.Info);
+                rootVisualElement.Add(helpBox);
+            }
+
             m_View = new InputActionsEditorView(rootVisualElement, m_StateContainer, false, () => Save(isAutoSave: false));
             m_StateContainer.Initialize(rootVisualElement.Q("action-editor"));
+        }
+
+        private bool IsProjectSettingsWindowInputAsset()
+        {
+            var projectWideActions = InputSystem.actions;
+            if (projectWideActions == null)
+                return false;
+            var path = AssetDatabase.GUIDToAssetPath(m_AssetGUID);
+            return path == AssetDatabase.GetAssetPath(projectWideActions);
         }
 
         private void OnStateChanged(InputActionsEditorState newState, UIRebuildMode editorRebuildMode)
