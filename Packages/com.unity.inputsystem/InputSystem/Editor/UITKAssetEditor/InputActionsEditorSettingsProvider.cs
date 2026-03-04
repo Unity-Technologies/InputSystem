@@ -178,7 +178,6 @@ namespace UnityEngine.InputSystem.Editor
             // This code should be cleaned up once we migrate the InputControl stuff from ImGUI completely.
             // Since at that point it stops being a separate window that steals focus.
             // (See case ISXB-1713)
-            var projectSettingsWindowIsOpen = m_IsActivated;
             if (m_View.IsControlSchemeViewActive())
             {
                 return;
