@@ -363,7 +363,8 @@ namespace UnityEngine.InputSystem.Editor
         private bool HandleOnDestroyIfApplicationIsAllowedToQuit(bool rebuildUIOnCancel)
         {
             // Do we have unsaved changes that we need to ask the user to save or discard?
-            if (!m_IsDirty)
+            // Early out if asset up to date or editor closing.
+            if (!m_IsDirty || m_IsEditorQuitting)
                 return true;
 
             // Get target asset path from GUID, if this fails file no longer exists and we need to abort.
