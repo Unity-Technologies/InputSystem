@@ -329,7 +329,7 @@ namespace UnityEngine.InputSystem.Editor
         private bool OnWantsToQuit()
         {
             // Here the user will be prompted
-            bool isAllowedToQuit = HandleOnDestroyIfApplicationIsAllowedToQuit(false);
+            bool isAllowedToQuit = CheckCanCloseAndPromptIfDirty(false);
             m_IsEditorQuitting = isAllowedToQuit;
             return m_IsEditorQuitting;
         }
@@ -359,8 +359,9 @@ namespace UnityEngine.InputSystem.Editor
         /// <summary>
         /// Shows a dialog when trying to close an input asset without saving changes.
         /// </summary>
+        /// <param name="rebuildUIOnCancel">If true, reopens the editor window when user cancels.</param>
         /// <returns> Returns true if you should allow the Unity Editor to close. </returns>
-        private bool HandleOnDestroyIfApplicationIsAllowedToQuit(bool rebuildUIOnCancel)
+        private bool CheckCanCloseAndPromptIfDirty(bool rebuildUIOnCancel)
         {
             // Do we have unsaved changes that we need to ask the user to save or discard?
             // Early out if asset up to date or editor closing.
@@ -372,37 +373,32 @@ namespace UnityEngine.InputSystem.Editor
             if (string.IsNullOrEmpty(assetPath))
                 return true;
 
-            if (!m_IsEditorQuitting)
+            // Prompt user with a dialog
+            var result = Dialog.InputActionAsset.ShowSaveChanges(assetPath);
+            switch (result)
             {
-                // Prompt user with a dialog
-                var result = Dialog.InputActionAsset.ShowSaveChanges(assetPath);
-                switch (result)
-                {
-                    case Dialog.Result.Save:
-                        Save(isAutoSave: false);
-                        return true;
-                    case Dialog.Result.Cancel:
-                        if (rebuildUIOnCancel)
-                        {
-                            // Cancel editor quit. (open new editor window with the edited asset)
-                            ReshowEditorWindowWithUnsavedChanges();
-                        }
+                case Dialog.Result.Save:
+                    Save(isAutoSave: false);
+                    return true;
+                case Dialog.Result.Cancel:
+                    if (rebuildUIOnCancel)
+                    {
+                        // Cancel editor quit. (open new editor window with the edited asset)
+                        ReshowEditorWindowWithUnsavedChanges();
+                    }
 
-                        return false;
-                    case Dialog.Result.Discard:
-                        // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
-                        return true;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(result));
-                }
+                    return false;
+                case Dialog.Result.Discard:
+                    // Don't save, quit - reload the old asset from the json to prevent the asset from being dirtied
+                    return true;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(result));
             }
-
-            return true;
         }
 
         private void OnDestroy()
         {
-            HandleOnDestroyIfApplicationIsAllowedToQuit(true);
+            CheckCanCloseAndPromptIfDirty(true);
 
             // Clean-up
             CleanupStateContainer();
