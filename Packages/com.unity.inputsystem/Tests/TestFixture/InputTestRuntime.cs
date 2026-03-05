@@ -233,6 +233,15 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public void SetPlayerFocus(bool playerHasFocus)
+        {
+            if (m_HasFocus == playerHasFocus)
+                return;
+            
+            m_HasFocus = playerHasFocus;
+            onPlayerFocusChanged?.Invoke(playerHasFocus);
+        }
+        
         public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.InvalidDeviceId)
         {
             lock (m_Lock)

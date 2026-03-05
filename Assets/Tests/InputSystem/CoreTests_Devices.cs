@@ -4611,7 +4611,7 @@ partial class CoreTests
         {
             // Focus events will always be processed no matter the state
             // Since the test relies on counting events based on state, dont count focus events
-            if (eventPtr.data->type != (FourCC)(int)InputFocusEvent.Type)
+            if (eventPtr.data->type != (FourCC)FocusConstants.kEventType)
                 ++eventCount;
         };
 
