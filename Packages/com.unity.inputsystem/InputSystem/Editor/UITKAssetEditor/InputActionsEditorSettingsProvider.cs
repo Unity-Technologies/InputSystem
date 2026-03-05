@@ -289,6 +289,8 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        internal static bool IsInputActionsPageActive => s_Provider != null && s_Provider.m_IsActivated;
+
         [SettingsProvider]
         public static SettingsProvider CreateGlobalInputActionsEditorProvider()
         {

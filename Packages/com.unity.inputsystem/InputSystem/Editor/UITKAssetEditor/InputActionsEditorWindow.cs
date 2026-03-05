@@ -259,11 +259,10 @@ namespace UnityEngine.InputSystem.Editor
             if (!rootVisualElement.styleSheets.Contains(InputActionsEditorWindowUtils.theme))
                 rootVisualElement.styleSheets.Add(InputActionsEditorWindowUtils.theme);
 
-            if (IsProjectSettingsWindowInputAsset())
+            if (IsProjectSettingsWindowInputAsset() && InputActionsEditorSettingsProvider.IsInputActionsPageActive)
             {
-                var helpBox = new HelpBox(
-                    "This asset is assigned as the Project-wide Input Actions in Project Settings. Changes here affect input for the entire project.",
-                    HelpBoxMessageType.Info);
+                var helpBox = new HelpBox( "This asset is assigned as the Project-wide Input Actions in Project Settings. Changes made here will affect input behavior across the entire project. Avoid editing this asset simultaneously in Project Settings windows.",
+                    HelpBoxMessageType.Warning);
                 rootVisualElement.Add(helpBox);
             }
 
