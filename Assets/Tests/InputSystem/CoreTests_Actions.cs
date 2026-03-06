@@ -1434,7 +1434,7 @@ partial class CoreTests
             foreach (var eventPtr in trace)
             {
                 // The trace should only contain a Canceled event for the action.
-                Assert.AreEqual(InputActionPhase.Canceled, eventPtr.phase, 
+                Assert.AreEqual(InputActionPhase.Canceled, eventPtr.phase,
                     $"inactive touch state should not produce action callbacks, but received {eventPtr.phase}.");
             }
         }
@@ -12509,14 +12509,14 @@ partial class CoreTests
         actionMap.Enable();
         // Inactive touches (ended before action was enabled) must NOT produce started/performed from
         // OnBeforeInitialUpdate. Their persisted state (position, touchId) is non-default due to
-        // dontReset, but only TouchControl.isInProgress should be considered for initial-state check. 
+        // dontReset, but only TouchControl.isInProgress should be considered for initial-state check.
         // Related to UUM-100125 and Actions_InitialStateCheckAfterConfigurationChange_DoesNotTriggerForInactiveTouch.
         InputSystem.Update();
         Assert.That(values.Count, Is.EqualTo(0));
         values.Clear();
 
         BeginTouch(200, new Vector2(1, 1));
-        // If prepopulated, action was never actuated (synthetic initial-check is suppressed), 
+        // If prepopulated, action was never actuated (synthetic initial-check is suppressed),
         // so BeginTouch fires started+performed (2 events).
         Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 1));
         Assert.That(values[values.Count - 1].InputId, Is.EqualTo(200));
