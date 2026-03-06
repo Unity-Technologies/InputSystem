@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed a `NullPointerReferenceException` thrown in `InputManagerStateMonitors.FireStateChangeNotifications` logging by adding validation [UUM-136095].
 - Fixed auto-save not working for Input System actions in Project Settings when both the Project Settings and Input System Actions windows were open [UUM-134035](https://jira.unity3d.com/browse/UUM-134035)
 - Improved New Input System warning dialog, Native Device Inputs Not Enabled [UUM-132151].
 - Fixed caching for InputControlPath display name [ISX-2501](https://jira.unity3d.com/browse/ISX-2501)
