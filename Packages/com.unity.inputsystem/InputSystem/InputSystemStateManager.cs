@@ -87,12 +87,12 @@ namespace UnityEngine.InputSystem
                 systemState.manager = InputSystem.s_Manager;
                 systemState.managerState = InputSystem.s_Manager.SaveState();
             }
-        
+
             if (InputSystem.s_Remote != null)
             {
                 systemState.remote = InputSystem.s_Remote;
                 systemState.remotingState = InputSystem.s_Remote.SaveState();
-            }            
+            }
 
             systemState.remoteConnection = InputSystem.remoteConnection;
             systemState.userSettings = InputEditorUserSettings.s_Settings;

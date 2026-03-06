@@ -1036,7 +1036,6 @@ namespace UnityEngine.InputSystem
             InputState.Change(control, ref state, eventPtr: eventPtr);
             state.isTapRelease = false;
         }
-
     }
 
     /// <summary>

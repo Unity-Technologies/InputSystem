@@ -1375,7 +1375,7 @@ namespace UnityEngine.InputSystem
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeGlobalPlayerState()
         {
-             if (!InputSystem.IsDomainReloadDisabledForPlayMode())
+            if (!InputSystem.IsDomainReloadDisabledForPlayMode())
                 return;
 
             // Touch GlobalState doesn't require Dispose operations
