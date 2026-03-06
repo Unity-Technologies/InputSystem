@@ -1037,7 +1037,6 @@ namespace UnityEngine.InputSystem
             state.isTapRelease = false;
         }
 
-        private static TouchscreenSettings s_Settings;
     }
 
     /// <summary>
