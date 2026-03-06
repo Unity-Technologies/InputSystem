@@ -3922,12 +3922,9 @@ internal partial class UITests : CoreTestsFixture
     // can have a reference to UITK that doesn't break things in previous versions of Unity.
     [UnityTest]
     [Category("UI")]
-// #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
-//     [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
-// #endif
-// #if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
-//     [Ignore("Disabled to make test suite pass on Linux")]
-// #endif
+#if UNITY_2022_3_OR_LOWER && (UNITY_ANDROID || UNITY_IOS) // || UNITY_TVOS
+    [Ignore("Issue with mouse support on Android and iOS for 2022.3.")]
+#endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
     public IEnumerator UI_UIToolkitInputModule_MouseClick_CapturesAndClicksButton()
     {
@@ -3961,6 +3958,8 @@ internal partial class UITests : CoreTestsFixture
         }
         finally
         {
+            if (mouse.added)
+                InputSystem.RemoveDevice(mouse);
             SceneManager.UnloadSceneAsync(scene);
         }
 
@@ -3969,12 +3968,6 @@ internal partial class UITests : CoreTestsFixture
 
     [UnityTest]
     [Category("UI")]
-// #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
-//     [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
-// #endif
-// #if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
-//     [Ignore("Disabled to make test suite pass on Linux")]
-// #endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
     public IEnumerator UI_UIToolkitInputModule_MouseScroll_MovesScrollView()
     {
@@ -4002,6 +3995,8 @@ internal partial class UITests : CoreTestsFixture
         }
         finally
         {
+            if (mouse.added)
+                InputSystem.RemoveDevice(mouse);
             SceneManager.UnloadSceneAsync(scene);
         }
 
@@ -4010,12 +4005,6 @@ internal partial class UITests : CoreTestsFixture
 
     [UnityTest]
     [Category("UI")]
-// #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
-//     [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
-// #endif
-// #if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
-//     [Ignore("Disabled to make test suite pass on Linux")]
-// #endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
     public IEnumerator UI_UIToolkitInputModule_GamepadSubmit_ClicksFocusedButton()
     {
@@ -4043,6 +4032,8 @@ internal partial class UITests : CoreTestsFixture
         }
         finally
         {
+            if (gamepad.added)
+                InputSystem.RemoveDevice(gamepad);
             SceneManager.UnloadSceneAsync(scene);
         }
 
@@ -4054,11 +4045,11 @@ internal partial class UITests : CoreTestsFixture
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
-// #if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
-//     [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
-// #endif
-// #if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
-//     [Ignore("Disabled to make test suite pass on Linux")]
+#if UNITY_2022_3_OR_LOWER && (UNITY_ANDROID || UNITY_IOS)
+    [Ignore("Fails on CI for 2022.3 on Android and iOS.")]
+#endif
+// #if UNITY_EDITOR_LINUX
+//     [Ignore("Fails on CI for Editor Ubuntu")]
 // #endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
     public IEnumerator UI_UIToolkitInputModule_MultiTouchPointerOwnership(UIPointerBehavior pointerBehavior)
@@ -4130,6 +4121,8 @@ internal partial class UITests : CoreTestsFixture
         }
         finally
         {
+            if (touchscreen.added)
+                InputSystem.RemoveDevice(touchscreen);
             SceneManager.UnloadSceneAsync(scene);
         }
 
@@ -4186,11 +4179,11 @@ internal partial class UITests : CoreTestsFixture
             EndTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
             Assert.That(IsActiveVisualElement(uiButton), Is.False, "Expected uiButton to no longer be active after touch #1 is released.");
-
-            InputSystem.RemoveDevice(touchscreen);
         }
         finally
         {
+            if (touchscreen.added)
+                InputSystem.RemoveDevice(touchscreen);
             SceneManager.UnloadSceneAsync(scene);
         }
 
@@ -4648,7 +4641,7 @@ internal partial class UITests : CoreTestsFixture
     }
 
 #endif
-    #endregion
+#endregion
 
     public class MyButton : UnityEngine.UI.Button
     {
