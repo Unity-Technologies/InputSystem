@@ -22,7 +22,6 @@ using UnityEngine.Assemblies;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
-using UnityEngine.Tilemaps;
 
 #endif
 
