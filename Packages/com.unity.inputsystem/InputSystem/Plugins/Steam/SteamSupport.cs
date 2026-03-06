@@ -23,20 +23,30 @@ namespace UnityEngine.InputSystem.Steam
         /// </remarks>
         public static ISteamControllerAPI api
         {
-            get { return s_API; }
+            get { return s_GlobalState.api; }
             set
             {
-                s_API = value;
-                InstallControllerUpdateHooks(s_API != null);
+                s_GlobalState.api = value;
+                InstallControllerUpdateHooks(s_GlobalState.api != null);
             }
         }
 
         internal static ISteamControllerAPI GetAPIAndRequireItToBeSet()
         {
-            if (s_API == null)
+            if (s_GlobalState.api == null)
                 throw new InvalidOperationException("ISteamControllerAPI implementation has not been set on SteamSupport");
-            return s_API;
+            return s_GlobalState.api;
         }
+
+        private class GlobalState
+        {
+            public SteamHandle<SteamController>[] connectedControllers;
+            public SteamController[] inputDevices;
+            public int inputDeviceCount;
+            public ISteamControllerAPI api;
+        }
+
+        private static GlobalState s_GlobalState = new GlobalState();
 
         /// <summary>
         /// Returns if the controller Update event handlers have been set or not.
@@ -45,12 +55,7 @@ namespace UnityEngine.InputSystem.Steam
         /// The s_ConnectedControllers array is allocated in response to setting event handlers and
         /// so it can double as our "is installed" flag.
         /// </remarks>
-        private static bool updateHooksInstalled => s_ConnectedControllers != null;
-
-        private static SteamHandle<SteamController>[] s_ConnectedControllers;
-        private static SteamController[] s_InputDevices;
-        private static int s_InputDeviceCount;
-        private static ISteamControllerAPI s_API;
+        private static bool updateHooksInstalled => s_GlobalState.connectedControllers != null;
 
         private const int STEAM_CONTROLLER_MAX_COUNT = 16;
 
@@ -62,7 +67,7 @@ namespace UnityEngine.InputSystem.Steam
             // We use this as a base layout.
             InputSystem.RegisterLayout<SteamController>();
 
-            InstallControllerUpdateHooks(s_API != null);
+            InstallControllerUpdateHooks(s_GlobalState.api != null);
         }
 
         /// <summary>
@@ -72,9 +77,9 @@ namespace UnityEngine.InputSystem.Steam
         {
             InstallControllerUpdateHooks(false);
 
-            s_API = null;
-            s_InputDevices = null;
-            s_InputDeviceCount = 0;
+            s_GlobalState.api = null;
+            s_GlobalState.inputDevices = null;
+            s_GlobalState.inputDeviceCount = 0;
         }
 
         private static void InstallControllerUpdateHooks(bool state)
@@ -82,7 +87,7 @@ namespace UnityEngine.InputSystem.Steam
             Debug.Assert(api != null || !state);
             if (state && !updateHooksInstalled)
             {
-                s_ConnectedControllers = new SteamHandle<SteamController>[STEAM_CONTROLLER_MAX_COUNT];
+                s_GlobalState.connectedControllers = new SteamHandle<SteamController>[STEAM_CONTROLLER_MAX_COUNT];
                 InputSystem.onBeforeUpdate += OnUpdate;
                 InputSystem.onActionChange += OnActionChange;
             }
@@ -90,7 +95,7 @@ namespace UnityEngine.InputSystem.Steam
             {
                 InputSystem.onBeforeUpdate -= OnUpdate;
                 InputSystem.onActionChange -= OnActionChange;
-                s_ConnectedControllers = null;
+                s_GlobalState.connectedControllers = null;
             }
         }
 
@@ -146,20 +151,20 @@ namespace UnityEngine.InputSystem.Steam
             api.RunFrame();
 
             // Check if we have any new controllers have appeared.
-            var numConnectedControllers = api.GetConnectedControllers(s_ConnectedControllers);
+            var numConnectedControllers = api.GetConnectedControllers(s_GlobalState.connectedControllers);
             for (var i = 0; i < numConnectedControllers; ++i)
             {
-                var handle = s_ConnectedControllers[i];
+                var handle = s_GlobalState.connectedControllers[i];
 
                 // See if we already have a device for this one.
-                if (s_InputDevices != null)
+                if (s_GlobalState.inputDevices != null)
                 {
                     SteamController existingDevice = null;
-                    for (var n = 0; n < s_InputDeviceCount; ++n)
+                    for (var n = 0; n < s_GlobalState.inputDeviceCount; ++n)
                     {
-                        if (s_InputDevices[n].steamControllerHandle == handle)
+                        if (s_GlobalState.inputDevices[n].steamControllerHandle == handle)
                         {
-                            existingDevice = s_InputDevices[n];
+                            existingDevice = s_GlobalState.inputDevices[n];
                             break;
                         }
                     }
@@ -198,20 +203,20 @@ namespace UnityEngine.InputSystem.Steam
                     // Assign it the Steam controller handle.
                     steamDevice.steamControllerHandle = handle;
 
-                    ArrayHelpers.AppendWithCapacity(ref s_InputDevices, ref s_InputDeviceCount, steamDevice);
+                    ArrayHelpers.AppendWithCapacity(ref s_GlobalState.inputDevices, ref s_GlobalState.inputDeviceCount, steamDevice);
                 }
             }
 
             // Update all controllers we have.
-            for (var i = 0; i < s_InputDeviceCount; ++i)
+            for (var i = 0; i < s_GlobalState.inputDeviceCount; ++i)
             {
-                var device = s_InputDevices[i];
+                var device = s_GlobalState.inputDevices[i];
                 var handle = device.steamControllerHandle;
 
                 // Check if the device still exists.
                 var stillExists = false;
                 for (var n = 0; n < numConnectedControllers; ++n)
-                    if (s_ConnectedControllers[n] == handle)
+                    if (s_GlobalState.connectedControllers[n] == handle)
                     {
                         stillExists = true;
                         break;
@@ -220,7 +225,7 @@ namespace UnityEngine.InputSystem.Steam
                 // If not, remove it.
                 if (!stillExists)
                 {
-                    ArrayHelpers.EraseAtByMovingTail(s_InputDevices, ref s_InputDeviceCount, i);
+                    ArrayHelpers.EraseAtByMovingTail(s_GlobalState.inputDevices, ref s_GlobalState.inputDeviceCount, i);
                     ////REVIEW: should this rather queue a device removal event?
                     InputSystem.RemoveDevice(device);
                     --i;
