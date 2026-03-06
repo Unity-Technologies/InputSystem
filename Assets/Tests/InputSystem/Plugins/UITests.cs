@@ -3922,7 +3922,7 @@ internal partial class UITests : CoreTestsFixture
     // can have a reference to UITK that doesn't break things in previous versions of Unity.
     [UnityTest]
     [Category("UI")]
-#if UNITY_2022_3_OR_LOWER && (UNITY_ANDROID || UNITY_IOS) // || UNITY_TVOS
+#if UNITY_2022_3 && (UNITY_ANDROID || UNITY_IOS) // || UNITY_TVOS
     [Ignore("Issue with mouse support on Android and iOS for 2022.3.")]
 #endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
@@ -4045,7 +4045,7 @@ internal partial class UITests : CoreTestsFixture
     [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
     [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
     [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
-#if UNITY_2022_3_OR_LOWER && (UNITY_ANDROID || UNITY_IOS)
+#if UNITY_2022_3 && (UNITY_ANDROID || UNITY_IOS)
     [Ignore("Fails on CI for 2022.3 on Android and iOS.")]
 #endif
 // #if UNITY_EDITOR_LINUX
