@@ -1249,6 +1249,7 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(prefab));
 
             // Set initialization data.
+            s_GlobalState.initPairWithDevicesCount = 0;
             s_GlobalState.initPlayerIndex = playerIndex;
             s_GlobalState.initSplitScreenIndex = splitScreenIndex;
             s_GlobalState.initControlScheme = controlScheme;
