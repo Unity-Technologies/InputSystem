@@ -113,9 +113,9 @@ class DocumentationBasedAPIVerficationTests
 #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
 #endif
-#if UNITY_EDITOR_LINUX
+/*#if UNITY_EDITOR_LINUX
     [Ignore("Disabled to make test suite pass on Linux")]
-#endif
+#endif*/
     public void API_MonoBehaviourHelpUrlsAreValid()
     {
         // We exclude abstract MonoBehaviours as these can't show up in the Unity inspector.
