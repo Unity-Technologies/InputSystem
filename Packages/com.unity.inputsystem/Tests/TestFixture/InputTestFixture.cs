@@ -843,10 +843,14 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public unsafe void ScheduleFocusEvent(bool focus)
         {
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
             // For now we only set application focus. In the future we want to add support for other focus as well
             FocusFlags state = focus ? FocusFlags.ApplicationFocus : FocusFlags.None;
             var evt = InputFocusEvent.Create(state);
             InputSystem.QueueEvent(new InputEventPtr((InputEvent*)&evt.baseEvent));
+#else
+            runtime.InvokePlayerFocusChanged(focus);
+#endif
         }
 
         /// <summary>
@@ -1011,7 +1015,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         internal void SimulateDomainReload()
         {
             // This quite invasively goes into InputSystem internals. Unfortunately, we
@@ -1023,7 +1027,7 @@ namespace UnityEngine.InputSystem
             InputSystem.InitializeInEditor(runtime);
         }
 
-        #endif
+#endif
 
         private static void CheckValidity(InputDevice device, InputControl control)
         {
@@ -1058,7 +1062,7 @@ namespace UnityEngine.InputSystem
             return Application.isEditor && !Application.isPlaying;
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         /// <summary>
         /// Represents an analytics registration event captured by test harness.
         /// </summary>
@@ -1153,6 +1157,6 @@ namespace UnityEngine.InputSystem
             CollectAnalytics((_) => true);
         }
 
-        #endif
+#endif
     }
 }

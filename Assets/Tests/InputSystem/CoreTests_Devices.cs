@@ -4611,7 +4611,7 @@ partial class CoreTests
         {
             // Focus events will always be processed no matter the state
             // Since the test relies on counting events based on state, dont count focus events
-            if (eventPtr.data->type != (FourCC)(int)InputFocusEvent.Type)
+            if (eventPtr.data->type != (FourCC)FocusConstants.kEventType)
                 ++eventCount;
         };
 
@@ -5327,7 +5327,11 @@ partial class CoreTests
 
         // Lose focus
         ScheduleFocusEvent(false);
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+        // in the new system, we have to process the focus event to update the state of the devices.
+        // In the old system, this wouldn't work and would make the test fal
         InputSystem.Update();
+#endif
 
         Assert.That(gamepad.enabled, Is.False);
 

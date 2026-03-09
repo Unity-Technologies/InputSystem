@@ -37,6 +37,36 @@ namespace UnityEngine.InputSystem
     using LayoutChangeListener = Action<string, InputControlLayoutChange>;
     using UpdateListener = Action;
 
+    // Prior to 6000.5.a8 Input System mixed application focus with deferred events causing
+    // incorrect reasoning regarding which events happened in-focus vs out-of-focus.
+    // When running on an older editor, we define the enum here instead to reduce redundancy.
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+    /// <summary>
+    /// Flags indicating various focus states for the application and editor.
+    /// </summary>
+    internal enum FocusFlags : ushort
+    {
+        /// <summary>
+        /// No focus state is active.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
+        /// The application has focus.
+        /// </summary>
+        ApplicationFocus = (1 << 0)
+    };
+#endif
+
+    static class FocusConstants
+    {
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+        public const int kEventType = (int)NativeInputEventType.Focus;
+#else
+        public const int kEventType = 0x464f4355; // 'FOCU'
+#endif
+    }
+
     /// <summary>
     /// Hub of the input system.
     /// </summary>
@@ -182,6 +212,12 @@ namespace UnityEngine.InputSystem
                     m_ScrollDeltaBehavior == InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
 #endif
             }
+        }
+
+        public FocusFlags focusState
+        {
+            get => m_FocusState;
+            set => m_FocusState = value;
         }
 
         public float pollingFrequency
@@ -401,7 +437,7 @@ namespace UnityEngine.InputSystem
 #else
             true;
 #endif
-        private bool applicationHasFocus => (m_FocusState & FocusFlags.ApplicationFocus) != 0;
+        private bool applicationHasFocus => (focusState & FocusFlags.ApplicationFocus) != 0;
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
@@ -1902,8 +1938,8 @@ namespace UnityEngine.InputSystem
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
 
-            m_FocusState = Application.isFocused ? m_FocusState |= FocusFlags.ApplicationFocus
-                : m_FocusState &= ~FocusFlags.ApplicationFocus;
+            focusState = Application.isFocused ? focusState |= FocusFlags.ApplicationFocus
+                : focusState &= ~FocusFlags.ApplicationFocus;
 
 #if UNITY_EDITOR
             m_EditorIsActive = true;
@@ -2089,22 +2125,28 @@ namespace UnityEngine.InputSystem
                 m_Runtime.onBeforeUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onShouldRunUpdate = null;
-                #if UNITY_EDITOR
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+                m_Runtime.onPlayerFocusChanged = null;
+#endif
+#if UNITY_EDITOR
                 m_Runtime.onPlayerLoopInitialization = null;
-                #endif
+#endif
             }
 
             m_Runtime = runtime;
             m_Runtime.onUpdate = OnUpdate;
             m_Runtime.onDeviceDiscovered = OnNativeDeviceDiscovered;
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+            m_Runtime.onPlayerFocusChanged = OnFocusChanged;
+#endif
             m_Runtime.onShouldRunUpdate = ShouldRunUpdate;
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             m_Runtime.onPlayerLoopInitialization = OnPlayerLoopInitialization;
-            #endif
+#endif
             m_Runtime.pollingFrequency = pollingFrequency;
 
-            m_FocusState = m_Runtime.isPlayerFocused ? m_FocusState |= FocusFlags.ApplicationFocus
-                : m_FocusState &= ~FocusFlags.ApplicationFocus;
+            focusState = m_Runtime.isPlayerFocused ? focusState |= FocusFlags.ApplicationFocus
+                : focusState &= ~FocusFlags.ApplicationFocus;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -2113,10 +2155,10 @@ namespace UnityEngine.InputSystem
                 m_NativeBeforeUpdateHooked = true;
             }
 
-            #if UNITY_ANALYTICS || UNITY_EDITOR
+#if UNITY_ANALYTICS || UNITY_EDITOR
             InputAnalytics.Initialize(this);
             m_Runtime.onShutdown = () => InputAnalytics.OnShutdown(this);
-            #endif
+#endif
         }
 
         internal void InstallGlobals()
@@ -2168,6 +2210,9 @@ namespace UnityEngine.InputSystem
                 m_Runtime.onUpdate = null;
                 m_Runtime.onDeviceDiscovered = null;
                 m_Runtime.onBeforeUpdate = null;
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+                m_Runtime.onPlayerFocusChanged = null;
+#endif
                 m_Runtime.onShouldRunUpdate = null;
 
                 if (ReferenceEquals(InputRuntime.s_Instance, m_Runtime))
@@ -2186,9 +2231,9 @@ namespace UnityEngine.InputSystem
 
         // Used by EditorInputControlLayoutCache to determine whether its state is outdated.
         internal int m_LayoutRegistrationVersion;
-        #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+#if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
         private float m_PollingFrequency;
-        #endif
+#endif
         private InputEventHandledPolicy m_InputEventHandledPolicy;
 
         internal InputControlLayout.Collection m_Layouts;
@@ -2213,10 +2258,10 @@ namespace UnityEngine.InputSystem
 
         private InputSettings.ScrollDeltaBehavior m_ScrollDeltaBehavior;
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         // remember time offset to correctly restore it after editor mode is done
         private double latestNonEditorTimeOffsetToRealtimeSinceStartup;
-        #endif
+#endif
 
         // We don't use UnityEvents and thus don't persist the callbacks during domain reloads.
         // Restoration of UnityActions is unreliable and it's too easy to end up with double
@@ -2234,27 +2279,31 @@ namespace UnityEngine.InputSystem
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         private FocusFlags m_FocusState;
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+        private bool m_DiscardOutOfFocusEvents;
+        private double m_FocusRegainedTime;
+#endif
         private InputEventStream m_InputEventStream;
 
         // We want to sync devices when the editor comes back into focus. Unfortunately, there's no
         // callback for this so we have to poll this state.
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         private bool m_EditorIsActive;
-        #endif
+#endif
 
         // Allow external users to hook in validators and draw custom UI in the binding path editor
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         private Utilities.CallbackArray<CustomBindingPathValidator> m_customBindingPathValidators;
-        #endif
+#endif
 
         // We allocate the 'executeDeviceCommand' closure passed to 'onFindLayoutForDevice'
         // only once to avoid creating garbage.
         private InputDeviceExecuteCommandDelegate m_DeviceFindExecuteCommandDelegate;
         private int m_DeviceFindExecuteCommandDeviceId;
 
-        #if UNITY_ANALYTICS || UNITY_EDITOR
+#if UNITY_ANALYTICS || UNITY_EDITOR
         private bool m_HaveSentStartupAnalytics;
-        #endif
+#endif
 
         internal IInputRuntime m_Runtime;
         internal InputMetrics m_Metrics;
@@ -2288,9 +2337,9 @@ namespace UnityEngine.InputSystem
 
         private InputActionAsset m_Actions;
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
-        #endif
+#endif
 
         ////REVIEW: Make it so that device names *always* have a number appended? (i.e. Gamepad1, Gamepad2, etc. instead of Gamepad, Gamepad1, etc)
 
@@ -2410,13 +2459,13 @@ namespace UnityEngine.InputSystem
                 stateBlock.CopyToFrom(m_StateBuffers.m_PlayerStateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
             }
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (m_StateBuffers.m_EditorStateBuffers.valid)
             {
                 stateBlock.CopyToFrom(m_StateBuffers.m_EditorStateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
                 stateBlock.CopyToFrom(m_StateBuffers.m_EditorStateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
             }
-            #endif
+#endif
         }
 
         private unsafe void InitializeDeviceState(InputDevice device)
@@ -2496,13 +2545,13 @@ namespace UnityEngine.InputSystem
                     deviceStateBlock.CopyToFrom(m_StateBuffers.m_PlayerStateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
                 }
 
-                #if UNITY_EDITOR
+#if UNITY_EDITOR
                 if (m_StateBuffers.m_EditorStateBuffers.valid)
                 {
                     deviceStateBlock.CopyToFrom(m_StateBuffers.m_EditorStateBuffers.GetFrontBuffer(deviceIndex), defaultStateBuffer);
                     deviceStateBlock.CopyToFrom(m_StateBuffers.m_EditorStateBuffers.GetBackBuffer(deviceIndex), defaultStateBuffer);
                 }
-                #endif
+#endif
             }
         }
 
@@ -2677,10 +2726,10 @@ namespace UnityEngine.InputSystem
 
         private void RestoreDevicesAfterDomainReloadIfNecessary()
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (m_SavedDeviceStates != null)
                 RestoreDevicesAfterDomainReload();
-            #endif
+#endif
         }
 
 #if UNITY_EDITOR
@@ -2723,7 +2772,7 @@ namespace UnityEngine.InputSystem
             // If we still have any saved device states, we have devices that we couldn't figure
             // out how to recreate after a domain reload. Log a warning for each of them and
             // let go of them.
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (m_SavedDeviceStates == null)
                 return;
 
@@ -2736,7 +2785,7 @@ namespace UnityEngine.InputSystem
             // At this point, we throw the device states away and forget about
             // what we had before the domain reload.
             m_SavedDeviceStates = null;
-            #endif
+#endif
         }
 
         private void OnBeforeUpdate(InputUpdateType updateType)
@@ -2805,12 +2854,12 @@ namespace UnityEngine.InputSystem
                     throw new NotSupportedException("Invalid input update mode: " + m_Settings.updateMode);
             }
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             // In the editor, we force editor updates to be on even if InputEditorUserSettings.lockInputToGameView is
             // on as otherwise we'll end up accumulating events in edit mode without anyone flushing the
             // queue out regularly.
             newUpdateMask |= InputUpdateType.Editor;
-            #endif
+#endif
             updateMask = newUpdateMask;
 
             scrollDeltaBehavior = m_Settings.scrollDeltaBehavior;
@@ -2859,9 +2908,9 @@ namespace UnityEngine.InputSystem
             // Apply feature flags.
             if (m_Settings.m_FeatureFlags != null)
             {
-                #if UNITY_EDITOR
+#if UNITY_EDITOR
                 runPlayerUpdatesInEditMode = m_Settings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode);
-                #endif
+#endif
 
                 // Extract feature flags into fields since used in hot-path
                 m_ReadValueCachingFeatureEnabled = m_Settings.IsFeatureEnabled((InputFeatureNames.kUseReadValueCaching));
@@ -2947,6 +2996,207 @@ namespace UnityEngine.InputSystem
                 device.canRunInBackground;
         }
 
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+        internal void OnFocusChanged(bool focus)
+        {
+#if UNITY_EDITOR
+            SyncAllDevicesWhenEditorIsActivated();
+
+            if (!m_Runtime.isInPlayMode)
+            {
+                focusState = focus ? FocusFlags.ApplicationFocus : FocusFlags.None;
+                return;
+            }
+
+            var gameViewFocus = m_Settings.editorInputBehaviorInPlayMode;
+#endif
+
+            var runInBackground =
+#if UNITY_EDITOR
+                // In the editor, the player loop will always be run even if the Game View does not have focus. This
+                // amounts to runInBackground being always true in the editor, regardless of what the setting in
+                // the Player Settings window is.
+                //
+                // If, however, "Game View Focus" is set to "Exactly As In Player", we force code here down the same
+                // path as in the player.
+                gameViewFocus != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView || m_Runtime.runInBackground;
+#else
+                m_Runtime.runInBackground;
+#endif
+
+            var backgroundBehavior = m_Settings.backgroundBehavior;
+            if (backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
+            {
+                // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
+                // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
+                focusState = focus ? FocusFlags.ApplicationFocus : FocusFlags.None;
+                return;
+            }
+
+#if UNITY_EDITOR
+            // Set the current update type while we process the focus changes to make sure we
+            // feed into the right buffer. No need to do this in the player as it doesn't have
+            // the editor/player confusion.
+            m_CurrentUpdate = m_UpdateMask.GetUpdateTypeForPlayer();
+#endif
+
+            if (!focus)
+            {
+                // We only react to loss of focus when we will keep running in the background. If not,
+                // we'll do nothing and just wait for focus to come back (where we then try to sync all devices).
+                if (runInBackground)
+                {
+                    for (var i = 0; i < m_DevicesCount; ++i)
+                    {
+                        // Determine whether to run this device in the background.
+                        var device = m_Devices[i];
+                        if (!device.enabled || ShouldRunDeviceInBackground(device))
+                            continue;
+
+                        // Disable the device. This will also soft-reset it.
+                        EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+
+                        // In case we invoked a callback that messed with our device array, adjust our index.
+                        var index = m_Devices.IndexOfReference(device, m_DevicesCount);
+                        if (index == -1)
+                            --i;
+                        else
+                            i = index;
+                    }
+                }
+            }
+            else
+            {
+                m_DiscardOutOfFocusEvents = true;
+                m_FocusRegainedTime = m_Runtime.currentTime;
+                // On focus gain, reenable and sync devices.
+                for (var i = 0; i < m_DevicesCount; ++i)
+                {
+                    var device = m_Devices[i];
+
+                    // Re-enable the device if we disabled it on focus loss. This will also issue a sync.
+                    if (device.disabledWhileInBackground)
+                        EnableOrDisableDevice(device, true, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+                    // Try to sync. If it fails and we didn't run in the background, perform
+                    // a reset instead. This is to cope with backends that are unable to sync but
+                    // may still retain state which now may be outdated because the input device may
+                    // have changed state while we weren't running. So at least make the backend flush
+                    // its state (if any).
+                    else if (device.enabled && !runInBackground && !device.RequestSync() && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus)
+                        ResetDevice(device);
+                }
+            }
+
+#if UNITY_EDITOR
+            m_CurrentUpdate = InputUpdateType.None;
+#endif
+
+            // We set this *after* the block above as defaultUpdateType is influenced by the setting.
+           focusState = focus ? FocusFlags.ApplicationFocus : FocusFlags.None;
+        }
+
+        /// <summary>
+        /// Determines if the event buffer should be flushed without processing events.
+        /// </summary>
+        /// <returns>True if the buffer should be flushed, false otherwise.</returns>
+        private bool ShouldFlushEventBuffer()
+        {
+#if UNITY_EDITOR
+            // If out of focus and runInBackground is off and ExactlyAsInPlayer is on, discard input.
+            if (!gameHasFocus &&
+                m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView
+                &&
+                (!m_Runtime.runInBackground || m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices))
+                return true;
+#else
+            // In player builds, flush if out of focus and not running in background
+            if (!gameHasFocus && !m_Runtime.runInBackground)
+                return true;
+#endif
+            return false;
+        }
+
+        /// <summary>
+        /// Determines if we should exit early from event processing without handling events.
+        /// </summary>
+        /// <param name="eventBuffer">The current event buffer</param>
+        /// <param name="canFlushBuffer">Whether the buffer can be flushed</param>
+        /// <param name="updateType">The current update type</param>
+        /// <returns>True if we should exit early, false otherwise.</returns>
+        private bool ShouldExitEarlyFromEventProcessing(InputUpdateType updateType)
+        {
+#if UNITY_EDITOR
+            // Check various PlayMode specific early exit conditions
+            if (ShouldExitEarlyBasedOnBackgroundBehavior(updateType))
+                return true;
+
+            // When the game is playing and has focus, we never process input in editor updates.
+            // All we do is just switch to editor state buffers and then exit.
+            if ((gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor))
+                return true;
+#endif
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks background behavior conditions for early exit from event processing.
+        /// </summary>
+        /// <param name="updateType">The current update type</param>
+        /// <returns>True if we should exit early, false otherwise.</returns>
+        /// <remarks>
+        /// Whenever this method returns true, it usually means that events are left in the buffer and should be
+        /// processed in a next update call.
+        /// </remarks>
+        private bool ShouldExitEarlyBasedOnBackgroundBehavior(InputUpdateType updateType)
+        {
+            // In Play Mode, if we're in the background and not supposed to process events in this update
+            if ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus) && updateType != InputUpdateType.Editor)
+            {
+                if (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices ||
+                    m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
+                    return true;
+            }
+
+            // Special case for IgnoreFocus behavior with AllDeviceInputAlwaysGoesToGameView in editor updates
+            if ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus) &&
+                m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus &&
+                m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView &&
+                updateType == InputUpdateType.Editor)
+                return true;
+
+            return false;
+        }
+
+         private unsafe bool LegacyEarlyOutFromEventProcessing(InputUpdateType updateType, ref InputEventBuffer eventBuffer, ref bool dropStatusEvents)
+        {
+            var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
+            // Determine if we should flush the event buffer which would imply we exit early and do not process
+            // any of those events, ever.
+            var shouldFlushEventBuffer = ShouldFlushEventBuffer();
+            // When we exit early, we may or may not flush the event buffer. It depends if we want to process events
+            // later once this method is called.
+            var shouldExitEarly = eventBuffer.eventCount == 0 || shouldFlushEventBuffer || ShouldExitEarlyFromEventProcessing(updateType);
+            dropStatusEvents = ShouldDropStatusEvents(eventBuffer, ref shouldExitEarly);
+
+            // we exit early as we have no events in the buffer
+            if (shouldExitEarly)
+            {
+                // Normally, we process action timeouts after first processing all events. If we have no
+                // events, we still need to check timeouts.
+                if (shouldProcessActionTimeouts)
+                    ProcessStateChangeMonitorTimeouts();
+
+                if (shouldFlushEventBuffer)
+                    eventBuffer.Reset();
+                InvokeAfterUpdateCallback(updateType);
+                m_CurrentUpdate = InputUpdateType.None;
+                return true;
+            }
+            return false;
+        }
+#endif // !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+
 #if UNITY_EDITOR
         internal void LeavePlayMode()
         {
@@ -3000,24 +3250,26 @@ namespace UnityEngine.InputSystem
             return (updateType & mask) != 0;
         }
 
-        /// <summary>
-        /// Process input events.
-        /// </summary>
-        /// <param name="updateType"></param>
-        /// <param name="eventBuffer"></param>
-        /// <remarks>
-        /// This method is the core workhorse of the input system. It is called from <see cref="UnityEngineInternal.Input.NativeInputSystem"/>.
-        /// Usually this happens in response to the player loop running and triggering updates at set points. However,
-        /// updates can also be manually triggered through <see cref="InputSystem.Update"/>.
-        ///
-        /// The method receives the event buffer used internally by the runtime to collect events.
-        ///
-        /// Note that update types do *NOT* say what the events we receive are for. The update type only indicates
-        /// where in the Unity's application loop we got called from. Where the event data goes depends wholly on
-        /// which buffers we activate in the update and write the event data into.
-        /// </remarks>
-        /// <exception cref="InvalidOperationException">Thrown if OnUpdate is called recursively.</exception>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
+
+
+            /// <summary>
+            /// Process input events.
+            /// </summary>
+            /// <param name="updateType"></param>
+            /// <param name="eventBuffer"></param>
+            /// <remarks>
+            /// This method is the core workhorse of the input system. It is called from <see cref="UnityEngineInternal.Input.NativeInputSystem"/>.
+            /// Usually this happens in response to the player loop running and triggering updates at set points. However,
+            /// updates can also be manually triggered through <see cref="InputSystem.Update"/>.
+            ///
+            /// The method receives the event buffer used internally by the runtime to collect events.
+            ///
+            /// Note that update types do *NOT* say what the events we receive are for. The update type only indicates
+            /// where in the Unity's application loop we got called from. Where the event data goes depends wholly on
+            /// which buffers we activate in the update and write the event data into.
+            /// </remarks>
+            /// <exception cref="InvalidOperationException">Thrown if OnUpdate is called recursively.</exception>
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
             using (k_InputUpdateProfilerMarker.Auto())
@@ -3079,7 +3331,10 @@ namespace UnityEngine.InputSystem
                 var timesliceEvents = (updateType == InputUpdateType.Fixed || updateType == InputUpdateType.BeforeRender) &&
                     InputSystem.settings.updateMode == InputSettings.UpdateMode.ProcessEventsInFixedUpdate;
 
-                // we exit early as we have no events in the buffer
+                var dropStatusEvents = false;
+
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+                 // we exit early as we have no events in the buffer
                 if (eventBuffer.eventCount == 0)
                 {
                     // Normally, we process action timeouts after first processing all events. If we have no
@@ -3091,8 +3346,16 @@ namespace UnityEngine.InputSystem
                     m_CurrentUpdate = InputUpdateType.None;
                     return;
                 }
+                #if UNITY_EDITOR
+                    dropStatusEvents = ShouldDropStatusEvents(eventBuffer);
+                #endif
 
-                ProcessEventBuffer(updateType, ref eventBuffer, currentTime, timesliceEvents);
+#else
+                if (LegacyEarlyOutFromEventProcessing(updateType, ref eventBuffer, ref dropStatusEvents))
+                    return;
+#endif
+
+                ProcessEventBuffer(updateType, ref eventBuffer, currentTime, timesliceEvents, dropStatusEvents);
 
                 if (shouldProcessActionTimeouts)
                     ProcessStateChangeMonitorTimeouts();
@@ -3102,21 +3365,17 @@ namespace UnityEngine.InputSystem
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private unsafe void ProcessEventBuffer(InputUpdateType updateType, ref InputEventBuffer eventBuffer, double currentTime, bool timesliceEvents)
+        private unsafe void ProcessEventBuffer(InputUpdateType updateType, ref InputEventBuffer eventBuffer, double currentTime, bool timesliceEvents, bool dropStatusEvents)
         {
             var processingStartTime = Stopwatch.GetTimestamp();
             var totalEventLag = 0.0;
 
-#if UNITY_EDITOR
-            var isPlaying = gameIsPlaying;
-            var dropStatusEvents = ShouldDropStatusEvents(eventBuffer);
-#endif
             try
             {
                 m_InputEventStream = new InputEventStream(ref eventBuffer, m_Settings.maxQueuedEventsPerUpdate);
                 var totalEventBytesProcessed = 0U;
                 InputEvent* skipEventMergingFor = null;
-                var focusEventType = new FourCC((int)InputFocusEvent.Type);
+                var focusEventType = new FourCC(FocusConstants.kEventType);
 
                 // Handle events.
                 while (m_InputEventStream.remainingEventCount > 0)
@@ -3136,7 +3395,7 @@ namespace UnityEngine.InputSystem
                         break;
 
                     var currentEventTimeInternal = currentEventReadPtr->internalTime;
-
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
 #if UNITY_EDITOR
                     if (SkipEventDueToEditorBehaviour(updateType, currentEventType, dropStatusEvents, currentEventTimeInternal))
                         continue;
@@ -3147,6 +3406,27 @@ namespace UnityEngine.InputSystem
                         m_InputEventStream.Advance(false);
                         continue;
                     }
+#endif
+#else
+#if UNITY_EDITOR
+                    if (dropStatusEvents)
+                    {
+                        // If the type here is a status event, ask advance not to leave the event in the buffer.  Otherwise, leave it there.
+                        if (currentEventType == StateEvent.Type || currentEventType == DeltaStateEvent.Type || currentEventType == IMECompositionEvent.Type)
+                            m_InputEventStream.Advance(false);
+                        else
+                            m_InputEventStream.Advance(true);
+
+                        continue;
+                    }
+
+                    // Decide to skip events based on timing or focus state
+                    if (ShouldDiscardEventInEditor(currentEventType, currentEventTimeInternal, updateType))
+                    {
+                        m_InputEventStream.Advance(false);
+                        continue;
+                    }
+#endif
 #endif
                     // If we're timeslicing, check if the event time is within limits.
                     if (timesliceEvents && currentEventTimeInternal >= currentTime)
@@ -3268,6 +3548,9 @@ namespace UnityEngine.InputSystem
                 m_InputEventStream.CleanUpAfterException();
                 throw;
             }
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+            m_DiscardOutOfFocusEvents = false;
+#endif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3297,10 +3580,12 @@ namespace UnityEngine.InputSystem
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private unsafe bool SkipEventDueToEditorBehaviour(InputUpdateType updateType, FourCC currentEventType, bool dropStatusEvents, double currentEventTimeInternal)
         {
+            var focusEventType = new FourCC(FocusConstants.kEventType);
             var possibleFocusEvent = m_InputEventStream.Peek();
+
             if (possibleFocusEvent != null)
             {
-                if (possibleFocusEvent->type == new FourCC((int)InputFocusEvent.Type) && !gameShouldGetInputRegardlessOfFocus)
+                if (possibleFocusEvent->type == focusEventType && !gameShouldGetInputRegardlessOfFocus)
                 {
                     // If the next event is a focus event and we're not supposed to get input of the current update type in the next one, drop current event.
                     // This ensures that we don't end up with a half processed events due to swapping buffers between editor and player,
@@ -3312,7 +3597,7 @@ namespace UnityEngine.InputSystem
             // When the game is playing and has focus, we never process input in editor updates.
             // All we do is just switch to editor state buffers and then exit.
             if (gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor
-                && currentEventType != new FourCC((int)InputFocusEvent.Type))
+                && currentEventType != focusEventType)
             {
                 m_InputEventStream.Advance(true);
                 return true;
@@ -3324,7 +3609,7 @@ namespace UnityEngine.InputSystem
             if (!gameHasFocus
                 && m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView
                 && (!m_Runtime.runInBackground || m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)
-                && currentEventType != new FourCC((int)InputFocusEvent.Type))
+                && currentEventType != focusEventType)
             {
                 m_InputEventStream.Advance(false);
                 return true;
@@ -3360,7 +3645,7 @@ namespace UnityEngine.InputSystem
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private unsafe bool ShouldDeferEventBetweenEditorAndPlayerUpdates(InputUpdateType updateType, FourCC currentEventType, InputDevice device)
         {
-            var focusEventType = new FourCC((int)InputFocusEvent.Type);
+            var focusEventType = new FourCC(FocusConstants.kEventType);
 
             // If the event is a focus event, we want to let it through so that we can properly update our internal state of whether we have focus or not.
             // This is crucial for making sure that we don't end up in a state where we have focus but are still dropping events because we haven't processed the focus event yet.
@@ -3498,10 +3783,11 @@ namespace UnityEngine.InputSystem
                 case DeviceResetEvent.Type:
                     ResetDevice(device, alsoResetDontResetControls: ((DeviceResetEvent*)currentEventReadPtr)->hardReset);
                     break;
-
-                case (int)InputFocusEvent.Type:
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+                case FocusConstants.kEventType:
                     ProcessFocusEvent(currentEventReadPtr);
                     break;
+#endif
             }
         }
 
@@ -3639,6 +3925,7 @@ namespace UnityEngine.InputSystem
                 device, InputDeviceChange.ConfigurationChanged, k_InputOnDeviceChangeMarker, "InputSystem.onDeviceChange");
         }
 
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private unsafe void ProcessFocusEvent(InputEvent* currentEventReadPtr)
         {
@@ -3747,6 +4034,7 @@ namespace UnityEngine.InputSystem
                 break;
             }
         }
+#endif // UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
 
         private void FinalizeUpdate(InputUpdateType updateType)
         {
@@ -3801,7 +4089,7 @@ namespace UnityEngine.InputSystem
             // In Play Mode, if we're in the background and not supposed to process events in this update
             if ((!gameHasFocus || gameShouldGetInputRegardlessOfFocus)
                 && updateType != InputUpdateType.Editor
-                && currentEventType != new FourCC((int)InputFocusEvent.Type))
+                && currentEventType != new FourCC(FocusConstants.kEventType))
             {
                 if (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.ResetAndDisableAllDevices ||
                     m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDevicesRespectGameViewFocus)
@@ -3818,6 +4106,7 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
         /// <summary>
         /// Determines if status events should be dropped and modifies early exit behavior accordingly.
         /// </summary>
@@ -3830,6 +4119,26 @@ namespace UnityEngine.InputSystem
             // like to drop status events, and do not early out.
             return (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)));
         }
+#else
+        /// <summary>
+        /// Determines if status events should be dropped and modifies early exit behavior accordingly.
+        /// </summary>
+        /// <param name="eventBuffer">The current event buffer</param>
+        /// <param name="canEarlyOut">Reference to the early exit flag that may be modified</param>
+        /// <returns>True if status events should be dropped, false otherwise.</returns>
+        private bool ShouldDropStatusEvents(InputEventBuffer eventBuffer, ref bool canEarlyOut)
+        {
+            // If the game is not playing but we're sending all input events to the game,
+            // the buffer can just grow unbounded. So, in that case, set a flag to say we'd
+            // like to drop status events, and do not early out.
+            if (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)))
+            {
+                canEarlyOut = false;
+                return true;
+            }
+            return false;
+        }
+#endif
 
         /// <summary>
         /// Determines if an event should be discarded based on timing or focus state.
@@ -3840,9 +4149,35 @@ namespace UnityEngine.InputSystem
         /// <returns>True if the event should be discarded, false otherwise.</returns>
         private bool ShouldDiscardEventInEditor(FourCC eventType, double eventTime, InputUpdateType updateType)
         {
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
             // Check if this is an event that occurred during edit mode transition
             return ShouldDiscardEditModeTransitionEvent(eventType, eventTime, updateType);
+#else
+
+            // Check if this is an event that occurred during edit mode transition
+            if (ShouldDiscardEditModeTransitionEvent(eventType, eventTime, updateType))
+                return true;
+
+            // Check if this is an out-of-focus event that should be discarded
+            if (ShouldDiscardOutOfFocusEvent(eventTime))
+                return true;
+
+            return false;
+#endif
         }
+
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+        /// <summary>
+        /// Checks if an event should be discarded because it occurred while out of focus, under specific settings.
+        /// </summary>
+        private bool ShouldDiscardOutOfFocusEvent(double eventTime)
+        {
+            // If we care about focus, check if the event occurred while out of focus based on its timestamp.
+            if (gameHasFocus && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus)
+                return m_DiscardOutOfFocusEvents && eventTime < m_FocusRegainedTime;
+            return false;
+        }
+#endif
 
         /// <summary>
         /// In the editor, we discard all input events that occur in-between exiting edit mode and having
