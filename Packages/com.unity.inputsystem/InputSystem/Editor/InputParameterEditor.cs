@@ -220,9 +220,65 @@ namespace UnityEngine.InputSystem.Editor
                 m_DefaultInitializedValue = defaultInitializedValue;
                 m_UseDefaultValue = Mathf.Approximately(getValue(), defaultInitializedValue);
                 m_DefaultComesFromInputSettings = defaultComesFromInputSettings;
+                m_DefaultName = defaultName;
                 m_HelpBoxText =
                     EditorGUIUtility.TrTextContent(
                         $"Uses \"{defaultName}\" set in project-wide input settings.");
+            }
+
+            internal bool UseDefaultValue => m_UseDefaultValue;
+            internal bool DefaultComesFromInputSettings => m_DefaultComesFromInputSettings;
+            internal string DefaultName => m_DefaultName;
+
+            internal void SetUseDefaultChangedCallback(Action callback)
+            {
+                m_OnUseDefaultChanged = callback;
+            }
+
+            internal static void AddSharedDefaultSettingsFooter(VisualElement root,
+                IReadOnlyList<CustomOrDefaultSetting> settings, Action onChangedCallback)
+            {
+                if (settings == null || settings.Count == 0)
+                    return;
+
+                var footerContainer = new VisualElement();
+                var helpBox = new HelpBox("", HelpBoxMessageType.None);
+                var buttonContainer = new VisualElement { style = { flexDirection = FlexDirection.RowReverse } };
+                var openInputSettingsButton = new Button(InputSettingsProvider.Open)
+                {
+                    text = EditorGUIUtility.TrTextContent("Open Input Settings").text
+                };
+                openInputSettingsButton.AddToClassList("open-settings-button");
+                buttonContainer.Add(openInputSettingsButton);
+                footerContainer.Add(helpBox);
+                footerContainer.Add(buttonContainer);
+
+                void RefreshFooter()
+                {
+                    var namesInUse = new List<string>();
+                    foreach (var s in settings)
+                    {
+                        if (s.UseDefaultValue && s.DefaultComesFromInputSettings)
+                            namesInUse.Add(s.DefaultName);
+                    }
+                    if (namesInUse.Count > 0)
+                    {
+                        var combinedNames = string.Join(", ", namesInUse);
+                        helpBox.text = EditorGUIUtility.TrTextContent(
+                            $"Uses \"{combinedNames}\" set in project-wide input settings.").text;
+                        footerContainer.style.display = DisplayStyle.Flex;
+                    }
+                    else
+                    {
+                        footerContainer.style.display = DisplayStyle.None;
+                    }
+                }
+
+                foreach (var s in settings)
+                    s.SetUseDefaultChangedCallback(RefreshFooter);
+
+                RefreshFooter();
+                root.Add(footerContainer);
             }
 
             public void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
@@ -250,8 +306,6 @@ namespace UnityEngine.InputSystem.Editor
                 m_FloatField.RegisterCallback<BlurEvent>(_ => OnEditEnd(onChangedCallback));
                 m_FloatField.SetEnabled(!m_UseDefaultValue);
 
-                m_HelpBox = new HelpBox(m_HelpBoxText.text, HelpBoxMessageType.None);
-
                 m_DefaultToggle = new Toggle("Default")
                 {
                     value = m_UseDefaultValue,
@@ -263,28 +317,9 @@ namespace UnityEngine.InputSystem.Editor
                 m_DefaultToggle.RegisterValueChangedCallback(evt => ToggleUseDefaultValue(evt, onChangedCallback));
                 m_DefaultToggle.Q<Label>().style.minWidth = new StyleLength(StyleKeyword.Auto);
 
-                var buttonContainer = new VisualElement
-                {
-                    style =
-                    {
-                        flexDirection = FlexDirection.RowReverse
-                    }
-                };
-                m_OpenInputSettingsButton = new Button(InputSettingsProvider.Open){text = m_OpenInputSettingsLabel.text};
-                m_OpenInputSettingsButton.AddToClassList("open-settings-button");
-
                 settingsContainer.Add(m_FloatField);
                 settingsContainer.Add(m_DefaultToggle);
                 container.Add(settingsContainer);
-
-                if (m_UseDefaultValue)
-                {
-                    buttonContainer.Add(m_OpenInputSettingsButton);
-                    container.Add(m_HelpBox);
-                }
-
-                container.Add(buttonContainer);
-
                 root.Add(container);
             }
 
@@ -327,6 +362,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_UseDefaultValue = evt.newValue;
                 m_FloatField?.SetEnabled(!m_UseDefaultValue);
+                m_OnUseDefaultChanged?.Invoke();
             }
 
             private void SetValue(float newValue)
@@ -361,7 +397,6 @@ namespace UnityEngine.InputSystem.Editor
                 if ((value - float.Epsilon) == m_DefaultInitializedValue)
                     value = m_DefaultInitializedValue;
 
-                ////TODO: use slider rather than float field
                 var newValue = EditorGUILayout.FloatField(m_ValueLabel, value, GUILayout.ExpandWidth(false));
                 if (!m_UseDefaultValue)
                     SetValue(newValue);
@@ -399,14 +434,14 @@ namespace UnityEngine.InputSystem.Editor
             private bool m_UseDefaultValue;
             private bool m_DefaultComesFromInputSettings;
             private float m_DefaultInitializedValue;
+            private string m_DefaultName;
+            private Action m_OnUseDefaultChanged;
             private GUIContent m_ToggleLabel;
             private GUIContent m_ValueLabel;
             private GUIContent m_OpenInputSettingsLabel;
             private GUIContent m_HelpBoxText;
             private FloatField m_FloatField;
-            private Button m_OpenInputSettingsButton;
             private Toggle m_DefaultToggle;
-            private HelpBox m_HelpBox;
         }
     }
 }

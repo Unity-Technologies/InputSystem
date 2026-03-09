@@ -99,6 +99,8 @@ namespace UnityEngine.InputSystem.Interactions
         {
             m_DurationSetting.OnDrawVisualElements(root, onChangedCallback);
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
+            InputParameterEditor<SlowTapInteraction>.CustomOrDefaultSetting.AddSharedDefaultSettingsFooter(root,
+                new[] { m_DurationSetting, m_PressPointSetting }, onChangedCallback);
         }
 
         private CustomOrDefaultSetting m_DurationSetting;

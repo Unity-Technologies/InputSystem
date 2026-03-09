@@ -93,6 +93,8 @@ namespace UnityEngine.InputSystem.Processors
         {
             m_MinSetting.OnDrawVisualElements(root, onChangedCallback);
             m_MaxSetting.OnDrawVisualElements(root, onChangedCallback);
+            InputParameterEditor<StickDeadzoneProcessor>.CustomOrDefaultSetting.AddSharedDefaultSettingsFooter(root,
+                new[] { m_MinSetting, m_MaxSetting }, onChangedCallback);
         }
 
         private CustomOrDefaultSetting m_MinSetting;
