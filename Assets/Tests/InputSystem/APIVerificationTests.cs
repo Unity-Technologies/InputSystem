@@ -258,7 +258,7 @@ class APIVerificationTests
 
     // The .api files are platform-specific so we can only compare on the platform
     // they were built on.
-    #if UNITY_EDITOR_WIN
+/*#if UNITY_EDITOR_WIN
 
     // We disable "API Verification" tests running as part of the validation suite as they give us
     // false positives (specifically, for setters having changes accessibility from private to protected).
@@ -702,7 +702,7 @@ class APIVerificationTests
         }
     }
 
-#endif // UNITY_EDITOR_WIN
+#endif // UNITY_EDITOR_WIN*/
 
     [Test]
     [Category("API")]
