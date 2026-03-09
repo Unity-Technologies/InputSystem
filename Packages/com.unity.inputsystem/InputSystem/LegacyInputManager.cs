@@ -5,10 +5,10 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
     // Prior to 6000.5.a8 Input System mixed application focus with deferred events causing
     // incorrect reasoning regarding which events happened in-focus vs out-of-focus.
     // When running on an older editor, we define the enum here instead to reduce redundancy.
-#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
     /// <summary>
     /// Flags indicating various focus states for the application and editor.
     /// </summary>
@@ -261,6 +261,6 @@ namespace UnityEngine.InputSystem
                 return m_DiscardOutOfFocusEvents && eventTime < m_FocusRegainedTime;
             return false;
         }
-#endif // !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
     }
+#endif // !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
 }
