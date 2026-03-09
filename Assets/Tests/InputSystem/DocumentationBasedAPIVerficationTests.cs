@@ -127,7 +127,7 @@ class DocumentationBasedAPIVerficationTests
             typeof(MonoBehaviour).IsAssignableFrom(t));
 
         var monoBehaviourTypesWithHelpUrls = monoBehaviourTypes
-            .Where(t => t.GetCustomAttributes<HelpURLAttribute>().FirstOrDefault() != null);
+            .Where(t => t.GetCustomAttributes<HelpURLAttribute>().Any());
 
         var brokenHelpUrlErrors = new StringBuilder();
 
