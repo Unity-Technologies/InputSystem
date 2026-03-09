@@ -263,9 +263,12 @@ namespace UnityEngine.InputSystem.Editor
                     }
                     if (namesInUse.Count > 0)
                     {
-                        var combinedNames = string.Join(", ", namesInUse);
+                        var quotedNames = new List<string>(namesInUse.Count);
+                        foreach (var n in namesInUse)
+                            quotedNames.Add($"\"{n}\"");
+                        var combinedNames = string.Join(", ", quotedNames);
                         helpBox.text = EditorGUIUtility.TrTextContent(
-                            $"Uses \"{combinedNames}\" set in project-wide input settings.").text;
+                            $"Uses {combinedNames} set in project-wide input settings.").text;
                         footerContainer.style.display = DisplayStyle.Flex;
                     }
                     else
