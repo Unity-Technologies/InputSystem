@@ -215,22 +215,17 @@ namespace UnityEngine.InputSystem.Editor
                     ? $"If enabled, the default {label.ToLowerInvariant()} configured globally in the input settings is used. See Edit >> Project Settings... >> Input (NEW)."
                     : "If enabled, the default value is used.");
                 m_ValueLabel = EditorGUIUtility.TrTextContent(label, tooltip);
-                if (defaultComesFromInputSettings)
-                    m_OpenInputSettingsLabel = EditorGUIUtility.TrTextContent("Open Input Settings");
                 m_DefaultInitializedValue = defaultInitializedValue;
                 m_UseDefaultValue = Mathf.Approximately(getValue(), defaultInitializedValue);
                 m_DefaultComesFromInputSettings = defaultComesFromInputSettings;
                 m_DefaultName = defaultName;
-                m_HelpBoxText =
-                    EditorGUIUtility.TrTextContent(
-                        $"Uses \"{defaultName}\" set in project-wide input settings.");
             }
 
-            internal bool UseDefaultValue => m_UseDefaultValue;
-            internal bool DefaultComesFromInputSettings => m_DefaultComesFromInputSettings;
-            internal string DefaultName => m_DefaultName;
+            private bool UseDefaultValue => m_UseDefaultValue;
+            private bool DefaultComesFromInputSettings => m_DefaultComesFromInputSettings;
+            private string DefaultName => m_DefaultName;
 
-            internal void SetUseDefaultChangedCallback(Action callback)
+            private void SetUseDefaultChangedCallback(Action callback)
             {
                 m_OnUseDefaultChanged = callback;
             }
@@ -417,18 +412,6 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_UseDefaultValue = newUseDefault;
                 EditorGUILayout.EndHorizontal();
-
-                // If we're using a default from global InputSettings, show info text for that and provide
-                // button to open input settings.
-                if (m_UseDefaultValue && m_DefaultComesFromInputSettings)
-                {
-                    EditorGUILayout.HelpBox(m_HelpBoxText);
-                    EditorGUILayout.BeginHorizontal();
-                    GUILayout.FlexibleSpace();
-                    if (GUILayout.Button(m_OpenInputSettingsLabel, EditorStyles.miniButton))
-                        InputSettingsProvider.Open();
-                    EditorGUILayout.EndHorizontal();
-                }
             }
 
             private Func<float> m_GetValue;
@@ -441,8 +424,6 @@ namespace UnityEngine.InputSystem.Editor
             private Action m_OnUseDefaultChanged;
             private GUIContent m_ToggleLabel;
             private GUIContent m_ValueLabel;
-            private GUIContent m_OpenInputSettingsLabel;
-            private GUIContent m_HelpBoxText;
             private FloatField m_FloatField;
             private Toggle m_DefaultToggle;
         }
