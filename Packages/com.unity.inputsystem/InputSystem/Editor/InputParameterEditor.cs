@@ -225,10 +225,11 @@ namespace UnityEngine.InputSystem.Editor
             private bool DefaultComesFromInputSettings => m_DefaultComesFromInputSettings;
             private string DefaultName => m_DefaultName;
 
-            private void SetUseDefaultChangedCallback(Action callback)
-            {
-                m_OnUseDefaultChanged = callback;
-            }
+            /// <summary>
+            /// Raised when the "use default" toggle changes. Allows multiple subscribers to react
+            /// (e.g. refreshing shared footers) without overwriting each other.
+            /// </summary>
+            internal event Action onUseDefaultChanged;
 
             internal static void AddSharedDefaultSettingsFooter(VisualElement root,
                 IReadOnlyList<CustomOrDefaultSetting> settings)
@@ -273,7 +274,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
 
                 foreach (var s in settings)
-                    s.SetUseDefaultChangedCallback(RefreshFooter);
+                    s.onUseDefaultChanged += RefreshFooter;
 
                 RefreshFooter();
                 root.Add(footerContainer);
@@ -360,7 +361,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_UseDefaultValue = evt.newValue;
                 m_FloatField?.SetEnabled(!m_UseDefaultValue);
-                m_OnUseDefaultChanged?.Invoke();
+                onUseDefaultChanged?.Invoke();
             }
 
             private void SetValue(float newValue)
@@ -402,7 +403,8 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUI.EndDisabledGroup();
 
                 var newUseDefault = GUILayout.Toggle(m_UseDefaultValue, m_ToggleLabel, GUILayout.ExpandWidth(false));
-                if (newUseDefault != m_UseDefaultValue)
+                var useDefaultChanged = newUseDefault != m_UseDefaultValue;
+                if (useDefaultChanged)
                 {
                     if (!newUseDefault)
                         m_SetValue(m_GetDefaultValue());
@@ -411,6 +413,8 @@ namespace UnityEngine.InputSystem.Editor
                 }
 
                 m_UseDefaultValue = newUseDefault;
+                if (useDefaultChanged)
+                    onUseDefaultChanged?.Invoke();
                 EditorGUILayout.EndHorizontal();
             }
 
@@ -421,7 +425,6 @@ namespace UnityEngine.InputSystem.Editor
             private bool m_DefaultComesFromInputSettings;
             private float m_DefaultInitializedValue;
             private string m_DefaultName;
-            private Action m_OnUseDefaultChanged;
             private GUIContent m_ToggleLabel;
             private GUIContent m_ValueLabel;
             private FloatField m_FloatField;
