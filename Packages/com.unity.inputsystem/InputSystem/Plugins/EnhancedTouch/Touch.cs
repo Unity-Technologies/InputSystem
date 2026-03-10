@@ -709,18 +709,24 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             internal CallbackArray<Action<Finger>> onFingerMove;
             internal CallbackArray<Action<Finger>> onFingerUp;
 
+            // Used by EnhancedTouchSupport but placed here to consolidate static fields
+            internal int enhancedTouchEnabled;
+            internal InputSettings.UpdateMode enhancedTouchUpdateMode;
+
             internal FingerAndTouchState playerState;
 #if UNITY_EDITOR
             internal FingerAndTouchState editorState;
 #endif
         }
 
-        private static GlobalState CreateGlobalState()
-        {   // Convenient method since parameterized construction is default
-            return new GlobalState { historyLengthPerFinger = 64 };
-        }
+        internal static GlobalState s_GlobalState = new GlobalState { historyLengthPerFinger = 64 };
 
-        internal static GlobalState s_GlobalState = CreateGlobalState();
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void InitializeGlobalTouchState()
+        {
+            // Touch GlobalState doesn't require Dispose operations
+            s_GlobalState = new GlobalState { historyLengthPerFinger = 64 };
+        }
 
         internal static ISavedState SaveAndResetState()
         {
@@ -731,7 +737,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 () => { /* currently nothing to dispose */ });
 
             // Reset global state
-            s_GlobalState = CreateGlobalState();
+            InitializeGlobalTouchState();
 
             return savedState;
         }
