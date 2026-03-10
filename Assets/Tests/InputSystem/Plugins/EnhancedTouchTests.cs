@@ -172,7 +172,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         // Switch back to player.
         ScheduleFocusEvent(true);
 
-        // We have to schedule the specificic update type that the player is configured to process events in,
+        // We have to schedule the specific update type that the player is configured to process events in,
         // otherwise we will end up using defaultUpdateType, which due to the fact we do not have focus in pre-update yet,
         // will be Editor, which means that we will end up swapping buffers to the editor buffer, and retreiving the wrong active touch
         // The only way to properly fix this, is to remove defaultUpdateType, and split the player/editor update loops into separate methods, which would be a breaking change.
@@ -1187,7 +1187,6 @@ internal class EnhancedTouchTests : CoreTestsFixture
         else
         {
             // When not running in the background, the same thing happens but only on focus gain.
-            //runtime.PlayerFocusGained();
             ScheduleFocusEvent(true);
             InputSystem.Update();
         }

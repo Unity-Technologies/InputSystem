@@ -1524,8 +1524,7 @@ partial class CoreTests
 
         // Loose focus.
         ScheduleFocusEvent(false);
-        InputSystem.Update(InputUpdateType.Dynamic);
-        //InputSystem.Update();
+        InputSystem.Update();
 
         // Disconnect.
         var inputEvent = DeviceRemoveEvent.Create(deviceId, runtime.currentTime);
@@ -1537,8 +1536,7 @@ partial class CoreTests
 
         // Regain focus.
         ScheduleFocusEvent(true);
-        InputSystem.Update(InputUpdateType.Dynamic);
-        //InputSystem.Update();
+        InputSystem.Update();
 
         var newDeviceId = runtime.ReportNewInputDevice(deviceDesc);
         InputSystem.Update();
@@ -5288,7 +5286,7 @@ partial class CoreTests
                             "Sync Mouse", "Sync Mouse2", "Sync Mouse3",
                             "Sync Keyboard"
                         }));
-                        // Enabled devices that don't support syncs dont get reset for Ignore Forcus as we do not want to cancel any actions.
+                        // Enabled devices that don't support syncs dont get reset for Ignore Focus as we do not want to cancel any actions.
                         Assert.That(changes, Is.Empty);
                         break;
                     }

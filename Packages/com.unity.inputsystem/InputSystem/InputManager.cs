@@ -165,7 +165,7 @@ namespace UnityEngine.InputSystem
                     return m_CurrentUpdate;
 
 #if UNITY_EDITOR
-                // We can no longer rely on checking the curent focus state, due to this check being used pre-update
+                // We can no longer rely on checking the current focus state, due to this check being used pre-update
                 // to determine in which update type to process input, and focus being updated in Update.
                 // The solution here would be to make update calls explicitly specify the update type and no longer use this property.
                 if (!m_RunPlayerUpdatesInEditMode && (!gameIsPlaying || !gameHasFocus))
@@ -2139,8 +2139,9 @@ namespace UnityEngine.InputSystem
 #endif
             m_Runtime.pollingFrequency = pollingFrequency;
 
-            focusState = Application.isFocused ? focusState |= FocusFlags.ApplicationFocus
-                : focusState &= ~FocusFlags.ApplicationFocus;
+            focusState = Application.isFocused 
+                ? focusState | FocusFlags.ApplicationFocus
+                : focusState & ~FocusFlags.ApplicationFocus;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -3173,7 +3174,6 @@ namespace UnityEngine.InputSystem
                 {
                     InputDevice device = null;
                     var currentEventReadPtr = m_InputEventStream.currentEventPtr;
-                    var currentEventType = currentEventReadPtr->type;
 
                     Debug.Assert(!currentEventReadPtr->handled, "Event in buffer is already marked as handled");
 
@@ -3186,6 +3186,7 @@ namespace UnityEngine.InputSystem
                         break;
 
                     var currentEventTimeInternal = currentEventReadPtr->internalTime;
+                    var currentEventType = currentEventReadPtr->type;
 #if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
 #if UNITY_EDITOR
                     if (SkipEventDueToEditorBehaviour(updateType, currentEventType, dropStatusEvents, currentEventTimeInternal))
@@ -3318,7 +3319,7 @@ namespace UnityEngine.InputSystem
                     ProcessEvent(device, updateType, currentEventReadPtr, ref totalEventBytesProcessed);
 
                     m_InputEventStream.Advance(leaveEventInBuffer: false);
-
+                    
                     // Discard events in case the maximum event bytes per update has been exceeded
                     if (AreMaximumEventBytesPerUpdateExceeded(totalEventBytesProcessed))
                         break;
@@ -3366,6 +3367,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+#if UNITY_EDITOR
         // Handles editor-specific focus/background early-out behavior and advances the stream accordingly.
         // Returns true if event should be skipped (stream advanced), false otherwise.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3373,7 +3375,7 @@ namespace UnityEngine.InputSystem
         {
             var focusEventType = new FourCC(FocusConstants.kEventType);
             var possibleFocusEvent = m_InputEventStream.Peek();
-
+            
             if (possibleFocusEvent != null)
             {
                 if (possibleFocusEvent->type == focusEventType && !gameShouldGetInputRegardlessOfFocus)
@@ -3432,6 +3434,7 @@ namespace UnityEngine.InputSystem
             }
             return false;
         }
+#endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private unsafe bool ShouldDeferEventBetweenEditorAndPlayerUpdates(InputUpdateType updateType, FourCC currentEventType, InputDevice device)
@@ -3824,29 +3827,6 @@ namespace UnityEngine.InputSystem
                 }
                 break;
             }
-        }
-
-        /// <summary>
-        /// Determines if we should exit early from event processing without handling events.
-        /// </summary>
-        /// <param name="eventBuffer">The current event buffer</param>
-        /// <param name="canFlushBuffer">Whether the buffer can be flushed</param>
-        /// <param name="updateType">The current update type</param>
-        /// <returns>True if we should exit early, false otherwise.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool ShouldExitEarlyFromEventProcessing(FourCC currentEventType, InputUpdateType updateType)
-        {
-#if UNITY_EDITOR
-            // Check various PlayMode specific early exit conditions
-            if (ShouldExitEarlyBasedOnBackgroundBehavior(currentEventType, updateType))
-                return true;
-
-            // When the game is playing and has focus, we never process input in editor updates.
-            // All we do is just switch to editor state buffers and then exit.
-            if ((gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor))
-                return true;
-#endif
-            return false;
         }
 
         /// <summary>

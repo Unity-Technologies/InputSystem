@@ -170,7 +170,7 @@ namespace UnityEngine.InputSystem
 
             return false;
         }
-
+#if UNITY_EDITOR
         /// <summary>
         /// Checks background behavior conditions for early exit from event processing.
         /// </summary>
@@ -200,6 +200,7 @@ namespace UnityEngine.InputSystem
 
             return false;
         }
+#endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private unsafe bool LegacyEarlyOutFromEventProcessing(InputUpdateType updateType, ref InputEventBuffer eventBuffer, ref bool dropStatusEvents)
