@@ -222,7 +222,7 @@ namespace UnityEngine.InputSystem.Interactions
             m_TapDelaySetting.OnDrawVisualElements(root, onChangedCallback);
             m_TapTimeSetting.OnDrawVisualElements(root, onChangedCallback);
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
-            InputParameterEditor<MultiTapInteraction>.CustomOrDefaultSetting.AddSharedDefaultSettingsFooter(root,
+            CustomOrDefaultSetting.AddSharedDefaultSettingsFooter(root,
                 new[] { m_TapTimeSetting, m_TapDelaySetting, m_PressPointSetting }, onChangedCallback);
         }
 

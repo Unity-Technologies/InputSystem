@@ -125,7 +125,7 @@ namespace UnityEngine.InputSystem.Interactions
         {
             m_DurationSetting.OnDrawVisualElements(root, onChangedCallback);
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
-            InputParameterEditor<TapInteraction>.CustomOrDefaultSetting.AddSharedDefaultSettingsFooter(root,
+            CustomOrDefaultSetting.AddSharedDefaultSettingsFooter(root,
                 new[] { m_DurationSetting, m_PressPointSetting }, onChangedCallback);
         }
 
