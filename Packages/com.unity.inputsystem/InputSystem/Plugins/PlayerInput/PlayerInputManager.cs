@@ -135,7 +135,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// This count corresponds to all <see cref="PlayerInput"/> instances that are currently enabled.
         /// </remarks>
-        public int playerCount => PlayerInput.s_AllActivePlayersCount;
+        public int playerCount => PlayerInput.allActivePlayersCount;
 
         ////FIXME: this needs to be settable
         /// <summary>
@@ -444,7 +444,7 @@ namespace UnityEngine.InputSystem
             if (!CheckIfPlayerCanJoin(playerIndex))
                 return null;
 
-            PlayerInput.s_DestroyIfDeviceSetupUnsuccessful = true;
+            PlayerInput.destroyIfDeviceSetupUnsuccessful = true;
             return PlayerInput.Instantiate(m_PlayerPrefab, playerIndex: playerIndex, splitScreenIndex: splitScreenIndex,
                 controlScheme: controlScheme, pairWithDevice: pairWithDevice);
         }
@@ -470,7 +470,7 @@ namespace UnityEngine.InputSystem
             if (!CheckIfPlayerCanJoin(playerIndex))
                 return null;
 
-            PlayerInput.s_DestroyIfDeviceSetupUnsuccessful = true;
+            PlayerInput.destroyIfDeviceSetupUnsuccessful = true;
             return PlayerInput.Instantiate(m_PlayerPrefab, playerIndex: playerIndex, splitScreenIndex: splitScreenIndex,
                 controlScheme: controlScheme, pairWithDevices: pairWithDevices);
         }
@@ -520,12 +520,12 @@ namespace UnityEngine.InputSystem
             // If we have a player index, make sure it's unique.
             if (playerIndex != -1)
             {
-                for (var i = 0; i < PlayerInput.s_AllActivePlayersCount; ++i)
-                    if (PlayerInput.s_AllActivePlayers[i].playerIndex == playerIndex)
+                for (var i = 0; i < PlayerInput.allActivePlayersCount; ++i)
+                    if (PlayerInput.allActivePlayers[i].playerIndex == playerIndex)
                     {
                         Debug.LogError(
-                            $"Player index #{playerIndex} is already taken by player {PlayerInput.s_AllActivePlayers[i]}",
-                            PlayerInput.s_AllActivePlayers[i]);
+                            $"Player index #{playerIndex} is already taken by player {PlayerInput.allActivePlayers[i]}",
+                            PlayerInput.allActivePlayers[i]);
                         return false;
                     }
             }
@@ -577,8 +577,8 @@ namespace UnityEngine.InputSystem
             }
 
             // Join all players already in the game.
-            for (var i = 0; i < PlayerInput.s_AllActivePlayersCount; ++i)
-                NotifyPlayerJoined(PlayerInput.s_AllActivePlayers[i]);
+            for (var i = 0; i < PlayerInput.allActivePlayersCount; ++i)
+                NotifyPlayerJoined(PlayerInput.allActivePlayers[i]);
 
             if (m_AllowJoining)
                 EnableJoining();

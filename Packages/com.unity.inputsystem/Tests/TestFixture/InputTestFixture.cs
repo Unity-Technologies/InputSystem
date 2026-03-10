@@ -15,6 +15,7 @@ using UnityEngine.InputSystem.XR;
 #if UNITY_6000_5_OR_NEWER
 using UnityEngine.Assemblies;
 #endif
+using UnityEngine.InputSystem.Users;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -91,6 +92,8 @@ namespace UnityEngine.InputSystem
         {
             try
             {
+                m_StateManager = new InputTestStateManager();
+
                 // Apparently, NUnit is reusing instances :(
                 m_KeyInfos = default;
                 m_IsUnityTest = default;
@@ -106,7 +109,7 @@ namespace UnityEngine.InputSystem
 
                 // Push current input system state on stack.
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-                InputSystem.SaveAndReset(enableRemoting: false, runtime: runtime);
+                m_StateManager.SaveAndReset(false, runtime);
 #endif
                 // Override the editor messing with logic like canRunInBackground and focus and
                 // make it behave like in the player.
@@ -118,7 +121,7 @@ namespace UnityEngine.InputSystem
                 // so turn them off.
                 #if UNITY_EDITOR
                 if (Application.isPlaying && IsUnityTest())
-                    InputSystem.s_Manager.m_UpdateMask &= ~InputUpdateType.Editor;
+                    InputSystem.manager.m_UpdateMask &= ~InputUpdateType.Editor;
                 #endif
 
                 // We use native collections in a couple places. We when leak them, we want to know where exactly
@@ -134,7 +137,7 @@ namespace UnityEngine.InputSystem
                 NativeInputRuntime.instance.onUpdate =
                     (InputUpdateType updateType, ref InputEventBuffer buffer) =>
                 {
-                    if (InputSystem.s_Manager.ShouldRunUpdate(updateType))
+                    if (InputSystem.manager.ShouldRunUpdate(updateType))
                         InputSystem.Update(updateType);
                     // We ignore any input coming from native.
                     buffer.Reset();
@@ -189,7 +192,7 @@ namespace UnityEngine.InputSystem
             try
             {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-                InputSystem.Restore();
+                m_StateManager.Restore();
 #endif
                 runtime.Dispose();
 
@@ -315,6 +318,7 @@ namespace UnityEngine.InputSystem
             Assert.That(stick.right.ReadUnprocessedValue(), Is.EqualTo(right).Within(0.0001), "Incorrect 'right' value");
         }
 
+        internal InputTestStateManager m_StateManager;
         private Dictionary<Key, Tuple<string, int>> m_KeyInfos;
         private bool m_Initialized;
 
@@ -998,20 +1002,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        #if UNITY_EDITOR
-        internal void SimulateDomainReload()
-        {
-            // This quite invasively goes into InputSystem internals. Unfortunately, we
-            // have no proper way of simulating domain reloads ATM. So we directly call various
-            // internal methods here in a sequence similar to what we'd get during a domain reload.
-
-            InputSystem.s_SystemObject.OnBeforeSerialize();
-            InputSystem.s_SystemObject = null;
-            InputSystem.InitializeInEditor(runtime);
-        }
-
-        #endif
-
         private static void CheckValidity(InputDevice device, InputControl control)
         {
             if (!device.added)
@@ -1023,7 +1013,7 @@ namespace UnityEngine.InputSystem
             // Guards against a device from another scope being used. This is a direct way to evaluate whether
             // the device is associated with the current manager state or not since device state isn't consistently
             // pushed/popped in the current design.
-            var manager = InputSystem.s_Manager;
+            var manager = InputSystem.manager;
             if (manager == null || !manager.HasDevice(device))
             {
                 throw new ArgumentException($"Control '{control}' does not have any associated state. " +
