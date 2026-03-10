@@ -243,12 +243,9 @@ class APIVerificationTests
         var monoBehaviourTypes = typeof(InputSystem).Assembly.ExportedTypes.Where(t =>
             t.IsPublic && !t.IsAbstract && !IgnoreTypeForDocsByName(t.FullName) && !IgnoreTypeForDocsByNamespace(t.Namespace) &&
             typeof(MonoBehaviour).IsAssignableFrom(t));
-        var monoBehaviourTypesHelpUrls =
-            monoBehaviourTypes.Where(t => t.GetCustomAttribute<HelpURLAttribute>() != null)
-                .Select(t => t.GetCustomAttribute<HelpURLAttribute>().URL);
-        var monoBehaviourTypesWithoutHelpUrls =
-            monoBehaviourTypes.Where(t => t.GetCustomAttribute<HelpURLAttribute>() == null);
 
+        var monoBehaviourTypesHelpUrls = monoBehaviourTypes.Where(t => t.GetCustomAttributes<HelpURLAttribute>().Any()).Select(t => t.GetCustomAttributes<HelpURLAttribute>().First().URL);
+        var monoBehaviourTypesWithoutHelpUrls = monoBehaviourTypes.Where(t => !t.GetCustomAttributes<HelpURLAttribute>().Any());
         Assert.That(monoBehaviourTypesWithoutHelpUrls, Is.Empty);
         Assert.That(monoBehaviourTypesHelpUrls, Has.All.StartWith(InputSystem.kDocUrl));
     }

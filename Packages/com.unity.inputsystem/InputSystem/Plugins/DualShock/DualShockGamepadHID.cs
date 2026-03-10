@@ -585,7 +585,7 @@ namespace UnityEngine.InputSystem.DualShock
                     || newState->buttons2 != currentState->buttons2;
 
                 if (!actuated)
-                    InputSystem.s_Manager.DontMakeCurrentlyUpdatingDeviceCurrent();
+                    InputSystem.manager.DontMakeCurrentlyUpdatingDeviceCurrent();
             }
 
             InputState.Change(this, eventPtr);
@@ -675,8 +675,8 @@ namespace UnityEngine.InputSystem.DualShock
         [StructLayout(LayoutKind.Explicit)]
         internal struct DualSenseHIDMinimalInputReport
         {
-            public static int ExpectedSize1 = 10;
-            public static int ExpectedSize2 = 78;
+            public const int ExpectedSize1 = 10;
+            public const int ExpectedSize2 = 78;
 
             [FieldOffset(0)] public byte reportId;
             [FieldOffset(1)] public byte leftStickX;
@@ -920,7 +920,7 @@ namespace UnityEngine.InputSystem.DualShock
                     || newState->buttons3 != currentState->buttons3;
 
                 if (!actuatedOrChanged)
-                    InputSystem.s_Manager.DontMakeCurrentlyUpdatingDeviceCurrent();
+                    InputSystem.manager.DontMakeCurrentlyUpdatingDeviceCurrent();
             }
 
             InputState.Change(this, eventPtr);

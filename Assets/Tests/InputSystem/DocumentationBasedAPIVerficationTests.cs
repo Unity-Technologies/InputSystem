@@ -127,7 +127,7 @@ class DocumentationBasedAPIVerficationTests
             typeof(MonoBehaviour).IsAssignableFrom(t));
 
         var monoBehaviourTypesWithHelpUrls = monoBehaviourTypes
-            .Where(t => t.GetCustomAttribute<HelpURLAttribute>() != null);
+            .Where(t => t.GetCustomAttributes<HelpURLAttribute>().Any());
 
         var brokenHelpUrlErrors = new StringBuilder();
 
@@ -135,7 +135,8 @@ class DocumentationBasedAPIVerficationTests
         foreach (var monoBehaviorTypeWithHelpUrl in monoBehaviourTypesWithHelpUrls)
         {
             // Get url
-            var url = monoBehaviorTypeWithHelpUrl.GetCustomAttribute<HelpURLAttribute>().URL;
+            var test = monoBehaviorTypeWithHelpUrl.GetCustomAttributes<HelpURLAttribute>();
+            var url = test.FirstOrDefault()?.URL;
 
             // Parse file path and anchor.
             var path = url.Substring(InputSystem.kDocUrl.Length);

@@ -22,6 +22,7 @@ using UnityEngine.Assemblies;
 
 #if UNITY_EDITOR
 using UnityEngine.InputSystem.Editor;
+
 #endif
 
 #if UNITY_EDITOR
@@ -45,13 +46,88 @@ namespace UnityEngine.InputSystem
     ///
     /// Manages devices, layouts, and event processing.
     /// </remarks>
-    internal partial class InputManager
+    internal partial class InputManager : IDisposable
     {
+        private InputManager() {}
+
+        public static InputManager CreateAndInitialize(IInputRuntime runtime, InputSettings settings, bool fakeManagerForRemotingTests = false)
+        {
+            var newInstance = new InputManager();
+
+            // Not directly used by InputManager, but we need  a single instance that's used in a variety of places without a static field
+            newInstance.m_DeferBindingResolutionContext = new DeferBindingResolutionContext();
+
+            // If settings object wasn't provided, create a temporary settings object for now
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<InputSettings>();
+                settings.hideFlags = HideFlags.HideAndDontSave;
+            }
+            newInstance.m_Settings = settings;
+
+            newInstance.InitializeActions();
+
+            newInstance.InitializeData();
+            newInstance.InstallRuntime(runtime);
+
+            // For remoting tests, we need to create a "fake manager" that simulates a remote endpoint.
+            // In this case don't install globals as this will corrupt the "local" manager state.
+            if (!fakeManagerForRemotingTests)
+                newInstance.InstallGlobals();
+
+            newInstance.ApplySettings();
+
+            newInstance.ApplyActions();
+
+            newInstance.bindingsNeedResolving = true;
+            return newInstance;
+        }
+
+        #region Dispose implementation
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    // Notify devices are being removed but don't actually removed them; no point when disposing
+                    for (var i = 0; i < m_DevicesCount; ++i)
+                        m_Devices[i].NotifyRemoved();
+
+                    m_StateBuffers.FreeAll();
+                    UninstallGlobals();
+
+                    // If we're still holding the "temporary" settings object make sure to delete it
+                    if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
+                        Object.DestroyImmediate(m_Settings);
+
+                    // Project-wide Actions are never temporary so we do not destroy them.
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        ~InputManager()
+        {
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private bool disposedValue;
+        #endregion
+
         public ReadOnlyArray<InputDevice> devices => new ReadOnlyArray<InputDevice>(m_Devices, 0, m_DevicesCount);
 
         public TypeTable processors => m_Processors;
         public TypeTable interactions => m_Interactions;
         public TypeTable composites => m_Composites;
+        internal IInputRuntime runtime => m_Runtime;
 
         static readonly ProfilerMarker k_InputUpdateProfilerMarker = new ProfilerMarker("InputUpdate");
         static readonly ProfilerMarker k_InputTryFindMatchingControllerMarker = new ProfilerMarker("InputSystem.TryFindMatchingControlLayout");
@@ -97,7 +173,6 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-                Debug.Assert(m_Settings != null);
                 return m_Settings;
             }
             set
@@ -107,6 +182,10 @@ namespace UnityEngine.InputSystem
 
                 if (m_Settings == value)
                     return;
+
+                // Delete the "temporary" settings if necessary
+                if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
+                    ScriptableObject.DestroyImmediate(m_Settings);
 
                 m_Settings = value;
                 ApplySettings();
@@ -373,9 +452,6 @@ namespace UnityEngine.InputSystem
                 "InputSystem.ShouldDrawWarningIconForBinding");
         }
 
-#endif // UNITY_EDITOR
-
-#if UNITY_EDITOR
         private bool m_RunPlayerUpdatesInEditMode;
 
         /// <summary>
@@ -390,7 +466,8 @@ namespace UnityEngine.InputSystem
             get => m_RunPlayerUpdatesInEditMode;
             set => m_RunPlayerUpdatesInEditMode = value;
         }
-#endif
+
+#endif // UNITY_EDITOR
 
         private bool gameIsPlaying =>
 #if UNITY_EDITOR
@@ -1840,50 +1917,14 @@ namespace UnityEngine.InputSystem
             m_Runtime.Update(updateType);
         }
 
-        internal void Initialize(IInputRuntime runtime, InputSettings settings)
-        {
-            Debug.Assert(settings != null);
-
-            m_Settings = settings;
-
-            InitializeActions();
-            InitializeData();
-            InstallRuntime(runtime);
-            InstallGlobals();
-
-            ApplySettings();
-            ApplyActions();
-        }
-
-        internal void Destroy()
-        {
-            // There isn't really much of a point in removing devices but we still
-            // want to clear out any global state they may be keeping. So just tell
-            // the devices that they got removed without actually removing them.
-            for (var i = 0; i < m_DevicesCount; ++i)
-                m_Devices[i].NotifyRemoved();
-
-            // Free all state memory.
-            m_StateBuffers.FreeAll();
-
-            // Uninstall globals.
-            UninstallGlobals();
-
-            // Destroy settings if they are temporary.
-            if (m_Settings != null && m_Settings.hideFlags == HideFlags.HideAndDontSave)
-                Object.DestroyImmediate(m_Settings);
-
-            // Project-wide Actions are never temporary so we do not destroy them.
-        }
-
         // Initialize project-wide actions:
         // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
         // - In player build we always attempt to find a preloaded asset.
         private void InitializeActions()
         {
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
-#else
+            #else
             m_Actions = null;
             var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
             foreach (var candidate in candidates)
@@ -1894,7 +1935,7 @@ namespace UnityEngine.InputSystem
                     break;
                 }
             }
-#endif // UNITY_EDITOR
+            #endif // UNITY_EDITOR
         }
 
         internal void InitializeData()
@@ -1911,10 +1952,10 @@ namespace UnityEngine.InputSystem
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
             m_HasFocus = Application.isFocused;
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             m_EditorIsActive = true;
             m_UpdateMask |= InputUpdateType.Editor;
-#endif
+            #endif
 
             m_ScrollDeltaBehavior = InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
 
@@ -2089,6 +2130,47 @@ namespace UnityEngine.InputSystem
             return true; // Signal that custom types were extracted and registered.
         }
 
+        private static string GetRegisteredTypeDefaultName(Type type, string name, string suffix)
+        {
+            // Default name to name of type without suffix.
+            if (!string.IsNullOrEmpty(name))
+                return name;
+            name = type.Name;
+            if (name.EndsWith(suffix))
+                name = name.Substring(0, name.Length - suffix.Length);
+            return name;
+        }
+
+        internal void RegisterProcessor(Type type, string name = null)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            name = GetRegisteredTypeDefaultName(type, name, "Processor");
+
+            // Flush out any precompiled layout depending on the processor.
+            var precompiledLayouts = m_Layouts.precompiledLayouts;
+            foreach (var key in new List<InternedString>(precompiledLayouts.Keys)) // Need to keep key list stable while iterating; ToList() for some reason not available with .NET Standard 2.0 on Mono.
+            {
+                if (StringHelpers.CharacterSeparatedListsHaveAtLeastOneCommonElement(precompiledLayouts[key].metadata, name, ';'))
+                    m_Layouts.precompiledLayouts.Remove(key);
+            }
+
+            processors.AddTypeRegistration(name, type);
+        }
+
+        public void RegisterInteraction(Type type, string name = null)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            name = GetRegisteredTypeDefaultName(type, name, "Interaction");
+            interactions.AddTypeRegistration(name, type);
+        }
+
+        public void RegisterBindingComposite(Type type, string name = null)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            name = GetRegisteredTypeDefaultName(type, name, "Composite");
+            composites.AddTypeRegistration(name, type);
+        }
+
         internal void InstallRuntime(IInputRuntime runtime)
         {
             if (m_Runtime != null)
@@ -2184,6 +2266,30 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>
+        /// Acquires a temporary "lock" to suspend immediate re-resolution of bindings.
+        /// </summary>
+        /// <remarks>
+        /// When changing control setups, it may take multiple steps to get to the final setup but each individual
+        /// step may trigger bindings to be resolved again in order to update controls on actions (see <see cref="InputAction.controls"/>).
+        /// Using Acquire/Release semantics via the returned context object, binding resolution can be deferred until the entire operation
+        /// is complete and the final binding setup is in place.
+        ///
+        /// NOTE: Returned DeferBindingResolutionContext object is used globally for all ActionMaps.
+        /// </remarks>
+        internal DeferBindingResolutionContext DeferBindingResolution()
+        {
+            m_DeferBindingResolutionContext.Acquire();
+            return m_DeferBindingResolutionContext;
+        }
+
+        internal bool areDeferredBindingsToResolve => m_DeferBindingResolutionContext.deferredCount > 0;
+        public bool bindingsNeedResolving
+        {
+            get => m_DeferBindingResolutionContext.bindingsNeedResolving;
+            set => m_DeferBindingResolutionContext.bindingsNeedResolving = value;
+        }
+
         [Serializable]
         internal struct AvailableDevice
         {
@@ -2267,9 +2373,9 @@ namespace UnityEngine.InputSystem
         private bool m_HaveSentStartupAnalytics;
         #endif
 
-        internal IInputRuntime m_Runtime;
-        internal InputMetrics m_Metrics;
-        internal InputSettings m_Settings;
+        private IInputRuntime m_Runtime;
+        private InputMetrics m_Metrics;
+        private InputSettings m_Settings;
 
         // Extract as booleans (from m_Settings) because feature check is in the hot path
 
@@ -2302,6 +2408,8 @@ namespace UnityEngine.InputSystem
         #if UNITY_EDITOR
         internal IInputDiagnostics m_Diagnostics;
         #endif
+
+        private DeferBindingResolutionContext m_DeferBindingResolutionContext;
 
         ////REVIEW: Make it so that device names *always* have a number appended? (i.e. Gamepad1, Gamepad2, etc. instead of Gamepad, Gamepad1, etc)
 
@@ -2688,13 +2796,13 @@ namespace UnityEngine.InputSystem
 
         private void RestoreDevicesAfterDomainReloadIfNecessary()
         {
-            #if UNITY_EDITOR
+            #if UNITY_EDITOR && !ENABLE_CORECLR
             if (m_SavedDeviceStates != null)
                 RestoreDevicesAfterDomainReload();
             #endif
         }
 
-#if UNITY_EDITOR
+        #if UNITY_EDITOR
         private void SyncAllDevicesWhenEditorIsActivated()
         {
             var isActive = m_Runtime.isEditorActive;
@@ -2727,7 +2835,7 @@ namespace UnityEngine.InputSystem
             SyncAllDevices();
         }
 
-#endif
+        #endif // UNITY_EDITOR
 
         private void WarnAboutDevicesFailingToRecreateAfterDomainReload()
         {
@@ -2747,7 +2855,7 @@ namespace UnityEngine.InputSystem
             // At this point, we throw the device states away and forget about
             // what we had before the domain reload.
             m_SavedDeviceStates = null;
-            #endif
+            #endif // UNITY_EDITOR
         }
 
         private void OnBeforeUpdate(InputUpdateType updateType)
@@ -2791,6 +2899,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal void ApplySettings()
         {
+            Debug.Assert(m_Settings != null);
+
             // Sync update mask.
             var newUpdateMask = InputUpdateType.Editor;
             if ((m_UpdateMask & InputUpdateType.BeforeRender) != 0)
@@ -2880,10 +2990,14 @@ namespace UnityEngine.InputSystem
                 m_ParanoidReadValueCachingChecksEnabled = m_Settings.IsFeatureEnabled((InputFeatureNames.kParanoidReadValueCachingChecks));
             }
 
-            // Cache some values.
-            Touchscreen.s_TapTime = settings.defaultTapTime;
-            Touchscreen.s_TapDelayTime = settings.multiTapDelayTime;
-            Touchscreen.s_TapRadiusSquared = settings.tapRadius * settings.tapRadius;
+            // Cache Touch specific settings to Touchscreen
+            Touchscreen.settings = new TouchscreenSettings
+            {
+                tapTime = settings.defaultTapTime,
+                tapDelayTime = settings.multiTapDelayTime,
+                tapRadiusSquared = settings.tapRadius * settings.tapRadius
+            };
+
             // Extra clamp here as we can't tell what we're getting from serialized data.
             ButtonControl.s_GlobalDefaultButtonPressPoint = Mathf.Clamp(settings.defaultButtonPressPoint, ButtonControl.kMinButtonPressPoint, float.MaxValue);
             ButtonControl.s_GlobalDefaultButtonReleaseThreshold = settings.buttonReleaseThreshold;
@@ -3056,7 +3170,7 @@ namespace UnityEngine.InputSystem
             m_HasFocus = focus;
         }
 
-#if UNITY_EDITOR
+        #if UNITY_EDITOR
         internal void LeavePlayMode()
         {
             // Reenable all devices and reset their play mode state.
@@ -3084,7 +3198,7 @@ namespace UnityEngine.InputSystem
             InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdate.s_LatestUpdateType);
         }
 
-#endif
+        #endif // UNITY_EDITOR
 
         internal bool ShouldRunUpdate(InputUpdateType updateType)
         {
@@ -3095,7 +3209,7 @@ namespace UnityEngine.InputSystem
 
             var mask = m_UpdateMask;
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             // If the player isn't running, the only thing we run is editor updates, except if
             // explicitly overriden via `runUpdatesInEditMode`.
             // NOTE: This means that in edit mode (outside of play mode) we *never* switch to player
@@ -3104,7 +3218,7 @@ namespace UnityEngine.InputSystem
             //       it will see gamepad inputs going to the editor and respond to them.
             if (!gameIsPlaying && updateType != InputUpdateType.Editor && !runPlayerUpdatesInEditMode)
                 return false;
-#endif
+            #endif // UNITY_EDITOR
 
             return (updateType & mask) != 0;
         }
@@ -3274,7 +3388,7 @@ namespace UnityEngine.InputSystem
                     var currentEventTimeInternal = currentEventReadPtr->internalTime;
                     var currentEventType = currentEventReadPtr->type;
 
-#if UNITY_EDITOR
+                    #if UNITY_EDITOR
                     if (dropStatusEvents)
                     {
                         // If the type here is a status event, ask advance not to leave the event in the buffer.  Otherwise, leave it there.
@@ -3292,7 +3406,7 @@ namespace UnityEngine.InputSystem
                         m_InputEventStream.Advance(false);
                         continue;
                     }
-#endif
+                    #endif
 
                     // If we're timeslicing, check if the event time is within limits.
                     if (timesliceEvents && currentEventTimeInternal >= currentTime)
@@ -3306,10 +3420,10 @@ namespace UnityEngine.InputSystem
                         device = TryGetDeviceById(currentEventReadPtr->deviceId);
                     if (device == null)
                     {
-#if UNITY_EDITOR
+                    #if UNITY_EDITOR
                         ////TODO: see if this is a device we haven't created and if so, just ignore
                         m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
-#endif
+                    #endif
 
                         m_InputEventStream.Advance(false);
                         continue;
@@ -3317,7 +3431,7 @@ namespace UnityEngine.InputSystem
 
                     // In the editor, we may need to bump events from editor updates into player updates
                     // and vice versa.
-#if UNITY_EDITOR
+                    #if UNITY_EDITOR
                     if (isPlaying && !gameHasFocus)
                     {
                         if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode
@@ -3348,7 +3462,7 @@ namespace UnityEngine.InputSystem
                             }
                         }
                     }
-#endif
+                    #endif // UNITY_EDITOR
 
                     // If device is disabled, we let the event through only in certain cases.
                     // Removal and configuration change events should always be processed.
@@ -3358,12 +3472,12 @@ namespace UnityEngine.InputSystem
                         (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime |
                                                  InputDevice.DeviceFlags.DisabledWhileInBackground)) != 0)
                     {
-#if UNITY_EDITOR
+                    #if UNITY_EDITOR
                         // If the device is disabled in the backend, getting events for them
                         // is something that indicates a problem in the backend so diagnose.
                         if ((device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) != 0)
                             m_Diagnostics?.OnEventForDisabledDevice(currentEventReadPtr, device);
-#endif
+                    #endif
 
                         m_InputEventStream.Advance(false);
                         continue;
@@ -3435,17 +3549,17 @@ namespace UnityEngine.InputSystem
                     // Give the device a chance to do something with data before we propagate it to event listeners.
                     if (device.hasEventPreProcessor)
                     {
-#if UNITY_EDITOR
+                        #if UNITY_EDITOR
                         var eventSizeBeforePreProcessor = currentEventReadPtr->sizeInBytes;
-#endif
+                        #endif
                         var shouldProcess = ((IEventPreProcessor)device).PreProcessEvent(currentEventReadPtr);
-#if UNITY_EDITOR
+                        #if UNITY_EDITOR
                         if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
                         {
                             k_InputUpdateProfilerMarker.End();
                             throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
                         }
-#endif
+                        #endif
                         if (!shouldProcess)
                         {
                             // Skip event if PreProcessEvent considers it to be irrelevant.
@@ -3498,7 +3612,7 @@ namespace UnityEngine.InputSystem
                             if (currentEventTimeInternal < device.m_LastUpdateTimeInternal &&
                                 !(deviceIsStateCallbackReceiver && device.stateBlock.format != eventPtr.stateFormat))
                             {
-#if UNITY_EDITOR
+                                #if UNITY_EDITOR
                                 m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
 #elif UNITY_ANDROID
                                 // Android keyboards can send events out of order: Holding down a key will send multiple
@@ -3529,9 +3643,9 @@ namespace UnityEngine.InputSystem
                                 // If the state format doesn't match, ignore the event.
                                 if (device.stateBlock.format != eventPtr.stateFormat)
                                 {
-#if UNITY_EDITOR
+                                    #if UNITY_EDITOR
                                     m_Diagnostics?.OnEventFormatMismatch(currentEventReadPtr, device);
-#endif
+                                    #endif
                                     break;
                                 }
 
@@ -3547,9 +3661,9 @@ namespace UnityEngine.InputSystem
                             //       Only events should. If running play mode updates in editor, we want to defer to the play mode
                             //       callbacks to set the last update time to avoid dropping events only processed by the editor state.
                             if (device.m_LastUpdateTimeInternal <= eventPtr.internalTime
-#if UNITY_EDITOR
+                            #if UNITY_EDITOR
                                 && !(updateType == InputUpdateType.Editor && runPlayerUpdatesInEditMode)
-#endif
+                            #endif
                             )
                                 device.m_LastUpdateTimeInternal = eventPtr.internalTime;
 
@@ -3794,10 +3908,10 @@ namespace UnityEngine.InputSystem
         {
             return (eventType == StateEvent.Type || eventType == DeltaStateEvent.Type) &&
                 (updateType & InputUpdateType.Editor) == 0 &&
-                InputSystem.s_SystemObject.exitEditModeTime > 0 &&
-                eventTime >= InputSystem.s_SystemObject.exitEditModeTime &&
-                (eventTime < InputSystem.s_SystemObject.enterPlayModeTime ||
-                    InputSystem.s_SystemObject.enterPlayModeTime == 0);
+                InputSystem.domainStateManager.exitEditModeTime > 0 &&
+                eventTime >= InputSystem.domainStateManager.exitEditModeTime &&
+                (eventTime < InputSystem.domainStateManager.enterPlayModeTime ||
+                    InputSystem.domainStateManager.enterPlayModeTime == 0);
         }
 
         /// <summary>
@@ -3869,7 +3983,7 @@ namespace UnityEngine.InputSystem
         [Conditional("UNITY_EDITOR")]
         void CheckAllDevicesOptimizedControlsHaveValidState()
         {
-            if (!InputSystem.s_Manager.m_OptimizedControlsFeatureEnabled)
+            if (!InputSystem.manager.m_OptimizedControlsFeatureEnabled)
                 return;
 
             foreach (var device in devices)
@@ -4026,7 +4140,7 @@ namespace UnityEngine.InputSystem
             {
                 // Update the pressed/not pressed state of all buttons that have changed this update
                 // With enough ButtonControls being checked, it's faster to find out which have actually changed rather than test all.
-                if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled || device.m_UseCachePathForButtonPresses)
+                if (InputSystem.manager.m_ReadValueCachingFeatureEnabled || device.m_UseCachePathForButtonPresses)
                 {
                     foreach (var button in device.m_UpdatedButtons)
                     {
@@ -4103,7 +4217,7 @@ namespace UnityEngine.InputSystem
 
             // If we have enough ButtonControls being checked for wasPressedThisFrame/wasReleasedThisFrame,
             // use this path to find out which have actually changed here.
-            if (InputSystem.s_Manager.m_ReadValueCachingFeatureEnabled || m_Devices[deviceIndex].m_UseCachePathForButtonPresses)
+            if (InputSystem.manager.m_ReadValueCachingFeatureEnabled || m_Devices[deviceIndex].m_UseCachePathForButtonPresses)
             {
                 // if the buffers have just been flipped, and we're doing a full state update, then the state from the
                 // previous update is now in the back buffer, and we should be comparing to that when checking what
@@ -4133,7 +4247,7 @@ namespace UnityEngine.InputSystem
                 return false;
             }
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             ////REVIEW: should this use the editor update ticks as quasi-frame-boundaries?
             // Updates go to the editor only if the game isn't playing or does not have focus.
             // Otherwise we fall through to the logic that flips for the *next* dynamic and
@@ -4147,7 +4261,7 @@ namespace UnityEngine.InputSystem
                 m_StateBuffers.m_EditorStateBuffers.SwapBuffers(device.m_DeviceIndex);
                 return true;
             }
-#endif
+            #endif
 
             // Flip buffers if we haven't already for this frame.
             if (device.m_CurrentUpdateStepCount != InputUpdate.s_UpdateStepCount)
@@ -4165,7 +4279,7 @@ namespace UnityEngine.InputSystem
 
         // Stuff everything that we want to survive a domain reload into
         // a m_SerializedState.
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        #if UNITY_EDITOR || DEVELOPMENT_BUILD
         [Serializable]
         internal struct DeviceState
         {
@@ -4289,7 +4403,14 @@ namespace UnityEngine.InputSystem
             #endif
             m_InputEventHandledPolicy = state.inputEventHandledPolicy;
 
-            if (m_Settings != null)
+            // Cached settings might be null if the ScriptableObject was destroyed; create new default instance in this case.
+            if (state.settings == null)
+            {
+                state.settings = ScriptableObject.CreateInstance<InputSettings>();
+                state.settings.hideFlags = HideFlags.HideAndDontSave; // Hide from the project Hierarchy and Scene
+            }
+
+            if (m_Settings != null && m_Settings != state.settings)
                 Object.DestroyImmediate(m_Settings);
 
             settings = state.settings;
@@ -4312,6 +4433,7 @@ namespace UnityEngine.InputSystem
         internal DeviceState[] m_SavedDeviceStates;
         internal AvailableDevice[] m_SavedAvailableDevices;
 
+#if !ENABLE_CORECLR
         /// <summary>
         /// Recreate devices based on the devices we had before a domain reload.
         /// </summary>
@@ -4394,6 +4516,30 @@ namespace UnityEngine.InputSystem
 
             k_InputRestoreDevicesAfterReloadMarker.End();
         }
+
+        /// <summary>
+        /// Notifies all devices of removal to better cleanup data when using SimulateDomainReload test hook
+        /// </summary>
+        /// <remarks>
+        /// Devices maintain their own list of Devices within static fields, updated via NotifyAdded and NotifyRemoved overrides.
+        /// These fields are reset during a real DR, but not so when we "simulate" causing them to report incorrect values when
+        /// queried via direct APIs, e.g. Gamepad.all. So, to mitigate this we'll call NotifyRemove during this scenario.
+        /// </remarks>
+        internal void TestHook_RemoveDevicesForSimulatedDomainReload()
+        {
+            if (m_Devices == null)
+                return;
+
+            foreach (var device in m_Devices)
+            {
+                if (device == null)
+                    break;
+
+                device.NotifyRemoved();
+            }
+        }
+
+#endif // !ENABLE_CORECLR
 
         // We have two general types of devices we need to care about when recreating devices
         // after domain reloads:
