@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.InputSystem.SourceGenerator", "Unity.InputSystem.SourceGenerator\Unity.InputSystem.SourceGenerator.csproj", "{CD0E7260-107F-4C7D-BC63-8B24EC8853F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.InputSystem.SourceGenerator.Tests", "Unity.InputSystem.SourceGenerator.Tests\Unity.InputSystem.SourceGenerator.Tests.csproj", "{904BB251-1F1A-46A2-B2E1-89FB7F0C4295}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{669D18C6-87D7-4FB6-8096-87F12203EAC9}"
+	ProjectSection(SolutionItems) = preProject
+		.config/dotnet-tools.json = .config/dotnet-tools.json
+		.gitignore = .gitignore
+		coverlet.runsettings = coverlet.runsettings
+		README.md = README.md
+		build.sh = build.sh
+		build.bat = build.bat
+		test.sh = test.sh
+		test.bat = test.bat
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity.InputSystem.Mocks", "Unity.InputSystem.Mocks\Unity.InputSystem.Mocks.csproj", "{A75AFB3D-C4E9-49FF-9B0F-F37BC0F93AFE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CD0E7260-107F-4C7D-BC63-8B24EC8853F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD0E7260-107F-4C7D-BC63-8B24EC8853F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD0E7260-107F-4C7D-BC63-8B24EC8853F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD0E7260-107F-4C7D-BC63-8B24EC8853F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{904BB251-1F1A-46A2-B2E1-89FB7F0C4295}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{904BB251-1F1A-46A2-B2E1-89FB7F0C4295}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{904BB251-1F1A-46A2-B2E1-89FB7F0C4295}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{904BB251-1F1A-46A2-B2E1-89FB7F0C4295}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A75AFB3D-C4E9-49FF-9B0F-F37BC0F93AFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A75AFB3D-C4E9-49FF-9B0F-F37BC0F93AFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A75AFB3D-C4E9-49FF-9B0F-F37BC0F93AFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A75AFB3D-C4E9-49FF-9B0F-F37BC0F93AFE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

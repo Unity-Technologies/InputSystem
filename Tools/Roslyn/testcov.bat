@@ -1,0 +1,1 @@
+dotnet test --collect:"XPlat Code Coverage" --settings coverlet.runsettings --diag:coverletlog.txt && dotnet reportgenerator "-reports:Unity.InputSystem.SourceGenerator.Tests/TestResults/**/coverage.cobertura.xml" "-targetdir:coveragereport" -reporttypes:Html
