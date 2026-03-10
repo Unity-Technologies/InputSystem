@@ -512,8 +512,7 @@ partial class CoreTests
                  { ""path"" : ""vendorId"", ""value"" : ""9999"" }
              ]
          }
-     }
- ";
+     }";
 
         InputSystem.RegisterLayout(json);
 
