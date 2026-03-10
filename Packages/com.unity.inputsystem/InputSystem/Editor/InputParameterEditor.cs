@@ -231,7 +231,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             internal static void AddSharedDefaultSettingsFooter(VisualElement root,
-                IReadOnlyList<CustomOrDefaultSetting> settings, Action onChangedCallback)
+                IReadOnlyList<CustomOrDefaultSetting> settings)
             {
                 if (settings == null || settings.Count == 0)
                     return;

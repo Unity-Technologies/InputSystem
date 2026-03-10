@@ -94,7 +94,7 @@ namespace UnityEngine.InputSystem.Processors
             m_MinSetting.OnDrawVisualElements(root, onChangedCallback);
             m_MaxSetting.OnDrawVisualElements(root, onChangedCallback);
             CustomOrDefaultSetting.AddSharedDefaultSettingsFooter(root,
-                new[] { m_MinSetting, m_MaxSetting }, onChangedCallback);
+                new[] { m_MinSetting, m_MaxSetting });
         }
 
         private CustomOrDefaultSetting m_MinSetting;
