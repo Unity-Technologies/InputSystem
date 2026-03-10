@@ -1878,6 +1878,13 @@ namespace UnityEngine.InputSystem.Users
 
         private static GlobalState s_GlobalState;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void InitializeGlobalUserState()
+        {
+            ResetGlobals();
+            s_GlobalState = default;
+        }
+
         internal static ISavedState SaveAndResetState()
         {
             // Save current state and provide an opaque interface to restore it
