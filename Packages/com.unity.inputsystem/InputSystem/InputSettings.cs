@@ -770,7 +770,7 @@ namespace UnityEngine.InputSystem
         internal void OnChange()
         {
             if (InputSystem.settings == this)
-                InputSystem.s_Manager.ApplySettings();
+                InputSystem.manager.ApplySettings();
         }
 
         internal const int s_OldUnsupportedFixedAndDynamicUpdateSetting = 0;
