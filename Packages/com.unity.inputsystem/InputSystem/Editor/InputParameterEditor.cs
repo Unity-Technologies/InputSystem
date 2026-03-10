@@ -210,19 +210,12 @@ namespace UnityEngine.InputSystem.Editor
                 m_GetValue = getValue;
                 m_SetValue = setValue;
                 m_GetDefaultValue = getDefaultValue;
-                m_ToggleLabel = EditorGUIUtility.TrTextContent("Default",
-                    defaultComesFromInputSettings
-                    ? $"If enabled, the default {label.ToLowerInvariant()} configured globally in the input settings is used. See Edit >> Project Settings... >> Input (NEW)."
-                    : "If enabled, the default value is used.");
+                m_ToggleLabel = EditorGUIUtility.TrTextContent(
+                    "Default", $"If enabled, the default {label.ToLowerInvariant()} configured globally in the input settings is used. See Edit >> Project Settings... >> Input (NEW).");
                 m_ValueLabel = EditorGUIUtility.TrTextContent(label, tooltip);
-                if (defaultComesFromInputSettings)
-                    m_OpenInputSettingsLabel = EditorGUIUtility.TrTextContent("Open Input Settings");
                 m_DefaultInitializedValue = defaultInitializedValue;
                 m_UseDefaultValue = Mathf.Approximately(getValue(), defaultInitializedValue);
                 m_DefaultComesFromInputSettings = defaultComesFromInputSettings;
-                m_HelpBoxText =
-                    EditorGUIUtility.TrTextContent(
-                        $"Uses \"{defaultName}\" set in project-wide input settings.");
             }
 
             public void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
@@ -249,12 +242,10 @@ namespace UnityEngine.InputSystem.Editor
                 m_FloatField.RegisterValueChangedCallback(ChangeSettingValue);
                 m_FloatField.RegisterCallback<BlurEvent>(_ => OnEditEnd(onChangedCallback));
                 m_FloatField.SetEnabled(!m_UseDefaultValue);
-
-                m_HelpBox = new HelpBox(m_HelpBoxText.text, HelpBoxMessageType.None);
-
                 m_DefaultToggle = new Toggle("Default")
                 {
                     value = m_UseDefaultValue,
+                    tooltip = m_ToggleLabel.tooltip,
                     style =
                     {
                         flexDirection = FlexDirection.RowReverse
@@ -263,27 +254,9 @@ namespace UnityEngine.InputSystem.Editor
                 m_DefaultToggle.RegisterValueChangedCallback(evt => ToggleUseDefaultValue(evt, onChangedCallback));
                 m_DefaultToggle.Q<Label>().style.minWidth = new StyleLength(StyleKeyword.Auto);
 
-                var buttonContainer = new VisualElement
-                {
-                    style =
-                    {
-                        flexDirection = FlexDirection.RowReverse
-                    }
-                };
-                m_OpenInputSettingsButton = new Button(InputSettingsProvider.Open){text = m_OpenInputSettingsLabel.text};
-                m_OpenInputSettingsButton.AddToClassList("open-settings-button");
-
                 settingsContainer.Add(m_FloatField);
                 settingsContainer.Add(m_DefaultToggle);
                 container.Add(settingsContainer);
-
-                if (m_UseDefaultValue)
-                {
-                    buttonContainer.Add(m_OpenInputSettingsButton);
-                    container.Add(m_HelpBox);
-                }
-
-                container.Add(buttonContainer);
 
                 root.Add(container);
             }
@@ -344,7 +317,6 @@ namespace UnityEngine.InputSystem.Editor
                     m_SetValue(newValue);
                 }
             }
-
             public void OnGUI()
             {
                 EditorGUILayout.BeginHorizontal();
@@ -361,7 +333,6 @@ namespace UnityEngine.InputSystem.Editor
                 if ((value - float.Epsilon) == m_DefaultInitializedValue)
                     value = m_DefaultInitializedValue;
 
-                ////TODO: use slider rather than float field
                 var newValue = EditorGUILayout.FloatField(m_ValueLabel, value, GUILayout.ExpandWidth(false));
                 if (!m_UseDefaultValue)
                     SetValue(newValue);
@@ -379,18 +350,6 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_UseDefaultValue = newUseDefault;
                 EditorGUILayout.EndHorizontal();
-
-                // If we're using a default from global InputSettings, show info text for that and provide
-                // button to open input settings.
-                if (m_UseDefaultValue && m_DefaultComesFromInputSettings)
-                {
-                    EditorGUILayout.HelpBox(m_HelpBoxText);
-                    EditorGUILayout.BeginHorizontal();
-                    GUILayout.FlexibleSpace();
-                    if (GUILayout.Button(m_OpenInputSettingsLabel, EditorStyles.miniButton))
-                        InputSettingsProvider.Open();
-                    EditorGUILayout.EndHorizontal();
-                }
             }
 
             private Func<float> m_GetValue;
@@ -401,12 +360,9 @@ namespace UnityEngine.InputSystem.Editor
             private float m_DefaultInitializedValue;
             private GUIContent m_ToggleLabel;
             private GUIContent m_ValueLabel;
-            private GUIContent m_OpenInputSettingsLabel;
-            private GUIContent m_HelpBoxText;
             private FloatField m_FloatField;
             private Button m_OpenInputSettingsButton;
             private Toggle m_DefaultToggle;
-            private HelpBox m_HelpBox;
         }
     }
 }
