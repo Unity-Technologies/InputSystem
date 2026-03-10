@@ -221,10 +221,6 @@ namespace UnityEngine.InputSystem.Editor
                 m_DefaultName = defaultName;
             }
 
-            private bool UseDefaultValue => m_UseDefaultValue;
-            private bool DefaultComesFromInputSettings => m_DefaultComesFromInputSettings;
-            private string DefaultName => m_DefaultName;
-
             /// <summary>
             /// Raised when the "use default" toggle changes. Allows multiple subscribers to react
             /// (e.g. refreshing shared footers) without overwriting each other.
@@ -251,11 +247,11 @@ namespace UnityEngine.InputSystem.Editor
 
                 void RefreshFooter()
                 {
-                    var namesInUse = new List<string>();
+                    var namesInUse = new List<string>(settings.Count);
                     foreach (var s in settings)
                     {
-                        if (s.UseDefaultValue && s.DefaultComesFromInputSettings)
-                            namesInUse.Add(s.DefaultName);
+                        if (s.m_UseDefaultValue && s.m_DefaultComesFromInputSettings)
+                            namesInUse.Add(s.m_DefaultName);
                     }
                     if (namesInUse.Count > 0)
                     {
@@ -348,7 +344,7 @@ namespace UnityEngine.InputSystem.Editor
 
             private void OnEditEnd(Action onChangedCallback)
             {
-                onChangedCallback.Invoke();
+                onChangedCallback?.Invoke();
             }
 
             private void ToggleUseDefaultValue(ChangeEvent<bool> evt, Action onChangedCallback)
