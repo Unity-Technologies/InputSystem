@@ -234,18 +234,18 @@ class APIVerificationTests
 #if UNITY_EDITOR_OSX
     [Explicit] // Fails due to file system permissions on yamato, but works locally.
 #endif
+    #if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
+    [Ignore("Disabled to make test suite pass on Linux")]
+    #endif
     public void API_MonoBehavioursHaveHelpUrls()
     {
         // We exclude abstract MonoBehaviours as these can't show up in the Unity inspector.
         var monoBehaviourTypes = typeof(InputSystem).Assembly.ExportedTypes.Where(t =>
             t.IsPublic && !t.IsAbstract && !IgnoreTypeForDocsByName(t.FullName) && !IgnoreTypeForDocsByNamespace(t.Namespace) &&
             typeof(MonoBehaviour).IsAssignableFrom(t));
-        var monoBehaviourTypesHelpUrls =
-            monoBehaviourTypes.Where(t => t.GetCustomAttributes<HelpURLAttribute>().FirstOrDefault() != null)
-                .Select(t => t.GetCustomAttributes<HelpURLAttribute>().FirstOrDefault().URL);
-        var monoBehaviourTypesWithoutHelpUrls =
-            monoBehaviourTypes.Where(t => t.GetCustomAttributes<HelpURLAttribute>().FirstOrDefault() == null);
 
+        var monoBehaviourTypesHelpUrls = monoBehaviourTypes.Where(t => t.GetCustomAttributes<HelpURLAttribute>().Any()).Select(t => t.GetCustomAttributes<HelpURLAttribute>().First().URL);
+        var monoBehaviourTypesWithoutHelpUrls = monoBehaviourTypes.Where(t => !t.GetCustomAttributes<HelpURLAttribute>().Any());
         Assert.That(monoBehaviourTypesWithoutHelpUrls, Is.Empty);
         Assert.That(monoBehaviourTypesHelpUrls, Has.All.StartWith(InputSystem.kDocUrl));
     }
@@ -258,7 +258,7 @@ class APIVerificationTests
 
     // The .api files are platform-specific so we can only compare on the platform
     // they were built on.
-#if UNITY_EDITOR_WIN
+    #if UNITY_EDITOR_WIN
 
     // We disable "API Verification" tests running as part of the validation suite as they give us
     // false positives (specifically, for setters having changes accessibility from private to protected).

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Support for entering the play mode with domain reload turned off (i.e. Faster Enter Playmode feature) [ISX-2411]
 
 ## [1.19.0] - 2026-02-24
 
