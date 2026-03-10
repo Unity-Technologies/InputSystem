@@ -111,7 +111,7 @@ namespace UnityEngine.InputSystem.Interactions
     internal class HoldInteractionEditor : InputParameterEditor<HoldInteraction>
     {
         protected override void OnEnable()
-        { 
+        {
             m_DurationSetting.Initialize("Hold Time",
                 "Time (in seconds) that a control has to be held in order for it to register as a hold.",
                 "Default Hold Time",
