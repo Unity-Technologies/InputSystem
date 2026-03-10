@@ -2,6 +2,7 @@ using System;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Layouts;
+using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -117,6 +118,7 @@ namespace UnityEngine.InputSystem.LowLevel
         Action<bool> onPlayerFocusChanged { get; set; }
 #endif
 
+        FocusFlags focusState { get; set; }
         /// <summary>
         // Is true when the player or game view has focus.
         /// </summary>

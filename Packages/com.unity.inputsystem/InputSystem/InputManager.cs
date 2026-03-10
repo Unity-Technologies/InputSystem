@@ -195,19 +195,34 @@ namespace UnityEngine.InputSystem
 
         public FocusFlags focusState
         {
-            get => m_FocusState;
-            set => m_FocusState = value;
+            get
+            {
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+                return m_Runtime.focusState;
+#else
+                return m_FocusState;
+#endif
+            }
+            set
+            {
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+                if (m_Runtime != null)
+                    m_Runtime.focusState = value;
+#else
+                m_FocusState = value;
+#endif
+            }
         }
 
         public float pollingFrequency
         {
             get
             {
-                #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+#if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
                 return m_Runtime.pollingFrequency;
-                #else
+#else
                 return m_PollingFrequency;
-                #endif
+#endif
             }
 
             set
@@ -216,13 +231,13 @@ namespace UnityEngine.InputSystem
                 if (value <= 0)
                     throw new ArgumentException("Polling frequency must be greater than zero", "value");
 
-                #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+#if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
                 m_Runtime.pollingFrequency = value;
-                #else
+#else
                 m_PollingFrequency = value;
                 if (m_Runtime != null)
                     m_Runtime.pollingFrequency = value;
-                #endif
+#endif
             }
         }
 
@@ -644,7 +659,7 @@ namespace UnityEngine.InputSystem
             // (the latter is important as in that case, we should go through the normal matching
             // process and not just rely on the name of the layout). If so, we try here to recreate
             // the device with the just registered layout.
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             for (var i = 0; i < m_SavedDeviceStates.LengthSafe(); ++i)
             {
                 ref var deviceState = ref m_SavedDeviceStates[i];
@@ -657,7 +672,7 @@ namespace UnityEngine.InputSystem
                     --i;
                 }
             }
-            #endif
+#endif
 
             // Let listeners know.
             var change = isReplacement ? InputControlLayoutChange.Replaced : InputControlLayoutChange.Added;
@@ -847,7 +862,7 @@ namespace UnityEngine.InputSystem
 
         private void AddAvailableDevicesMatchingDescription(InputDeviceMatcher matcher, InternedString layout)
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             // If we still have some devices saved from the last domain reload, see
             // if they are matched by the given matcher. If so, turn them into devices.
             for (var i = 0; i < m_SavedDeviceStates.LengthSafe(); ++i)
@@ -860,7 +875,7 @@ namespace UnityEngine.InputSystem
                     --i;
                 }
             }
-            #endif
+#endif
 
             // See if the new description to layout mapping allows us to make
             // sense of a device we couldn't make sense of so far.
@@ -1050,10 +1065,10 @@ namespace UnityEngine.InputSystem
             // all available devices to be added regardless of what "Supported Devices" says. This
             // is useful to ensure that things like keyboard, mouse, and pen keep working in the editor
             // even if not supported as devices in the game.
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (InputEditorUserSettings.addDevicesNotSupportedByProject)
                 return true;
-            #endif
+#endif
 
             var supportedDevices = m_Settings.supportedDevices;
             if (supportedDevices.Count == 0)
@@ -1295,9 +1310,9 @@ namespace UnityEngine.InputSystem
             // If we're running in the background, find out whether the device can run in
             // the background. If not, disable it.
             var isPlaying = true;
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             isPlaying = m_Runtime.isInPlayMode;
-            #endif
+#endif
             if (isPlaying && !gameHasFocus
                 && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus
                 && m_Runtime.runInBackground
@@ -1603,10 +1618,10 @@ namespace UnityEngine.InputSystem
             var doIssueResetCommand = isHardReset;
             if (issueResetCommand != null)
                 doIssueResetCommand = issueResetCommand.Value;
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             else if (m_Settings.editorInputBehaviorInPlayMode != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
                 doIssueResetCommand = false;
-            #endif
+#endif
 
             if (doIssueResetCommand)
                 device.RequestReset();
@@ -1794,9 +1809,9 @@ namespace UnityEngine.InputSystem
                             return;
                         device.disabledWhileInBackground = true;
                         ResetDevice(device, issueResetCommand: false);
-                        #if UNITY_EDITOR
+#if UNITY_EDITOR
                         if (m_Settings.editorInputBehaviorInPlayMode == InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView)
-                        #endif
+#endif
                         {
                             device.ExecuteDisableCommand();
                             device.disabledInRuntime = true;
@@ -1916,9 +1931,10 @@ namespace UnityEngine.InputSystem
             // we don't know which one the user is going to use. The user
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
-
-            focusState = Application.isFocused ? focusState |= FocusFlags.ApplicationFocus
-                : focusState &= ~FocusFlags.ApplicationFocus;
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+            m_FocusState = FocusFlags.None;//Application.isFocused ? focusState |= FocusFlags.ApplicationFocus
+               // : focusState &= ~FocusFlags.ApplicationFocus;
+#endif
 
 #if UNITY_EDITOR
             m_EditorIsActive = true;
@@ -1927,10 +1943,10 @@ namespace UnityEngine.InputSystem
 
             m_ScrollDeltaBehavior = InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
 
-            #if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+#if !UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
             // Default polling frequency is 60 Hz.
             m_PollingFrequency = 60;
-            #endif
+#endif
 
             // Default input event handled policy.
             m_InputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
@@ -2000,9 +2016,9 @@ namespace UnityEngine.InputSystem
             processors.AddTypeRegistration("CompensateDirection", typeof(CompensateDirectionProcessor));
             processors.AddTypeRegistration("CompensateRotation", typeof(CompensateRotationProcessor));
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             processors.AddTypeRegistration("AutoWindowSpace", typeof(EditorWindowSpaceProcessor));
-            #endif
+#endif
 
             // Register interactions.
             interactions.AddTypeRegistration("Hold", typeof(HoldInteraction));
@@ -2124,8 +2140,8 @@ namespace UnityEngine.InputSystem
 #endif
             m_Runtime.pollingFrequency = pollingFrequency;
 
-            focusState = m_Runtime.isPlayerFocused ? focusState |= FocusFlags.ApplicationFocus
-                : focusState &= ~FocusFlags.ApplicationFocus;
+            focusState = Application.isFocused ? focusState |= FocusFlags.ApplicationFocus
+            : focusState &= ~FocusFlags.ApplicationFocus;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -2257,8 +2273,8 @@ namespace UnityEngine.InputSystem
         private CallbackArray<Action> m_ActionsChangedListeners;
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
-        private FocusFlags m_FocusState;
 #if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+        private FocusFlags m_FocusState;
         private bool m_DiscardOutOfFocusEvents;
         private double m_FocusRegainedTime;
 #endif
@@ -3124,9 +3140,9 @@ namespace UnityEngine.InputSystem
                     m_CurrentUpdate = InputUpdateType.None;
                     return;
                 }
-                #if UNITY_EDITOR
+#if UNITY_EDITOR
                     dropStatusEvents = ShouldDropStatusEvents(eventBuffer);
-                #endif
+#endif
 
 #else
                 if (LegacyEarlyOutFromEventProcessing(updateType, ref eventBuffer, ref dropStatusEvents))
@@ -3174,19 +3190,19 @@ namespace UnityEngine.InputSystem
 
                     var currentEventTimeInternal = currentEventReadPtr->internalTime;
 #if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                     if (SkipEventDueToEditorBehaviour(updateType, currentEventType, dropStatusEvents, currentEventTimeInternal))
                         continue;
-                    #else
+#else
                     // In player builds, drop events if out of focus and not running in background, unless it is a focus event.
                     if (!gameHasFocus && !m_Runtime.runInBackground && currentEventType != focusEventType)
                     {
                         m_InputEventStream.Advance(false);
                         continue;
                     }
-                    #endif
+#endif
 #else
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                     if (dropStatusEvents)
                     {
                         // If the type here is a status event, ask advance not to leave the event in the buffer.  Otherwise, leave it there.
@@ -3204,7 +3220,7 @@ namespace UnityEngine.InputSystem
                         m_InputEventStream.Advance(false);
                         continue;
                     }
-                    #endif
+#endif
 #endif
                     // If we're timeslicing, check if the event time is within limits.
                     if (timesliceEvents && currentEventTimeInternal >= currentTime)
@@ -3282,7 +3298,7 @@ namespace UnityEngine.InputSystem
                     // NOTE: We call listeners also for events where the device is disabled. This is crucial for code
                     //       such as TouchSimulation that disables the originating devices and then uses its events to
                     //       create simulated events from.
-                    if (m_EventListeners.length > 0)
+                    if (m_EventListeners.length > 0 && currentEventType != focusEventType)
                     {
                         DelegateHelpers.InvokeCallbacksSafe(ref m_EventListeners,
                             new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
@@ -3708,8 +3724,8 @@ namespace UnityEngine.InputSystem
         private unsafe void ProcessFocusEvent(InputEvent* currentEventReadPtr)
         {
             var focusEventPtr = (InputFocusEvent*)currentEventReadPtr;
-            FocusFlags focusState = focusEventPtr->focusFlags;
-            m_FocusState = focusState;
+            FocusFlags state = focusEventPtr->focusFlags;
+            focusState = state;
 
 #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();

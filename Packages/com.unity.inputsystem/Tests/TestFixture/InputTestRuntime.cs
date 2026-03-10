@@ -8,6 +8,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -235,7 +236,7 @@ namespace UnityEngine.InputSystem
 
         public void InvokePlayerFocusChanged(bool newFocusState)
         {
-            m_HasFocus = newFocusState;
+            focusState = newFocusState ? FocusFlags.ApplicationFocus : FocusFlags.None;
             onPlayerFocusChanged?.Invoke(newFocusState);
         }
 
@@ -348,7 +349,8 @@ namespace UnityEngine.InputSystem
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
         public Action<bool> onPlayerFocusChanged { get; set; }
-        public bool isPlayerFocused => m_HasFocus;
+        public FocusFlags focusState { get; set; }
+        public bool isPlayerFocused => (focusState & FocusFlags.ApplicationFocus) != 0;
         public float pollingFrequency { get; set; } = 60.0f; // At least 60 Hz by default
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
@@ -422,7 +424,6 @@ namespace UnityEngine.InputSystem
 
         internal const int kDefaultEventBufferSize = 1024 * 512;
 
-        private bool m_HasFocus = true;
         private int m_NextDeviceId = 1;
         private int m_NextEventId = 1;
         internal int m_EventCount;

@@ -4077,9 +4077,6 @@ internal partial class UITests : CoreTestsFixture
     static bool[] canRunInBackgroundValueSource = new[] { false, true };
 
     [UnityTest]
-#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-    [Ignore("Failing due to desync focus state, needs further investigation")]
-#endif
     public IEnumerator UI_WhenAppLosesAndRegainsFocus_WhileUIButtonIsPressed_UIButtonClickBehaviorShouldDependOnIfDeviceCanRunInBackground(
         [ValueSource(nameof(canRunInBackgroundValueSource))] bool canRunInBackground)
     {
