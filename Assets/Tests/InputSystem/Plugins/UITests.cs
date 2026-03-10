@@ -4515,7 +4515,7 @@ internal partial class UITests : CoreTestsFixture
     }
 
 #endif
-#endregion
+    #endregion
 
     public class MyButton : UnityEngine.UI.Button
     {

@@ -214,7 +214,7 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             get => m_FocusState;
             set => m_FocusState = value;
-        }        
+        }
         public bool isPlayerFocused => (m_FocusState & FocusFlags.ApplicationFocus) != 0;
 
         public float pollingFrequency
@@ -297,6 +297,7 @@ namespace UnityEngine.InputSystem.LowLevel
         {
             m_FocusChangedMethod(focus);
         }
+
 #endif
 
         public Vector2 screenSize => new Vector2(Screen.width, Screen.height);

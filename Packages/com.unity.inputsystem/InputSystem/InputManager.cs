@@ -1932,8 +1932,7 @@ namespace UnityEngine.InputSystem
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
 #if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-            m_FocusState = FocusFlags.None;//Application.isFocused ? focusState |= FocusFlags.ApplicationFocus
-               // : focusState &= ~FocusFlags.ApplicationFocus;
+            m_FocusState = FocusFlags.None;
 #endif
 
 #if UNITY_EDITOR
@@ -2141,7 +2140,7 @@ namespace UnityEngine.InputSystem
             m_Runtime.pollingFrequency = pollingFrequency;
 
             focusState = Application.isFocused ? focusState |= FocusFlags.ApplicationFocus
-            : focusState &= ~FocusFlags.ApplicationFocus;
+                : focusState &= ~FocusFlags.ApplicationFocus;
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -3044,26 +3043,24 @@ namespace UnityEngine.InputSystem
             return (updateType & mask) != 0;
         }
 
-
-
-            /// <summary>
-            /// Process input events.
-            /// </summary>
-            /// <param name="updateType"></param>
-            /// <param name="eventBuffer"></param>
-            /// <remarks>
-            /// This method is the core workhorse of the input system. It is called from <see cref="UnityEngineInternal.Input.NativeInputSystem"/>.
-            /// Usually this happens in response to the player loop running and triggering updates at set points. However,
-            /// updates can also be manually triggered through <see cref="InputSystem.Update"/>.
-            ///
-            /// The method receives the event buffer used internally by the runtime to collect events.
-            ///
-            /// Note that update types do *NOT* say what the events we receive are for. The update type only indicates
-            /// where in the Unity's application loop we got called from. Where the event data goes depends wholly on
-            /// which buffers we activate in the update and write the event data into.
-            /// </remarks>
-            /// <exception cref="InvalidOperationException">Thrown if OnUpdate is called recursively.</exception>
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
+        /// <summary>
+        /// Process input events.
+        /// </summary>
+        /// <param name="updateType"></param>
+        /// <param name="eventBuffer"></param>
+        /// <remarks>
+        /// This method is the core workhorse of the input system. It is called from <see cref="UnityEngineInternal.Input.NativeInputSystem"/>.
+        /// Usually this happens in response to the player loop running and triggering updates at set points. However,
+        /// updates can also be manually triggered through <see cref="InputSystem.Update"/>.
+        ///
+        /// The method receives the event buffer used internally by the runtime to collect events.
+        ///
+        /// Note that update types do *NOT* say what the events we receive are for. The update type only indicates
+        /// where in the Unity's application loop we got called from. Where the event data goes depends wholly on
+        /// which buffers we activate in the update and write the event data into.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">Thrown if OnUpdate is called recursively.</exception>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1809:AvoidExcessiveLocals", Justification = "TODO: Refactor later.")]
         private unsafe void OnUpdate(InputUpdateType updateType, ref InputEventBuffer eventBuffer)
         {
             using (k_InputUpdateProfilerMarker.Auto())
@@ -3128,7 +3125,7 @@ namespace UnityEngine.InputSystem
                 var dropStatusEvents = false;
 
 #if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-                 // we exit early as we have no events in the buffer
+                // we exit early as we have no events in the buffer
                 if (eventBuffer.eventCount == 0)
                 {
                     // Normally, we process action timeouts after first processing all events. If we have no
@@ -3141,7 +3138,7 @@ namespace UnityEngine.InputSystem
                     return;
                 }
 #if UNITY_EDITOR
-                    dropStatusEvents = ShouldDropStatusEvents(eventBuffer);
+                dropStatusEvents = ShouldDropStatusEvents(eventBuffer);
 #endif
 
 #else
@@ -3865,6 +3862,7 @@ namespace UnityEngine.InputSystem
             // like to drop status events, and do not early out.
             return (!gameIsPlaying && gameShouldGetInputRegardlessOfFocus && (eventBuffer.sizeInBytes > (100 * 1024)));
         }
+
 #endif // UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3915,7 +3913,6 @@ namespace UnityEngine.InputSystem
 
             return false;
         }
-
 
         /// <summary>
         /// Determines if an event should be discarded based on timing or focus state.
