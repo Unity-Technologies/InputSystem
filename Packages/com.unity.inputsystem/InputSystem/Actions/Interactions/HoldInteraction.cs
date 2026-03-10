@@ -133,8 +133,8 @@ namespace UnityEngine.InputSystem.Interactions
 
         public override void OnDrawVisualElements(VisualElement root, Action onChangedCallback)
         {
-            m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
             m_DurationSetting.OnDrawVisualElements(root, onChangedCallback);
+            m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
             CustomOrDefaultSetting.AddSharedDefaultSettingsFooter(root,
                 new[] { m_PressPointSetting, m_DurationSetting });
         }
