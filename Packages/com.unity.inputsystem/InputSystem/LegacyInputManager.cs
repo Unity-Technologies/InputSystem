@@ -170,6 +170,7 @@ namespace UnityEngine.InputSystem
 
             return false;
         }
+
 #if UNITY_EDITOR
         /// <summary>
         /// Checks background behavior conditions for early exit from event processing.
@@ -200,6 +201,7 @@ namespace UnityEngine.InputSystem
 
             return false;
         }
+
 #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

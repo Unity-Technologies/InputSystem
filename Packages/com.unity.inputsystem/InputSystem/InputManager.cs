@@ -2221,7 +2221,7 @@ namespace UnityEngine.InputSystem
 #endif
             m_Runtime.pollingFrequency = pollingFrequency;
 
-            focusState = Application.isFocused 
+            focusState = Application.isFocused
                 ? focusState | FocusFlags.ApplicationFocus
                 : focusState & ~FocusFlags.ApplicationFocus;
 
@@ -3432,10 +3432,10 @@ namespace UnityEngine.InputSystem
                     ++m_Metrics.totalEventCount;
                     m_Metrics.totalEventBytes += (int)currentEventReadPtr->sizeInBytes;
 
-                    ProcessEvent(device, updateType, currentEventReadPtr, ref totalEventBytesProcessed);
+                    ProcessEvent(device, updateType, currentEventReadPtr, ref totalEventBytesProcessed, currentEventTimeInternal);
 
                     m_InputEventStream.Advance(leaveEventInBuffer: false);
-                    
+
                     // Discard events in case the maximum event bytes per update has been exceeded
                     if (AreMaximumEventBytesPerUpdateExceeded(totalEventBytesProcessed))
                         break;
@@ -3491,7 +3491,7 @@ namespace UnityEngine.InputSystem
         {
             var focusEventType = new FourCC(FocusConstants.kEventType);
             var possibleFocusEvent = m_InputEventStream.Peek();
-            
+
             if (possibleFocusEvent != null)
             {
                 if (possibleFocusEvent->type == focusEventType && !gameShouldGetInputRegardlessOfFocus)
@@ -3550,6 +3550,7 @@ namespace UnityEngine.InputSystem
             }
             return false;
         }
+
 #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -3662,7 +3663,7 @@ namespace UnityEngine.InputSystem
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private unsafe void ProcessEvent(InputDevice device, InputUpdateType updateType, InputEvent* currentEventReadPtr, ref uint totalEventBytesProcessed)
+        private unsafe void ProcessEvent(InputDevice device, InputUpdateType updateType, InputEvent* currentEventReadPtr, ref uint totalEventBytesProcessed, double currentEventTimeInternal)
         {
             var currentEventType = currentEventReadPtr->type;
 
@@ -3671,7 +3672,7 @@ namespace UnityEngine.InputSystem
             {
                 case StateEvent.Type:
                 case DeltaStateEvent.Type:
-                    ProcessStateEvent(device, updateType, currentEventReadPtr, ref totalEventBytesProcessed);
+                    ProcessStateEvent(device, updateType, currentEventReadPtr, ref totalEventBytesProcessed, currentEventTimeInternal);
                     break;
 
                 case TextEvent.Type:
@@ -3702,24 +3703,23 @@ namespace UnityEngine.InputSystem
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private unsafe void ProcessStateEvent(InputDevice device, InputUpdateType updateType, InputEvent* currentEventReadPtr, ref uint totalEventBytesProcessed)
+        private unsafe void ProcessStateEvent(InputDevice device, InputUpdateType updateType, InputEvent* currentEventReadPtr, ref uint totalEventBytesProcessed, double currentEventTimeInternal)
         {
             var eventPtr = new InputEventPtr(currentEventReadPtr);
 
-                            // Ignore the event if the last state update we received for the device was
-                            // newer than this state event is. We don't allow devices to go back in time.
-                            //
-                            // NOTE: We make an exception here for devices that implement IInputStateCallbackReceiver (such
-                            //       as Touchscreen). For devices that dynamically incorporate state it can be hard ensuring
-                            //       a global ordering of events as there may be multiple substreams (e.g. each individual touch)
-                            //       that are generated in the backend and would require considerable work to ensure monotonically
-                            //       increasing timestamps across all such streams.
-                            var deviceIsStateCallbackReceiver = device.hasStateCallbacks;
-                            if (currentEventTimeInternal < device.m_LastUpdateTimeInternal &&
-                                !(deviceIsStateCallbackReceiver && device.stateBlock.format != eventPtr.stateFormat))
-                            {
-                                #if UNITY_EDITOR
+            // Ignore the event if the last state update we received for the device was
+            // newer than this state event is. We don't allow devices to go back in time.
+            //
+            // NOTE: We make an exception here for devices that implement IInputStateCallbackReceiver (such
+            //       as Touchscreen). For devices that dynamically incorporate state it can be hard ensuring
+            //       a global ordering of events as there may be multiple substreams (e.g. each individual touch)
+            //       that are generated in the backend and would require considerable work to ensure monotonically
+            //       increasing timestamps across all such streams.
+            var deviceIsStateCallbackReceiver = device.hasStateCallbacks;
+            if (currentEventTimeInternal < device.m_LastUpdateTimeInternal &&
+                !(deviceIsStateCallbackReceiver && device.stateBlock.format != eventPtr.stateFormat))
             {
+#if UNITY_EDITOR
                 m_Diagnostics?.OnEventTimestampOutdated(new InputEventPtr(currentEventReadPtr), device);
 #elif UNITY_ANDROID
                 // Android keyboards can send events out of order: Holding down a key will send multiple
