@@ -120,6 +120,23 @@ internal class ArrayHelperTests
 
     [Test]
     [Category("Utilities")]
+    public void Utilities_HaveDuplicateReferences_DetectsDuplicatesInFullRange()
+    {
+        var withDup = new object[] { new object(), new object(), new object() };
+        withDup[2] = withDup[0]; // duplicate at 0 and 2
+        Assert.That(withDup.HaveDuplicateReferences(0, 3), Is.True);
+
+        var noDup = new object[] { new object(), new object(), new object() };
+        Assert.That(noDup.HaveDuplicateReferences(0, 3), Is.False);
+
+        // Regression test for ISXB-1792: inner loop was "n < count - i" so later pairs were never checked
+        var dupAtEnd = new object[] { new object(), new object(), new object(), new object() };
+        dupAtEnd[3] = dupAtEnd[2]; // duplicate at 2 and 3
+        Assert.That(dupAtEnd.HaveDuplicateReferences(0, 4), Is.True);
+    }
+
+    [Test]
+    [Category("Utilities")]
     public void Utilities_IndexOfPredicate__IsUsingPredicateForEqualityAndConstraintedByStartIndexAndCount()
     {
         var arr = new int[] { 0, 1, 2, 3, 4, 5 };
