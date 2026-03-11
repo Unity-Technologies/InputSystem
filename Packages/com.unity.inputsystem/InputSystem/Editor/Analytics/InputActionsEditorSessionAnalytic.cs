@@ -223,7 +223,7 @@ namespace UnityEngine.InputSystem.Editor
         private double m_FocusStart;
         private double m_SessionStart;
 
-        private static IInputRuntime runtime => InputSystem.s_Manager.m_Runtime;
+        private static IInputRuntime runtime => InputSystem.manager.runtime;
         private bool hasFocus => !double.IsNaN(m_FocusStart);
         private bool hasSession => !double.IsNaN(m_SessionStart);
         // Returns current time since startup. Note that IInputRuntime explicitly defines in interface that
