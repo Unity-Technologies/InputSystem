@@ -35,6 +35,7 @@ partial class CoreTests
     [TestCase(InputFeatureNames.kParanoidReadValueCachingChecks)]
     [TestCase(InputFeatureNames.kDisableUnityRemoteSupport)]
     [TestCase(InputFeatureNames.kRunPlayerUpdatesInEditMode)]
+    [TestCase(InputFeatureNames.kUseIMGUIEditorForAssets)]
     public void Settings_ShouldStoreSettingsAndFeatureFlags(string featureName)
     {
         using (var settings = Scoped.Object(InputSettings.CreateInstance<InputSettings>()))
@@ -5523,56 +5524,68 @@ partial class CoreTests
         [Preserve]
         public ModificationCases() {}
 
+        private static readonly Modification[] ModificationAppliesToSingleActionMap =
+        {
+            Modification.AddBinding,
+            Modification.RemoveBinding,
+            Modification.ModifyBinding,
+            Modification.ApplyBindingOverride,
+            Modification.AddAction,
+            Modification.RemoveAction,
+            Modification.ChangeBindingMask,
+            Modification.AddDevice,
+            Modification.RemoveDevice,
+            Modification.AddDeviceGlobally,
+            Modification.RemoveDeviceGlobally,
+            // Excludes: AddMap, RemoveMap
+        };
+
+        private static readonly Modification[] ModificationAppliesToSingletonAction =
+        {
+            Modification.AddBinding,
+            Modification.RemoveBinding,
+            Modification.ModifyBinding,
+            Modification.ApplyBindingOverride,
+            Modification.AddDeviceGlobally,
+            Modification.RemoveDeviceGlobally,
+        };
+
         public IEnumerator GetEnumerator()
         {
-            bool ModificationAppliesToSingletonAction(Modification modification)
-            {
-                switch (modification)
-                {
-                    case Modification.AddBinding:
-                    case Modification.RemoveBinding:
-                    case Modification.ModifyBinding:
-                    case Modification.ApplyBindingOverride:
-                    case Modification.AddDeviceGlobally:
-                    case Modification.RemoveDeviceGlobally:
-                        return true;
-                }
-                return false;
-            }
-
-            bool ModificationAppliesToSingleActionMap(Modification modification)
-            {
-                switch (modification)
-                {
-                    case Modification.AddMap:
-                    case Modification.RemoveMap:
-                        return false;
-                }
-                return true;
-            }
-
             // NOTE: This executes *outside* of our test fixture during test discovery.
 
-            // Creates a matrix of all permutations of Modifications combined with assets, maps, and singleton actions.
-            foreach (var func in new Func<IInputActionCollection2>[] { () => new DefaultInputActions().asset, CreateMap, CreateSingletonAction })
+            // We cannot directly create the InputAction objects within GetEnumerator() because the underlying
+            // asset object might be invalid by the time the tests are actually run.
+            //
+            // That is, NUnit TestCases are generated once when the Assembly is loaded and will persist until it's unloaded,
+            // meaning they'll never be recreated without a Domain Reload. However, since InputActionAsset is a ScriptableObject,
+            // it could be deleted or otherwise invalidated between test case creation and actual test execution.
+            //
+            // So, instead we'll create a delegate to create the Actions object as the parameter for each test case, allowing
+            // the test case to create an Actions object itself when it actually runs.
             {
+                var actionsFromAsset = new Func<IInputActionCollection2>(() => new DefaultInputActions().asset);
                 foreach (var value in Enum.GetValues(typeof(Modification)))
                 {
-                    var actions = func();
-                    if (actions is InputActionMap map)
-                    {
-                        if (map.m_SingletonAction != null)
-                        {
-                            if (!ModificationAppliesToSingletonAction((Modification)value))
-                                continue;
-                        }
-                        else if (!ModificationAppliesToSingleActionMap((Modification)value))
-                        {
-                            continue;
-                        }
-                    }
+                    yield return new TestCaseData(value, actionsFromAsset);
+                }
+            }
 
-                    yield return new TestCaseData(value, actions);
+            {
+                var actionMap = new Func<IInputActionCollection2>(CreateMap);
+                foreach (var value in Enum.GetValues(typeof(Modification)))
+                {
+                    if (ModificationAppliesToSingleActionMap.Contains((Modification)value))
+                        yield return new TestCaseData(value, actionMap);
+                }
+            }
+
+            {
+                var singletonMap = new Func<IInputActionCollection2>(CreateSingletonAction);
+                foreach (var value in Enum.GetValues(typeof(Modification)))
+                {
+                    if (ModificationAppliesToSingletonAction.Contains((Modification)value))
+                        yield return new TestCaseData(value, singletonMap);
                 }
             }
         }
@@ -5603,12 +5616,13 @@ partial class CoreTests
     [Test]
     [Category("Actions")]
     [TestCaseSource(typeof(ModificationCases))]
-    public void Actions_CanHandleModification(Modification modification, IInputActionCollection2 actions)
+    public void Actions_CanHandleModification(Modification modification, Func<IInputActionCollection2> getActions)
     {
         // Exclude project-wide actions from this test
         InputSystem.actions?.Disable();
         InputActionState.DestroyAllActionMapStates(); // Required for `onActionChange` to report correct number of changes
 
+        var actions = getActions();
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         if (modification == Modification.AddDevice || modification == Modification.RemoveDevice)
@@ -6338,12 +6352,12 @@ partial class CoreTests
         InputSystem.RegisterProcessor<ConstantFloat1TestProcessor>();
         Assert.That(InputSystem.TryGetProcessor("ConstantFloat1Test"), Is.Not.EqualTo(null));
 
-        bool hide = InputSystem.s_Manager.processors.ShouldHideInUI("ConstantFloat1Test");
+        bool hide = InputSystem.manager.processors.ShouldHideInUI("ConstantFloat1Test");
         Assert.That(hide, Is.EqualTo(false));
 
         InputSystem.RegisterProcessor<ConstantFloat1TestProcessor>();
         // Check we haven't caused this to alias with itself and cause it to be hidden in the UI
-        hide = InputSystem.s_Manager.processors.ShouldHideInUI("ConstantFloat1Test");
+        hide = InputSystem.manager.processors.ShouldHideInUI("ConstantFloat1Test");
         Assert.That(hide, Is.EqualTo(false));
     }
 
@@ -6979,7 +6993,7 @@ partial class CoreTests
     {
         InputSystem.RegisterInteraction<HoldInteraction>("TestTest");
 
-        Assert.That(InputSystem.s_Manager.interactions.aliases.Contains(new InternedString("TestTest")));
+        Assert.That(InputSystem.manager.interactions.aliases.Contains(new InternedString("TestTest")));
     }
 
     #endif // UNITY_EDITOR
@@ -9298,7 +9312,7 @@ partial class CoreTests
     {
         InputSystem.RegisterBindingComposite<Vector2Composite>("TestTest");
 
-        Assert.That(InputSystem.s_Manager.composites.aliases.Contains(new InternedString("TestTest")));
+        Assert.That(InputSystem.manager.composites.aliases.Contains(new InternedString("TestTest")));
     }
 
     #endif // UNITY_EDITOR
@@ -11606,7 +11620,7 @@ partial class CoreTests
 
         // Not the most elegant test as we reach into internals here but with the
         // current API, it's not possible to enumerate monitors from outside.
-        Assert.That(InputSystem.s_Manager.m_StateChangeMonitors,
+        Assert.That(InputSystem.manager.m_StateChangeMonitors,
             Has.All.Matches(
                 (InputManager.StateChangeMonitorsForDevice x) => x.memoryRegions.All(r => r.sizeInBits == 0)));
     }
@@ -12580,5 +12594,68 @@ partial class CoreTests
 
         Assert.That(map.enabled, Is.True);
         Assert.That(map.FindAction("MyAction", true).enabled, Is.True);
+    }
+
+    // Verifies that a multi-control-scheme project with a disconnected device that attempts to enable the associated
+    // actions via an action cancellation callback doesn't result in IndexOutOfBoundsException, and that the binding
+    // will be restored upon device reconnect. We use the same bindings as the associated ISXB issue to make sure
+    // we test the exact same scenario.
+    [Test, Description("https://jira.unity3d.com/browse/ISXB-1767")]
+    public void Actions_CanHandleDeviceDisconnectWithControlSchemesAndReconnect()
+    {
+        int started = 0;
+        int performed = 0;
+        int canceled = 0;
+
+        // Create an input action asset object.
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        // These control schemes are critical to this test. Without them the exception won't happen.
+        var keyboardScheme = actions.AddControlScheme("Keyboard").WithRequiredDevice<Keyboard>();
+        var gamepadScheme = actions.AddControlScheme("Gamepad").WithRequiredDevice<Gamepad>();
+
+        // Create a single action map since its sufficient for the scenario.
+        var map = actions.AddActionMap("map");
+
+        var action = map.AddAction(name: "Toggle", InputActionType.Button);
+        action.AddBinding("<Gamepad>/leftTrigger");
+        action.started += context => ++ started;
+        action.performed += context => ++ performed;
+        action.canceled += (context) =>
+        {
+            // In reported issue, map state is changed from cancellation callback.
+            map.Disable();
+            map.Enable();
+
+            // This is not part of the bug reported in ISXB-1767 but extends the test coverage since
+            // it makes sure Disable() is safe after logically skipped Enable().
+            map.Disable();
+            map.Enable();
+
+            ++canceled;
+        };
+
+        // Add a keyboard and a gamepad.
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        // Enable the map, press (and hold) the left trigger and assert action is firing.
+        map.Enable();
+        Press(gamepad.leftTrigger, queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(started, Is.EqualTo(1));
+
+        // Remove the gamepad device. This is consistent with event queue based removal (not kept on list).
+        InputSystem.RemoveDevice(gamepad);
+        InputSystem.Update();
+        Assert.That(canceled, Is.EqualTo(1));
+
+        // Reconnect the disconnected gamepad
+        InputSystem.AddDevice(gamepad);
+
+        // Interact again
+        Press(gamepad.leftTrigger, queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(started, Is.EqualTo(2));
     }
 }

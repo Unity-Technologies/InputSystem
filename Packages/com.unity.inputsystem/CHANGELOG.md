@@ -5,13 +5,29 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-Due to package verification, the latest version below is the unpublished version and the date is meaningless.
-however, it has to be formatted properly to pass verification tests.
-
 ## [Unreleased] - yyyy-mm-dd
+
+### Fixed
+
+- Fixed a `NullPointerReferenceException` thrown in `InputManagerStateMonitors.FireStateChangeNotifications` logging by adding validation [UUM-136095].
+- Fixed auto-save not working for Input System actions in Project Settings when both the Project Settings and Input System Actions windows were open [UUM-134035](https://jira.unity3d.com/browse/UUM-134035)
+- Improved New Input System warning dialog, Native Device Inputs Not Enabled [UUM-132151].
+- Fixed caching for InputControlPath display name [ISX-2501](https://jira.unity3d.com/browse/ISX-2501)
+- Fixed editor closing and not saving the input asset when clicking cancel in the dialog prompt [UUM-134748](https://jira.unity3d.com/browse/UUM-134748)
+- Fixed `buttonSouth` returning the state of the east button (and so on for all the compass named buttons) when using a Nintendo Switch Pro Controller on iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
+- Fixed `aButton` returning the state of the east button (and so on for all the letter named buttons) when using a Nintendo Switch Pro Controller on Standalone & iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
 
 ### Changed
 
+### Added
+
+- Support for entering the play mode with domain reload turned off (i.e. Faster Enter Playmode feature) [ISX-2411]
+
+## [1.19.0] - 2026-02-24
+
+### Changed
+
+- Reverted the deprecation of the USE_IMGUI_EDITOR_FOR_ASSETS feature option (ISX-2397).
 - Updated `m_ActionAssetInstanceID` in PlayerInputEditor.cs to use `EntityId` instead of `InstanceID`.
 - Consecutive wildcard characters ('*') used in input control-paths are now collapsed into a single wildcard when multiple consecutive wildcard characters are present.
 
@@ -21,8 +37,8 @@ however, it has to be formatted properly to pass verification tests.
 - Align title font size with toolbar style in `Input Action` window.
 - Updated Action Properties headers to use colors consistent with GameObject component headers.
 - Fixed misaligned Virtual Cursor when changing resolution [ISXB-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1119)
-- Fixed `buttonSouth` returning the state of the east button (and so on for all the compass named buttons) when using a Nintendo Switch Pro Controller on iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
-- Fixed `aButton` returning the state of the east button (and so on for all the letter named buttons) when using a Nintendo Switch Pro Controller on Standalone & iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
+- Fixed OnScreenStick ignoring dynamic-origin presses when isolated input actions were enabled. [ISXB-1027](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1027)
+- Fixed an issue where `IndexOutOfRangeException` was thrown from `InputManagerStateMonitors.AddStateChangeMonitor` when attempting to enable an action map from within an `InputAction.cancel` callback when using control schemes. (ISXB-1767).
 
 ### Added
 

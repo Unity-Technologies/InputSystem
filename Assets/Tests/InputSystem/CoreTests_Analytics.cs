@@ -409,7 +409,6 @@ partial class CoreTests
     {
         CollectAnalytics(InputBuildAnalytic.kEventName);
 
-        var storedSettings = InputSystem.s_Manager.settings;
         InputSettings defaultSettings = null;
 
         try
@@ -458,10 +457,10 @@ partial class CoreTests
             Assert.That(data.feature_paranoid_read_value_caching_checks_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kParanoidReadValueCachingChecks)));
             Assert.That(data.feature_disable_unity_remote_support, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport)));
             Assert.That(data.feature_run_player_updates_in_editmode, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode)));
+            Assert.That(data.feature_use_imgui_editor_for_assets, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)));
         }
         finally
         {
-            InputSystem.s_Manager.settings = storedSettings;
             if (defaultSettings != null)
                 Object.DestroyImmediate(defaultSettings);
         }
@@ -473,7 +472,6 @@ partial class CoreTests
     {
         CollectAnalytics(InputBuildAnalytic.kEventName);
 
-        var storedSettings = InputSystem.s_Manager.settings;
         InputSettings customSettings = null;
 
         try
@@ -506,6 +504,7 @@ partial class CoreTests
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kDisableUnityRemoteSupport, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
+            customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseIMGUIEditorForAssets, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, true);
 
             InputSystem.settings = customSettings;
@@ -552,10 +551,10 @@ partial class CoreTests
             Assert.That(data.feature_paranoid_read_value_caching_checks_enabled, Is.True);
             Assert.That(data.feature_disable_unity_remote_support, Is.True);
             Assert.That(data.feature_run_player_updates_in_editmode, Is.True);
+            Assert.That(data.feature_use_imgui_editor_for_assets, Is.True);
         }
         finally
         {
-            InputSystem.s_Manager.settings = storedSettings;
             if (customSettings != null)
                 Object.DestroyImmediate(customSettings);
         }
