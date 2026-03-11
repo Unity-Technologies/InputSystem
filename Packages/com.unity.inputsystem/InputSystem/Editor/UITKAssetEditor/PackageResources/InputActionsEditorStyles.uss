@@ -138,6 +138,11 @@
 .name-and-parameters-list-foldout {
 }
 
+/* ISXB-1782: Hide expand arrow when processor/interaction has no properties (e.g. Invert) */
+.name-and-parameters-list-foldout--no-content .unity-foldout__checkmark {
+    display: none;
+}
+
 .name-and-parameters-list-view .name-and-parameters-list-foldout-button {
     width: 12px;
     height: 12px;

@@ -170,9 +170,19 @@ namespace UnityEngine.InputSystem.Editor
 
             var foldout = container.Q<Foldout>("Foldout");
             foldout.text = parameterListView.name;
-            parameterListView.OnDrawVisualElements(foldout);
 
-            foldout.Add(new IMGUIContainer(parameterListView.OnGUI));
+            if (parameterListView.hasUIToShow)
+            {
+                parameterListView.OnDrawVisualElements(foldout);
+                foldout.Add(new IMGUIContainer(parameterListView.OnGUI));
+            }
+            else
+            {
+                // ISXB-1782: No expandable foldout when processor/interaction has no properties (e.g. Invert)
+                foldout.value = false;
+                foldout.SetEnabled(false);
+                foldout.AddToClassList("name-and-parameters-list-foldout--no-content");
+            }
         }
     }
 }
