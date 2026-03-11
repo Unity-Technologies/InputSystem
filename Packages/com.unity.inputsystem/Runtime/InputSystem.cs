@@ -3748,8 +3748,9 @@ namespace UnityEngine.InputSystem
 
             EnableActions();
         }
+
 #endif
-        
+
 #if UNITY_INCLUDE_TESTS
         //
         // We cannot define UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS within the Test-Framework assembly, and
@@ -3772,7 +3773,7 @@ namespace UnityEngine.InputSystem
         }
 
 #endif // UNITY_INCLUDE_TESTS
-            
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void RunInitialUpdate()
         {

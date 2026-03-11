@@ -1017,7 +1017,7 @@ namespace UnityEngine.InputSystem
         }
 
         #endif
-        
+
         private static void CheckValidity(InputDevice device, InputControl control)
         {
             if (!device.added)
