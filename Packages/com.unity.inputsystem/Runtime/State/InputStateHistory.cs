@@ -128,7 +128,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </remarks>
         public InputUpdateType updateMask
         {
-            get => m_UpdateMask ?? InputSystem.s_Manager.updateMask & ~InputUpdateType.Editor;
+            get => m_UpdateMask ?? InputSystem.manager.updateMask & ~InputUpdateType.Editor;
             set
             {
                 if (value == InputUpdateType.None)

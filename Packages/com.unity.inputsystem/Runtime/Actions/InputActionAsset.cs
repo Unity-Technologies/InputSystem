@@ -894,7 +894,11 @@ namespace UnityEngine.InputSystem
         internal void MarkAsDirty()
         {
 #if UNITY_EDITOR
+//<<<<<<< HEAD:Packages/com.unity.inputsystem/Runtime/Actions/InputActionAsset.cs
             s_OnMarkAsDirty?.Invoke(this);
+//=======
+//            DirtyAssetTracker.TrackDirtyInputActionAsset(this);
+//>>>>>>> develop:Packages/com.unity.inputsystem/InputSystem/Actions/InputActionAsset.cs
 #endif
         }
 

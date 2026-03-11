@@ -35,7 +35,7 @@
                             <ui:Button display-tooltip-when-elided="true" name="add-new-action-button" style="align-items: auto;"/>
                         </ui:VisualElement>
                         <ui:VisualElement name="body">
-                            <ui:TreeView view-data-key="unity-tree-view" focusable="true" name="actions-tree-view" show-border="false" reorderable="true" show-alternating-row-backgrounds="None" fixed-item-height="20"/>
+                            <ui:TreeView view-data-key="unity-tree-view" focusable="true" name="actions-tree-view" show-border="false" reorderable="true" show-alternating-row-backgrounds="None" />
                         </ui:VisualElement>
                         <ui:VisualElement name="rclick-area-to-add-new-action" style="flex-direction: column; flex-grow: 1;"/>
                     </ui:VisualElement>
