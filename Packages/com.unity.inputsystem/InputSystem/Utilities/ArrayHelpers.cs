@@ -120,7 +120,7 @@ namespace UnityEngine.InputSystem.Utilities
             for (var i = 0; i < count; ++i)
             {
                 var element = first[i];
-                for (var n = i + 1; n < count - i; ++n)
+                for (var n = i + 1; n < count; ++n)
                 {
                     if (ReferenceEquals(element, first[n]))
                         return true;
@@ -552,7 +552,7 @@ namespace UnityEngine.InputSystem.Utilities
             for (var i = 0; i < second.Length; ++i)
             {
                 var secondValue = second[i];
-                if (!merged.Exists(x => comparer.Equals(secondValue)))
+                if (!merged.Exists(x => comparer.Equals(x, secondValue)))
                 {
                     merged.Add(secondValue);
                 }
