@@ -1564,7 +1564,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
             [SerializeField] internal int m_DeviceId;
             [SerializeField] internal string m_Layout;
-            [SerializeField] internal FourCC m_StateFormat;
+            [NonSerialized] internal FourCC m_StateFormat;
             [SerializeField] internal int m_StateSizeInBytes;
             [SerializeField] internal string m_FullLayoutJson;
         }

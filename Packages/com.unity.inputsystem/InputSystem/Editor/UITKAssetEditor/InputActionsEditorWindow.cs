@@ -19,7 +19,7 @@ namespace UnityEngine.InputSystem.Editor
         // For UI testing purpose
         internal InputActionAsset currentAssetInEditor => m_AssetObjectForEditing;
         [SerializeField] private InputActionAsset m_AssetObjectForEditing;
-        [SerializeField] private InputActionsEditorState m_State;
+        [NonSerialized] private InputActionsEditorState m_State;
         [SerializeField] private string m_AssetGUID;
 
         private string m_AssetJson;

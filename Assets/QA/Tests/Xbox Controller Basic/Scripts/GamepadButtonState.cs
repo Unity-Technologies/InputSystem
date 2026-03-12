@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -6,7 +7,7 @@ using UnityEngine.InputSystem.XInput;
 
 public class GamepadButtonState : MonoBehaviour
 {
-    public ButtonControl buttonToTrack;
+    [NonSerialized] public ButtonControl buttonToTrack;
 
     [Header("If left empty, will try to auto populate with GetComponent<Image>()")]
     public Image stateImage;
