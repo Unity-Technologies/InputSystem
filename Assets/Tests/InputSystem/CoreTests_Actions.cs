@@ -631,7 +631,7 @@ partial class CoreTests
 
         using (var trace = new InputActionTrace(action))
         {
-            ScheduleFocusEvent(false);
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
             InputSystem.Update(InputUpdateType.Dynamic);
 
             Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
@@ -663,13 +663,13 @@ partial class CoreTests
             // could just rely on order of event. Which means this test work for a fixed timestamp and it should
             // changed accordingly.
             currentTime += 1.0f;
-            ScheduleFocusEvent(false);
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
             currentTime += 1.0f;
             // Queuing an event like it would be in the editor when the GameView is out of focus.
             Set(mouse.position, new Vector2(0.234f, 0.345f) , queueEventOnly: true);
             currentTime += 1.0f;
             // Gaining focus like it would happen in the editor when the GameView regains focus.
-            ScheduleFocusEvent(true);
+            ScheduleFocusChangedEvent(applicationHasFocus: true);
             currentTime += 1.0f;
             // This emulates a device sync that happens when the player regains focus through an IOCTL command.
             // That's why it also has it's time incremented.
@@ -722,7 +722,7 @@ partial class CoreTests
 
             trace.Clear();
 
-            ScheduleFocusEvent(false);
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
             InputSystem.Update(InputUpdateType.Dynamic);
             currentTime = 10;
 
@@ -730,7 +730,7 @@ partial class CoreTests
 
             Assert.That(trace, Is.Empty);
 
-            ScheduleFocusEvent(true);
+            ScheduleFocusChangedEvent(applicationHasFocus: true);
             InputSystem.Update(InputUpdateType.Dynamic);
 
             actions = trace.ToArray();

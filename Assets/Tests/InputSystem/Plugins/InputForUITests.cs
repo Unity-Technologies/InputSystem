@@ -715,11 +715,11 @@ public class InputForUITests : InputTestFixture
         currentTime += 1.0f;
         Update();
         currentTime += 1.0f;
-        ScheduleFocusEvent(false);
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
         currentTime += 1.0f;
         Set(mouse.position, outOfFocusPosition , queueEventOnly: true);
         currentTime += 1.0f;
-        ScheduleFocusEvent(true);
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
         currentTime += 1.0f;
         Set(mouse.position, focusPosition, queueEventOnly: true);
         currentTime += 1.0f;

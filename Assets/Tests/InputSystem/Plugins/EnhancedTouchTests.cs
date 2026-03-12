@@ -158,7 +158,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
 
         // And make sure we're not seeing the data in the editor.
-        ScheduleFocusEvent(false);
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
         InputSystem.Update(InputUpdateType.Editor);
 
         Assert.That(Touch.activeTouches, Is.Empty);
@@ -170,7 +170,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touch.activeTouches[0].touchId, Is.EqualTo(2));
 
         // Switch back to player.
-        ScheduleFocusEvent(true);
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
 
         // Explicitly schedule the player's configured update type rather than relying on the default.
         // Without explicit scheduling, defaultUpdateType would be Editor (since focus has not yet been
@@ -1176,7 +1176,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         Assert.That(Touch.activeTouches, Has.Count.EqualTo(1));
         Assert.That(Touch.activeTouches[0].phase, Is.EqualTo(TouchPhase.Began));
 
-        ScheduleFocusEvent(false);
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
 
         if (runInBackground)
         {
@@ -1187,7 +1187,7 @@ internal class EnhancedTouchTests : CoreTestsFixture
         else
         {
             // When not running in the background, the same thing happens but only on focus gain.
-            ScheduleFocusEvent(true);
+            ScheduleFocusChangedEvent(applicationHasFocus: true);
             InputSystem.Update();
         }
 

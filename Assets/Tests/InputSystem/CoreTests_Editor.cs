@@ -2720,7 +2720,7 @@ partial class CoreTests
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        ScheduleFocusEvent(false);
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(keyboard.enabled, Is.True);
@@ -3017,7 +3017,7 @@ partial class CoreTests
         Set(mouse.position, new Vector2(123, 234));
         Press(gamepad.buttonSouth);
 
-        ScheduleFocusEvent(false);
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(gamepad.enabled, Is.False);

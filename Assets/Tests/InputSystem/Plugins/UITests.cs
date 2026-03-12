@@ -4128,7 +4128,7 @@ internal partial class UITests : CoreTestsFixture
 
         scene.leftChildReceiver.events.Clear();
 
-        ScheduleFocusEvent(false);
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
         InputSystem.Update(InputUpdateType.Dynamic);
 
         if (canRunInBackground)
@@ -4141,7 +4141,7 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.eventSystem.hasFocus, Is.False);
         Assert.That(clicked, Is.False);
 
-        ScheduleFocusEvent(true);
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
         InputSystem.Update(InputUpdateType.Dynamic);
 
         scene.eventSystem.SendMessage("OnApplicationFocus", true);
@@ -4172,12 +4172,12 @@ internal partial class UITests : CoreTestsFixture
 
         // Ensure that losing and regaining focus doesn't cause the next click to be ignored
         clicked = false;
-        ScheduleFocusEvent(false);
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
         InputSystem.Update(InputUpdateType.Dynamic);
         scene.eventSystem.SendMessage("OnApplicationFocus", false);
         yield return null;
 
-        ScheduleFocusEvent(true);
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
         InputSystem.Update(InputUpdateType.Dynamic);
         scene.eventSystem.SendMessage("OnApplicationFocus", true);
         yield return null;

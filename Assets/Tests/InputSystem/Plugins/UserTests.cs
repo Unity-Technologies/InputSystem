@@ -1281,7 +1281,7 @@ internal class UserTests : CoreTestsFixture
         //
         // Proper fix: Remove defaultUpdateType and split editor/player loops, or always specify the
         // update type explicitly when calling Update().
-        ScheduleFocusEvent(false);
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
         InputSystem.Update(InputUpdateType.Dynamic);
         Press(gamepad.buttonSouth);
 

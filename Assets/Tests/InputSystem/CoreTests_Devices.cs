@@ -1523,7 +1523,7 @@ partial class CoreTests
         Assert.That(device, Is.Not.Null);
 
         // Loose focus.
-        ScheduleFocusEvent(false);
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
         InputSystem.Update();
 
         // Disconnect.
@@ -1535,7 +1535,7 @@ partial class CoreTests
         Assert.That(InputSystem.devices, Is.Empty);
 
         // Regain focus.
-        ScheduleFocusEvent(true);
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
         InputSystem.Update();
 
         var newDeviceId = runtime.ReportNewInputDevice(deviceDesc);
@@ -4654,7 +4654,7 @@ partial class CoreTests
         }
 
         // Lose focus.
-        ScheduleFocusEvent(false);
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(sensor.enabled, Is.False);
@@ -5076,7 +5076,7 @@ partial class CoreTests
         commands.Clear();
 
         // Regain focus.
-        ScheduleFocusEvent(true);
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
         InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(sensor.enabled, Is.False);
@@ -5324,7 +5324,7 @@ partial class CoreTests
         Assert.That(performedCount, Is.EqualTo(1));
 
         // Lose focus
-        ScheduleFocusEvent(false);
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
 #if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
         // in the new system, we have to process the focus event to update the state of the devices.
         // In the old system, this wouldn't work and would make the test fal
@@ -5341,7 +5341,7 @@ partial class CoreTests
         InputSystem.Update();
 
         // Gain focus
-        ScheduleFocusEvent(true);
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
 
         // Run update to try process events accordingly once focus is gained
         InputSystem.Update();
