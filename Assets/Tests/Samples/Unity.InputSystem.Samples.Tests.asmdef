@@ -1,5 +1,6 @@
 {
     "name": "Unity.InputSystem.Samples.Tests",
+    "rootNamespace": "",
     "references": [
         "GUID:75469ad4d38634e559750d17036d5f7c",
         "GUID:dc04f38471c3a459fb4d31124ee9127d",
@@ -8,8 +9,7 @@
         "GUID:0acc523941302664db1f4e527237feb3",
         "GUID:043547d79c83ab74e9bcfef914059964",
         "GUID:157556569ac93a94fb6a763f50476339",
-        "GUID:813ed4fded4e24cc69d83a9178f8fede",
-        "Unity.InputSystem.TestFramework"
+        "GUID:813ed4fded4e24cc69d83a9178f8fede"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -22,5 +22,6 @@
     "defineConstraints": [
         "UNITY_INCLUDE_TESTS"
     ],
-    "versionDefines": []
+    "versionDefines": [],
+    "noEngineReferences": false
 }
