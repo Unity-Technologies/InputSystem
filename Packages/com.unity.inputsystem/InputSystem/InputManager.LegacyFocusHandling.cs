@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem
         None = 0,
 
         /// <summary>
-        /// The application has focus.
+        /// In editor this means the GameView has focus. In a built player this means the player has focus.
         /// </summary>
         ApplicationFocus = (1 << 0)
     };

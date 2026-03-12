@@ -508,7 +508,7 @@ namespace UnityEngine.InputSystem
 #else
             true;
 #endif
-        private bool applicationHasFocus => (focusState & FocusFlags.ApplicationFocus) != 0;
+        private bool applicationHasFocus => (focusState & FocusFlags.ApplicationFocus) != FocusFlags.None;
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
@@ -1973,10 +1973,12 @@ namespace UnityEngine.InputSystem
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
 #if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-            m_FocusState = FocusFlags.None;
+            m_FocusState = Application.isFocused
+                ? m_FocusState | FocusFlags.ApplicationFocus
+                : m_FocusState & ~FocusFlags.ApplicationFocus;
 #endif
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             m_EditorIsActive = true;
             m_UpdateMask |= InputUpdateType.Editor;
             #endif
@@ -2221,7 +2223,7 @@ namespace UnityEngine.InputSystem
 #endif
             m_Runtime.pollingFrequency = pollingFrequency;
 
-            focusState = Application.isFocused
+            focusState = m_Runtime.isPlayerFocused
                 ? focusState | FocusFlags.ApplicationFocus
                 : focusState & ~FocusFlags.ApplicationFocus;
 
@@ -2380,7 +2382,7 @@ namespace UnityEngine.InputSystem
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
 #if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-        private FocusFlags m_FocusState;
+        private FocusFlags m_FocusState = FocusFlags.ApplicationFocus;
         private bool m_DiscardOutOfFocusEvents;
         private double m_FocusRegainedTime;
 #endif
@@ -2829,13 +2831,13 @@ namespace UnityEngine.InputSystem
 
         private void RestoreDevicesAfterDomainReloadIfNecessary()
         {
-            #if UNITY_EDITOR && !ENABLE_CORECLR
+#if UNITY_EDITOR && !ENABLE_CORECLR
             if (m_SavedDeviceStates != null)
                 RestoreDevicesAfterDomainReload();
 #endif
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         private void SyncAllDevicesWhenEditorIsActivated()
         {
             var isActive = m_Runtime.isEditorActive;
@@ -2868,7 +2870,7 @@ namespace UnityEngine.InputSystem
             SyncAllDevices();
         }
 
-        #endif // UNITY_EDITOR
+#endif // UNITY_EDITOR
 
         private void WarnAboutDevicesFailingToRecreateAfterDomainReload()
         {
@@ -2888,7 +2890,7 @@ namespace UnityEngine.InputSystem
             // At this point, we throw the device states away and forget about
             // what we had before the domain reload.
             m_SavedDeviceStates = null;
-            #endif // UNITY_EDITOR
+#endif // UNITY_EDITOR
         }
 
         private void OnBeforeUpdate(InputUpdateType updateType)
@@ -3105,7 +3107,7 @@ namespace UnityEngine.InputSystem
                 device.canRunInBackground;
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         internal void LeavePlayMode()
         {
             // Reenable all devices and reset their play mode state.
@@ -3133,7 +3135,7 @@ namespace UnityEngine.InputSystem
             InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdate.s_LatestUpdateType);
         }
 
-        #endif // UNITY_EDITOR
+#endif // UNITY_EDITOR
 
         internal bool ShouldRunUpdate(InputUpdateType updateType)
         {
@@ -3144,7 +3146,7 @@ namespace UnityEngine.InputSystem
 
             var mask = m_UpdateMask;
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             // If the player isn't running, the only thing we run is editor updates, except if
             // explicitly overriden via `runUpdatesInEditMode`.
             // NOTE: This means that in edit mode (outside of play mode) we *never* switch to player
@@ -3153,7 +3155,7 @@ namespace UnityEngine.InputSystem
             //       it will see gamepad inputs going to the editor and respond to them.
             if (!gameIsPlaying && updateType != InputUpdateType.Editor && !runPlayerUpdatesInEditMode)
                 return false;
-            #endif // UNITY_EDITOR
+#endif // UNITY_EDITOR
 
             return (updateType & mask) != 0;
         }
@@ -3314,7 +3316,7 @@ namespace UnityEngine.InputSystem
                     }
 #endif
 #else
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                     if (dropStatusEvents)
                     {
                         // If the type here is a status event, ask advance not to leave the event in the buffer.  Otherwise, leave it there.
@@ -3332,7 +3334,7 @@ namespace UnityEngine.InputSystem
                         m_InputEventStream.Advance(false);
                         continue;
                     }
-                    #endif
+#endif
 #endif
                     // If we're timeslicing, check if the event time is within limits.
                     if (timesliceEvents && currentEventTimeInternal >= currentTime)
@@ -3346,7 +3348,7 @@ namespace UnityEngine.InputSystem
                         device = TryGetDeviceById(currentEventReadPtr->deviceId);
                     if (device == null && currentEventType != focusEventType)
                     {
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                         ////TODO: see if this is a device we haven't created and if so, just ignore
                         m_Diagnostics?.OnCannotFindDeviceForEvent(new InputEventPtr(currentEventReadPtr));
 #endif
@@ -3355,11 +3357,11 @@ namespace UnityEngine.InputSystem
                         continue;
                     }
 
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                     // In the editor, route keyboard/pointer events between Editor/Player updates if required.
                     if (ShouldDeferEventBetweenEditorAndPlayerUpdates(updateType, currentEventType, device))
                         continue;
-                    #endif // UNITY_EDITOR
+#endif // UNITY_EDITOR
 
                     // If device is disabled, we let the event through only in certain cases.
                     // Removal and configuration change events should always be processed.
@@ -3369,12 +3371,12 @@ namespace UnityEngine.InputSystem
                         (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime |
                                                  InputDevice.DeviceFlags.DisabledWhileInBackground)) != 0)
                     {
-                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                         // If the device is disabled in the backend, getting events for them
                         // is something that indicates a problem in the backend so diagnose.
                         if ((device.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime) != 0)
                             m_Diagnostics?.OnEventForDisabledDevice(currentEventReadPtr, device);
-                    #endif
+#endif
 
                         m_InputEventStream.Advance(false);
                         continue;
@@ -3390,16 +3392,16 @@ namespace UnityEngine.InputSystem
                     // Give the device a chance to do something with data before we propagate it to event listeners.
                     if (device != null && device.hasEventPreProcessor)
                     {
-                        #if UNITY_EDITOR
+#if UNITY_EDITOR
                         var eventSizeBeforePreProcessor = currentEventReadPtr->sizeInBytes;
-                        #endif
+#endif
                         var shouldProcess = ((IEventPreProcessor)device).PreProcessEvent(currentEventReadPtr);
-                        #if UNITY_EDITOR
+#if UNITY_EDITOR
                         if (currentEventReadPtr->sizeInBytes > eventSizeBeforePreProcessor)
                         {
                             throw new AccessViolationException($"'{device}'.PreProcessEvent tries to grow an event from {eventSizeBeforePreProcessor} bytes to {currentEventReadPtr->sizeInBytes} bytes, this will potentially corrupt events after the current event and/or cause out-of-bounds memory access.");
                         }
-                        #endif
+#endif
                         if (!shouldProcess)
                         {
                             // Skip event if PreProcessEvent considers it to be irrelevant.
@@ -3750,9 +3752,9 @@ namespace UnityEngine.InputSystem
                 // If the state format doesn't match, ignore the event.
                 if (device.stateBlock.format != eventPtr.stateFormat)
                 {
-                                    #if UNITY_EDITOR
+#if UNITY_EDITOR
                     m_Diagnostics?.OnEventFormatMismatch(currentEventReadPtr, device);
-                                    #endif
+#endif
                     return;
                 }
 
@@ -3767,9 +3769,9 @@ namespace UnityEngine.InputSystem
             //       Only events should. If running play mode updates in editor, we want to defer to the play mode
             //       callbacks to set the last update time to avoid dropping events only processed by the editor state.
             if (device.m_LastUpdateTimeInternal <= eventPtr.internalTime
-                            #if UNITY_EDITOR
+#if UNITY_EDITOR
                 && !(updateType == InputUpdateType.Editor && runPlayerUpdatesInEditMode)
-                            #endif
+#endif
             )
                 device.m_LastUpdateTimeInternal = eventPtr.internalTime;
 
@@ -4382,7 +4384,7 @@ namespace UnityEngine.InputSystem
                 return false;
             }
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             ////REVIEW: should this use the editor update ticks as quasi-frame-boundaries?
             // Updates go to the editor only if the game isn't playing or does not have focus.
             // Otherwise we fall through to the logic that flips for the *next* dynamic and
@@ -4396,7 +4398,7 @@ namespace UnityEngine.InputSystem
                 m_StateBuffers.m_EditorStateBuffers.SwapBuffers(device.m_DeviceIndex);
                 return true;
             }
-            #endif
+#endif
 
             // Flip buffers if we haven't already for this frame.
             if (device.m_CurrentUpdateStepCount != InputUpdate.s_UpdateStepCount)
@@ -4414,7 +4416,7 @@ namespace UnityEngine.InputSystem
 
         // Stuff everything that we want to survive a domain reload into
         // a m_SerializedState.
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         [Serializable]
         internal struct DeviceState
         {

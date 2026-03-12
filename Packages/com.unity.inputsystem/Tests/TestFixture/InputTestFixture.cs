@@ -844,6 +844,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Utility function for manually scheduling an InputFocusEvent.
         /// This is useful for testing how the system reacts to focus changes.
+        /// <param name = "focus">The focus state to be scheduled.</param>
         /// </summary>
         public unsafe void ScheduleFocusEvent(bool focus)
         {

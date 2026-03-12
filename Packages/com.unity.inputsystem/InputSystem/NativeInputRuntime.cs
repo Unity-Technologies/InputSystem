@@ -234,7 +234,7 @@ namespace UnityEngine.InputSystem.LowLevel
             get => m_FocusState;
             set => m_FocusState = value;
         }
-        public bool isPlayerFocused => (m_FocusState & FocusFlags.ApplicationFocus) != 0;
+        public bool isPlayerFocused => (m_FocusState & FocusFlags.ApplicationFocus) != FocusFlags.None;
 
         public float pollingFrequency
         {

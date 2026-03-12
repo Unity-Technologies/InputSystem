@@ -1268,14 +1268,19 @@ internal class UserTests : CoreTestsFixture
         ++InputUser.listenForUnpairedDeviceActivity;
         InputUser.onUnpairedDeviceUsed += (control, eventPtr) => Assert.Fail("Should not react!");
 
-        // We now have to run a dynamic update before the press, to make sure the focus state is up to date.
-        // This is due to scheduled focus events are not being processed in pre-update, and not running an update before the press would result in the incorrect state.
-        // When calling an empty Update(), it will use the default defaultUpdateType to determine which update type to use.
-        // However in pre-update the focus will not have switched to false yet if not running a dynamic update before, so the focus check in defaultUpdateType is no longer correct.
-        // which would cause it to schedule a dynamic update instead. We solve this by first processing the focus event before pressing the button,
-        // which will then make it correctly swap to an editor update type when doing the button press.
-        // Another way to make this test pass, is to queue the button press and then explicitly call an editor update and process both events
-        // The way to solve this is to remove defaultUpdateType and split the editor/player loops or to make sure we do not call any Update() without update type, so we do not use defaultUpdateType.
+        // Process the focus event before pressing the button to ensure correct update type selection.
+        //
+        // Issue: When Update() is called without an update type, it uses defaultUpdateType which checks
+        // focus state. However, scheduled focus events aren't processed until an update runs, so the
+        // focus check sees stale state and selects the wrong update type.
+        //
+        // Workaround: Run a dynamic update first to process the focus event, ensuring the subsequent
+        // button press correctly uses editor update type.
+        //
+        // Alternative: Queue the button press and explicitly call an editor update to process both events.
+        //
+        // Proper fix: Remove defaultUpdateType and split editor/player loops, or always specify the
+        // update type explicitly when calling Update().
         ScheduleFocusEvent(false);
         InputSystem.Update(InputUpdateType.Dynamic);
         Press(gamepad.buttonSouth);

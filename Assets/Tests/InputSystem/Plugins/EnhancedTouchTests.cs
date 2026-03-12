@@ -172,11 +172,11 @@ internal class EnhancedTouchTests : CoreTestsFixture
         // Switch back to player.
         ScheduleFocusEvent(true);
 
-        // We have to schedule the specific update type that the player is configured to process events in,
-        // otherwise we will end up using defaultUpdateType, which due to the fact we do not have focus in pre-update yet,
-        // will be Editor, which means that we will end up swapping buffers to the editor buffer, and retreiving the wrong active touch
-        // The only way to properly fix this, is to remove defaultUpdateType, and split the player/editor update loops into separate methods, which would be a breaking change.
-        // Until then, we have to make sure to schedule the correct update type here.
+        // Explicitly schedule the player's configured update type rather than relying on the default.
+        // Without explicit scheduling, defaultUpdateType would be Editor (since focus has not yet been
+        // gained during update), causing the editor buffer to be used instead of the player buffer,
+        // which would retrieve the wrong active touch. A proper fix would require removing defaultUpdateType
+        // and splitting player/editor update loops into separate methods.
         switch (updateMode)
         {
             case InputSettings.UpdateMode.ProcessEventsInDynamicUpdate:
