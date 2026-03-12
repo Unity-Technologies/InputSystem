@@ -265,7 +265,7 @@ namespace UnityEngine.InputSystem.Editor
                 InputSystem.s_Manager.m_SavedDeviceStates = s_StateManager.systemState.managerState.devices;
                 InputSystem.s_Manager.m_SavedAvailableDevices = s_StateManager.systemState.managerState.availableDevices;
 
-                InputEditorUserSettings.s_Settings = s_StateManager.systemState.userSettings;
+                // InputEditorUserSettings.s_Settings = s_StateManager.systemState.userSettings;
 
                 s_StateManager.systemState = new InputSystemState();
             }

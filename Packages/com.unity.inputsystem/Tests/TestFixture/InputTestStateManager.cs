@@ -22,10 +22,13 @@ namespace UnityEngine.InputSystem
     {
         static readonly ProfilerMarker k_InputResetMarker = new ProfilerMarker("InputSystem.Reset");
 
+        #if UNITY_EDITOR
         public InputSystemState GetSavedState()
         {
             return m_SavedStateStack.Peek();
         }
+
+        #endif
 
         /// <summary>
         /// Push the current state of the input system onto a stack and
@@ -49,7 +52,7 @@ namespace UnityEngine.InputSystem
                 managerState = InputSystem.manager.SaveState(),
                 remotingState = InputSystem.remoting?.SaveState() ?? new InputRemoting.SerializedState(),
 #if UNITY_EDITOR
-                userSettings = InputEditorUserSettings.s_Settings,
+                // userSettings = InputEditorUserSettings.s_Settings,
                 systemObject = JsonUtility.ToJson(InputSystemEditorInitializer.stateManager),
 #endif
                 inputActionState = InputActionState.SaveAndResetState(),
@@ -138,7 +141,7 @@ namespace UnityEngine.InputSystem
             else InputSystem.manager.ApplySettings();
 
 #if UNITY_EDITOR
-            InputEditorUserSettings.s_Settings = state.userSettings;
+            // InputEditorUserSettings.s_Settings = state.userSettings;
             JsonUtility.FromJsonOverwrite(state.systemObject, InputSystemEditorInitializer.stateManager);
 #endif
 

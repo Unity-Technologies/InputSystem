@@ -8,31 +8,6 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-    /// <summary>
-    /// Snapshot of the state used by the input system.
-    /// </summary>
-    /// <remarks>
-    /// Can be taken across domain reloads.
-    /// </remarks>
-    [Serializable]
-    internal struct InputSystemState
-    {
-        [NonSerialized] public InputManager manager;
-        [NonSerialized] public InputRemoting remote;
-        [SerializeField] public RemoteInputPlayerConnection remoteConnection;
-        [SerializeField] public InputManager.SerializedState managerState;
-        [SerializeField] public InputRemoting.SerializedState remotingState;
-#if UNITY_EDITOR
-        [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
-        [SerializeField] public string systemObject;
-#endif
-        ////TODO: make these saved states capable of surviving domain reloads
-        [NonSerialized] public ISavedState inputActionState;
-        [NonSerialized] public ISavedState touchState;
-        [NonSerialized] public ISavedState inputUserState;
-    }
-
     // ISX-1860 - #ifdef out Domain Reload specific functionality from CoreCLR
 #if UNITY_EDITOR
     /// <summary>
@@ -95,7 +70,8 @@ namespace UnityEngine.InputSystem
             }
 
             systemState.remoteConnection = InputSystem.remoteConnection;
-            systemState.userSettings = InputEditorUserSettings.s_Settings;
+            //TODO: fix
+            // systemState.userSettings = InputEditorUserSettings.s_Settings;
         }
 
         public void OnAfterDeserialize()
@@ -103,5 +79,4 @@ namespace UnityEngine.InputSystem
         }
     }
 #endif // UNITY_EDITOR
-#endif // UNITY_EDITOR || DEVELOPMENT_BUILD
 }

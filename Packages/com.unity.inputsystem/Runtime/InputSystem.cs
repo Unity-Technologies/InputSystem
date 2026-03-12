@@ -3402,9 +3402,9 @@ namespace UnityEngine.InputSystem
         {
             #if UNITY_INCLUDE_TESTS
             return false; // Don't remote while running tests.
-            #endif
-
+            #else
             return true;
+            #endif
         }
 
         #endif //!UNITY_EDITOR
@@ -3436,9 +3436,10 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal static Action<bool> s_EditorGlobalInitializeCallback;
 
-        internal static Func<bool> s_EditorIsDomainReloadDisabledCallback;
 
         #endif
+
+        internal static Func<bool> s_EditorIsDomainReloadDisabledCallback;
 
         private static void GlobalInitialize(bool calledFromCtor)
         {
