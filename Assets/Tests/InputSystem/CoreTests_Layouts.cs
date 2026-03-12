@@ -516,14 +516,21 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(json);
 
-        var matchedLayout = InputSystem.TryFindMatchingLayout(
-            new InputDeviceDescription
-            {
-                deviceClass = "Gamepad",
-                capabilities = @"{""vendorId"":""9999""}"
-            });
+        try
+        {
+            var matchedLayout = InputSystem.TryFindMatchingLayout(
+                new InputDeviceDescription
+                {
+                    deviceClass = "Gamepad",
+                    capabilities = @"{""vendorId"":""9999""}"
+                });
 
-        Assert.That(matchedLayout, Is.EqualTo("CapabilityTestLayout"));
+            Assert.That(matchedLayout, Is.EqualTo("CapabilityTestLayout"));
+        }
+        finally
+        {
+            InputSystem.RemoveLayout("CapabilityTestLayout");
+        }
     }
 
     [Test]
