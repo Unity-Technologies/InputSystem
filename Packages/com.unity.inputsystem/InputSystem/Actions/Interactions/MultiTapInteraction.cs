@@ -222,6 +222,8 @@ namespace UnityEngine.InputSystem.Interactions
             m_TapDelaySetting.OnDrawVisualElements(root, onChangedCallback);
             m_TapTimeSetting.OnDrawVisualElements(root, onChangedCallback);
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
+            CustomOrDefaultSetting.AddSharedDefaultSettingsFooter(root,
+                new[] { m_TapTimeSetting, m_TapDelaySetting, m_PressPointSetting });
         }
 
         private readonly GUIContent m_TapCountLabel = new GUIContent("Tap Count", "How many taps need to be performed in succession. Two means double-tap, three means triple-tap, and so on.");
