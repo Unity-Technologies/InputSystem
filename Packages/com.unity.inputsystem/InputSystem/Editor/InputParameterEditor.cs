@@ -260,7 +260,7 @@ namespace UnityEngine.InputSystem.Editor
                             quotedNames.Add($"\"{n}\"");
                         var combinedNames = string.Join(", ", quotedNames);
                         helpBox.text = EditorGUIUtility.TrTextContent(
-                            $"Uses {combinedNames} set in project-wide input settings.").text;
+                            $"Uses {combinedNames} set in Input System Package Settings.").text;
                         footerContainer.style.display = DisplayStyle.Flex;
                     }
                     else
