@@ -501,6 +501,40 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_CanMatchLayoutBasedOnCapabilitiesFromJson()
+    {
+        const string json = @"
+     {
+         ""name"" : ""CapabilityTestLayout"",
+         ""extend"" : ""Gamepad"",
+         ""device"" : {
+             ""capabilities"" : [
+                 { ""path"" : ""vendorId"", ""value"" : ""9999"" }
+             ]
+         }
+     }";
+
+        InputSystem.RegisterLayout(json);
+
+        try
+        {
+            var matchedLayout = InputSystem.TryFindMatchingLayout(
+                new InputDeviceDescription
+                {
+                    deviceClass = "Gamepad",
+                    capabilities = @"{""vendorId"":""9999""}"
+                });
+
+            Assert.That(matchedLayout, Is.EqualTo("CapabilityTestLayout"));
+        }
+        finally
+        {
+            InputSystem.RemoveLayout("CapabilityTestLayout");
+        }
+    }
+
+    [Test]
+    [Category("Layouts")]
     public void Layouts_CanFindAllLayoutsBasedOnGivenLayout()
     {
         const string rootLayout = @"

@@ -237,6 +237,8 @@ namespace UnityEngine.InputSystem.Interactions
             root.Add(behaviourDropdown);
 
             m_PressPointSetting.OnDrawVisualElements(root, onChangedCallback);
+            CustomOrDefaultSetting.AddSharedDefaultSettingsFooter(root,
+                new[] { m_PressPointSetting });
         }
 
         private CustomOrDefaultSetting m_PressPointSetting;
