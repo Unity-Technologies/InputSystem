@@ -564,6 +564,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string[] versions;
             [NonSerialized] public Capability[] capabilities;
 
+            [Serializable]
             public struct Capability
             {
                 public string path;
