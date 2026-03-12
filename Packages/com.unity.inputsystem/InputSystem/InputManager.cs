@@ -3492,19 +3492,26 @@ namespace UnityEngine.InputSystem
         private unsafe bool SkipEventDueToEditorBehaviour(InputUpdateType updateType, FourCC currentEventType, bool dropStatusEvents, double currentEventTimeInternal)
         {
             var focusEventType = new FourCC(FocusConstants.kEventType);
-            var possibleFocusEvent = m_InputEventStream.Peek();
 
-            if (possibleFocusEvent != null)
+            // Check if the next event is a FocusEvent. If so, cancel any in-progress actions before
+            // the focus change to prevent half-processed action states (e.g., Started without Performed).
+            // This avoids the problem of dropping individual events (which can cause button stuck states)
+            // by instead explicitly resetting action state at the right time.
+            var possibleFocusEvent = m_InputEventStream.Peek();
+            if (possibleFocusEvent != null && possibleFocusEvent->type == focusEventType &&
+                !gameShouldGetInputRegardlessOfFocus)
             {
-                if (possibleFocusEvent->type == focusEventType && !gameShouldGetInputRegardlessOfFocus)
+                // Cancel all in-progress actions for all devices to prevent actions getting stuck
+                // in Started phase when focus changes cause events to be routed differently.
+                // We use SoftReset which cancels actions but doesn't reset device state.
+                for (var i = 0; i < m_DevicesCount; ++i)
                 {
-                    // If the next event is a focus event and we're not supposed to get input of the current update type in the next one, drop current event.
-                    // This ensures that we don't end up with a half processed events due to swapping buffers between editor and player,
-                    // such as InputActionPhase.Started not being finished by a InputActionPhase.Performed and ending up in a pressed state in the previous update type
-                    m_InputEventStream.Advance(false);
-                    return true;
+                    var device = m_Devices[i];
+                    if (device.enabled)
+                        InputActionState.OnDeviceChange(device, InputDeviceChange.SoftReset);
                 }
             }
+
             // When the game is playing and has focus, we never process input in editor updates.
             // All we do is just switch to editor state buffers and then exit.
             if (gameIsPlaying && gameHasFocus && updateType == InputUpdateType.Editor
