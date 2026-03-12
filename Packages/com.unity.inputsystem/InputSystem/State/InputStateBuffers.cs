@@ -13,6 +13,7 @@ namespace UnityEngine.InputSystem.LowLevel
     // Internally, we perform only a single combined unmanaged allocation for all state
     // buffers needed by the system. Externally, we expose them as if they are each separate
     // buffers.
+    [Serializable]
     internal unsafe struct InputStateBuffers
     {
         // State buffers are set up in a double buffering scheme where the "back buffer"
