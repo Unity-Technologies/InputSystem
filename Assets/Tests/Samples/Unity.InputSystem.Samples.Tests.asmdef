@@ -8,7 +8,8 @@
         "GUID:0acc523941302664db1f4e527237feb3",
         "GUID:043547d79c83ab74e9bcfef914059964",
         "GUID:157556569ac93a94fb6a763f50476339",
-        "GUID:813ed4fded4e24cc69d83a9178f8fede"
+        "GUID:813ed4fded4e24cc69d83a9178f8fede",
+        "Unity.InputSystem.TestFramework"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
