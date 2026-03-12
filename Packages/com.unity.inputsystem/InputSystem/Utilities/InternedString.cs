@@ -24,7 +24,6 @@ namespace UnityEngine.InputSystem.Utilities
     /// There is a non-zero cost to creating an InternedString. The first time a new unique InternedString
     /// is encountered, there may also be a GC heap allocation.
     /// </remarks>
-    [Serializable]
     public struct InternedString : IEquatable<InternedString>, IComparable<InternedString>
     {
         private readonly string m_StringOriginalCase;
