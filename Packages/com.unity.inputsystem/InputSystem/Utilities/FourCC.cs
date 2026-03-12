@@ -11,6 +11,7 @@ namespace UnityEngine.InputSystem.Utilities
     /// FourCCs are frequently used in the input system to identify the format of data sent to or from
     /// the native backend representing events, input device state or commands sent to input devices.
     /// </remarks>
+    [Serializable]
     public struct FourCC : IEquatable<FourCC>
     {
         private int m_Code;
