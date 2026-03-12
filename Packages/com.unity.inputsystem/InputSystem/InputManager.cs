@@ -4329,7 +4329,7 @@ namespace UnityEngine.InputSystem
             public InputEventHandledPolicy inputEventHandledPolicy;
             public DeviceState[] devices;
             public AvailableDevice[] availableDevices;
-            public InputStateBuffers buffers;
+            [NonSerialized] public InputStateBuffers buffers;
             public InputUpdate.SerializedState updateState;
             public InputUpdateType updateMask;
             public InputSettings.ScrollDeltaBehavior scrollDeltaBehavior;

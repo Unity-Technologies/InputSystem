@@ -562,7 +562,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string[] products;
             public string version;
             public string[] versions;
-            public Capability[] capabilities;
+            [NonSerialized] public Capability[] capabilities;
 
             public struct Capability
             {

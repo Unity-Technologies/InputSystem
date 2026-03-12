@@ -4623,7 +4623,7 @@ internal partial class UITests : CoreTestsFixture
             }
         }
 
-        public List<Event> events = new List<Event>();
+        [NonSerialized] public List<Event> events = new List<Event>();
 
         public void OnPointerClick(PointerEventData eventData)
         {
