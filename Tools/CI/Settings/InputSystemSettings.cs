@@ -1,9 +1,10 @@
-﻿using InputSystem.Cookbook.Recipes;
-using Newtonsoft.Json.Linq;
+using InputSystem.Cookbook.Recipes;
+using System.Text.Json;
 using RecipeEngine.Api.Commands;
 using RecipeEngine.Api.Platforms;
 using RecipeEngine.Api.Settings;
 using RecipeEngine.Modules.Wrench.Models;
+using RecipeEngine.Modules.Wrench.Platforms;
 using RecipeEngine.Modules.Wrench.Settings;
 using RecipeEngine.Platforms;
 using RecipeEngine.Unity.Abstractions.Editors;
@@ -16,7 +17,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
     readonly string[] PackagesRootPaths = ["Packages"];
 
     private static InputSystemSettings? _instance;
-    
+
     public static readonly string BranchName = "develop";
     public static readonly string InputSystemPackageName = "com.unity.inputsystem";
 
@@ -28,13 +29,13 @@ public class InputSystemSettings : AnnotatedSettingsBase
 
     // Mobile platforms which run build jobs
     public readonly Dictionary<SystemType, Platform> MobileBuildPlatforms = new();
-    
+
     // Mobile platforms which run tests jobs
     public readonly Dictionary<SystemType, Platform> MobileTestPlatforms = new();
 
     // iOS platform with iOS 15 device (iPhone SE 3rd generation) for 6000.3+ editors
     public readonly Platform iOS15Platform;
-    
+
     public readonly string[] AndroidExtraCommands = new[]
     {
         //Establish an ADB connection with the device
@@ -83,7 +84,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
             return _instance;
         }
     }
-    
+
     readonly string mobileConfigFilePath = ".yamato/mobile_config.json";
 
     public InputSystemSettings()
@@ -94,35 +95,16 @@ public class InputSystemSettings : AnnotatedSettingsBase
             wrenchCsProjectPath: "/Tools/CI/InputSystem.Cookbook.csproj",
             useLocalPvpExemptions: true
         );
-        
-        var defaultUbuntuPlatform = WrenchPackage.DefaultEditorPlatforms[SystemType.Ubuntu];
-        // Use Ubuntu image package-ci/ubuntu-22.04 which is required by 6000.0+ versions.
-        InputSystemPackage.EditorPlatforms[SystemType.Ubuntu] = new Platform(new Agent("package-ci/ubuntu-22.04:default",
-            defaultUbuntuPlatform.Agent.Flavor, defaultUbuntuPlatform.Agent.Resource), defaultUbuntuPlatform.System);
 
-        // ignore packages listed below in PreviewAPV
+        // Ignore packages listed below in PreviewAPV because they cause instability in the editor
+        // We don't want to block our development on fixing those as they are not related to our package.
+        // We can remove them from this list once the issues are fixed on their end.
         InputSystemPackage.DependantsToIgnoreInPreviewApv = new Dictionary<Editor, ISet<string>>()
         {
-            {
-                new Editor("6000.3",  ""),
-                new HashSet<string>()
-                {
-                    "com.unity.polyspatial",
-                    "com.unity.polyspatial.visionos",
-                    "com.unity.polyspatial.extensions",
-                    "com.unity.polyspatial.xr",
-                    "com.unity.xr.visionos" 
-                }
-            },
             {
                 new Editor("6000.5",  ""),
                 new HashSet<string>()
                 {
-                    "com.unity.polyspatial",
-                    "com.unity.polyspatial.visionos",
-                    "com.unity.polyspatial.extensions",
-                    "com.unity.polyspatial.xr",
-                    "com.unity.xr.visionos",
                     "com.unity.charactercontroller"
                 }
             },
@@ -130,27 +112,39 @@ public class InputSystemSettings : AnnotatedSettingsBase
                 new Editor("6000.6",  ""),
                 new HashSet<string>()
                 {
-                    "com.unity.polyspatial",
-                    "com.unity.polyspatial.visionos",
-                    "com.unity.polyspatial.extensions",
-                    "com.unity.polyspatial.xr",
-                    "com.unity.xr.visionos",
                     "com.unity.charactercontroller"
                 }
-            },
+            }
         };
 
         InputSystemPackage.CoverageCommands.Enabled = true;
-        var assemblies = InputSystemPackage.CoverageAssemblies;
-        var assebmliesNames = InputSystemPackage.CoverageAssemblyNames();
+
         Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
 
+        OverridePackagePlatform(InputSystemPackage);
+
         ReadMobileConfig();
-        
+
         var oldIOSAgent = MobileTestPlatforms[SystemType.IOS].Agent;
         iOS15Platform = new Platform(new Agent(oldIOSAgent.Image, oldIOSAgent.Flavor, oldIOSAgent.Resource, "SE-Gen3"), SystemType.IOS);
     }
-    
+
+    // Default FlavorType was changed for Win & Mac in Wrench 2.0.
+    // Overriding this to keep them the same esp. for performance jobs.
+    private void OverridePackagePlatform(WrenchPackage package)
+    {
+        foreach (UnityEditor unityEditor in package.UnityEditors)
+        {
+            unityEditor.EditorPlatforms.Items[EditorPlatformType.Win10]
+                = new EditorPlatform(EditorPlatformType.Win10,
+                new Agent("package-ci/win10:v4", FlavorType.BuildLarge, ResourceType.Vm));
+
+            unityEditor.EditorPlatforms.Items[EditorPlatformType.MacOs13]
+                = new EditorPlatform(EditorPlatformType.MacOs13,
+                new Agent("package-ci/macos-13:v4", FlavorType.BuildExtraLarge, ResourceType.VmOsx));
+        }
+    }
+
     public WrenchSettings Wrench { get; private set; }
 
     void ReadMobileConfig()
@@ -159,10 +153,14 @@ public class InputSystemSettings : AnnotatedSettingsBase
             throw new FileNotFoundException("Mobile config file could not be found.");
 
         var configs = File.ReadAllText(mobileConfigFilePath);
-        var jsonObject = JObject.Parse(configs);
+        using var jsonDocument = JsonDocument.Parse(configs);
+        var jsonObject = jsonDocument.RootElement;
 
-        foreach (var (k, v) in jsonObject)
+        foreach (var property in jsonObject.EnumerateObject())
         {
+            var k = property.Name;
+            var v = property.Value;
+
             SystemType platform;
             switch (k)
             {
@@ -179,18 +177,20 @@ public class InputSystemSettings : AnnotatedSettingsBase
                     platform = SystemType.Unknown;
                     break;
             }
-            
+
             MobileBuildPlatforms.Add(platform, new Platform(
-                new Agent(v?["build"]?["image"]?.ToString() ?? string.Empty, 
-                    Utilities.GetEnumValue<FlavorType>(v?["build"]?["flavor"]?.ToString() ?? string.Empty), 
-                    Utilities.GetEnumValue<ResourceType>(v?["build"]?["type"]?.ToString() ?? string.Empty)),
+                new Agent(
+                    v.TryGetProperty("build", out var build) && build.TryGetProperty("image", out var buildImage) ? buildImage.GetString() ?? string.Empty : string.Empty,
+                    Utilities.GetEnumValue<FlavorType>(v.TryGetProperty("build", out build) && build.TryGetProperty("flavor", out var buildFlavor) ? buildFlavor.GetString() ?? string.Empty : string.Empty),
+                    Utilities.GetEnumValue<ResourceType>(v.TryGetProperty("build", out build) && build.TryGetProperty("type", out var buildType) ? buildType.GetString() ?? string.Empty : string.Empty)),
                 platform));
-            
+
             MobileTestPlatforms.Add(platform, new Platform(
-                new Agent(v?["run"]?["image"]?.ToString() ?? string.Empty, 
-                    Utilities.GetEnumValue<FlavorType>(v?["run"]?["flavor"]?.ToString() ?? string.Empty), 
-                    Utilities.GetEnumValue<ResourceType>(v?["run"]?["type"]?.ToString() ?? string.Empty),
-                    v?["run"]?["model"]?.ToString()),
+                new Agent(
+                    v.TryGetProperty("run", out var run) && run.TryGetProperty("image", out var runImage) ? runImage.GetString() ?? string.Empty : string.Empty,
+                    Utilities.GetEnumValue<FlavorType>(v.TryGetProperty("run", out run) && run.TryGetProperty("flavor", out var runFlavor) ? runFlavor.GetString() ?? string.Empty : string.Empty),
+                    Utilities.GetEnumValue<ResourceType>(v.TryGetProperty("run", out run) && run.TryGetProperty("type", out var runType) ? runType.GetString() ?? string.Empty : string.Empty),
+                    v.TryGetProperty("run", out run) && run.TryGetProperty("model", out var runModel) ? runModel.GetString() : null),
                 platform));
         }
     }

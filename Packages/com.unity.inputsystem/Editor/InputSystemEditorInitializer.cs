@@ -5,6 +5,7 @@ using UnityEditor.Networking.PlayerConnection;
 using UnityEditorInternal;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
+using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -14,65 +15,63 @@ namespace UnityEngine.InputSystem.Editor
     [InitializeOnLoad]
     internal static class InputSystemEditorInitializer
     {
-        internal static InputSystemObject s_SystemObject;
-        private static HashSet<string> s_TrackedDirtyAssets;
+        private static InputSystemStateManager s_StateManager;
+        internal static InputSystemStateManager stateManager => s_StateManager;
 
         static InputSystemEditorInitializer()
         {
             InitializeInEditor();
 
-            // Hook into Input System property setters to add Editor-specific behavior
             InputSystem.onSettingsChange += OnSettingsChanged;
             InputSystem.s_OnActionsChanging = ValidateAndTrackActions;
             InputSystem.s_ShouldEnableActions = ShouldEnableActions;
             InputAnalytics.s_IsNewSystemBackendsEnabled = ShouldEnableActionsNewBackend;
             InputAnalytics.s_IsOldSystemBackendsEnabled = ShouldEnableActionsOldBackend;
 
-            // Register analytics callbacks for InputActionSetupExtensions
             InputActionSetupExtensions.s_ApiUsageCallback = RegisterSetupApiUsage;
             InputActionSetupExtensions.s_SuppressAnalytics = SuppressSetupAnalytics;
 
-            // Register callback for InputSystemUIInputModule Reset()
             #if UNITY_INPUT_SYSTEM_ENABLE_UI || PACKAGE_DOCS_GENERATION
             UnityEngine.InputSystem.UI.InputSystemUIInputModule.s_OnReset = OnUIInputModuleReset;
             #endif
 
-            // Update Editor state in runtime
             UpdateEditorState();
             EditorApplication.update += UpdateEditorState;
 
-            // Register callbacks for Runtime to access Editor functionality
-            InputActionAsset.s_OnMarkAsDirty = TrackDirtyInputActionAsset;
+            InputActionAsset.s_OnMarkAsDirty = DirtyAssetTracker.TrackDirtyInputActionAsset;
             InputManager.s_GetProjectWideActions = () => ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
             InputSystem.s_Manager.m_AddDevicesNotSupportedByProject = InputEditorUserSettings.addDevicesNotSupportedByProject;
 
-            // Register callback for tests to call InputSystem.OnPlayModeChange (takes int)
             InputSystem.s_OnPlayModeChangeCallback = change => OnPlayModeChange((PlayModeStateChange)change);
 
-            // Register Editor-specific callbacks on NativeInputRuntime
+            // Register editor-side global initialization callback for InputSystem.GlobalInitialize
+            InputSystem.s_EditorGlobalInitializeCallback = OnGlobalInitialize;
+            InputSystem.s_EditorIsDomainReloadDisabledCallback = IsDomainReloadDisabledForPlayMode;
+
+            // Register test hook callbacks
+            InputSystem.s_TestHookInitializeForPlayModeTests = TestHook_InitializeForPlayModeTests;
+#if !ENABLE_CORECLR
+            InputSystem.s_TestHookSimulateDomainReload = TestHook_SimulateDomainReload;
+#endif
+            InputSystem.s_TestHookEditorCleanup = TestHook_EditorCleanup;
+
             if (InputRuntime.s_Instance is NativeInputRuntime nativeRuntime)
             {
-                // Shutdown callback
                 nativeRuntime.m_RegisterWantsToQuit = RegisterWantsToQuit;
                 nativeRuntime.m_UnregisterWantsToQuit = UnregisterWantsToQuit;
 
-                // Unity Remote callbacks
                 nativeRuntime.m_SetUnityRemoteMessageHandler = SetUnityRemoteMessageHandler;
                 nativeRuntime.m_SetUnityRemoteGyroEnabledCallback = SetUnityRemoteGyroEnabled;
                 nativeRuntime.m_SetUnityRemoteGyroUpdateIntervalCallback = SetUnityRemoteGyroUpdateInterval;
 
-                // Editor Analytics callback
                 nativeRuntime.m_SendEditorAnalytic = SendEditorAnalytic;
             }
 
-            // Register RemoteInputPlayerConnection instance getter
             RemoteInputPlayerConnection.s_GetInstance = RemoteInputPlayerConnectionEditor.GetInstance;
 
-            // Register EnhancedTouchSupport assembly reload callbacks
             EnhancedTouch.EnhancedTouchSupport.s_BeforeAssemblyReloadCallback = RegisterBeforeAssemblyReload;
             EnhancedTouch.EnhancedTouchSupport.s_UnregisterBeforeAssemblyReloadCallback = UnregisterBeforeAssemblyReload;
 
-            // Register InputActionReference asset database callbacks
             InputActionReference.s_IsSubAsset = AssetDatabase.IsSubAsset;
             InputActionReference.s_GetAssetPath = AssetDatabase.GetAssetPath;
             InputActionReference.s_LoadMainAssetAtPath = AssetDatabase.LoadMainAssetAtPath;
@@ -155,7 +154,6 @@ namespace UnityEngine.InputSystem.Editor
             return genericRemoteClass.GetMethod(methodName);
         }
 
-        // Editor Analytics
         private static void SendEditorAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
             #if ENABLE_CLOUD_SERVICES_ANALYTICS
@@ -209,47 +207,79 @@ namespace UnityEngine.InputSystem.Editor
 
         #endif
 
+        internal static bool IsDomainReloadDisabledForPlayMode()
+        {
+            #if !ENABLE_CORECLR
+            if (!EditorSettings.enterPlayModeOptionsEnabled || (EditorSettings.enterPlayModeOptions & EnterPlayModeOptions.DisableDomainReload) == 0)
+                return false;
+            return true;
+            #else
+            return false;
+            #endif
+        }
+
+        /// <summary>
+        /// Called from InputSystem.GlobalInitialize via the s_EditorGlobalInitializeCallback.
+        /// Handles the dual-call initialization pattern for Domain Reload disabled mode.
+        /// </summary>
+        private static void OnGlobalInitialize(bool calledFromCtor)
+        {
+            // When Domain Reloads are enabled, initialization is handled by [InitializeOnLoad]
+            // via the static constructor. When DRs are disabled, the static ctor doesn't re-fire
+            // on play mode entry, so we need RuntimeInitialize (calledFromCtor=false) to handle it.
+            // The static ctor always fires on actual domain reload regardless.
+            if (!calledFromCtor || IsDomainReloadDisabledForPlayMode())
+            {
+                //TODO check if we can call this again; check against Anthony FEPM PR
+                InitializeInEditor();
+            }
+        }
+
         internal static void InitializeInEditor()
         {
-            // Call Runtime reset
-            InputSystem.Reset();
+            if (InputSystem.s_Manager != null)
+                InputSystem.s_Manager.Dispose();
 
-            var existingSystemObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
-            if (existingSystemObjects != null && existingSystemObjects.Length > 0)
+            //TODO: I think we shouldn't call this again like the previous commit. This is probably a failure of
+            // merging FEPM PR into this branch.
+            InputSystem.s_Manager = InputManager.CreateAndInitialize(NativeInputRuntime.instance, null);
+            InputSystem.s_Manager.runtime.onPlayModeChanged = InputSystem.OnPlayModeChange;
+
+            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
+
+            #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+            InputSystem.PerformDefaultPluginInitialization();
+            #endif
+
+            var existingStateManagers = Resources.FindObjectsOfTypeAll<InputSystemStateManager>();
+            if (existingStateManagers != null && existingStateManagers.Length > 0)
             {
-                // We're coming back out of a domain reload
-                s_SystemObject = existingSystemObjects[0];
-                InputSystem.s_Manager.RestoreStateWithoutDevices(s_SystemObject.systemState.managerState);
+                s_StateManager = existingStateManagers[0];
+                InputSystem.s_Manager.RestoreStateWithoutDevices(s_StateManager.systemState.managerState);
                 InputDebuggerWindow.ReviveAfterDomainReload();
 
-                // Restore remoting state
-                InputSystem.s_RemoteConnection = s_SystemObject.systemState.remoteConnection;
+                InputSystem.remoteConnection = s_StateManager.systemState.remoteConnection;
                 InputSystem.SetUpRemoting();
-                InputSystem.s_Remote.RestoreState(s_SystemObject.systemState.remotingState, InputSystem.s_Manager);
+                InputSystem.s_Remote.RestoreState(s_StateManager.systemState.remotingState, InputSystem.s_Manager);
 
-                // Get manager to restore devices on first input update
-                InputSystem.s_Manager.m_SavedDeviceStates = s_SystemObject.systemState.managerState.devices;
-                InputSystem.s_Manager.m_SavedAvailableDevices = s_SystemObject.systemState.managerState.availableDevices;
+                InputSystem.s_Manager.m_SavedDeviceStates = s_StateManager.systemState.managerState.devices;
+                InputSystem.s_Manager.m_SavedAvailableDevices = s_StateManager.systemState.managerState.availableDevices;
 
-                // Get rid of saved state
-                s_SystemObject.systemState = new InputSystem.State();
+                InputEditorUserSettings.s_Settings = s_StateManager.systemState.userSettings;
+
+                s_StateManager.systemState = new InputSystemState();
             }
             else
             {
-                s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
-                s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
+                s_StateManager = ScriptableObject.CreateInstance<InputSystemStateManager>();
+                s_StateManager.hideFlags = HideFlags.HideAndDontSave;
 
-                // Load settings
                 if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
                     out InputSettings settingsAsset))
                 {
-                    if (InputSystem.s_Manager.m_Settings.hideFlags == HideFlags.HideAndDontSave)
-                        ScriptableObject.DestroyImmediate(InputSystem.s_Manager.m_Settings);
-                    InputSystem.s_Manager.m_Settings = settingsAsset;
-                    InputSystem.s_Manager.ApplySettings();
+                    InputSystem.s_Manager.settings = settingsAsset;
                 }
 
-                // Load project-wide actions
                 var savedActions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
                 if (savedActions != null)
                     InputSystem.s_Manager.actions = savedActions;
@@ -258,47 +288,36 @@ namespace UnityEngine.InputSystem.Editor
                 SetUpEditorRemoting();
             }
 
-            // Subscribe to Editor events directly (cleaner separation from Runtime)
             EditorApplication.playModeStateChanged += OnEditorPlayModeStateChanged;
             EditorApplication.projectChanged += OnEditorProjectChanged;
 
-            // Initialize Unity Remote support (Editor-only)
             UnityRemoteSupport.Initialize();
 
-            // Check for backend settings
             EditorApplication.delayCall += ShowRestartWarning;
 
-            // Run initial update
             InputSystem.RunInitialUpdate();
+
+            InputSystem.EnableActions();
         }
 
-        /// <summary>
-        /// Editor-specific remoting setup that uses EditorApplication.delayCall
-        /// </summary>
         private static void SetUpEditorRemoting()
         {
             InputSystem.s_Remote = new InputRemoting(InputSystem.s_Manager);
-            // NOTE: We use delayCall as our initial startup will run in editor initialization before
-            //       PlayerConnection is itself ready. If we call Bind() directly here, we won't
-            //       see any errors but the callbacks we register for will not trigger.
             EditorApplication.delayCall += SetUpRemotingInternal;
         }
 
         private static void SetUpRemotingInternal()
         {
-            if (InputSystem.s_RemoteConnection == null)
+            if (InputSystem.remoteConnection == null)
             {
-                InputSystem.s_RemoteConnection = RemoteInputPlayerConnection.instance;
-                InputSystem.s_RemoteConnection.Bind(EditorConnection.instance, false);
+                InputSystem.remoteConnection = RemoteInputPlayerConnection.instance;
+                InputSystem.remoteConnection.Bind(EditorConnection.instance, false);
             }
 
-            InputSystem.s_Remote.Subscribe(InputSystem.s_RemoteConnection); // Feed messages from players into editor.
-            InputSystem.s_RemoteConnection.Subscribe(InputSystem.s_Remote); // Feed messages from editor into players.
+            InputSystem.s_Remote.Subscribe(InputSystem.remoteConnection);
+            InputSystem.remoteConnection.Subscribe(InputSystem.s_Remote);
         }
 
-        /// <summary>
-        /// Called when InputSystem.settings changes to track it in EditorBuildSettings
-        /// </summary>
         private static void OnSettingsChanged()
         {
             var settings = InputSystem.settings;
@@ -309,134 +328,115 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        /// <summary>
-        /// Validates and tracks InputActionAsset assignments in the Editor
-        /// </summary>
         internal static void ValidateAndTrackActions(InputActionAsset value)
         {
             if (value != null)
             {
-                // Do not allow assigning non-persistent assets (pure in-memory objects)
                 if (!EditorUtility.IsPersistent(value))
                     throw new ArgumentException($"Assigning a non-persistent {nameof(InputActionAsset)} to this property is not allowed. The assigned asset needs to be persisted on disk inside the /Assets folder.");
 
-                // Track reference to enable including it in built Players
                 ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = value;
             }
             else
             {
-                // Clear build settings when project-wide actions are set to null
                 ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = null;
             }
         }
 
-        /// <summary>
-        /// Checks if actions should be enabled (Editor-specific check for play mode)
-        /// </summary>
         internal static bool ShouldEnableActions()
         {
-            // Abort if not in play-mode in editor
             return EditorApplication.isPlayingOrWillChangePlaymode;
         }
 
-        /// <summary>
-        /// Checks if the backends for the new input system should be enabled in the Editor (Editor-specific check for play mode and player settings)
-        /// </summary>
         internal static bool ShouldEnableActionsNewBackend()
         {
-            // Abort if not in play-mode in editor
             return EditorPlayerSettingHelpers.newSystemBackendsEnabled;
         }
 
-        /// <summary>
-        /// Checks if the backends for the old input system should be enabled in the Editor (Editor-specific check for play mode and player settings)
-        /// </summary>
         internal static bool ShouldEnableActionsOldBackend()
         {
-            // Abort if not in play-mode in editor
             return EditorPlayerSettingHelpers.oldSystemBackendsEnabled;
         }
 
         private static void ShowRestartWarning()
         {
-            if (!s_SystemObject.newInputBackendsCheckedAsEnabled &&
+            if (!s_StateManager.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
                 !Application.isBatchMode)
             {
-                const string dialogText = "This project is using the new input system package but the native platform backends for the new input system are not enabled in the player settings. " +
-                    "This means that no input from native devices will come through." +
-                    "\n\nDo you want to enable the backends? Doing so will *RESTART* the editor.";
+                const string dialogText = "The new Input System Package is installed, but not configured to enable native device input, such as keyboard, mouse, or gamepad actions. " +
+                    "\n\nThe Active Input Handling parameter must be set to \"Input System Package (New)\", under Project Settings > Player." +
+                    "\n\nNote: Changing the active input handling requires to restart the Editor.";
 
-                if (EditorUtility.DisplayDialog("Warning", dialogText, "Yes", "No"))
+                bool userChoseEnableAndRestart;
+#if UNITY_6000_3_OR_NEWER
+                userChoseEnableAndRestart = EditorUtility.DisplayDialog(
+                    "Input System native platform backend not enabled",
+                    dialogText,
+                    "Enable & Restart",
+                    "Don't Enable",
+                    DialogOptOutDecisionType.ForThisSession,
+                    "RestartInstalledInputHandlingWarning");
+#else
+                userChoseEnableAndRestart = EditorUtility.DisplayDialog(
+                    "Input System native platform backend not enabled",
+                    dialogText,
+                    "Enable & Restart",
+                    "Don't Enable");
+#endif
+                if (userChoseEnableAndRestart)
                 {
                     EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
                     EditorHelpers.RestartEditorAndRecompileScripts();
                 }
             }
-            s_SystemObject.newInputBackendsCheckedAsEnabled = true;
+            s_StateManager.newInputBackendsCheckedAsEnabled = true;
             EditorApplication.delayCall -= ShowRestartWarning;
         }
 
-        /// <summary>
-        /// Called by EditorApplication.playModeStateChanged
-        /// </summary>
         private static void OnEditorPlayModeStateChanged(PlayModeStateChange change)
         {
-            // Dispatch to runtime callback if registered
             if (InputRuntime.s_Instance is NativeInputRuntime nativeRuntime)
             {
                 nativeRuntime.DispatchPlayModeChange((int)change);
             }
 
-            // Handle the change
             OnPlayModeChange(change);
         }
 
-        /// <summary>
-        /// Called by EditorApplication.projectChanged
-        /// </summary>
         private static void OnEditorProjectChanged()
         {
-            // Dispatch to runtime callback if registered
             if (InputRuntime.s_Instance is NativeInputRuntime nativeRuntime)
             {
                 nativeRuntime.DispatchProjectChange();
             }
 
-            // Handle the change
             OnProjectChange();
         }
 
-        /// <summary>
-        /// Public method for tests and direct calls (with PlayModeStateChange enum)
-        /// </summary>
         internal static void OnPlayModeChange(PlayModeStateChange change)
         {
-            // Tests may call this directly without going through the full editor initialization path.
-            // Ensure we have a system object to store/restore transient editor state.
-            if (s_SystemObject == null)
+            if (s_StateManager == null)
             {
-                s_SystemObject = ScriptableObject.CreateInstance<InputSystemObject>();
-                s_SystemObject.hideFlags = HideFlags.HideAndDontSave;
+                s_StateManager = ScriptableObject.CreateInstance<InputSystemStateManager>();
+                s_StateManager.hideFlags = HideFlags.HideAndDontSave;
             }
 
             switch (change)
             {
                 case PlayModeStateChange.ExitingEditMode:
-                    s_SystemObject.settings = JsonUtility.ToJson(InputSystem.settings);
-                    s_SystemObject.exitEditModeTime = InputRuntime.s_Instance.currentTime;
-                    s_SystemObject.enterPlayModeTime = 0;
+                    s_StateManager.settings = JsonUtility.ToJson(InputSystem.settings);
+                    s_StateManager.exitEditModeTime = InputRuntime.s_Instance.currentTime;
+                    s_StateManager.enterPlayModeTime = 0;
 
-                    // Set times in InputManager for event filtering
-                    InputSystem.s_Manager.m_ExitEditModeTime = s_SystemObject.exitEditModeTime;
+                    InputSystem.s_Manager.m_ExitEditModeTime = s_StateManager.exitEditModeTime;
                     InputSystem.s_Manager.m_EnterPlayModeTime = 0;
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
-                    s_SystemObject.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
+                    s_StateManager.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
 
-                    // Update time in InputManager
-                    InputSystem.s_Manager.m_EnterPlayModeTime = s_SystemObject.enterPlayModeTime;
+                    InputSystem.s_Manager.m_EnterPlayModeTime = s_StateManager.enterPlayModeTime;
                     InputSystem.s_Manager.SyncAllDevicesAfterEnteringPlayMode();
                     break;
 
@@ -447,34 +447,20 @@ namespace UnityEngine.InputSystem.Editor
                 case PlayModeStateChange.EnteredEditMode:
                     InputSystem.DisableActions(false);
 
-                    // Nuke all InputUsers
                     InputUser.ResetGlobals();
 
-                    // Nuke all InputActionMapStates
                     InputActionState.DestroyAllActionMapStates();
 
-                    // Clear the Action reference from all InputActionReference objects
                     InputActionReference.InvalidateAll();
 
-                    // Restore settings
-                    if (!string.IsNullOrEmpty(s_SystemObject.settings))
+                    if (!string.IsNullOrEmpty(s_StateManager.settings))
                     {
-                        JsonUtility.FromJsonOverwrite(s_SystemObject.settings, InputSystem.settings);
-                        s_SystemObject.settings = null;
+                        JsonUtility.FromJsonOverwrite(s_StateManager.settings, InputSystem.settings);
+                        s_StateManager.settings = null;
                         InputSystem.settings.OnChange();
                     }
 
-                    // Reload input action assets marked as dirty from disk
-                    if (s_TrackedDirtyAssets != null)
-                    {
-                        foreach (var assetGuid in s_TrackedDirtyAssets)
-                        {
-                            var assetPath = AssetDatabase.GUIDToAssetPath(assetGuid);
-                            if (!string.IsNullOrEmpty(assetPath))
-                                AssetDatabase.ImportAsset(assetPath, ImportAssetOptions.ForceUpdate);
-                        }
-                        s_TrackedDirtyAssets.Clear();
-                    }
+                    DirtyAssetTracker.ReloadDirtyAssets();
                     break;
             }
         }
@@ -483,8 +469,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             InputSettingsProvider.ForceReload();
 
-            // If the asset holding our current settings got deleted, switch back to a temporary settings object
-            if (EditorUtility.InstanceIDToObject(InputSystem.s_Manager.m_Settings.GetInstanceID()) == null)
+            if (!HasNativeObject(InputSystem.s_Manager.settings))
             {
                 var newSettings = ScriptableObject.CreateInstance<InputSettings>();
                 newSettings.hideFlags = HideFlags.HideAndDontSave;
@@ -492,13 +477,55 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        internal static void TrackDirtyInputActionAsset(InputActionAsset asset)
+        private static bool HasNativeObject(Object obj)
         {
-            if (s_TrackedDirtyAssets == null)
-                s_TrackedDirtyAssets = new HashSet<string>();
-
-            if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(asset, out string assetGuid, out long _))
-                s_TrackedDirtyAssets.Add(assetGuid);
+#if UNITY_6000_3_OR_NEWER
+            return EditorUtility.EntityIdToObject(obj.GetEntityId()) != null;
+#else
+            return EditorUtility.InstanceIDToObject(obj.GetInstanceID()) != null;
+#endif
         }
+
+        #region Test Hooks
+
+        private static void TestHook_InitializeForPlayModeTests(bool enableRemoting, IInputRuntime runtime)
+        {
+            InputSystem.s_Manager = InputManager.CreateAndInitialize(runtime, null);
+
+            InputSystem.s_Manager.runtime.onPlayModeChanged = InputSystem.OnPlayModeChange;
+
+            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
+
+            if (enableRemoting)
+                InputSystem.SetUpRemoting();
+
+#if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+            InputSystem.s_PluginsInitialized = false;
+            InputSystem.PerformDefaultPluginInitialization();
+#endif
+        }
+
+#if !ENABLE_CORECLR
+        private static void TestHook_SimulateDomainReload(IInputRuntime runtime)
+        {
+            InputSystem.s_Manager.TestHook_RemoveDevicesForSimulatedDomainReload();
+
+            s_StateManager.OnBeforeSerialize();
+            s_StateManager = null;
+            InputSystem.s_Manager = null;
+            InputSystem.s_PluginsInitialized = false;
+            InitializeInEditor();
+        }
+
+#endif
+
+        private static void TestHook_EditorCleanup()
+        {
+            EditorInputControlLayoutCache.Clear();
+            InputDeviceDebuggerWindow.s_OnToolbarGUIActions.Clear();
+            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
+        }
+
+        #endregion
     }
 }
