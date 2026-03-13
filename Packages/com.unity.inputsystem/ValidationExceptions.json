@@ -15,6 +15,26 @@
             "ValidationTest": "API Validation",
             "ExceptionMessage": "Additions require a new minor or major version.",
             "PackageVersion": "1.19.1"
+        },
+        {
+            "ValidationTest": "NDA Keyword Validation",
+            "ExceptionMessage": "File 'InputSystem/Plugins/iOS/IOSGameController.cs' contains keyword pattern '(?<!(BuildTarget|BuildTargetGroup|BuildSettings|AddressablesPlatform|RuntimePlatform|TargetPlatform|OpCodes|GraphicsDeviceType))\\.switch\\W' which indicates it is specific to restricted targets '-Switch'. It must not be published",
+            "PackageVersion": "1.19.1"
+        },
+        {
+            "ValidationTest": "NDA Keyword Validation",
+            "ExceptionMessage": "using UnityEngine.InputSystem.Switch;",
+            "PackageVersion": "1.19.1"
+        },
+        {
+            "ValidationTest": "NDA Keyword Validation",
+            "ExceptionMessage": "File 'InputSystem/Plugins/Switch/SwitchProController.cs' contains keyword pattern '(?<!(BuildTarget|BuildTargetGroup|BuildSettings|AddressablesPlatform|RuntimePlatform|TargetPlatform|OpCodes|GraphicsDeviceType))\\.switch\\W' which indicates it is specific to restricted targets '-Switch'. It must not be published",
+            "PackageVersion": "1.19.1"
+        },
+        {
+            "ValidationTest": "NDA Keyword Validation",
+            "ExceptionMessage": "namespace UnityEngine.InputSystem.Switch",
+            "PackageVersion": "1.19.1"
         }
     ],
     "WarningExceptions": []
