@@ -59,6 +59,10 @@ public class InputSystemSettings : AnnotatedSettingsBase
             new PackageOptions()
             {
                 ReleaseOptions = new ReleaseOptions() { IsReleasing = true },
+                ValidationOptions = new ValidationOptions()
+                {
+                    AdditionalUtrArguments = ["--extra-editor-arg=\"-editorAnalyticsTestMode\""]
+                },
                 PackJobOptions = new PackJobOptions()
                 {
                     PrePackCommands = new List<Command>()
