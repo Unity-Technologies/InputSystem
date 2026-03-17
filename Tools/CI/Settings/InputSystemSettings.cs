@@ -61,7 +61,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
                 ReleaseOptions = new ReleaseOptions() { IsReleasing = true },
                 ValidationOptions = new ValidationOptions()
                 {
-                    AdditionalUtrArguments = ["--extra-editor-arg=\"-editorAnalyticsTestMode\""]
+                    AdditionalUtrArguments = ["--coverage-pkg-version=1.3.0"]
                 },
                 PackJobOptions = new PackJobOptions()
                 {
