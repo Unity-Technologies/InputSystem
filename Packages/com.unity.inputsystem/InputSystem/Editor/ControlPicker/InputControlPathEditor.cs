@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.InputSystem.Layouts;
 #if UNITY_EDITOR
 using UnityEngine.UIElements;
@@ -227,8 +228,8 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         /// <summary>
-        /// Maps a panel/world point (same space as <see cref="VisualElement.worldBound"/>) to screen pixels.
-        /// Uses <see cref="RuntimePanelUtils.ScreenToPanel"/> inversion (Unity 6 removed CameraTransformWorldToScreen).
+        /// Screen-space anchor rect for <see cref="AdvancedDropdownWindow.ShowAsDropDown"/>.
+        /// Editor panels cannot use <see cref="RuntimePanelUtils.ScreenToPanel"/> (runtime-only; throws InvalidCastException).
         /// </summary>
         internal static Rect GetScreenSpaceButtonRect(VisualElement element)
         {
@@ -237,6 +238,10 @@ namespace UnityEngine.InputSystem.Editor
 
             var bounds = element.worldBound;
             var panel = element.panel;
+
+            // Editor UITK (Inspector, Input Actions window, etc.)
+            if (panel.contextType == ContextType.Editor)
+                return GetEditorPanelPickerAnchorRect();
 
             float sx1 = 100f;
             float sy1 = 100f;
@@ -294,6 +299,21 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             return rect;
+        }
+
+        static Rect GetEditorPanelPickerAnchorRect()
+        {
+            const float anchorW = 200f;
+            const float anchorH = 22f;
+            var sw = Screen.width;
+            var sh = Screen.height;
+            if (sw < 64 || sh < 64)
+            {
+                sw = (int)1280f;
+                sh = (int)720f;
+            }
+
+            return new Rect((sw - anchorW) * 0.5f, (sh - anchorH) * 0.5f, anchorW, anchorH);
         }
 
         private void ShowDropdown(VisualElement anchor, SerializedProperty serializedProperty, Action modifiedCallback,
