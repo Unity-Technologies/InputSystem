@@ -148,7 +148,7 @@ namespace UnityEngine.InputSystem
 
             // If shortcut support is disabled, we simply put put all bindings at complexity=1 and
             // in their own group.
-            var disableControlGrouping = !InputSystem.settings.shortcutKeysConsumeInput;
+            var disableControlGrouping = true; // !InputSystem.settings.shortcutKeysConsumeInput;
 
             var currentGroup = 1u;
             for (var i = 0; i < totalControlCount; ++i)
