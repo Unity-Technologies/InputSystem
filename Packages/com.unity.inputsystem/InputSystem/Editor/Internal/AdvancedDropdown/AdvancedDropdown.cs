@@ -48,6 +48,36 @@ namespace UnityEngine.InputSystem.Editor
             m_WindowInstance.Init(rect);
         }
 
+        public void ShowFromScreenSpaceButtonRect(Rect screenButtonRect)
+        {
+            if (m_WindowInstance != null)
+            {
+                m_WindowInstance.Close();
+                m_WindowInstance = null;
+            }
+            if (m_DataSource == null)
+            {
+                m_DataSource = new CallbackDataSource(BuildRoot, BuildCustomSearch);
+            }
+            if (m_Gui == null)
+            {
+                m_Gui = new AdvancedDropdownGUI();
+            }
+
+            m_WindowInstance = ScriptableObject.CreateInstance<AdvancedDropdownWindow>();
+            if (minimumSize != Vector2.zero)
+                m_WindowInstance.minSize = minimumSize;
+            if (maximumSize != Vector2.zero)
+                m_WindowInstance.maxSize = maximumSize;
+            m_WindowInstance.state = m_State;
+            m_WindowInstance.dataSource = m_DataSource;
+            m_WindowInstance.gui = m_Gui;
+            m_WindowInstance.windowClosed +=
+                w => { ItemSelected(w.GetSelectedItem()); };
+            m_WindowInstance.windowDestroyed += OnDestroy;
+            m_WindowInstance.InitWithScreenSpaceButtonRect(screenButtonRect);
+        }
+
         public void Reload()
         {
             m_WindowInstance?.ReloadData();

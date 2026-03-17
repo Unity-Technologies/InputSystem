@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using UnityEditor;
+using UnityEngine.UIElements;
 using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem.Editor
@@ -30,6 +31,17 @@ namespace UnityEngine.InputSystem.Editor
         public void Dispose()
         {
             m_Editor?.Dispose();
+        }
+
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        {
+            if (m_PickerState == null)
+                m_PickerState = new InputControlPickerState();
+            var editor = new InputControlPathEditor(property, m_PickerState,
+                () => property.serializedObject.ApplyModifiedProperties(),
+                new GUIContent(property.displayName, property.tooltip));
+            editor.SetExpectedControlLayoutFromAttribute();
+            return editor.CreateVisualElement(property, () => property.serializedObject.ApplyModifiedProperties());
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)

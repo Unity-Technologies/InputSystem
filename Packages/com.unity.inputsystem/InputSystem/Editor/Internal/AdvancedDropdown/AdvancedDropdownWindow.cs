@@ -131,8 +131,16 @@ namespace UnityEngine.InputSystem.Editor
         public void Init(Rect buttonRect)
         {
             var screenPoint = GUIUtility.GUIToScreenPoint(new Vector2(buttonRect.x, buttonRect.y));
-            m_ButtonRectScreenPos.x = screenPoint.x;
-            m_ButtonRectScreenPos.y = screenPoint.y;
+            var screenButtonRect = new Rect(screenPoint.x, screenPoint.y, buttonRect.width, buttonRect.height);
+            InitWithScreenSpaceButtonRect(screenButtonRect);
+        }
+
+        /// <summary>
+        /// Same as <see cref="Init"/> but the rect is already in screen space (e.g. anchor from UI Toolkit).
+        /// </summary>
+        internal void InitWithScreenSpaceButtonRect(Rect screenButtonRect)
+        {
+            m_ButtonRectScreenPos = screenButtonRect;
 
             if (m_State == null)
                 m_State = new AdvancedDropdownState();
@@ -143,10 +151,7 @@ namespace UnityEngine.InputSystem.Editor
             m_Gui.state = m_State;
             m_Gui.Init();
 
-            // Has to be done before calling Show / ShowWithMode
-            screenPoint = GUIUtility.GUIToScreenPoint(new Vector2(buttonRect.x, buttonRect.y));
-            buttonRect.x = screenPoint.x;
-            buttonRect.y = screenPoint.y;
+            var buttonRect = screenButtonRect;
 
             OnDirtyList();
             m_CurrentlyRenderedTree = hasSearch ? m_DataSource.searchTree : m_DataSource.mainTree;

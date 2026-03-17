@@ -2122,6 +2122,7 @@ namespace UnityEngine.InputSystem.Editor
         public System.Action onModified { get; }
         public UnityEditor.SerializedProperty pathProperty { get; }
         public InputControlPathEditor(UnityEditor.SerializedProperty pathProperty, InputControlPickerState pickerState, System.Action onModified, GUIContent label = default(GUIContent)) {}
+        public UnityEngine.UIElements.VisualElement CreateVisualElement(UnityEditor.SerializedProperty property = default(UnityEditor.SerializedProperty), System.Action modifiedCallback = default(System.Action)) {}
         public void Dispose();
         public void OnGUI();
         public void OnGUI(Rect rect);

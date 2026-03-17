@@ -65,8 +65,7 @@ namespace UnityEngine.InputSystem.Editor
                 var inputAction = viewState.selectedInputAction;
                 controlPathEditor.SetExpectedControlLayout(inputAction?.expectedControlType ?? "");
 
-                var controlPathContainer = new IMGUIContainer(controlPathEditor.OnGUI);
-                rootElement.Add(controlPathContainer);
+                rootElement.Add(controlPathEditor.CreateVisualElement());
 
                 DrawMatchingControlPaths(viewState);
                 DrawControlSchemeToggles(viewState, binding.Value);

@@ -10,7 +10,7 @@ namespace UnityEngine.InputSystem.Editor
     internal class CompositePartBindingPropertiesView : ViewBase<CompositePartBindingPropertiesView.ViewState>
     {
         private readonly DropdownField m_CompositePartField;
-        private readonly IMGUIContainer m_PathEditorContainer;
+        private readonly VisualElement m_PathEditorContainer;
 
         private const string UxmlName = InputActionsEditorConstants.PackagePath +
             InputActionsEditorConstants.ResourcesPath +
@@ -23,7 +23,7 @@ namespace UnityEngine.InputSystem.Editor
             var container = visualTreeAsset.CloneTree();
             rootElement.Add(container);
 
-            m_PathEditorContainer = container.Q<IMGUIContainer>("path-editor-container");
+            m_PathEditorContainer = container.Q<VisualElement>("path-editor-container");
             m_CompositePartField = container.Q<DropdownField>("composite-part-dropdown");
 
             CreateSelector(Selectors.GetSelectedBinding,
@@ -41,7 +41,8 @@ namespace UnityEngine.InputSystem.Editor
             controlPathEditor.SetControlPathsToMatch(viewState.currentControlScheme.deviceRequirements.Select(x => x.controlPath));
             controlPathEditor.SetExpectedControlLayout(viewState.expectedControlLayoutName);
 
-            m_PathEditorContainer.onGUIHandler = controlPathEditor.OnGUI;
+            m_PathEditorContainer.Clear();
+            m_PathEditorContainer.Add(controlPathEditor.CreateVisualElement());
 
             m_CompositePartField.choices.Clear();
             m_CompositePartField.choices.AddRange(viewState.compositePartNames);

@@ -367,9 +367,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (InputEditorUserSettings.autoSaveInputActionAssets && m_IsDirty)
             {
-                // We'd like to avoid saving in case the focus was lost due to the drop-down window being spawned.
-                // This code should be cleaned up once we migrate the InputControl stuff from ImGUI completely.
-                // Since at that point it stops being a separate window that steals focus.
+                // Avoid saving when the control path picker drop-down (still an IMGUI window) steals focus.
                 // (See case ISXB-1221)
                 if (!InputControlPathEditor.IsShowingDropdown && !m_View.IsControlSchemeViewActive())
                 {
