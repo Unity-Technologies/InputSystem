@@ -99,6 +99,17 @@ namespace UnityEngine.InputSystem.Editor
             DrawSettingsGUI(includeUIToolkitHeader: false);
         }
 
+        private void DrawSupportedDevicesGUI()
+        {
+            InitializeWithCurrentSettingsIfNecessary();
+
+            using (new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
+            {
+                Debug.Assert(m_Settings != null);
+                m_SupportedDevices.DoLayoutList();
+            }
+        }
+
         private void DrawSettingsGUI(bool includeUIToolkitHeader)
         {
             InitializeWithCurrentSettingsIfNecessary();
@@ -164,17 +175,19 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
                 }
 
-                EditorGUILayout.Space();
-                EditorGUILayout.Separator();
-                EditorGUILayout.Space();
-
                 if (!includeUIToolkitHeader)
+                {
+                    EditorGUILayout.Space();
+                    EditorGUILayout.Separator();
+                    EditorGUILayout.Space();
+
                     EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
                         + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
                         + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
                         + "as supported will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
 
-                m_SupportedDevices.DoLayoutList();
+                    m_SupportedDevices.DoLayoutList();
+                }
 
                 if (!includeUIToolkitHeader)
                 {
@@ -340,7 +353,12 @@ namespace UnityEngine.InputSystem.Editor
             m_SupportedDevicesHelpBox.style.marginTop = 48;
             m_HeaderContainer.Add(m_SupportedDevicesHelpBox);
 
-            m_iOSProvider.CreateGUI(m_HeaderContainer, () =>
+            m_RootElement.Add(new IMGUIContainer(DrawSupportedDevicesGUI));
+
+            var lowerSectionsContainer = new VisualElement();
+            m_RootElement.Add(lowerSectionsContainer);
+
+            m_iOSProvider.CreateGUI(lowerSectionsContainer, () =>
             {
                 Apply();
                 RefreshUIToolkitHeaderState();
@@ -349,24 +367,24 @@ namespace UnityEngine.InputSystem.Editor
             var editorTitleLabel = new Label("Editor");
             editorTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             editorTitleLabel.style.marginTop = 12;
-            m_HeaderContainer.Add(editorTitleLabel);
+            lowerSectionsContainer.Add(editorTitleLabel);
 
             m_EditorInputBehaviorInPlayModeDropdown = CreateEnumDropdown(
                 () => m_EditorInputBehaviorInPlayMode,
                 m_EditorInputBehaviorInPlayModeContent,
                 RefreshUIToolkitHeaderState);
-            m_HeaderContainer.Add(m_EditorInputBehaviorInPlayModeDropdown);
+            lowerSectionsContainer.Add(m_EditorInputBehaviorInPlayModeDropdown);
 
             var shortcutSupportTitleLabel = new Label("Improved Shortcut Support");
             shortcutSupportTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             shortcutSupportTitleLabel.style.marginTop = 12;
-            m_HeaderContainer.Add(shortcutSupportTitleLabel);
+            lowerSectionsContainer.Add(shortcutSupportTitleLabel);
 
             m_ShortcutKeysConsumeInputsToggle = CreateToggle(
                 () => m_ShortcutKeysConsumeInputs,
                 m_ShortcutKeysConsumeInputsContent,
                 RefreshUIToolkitHeaderState);
-            m_HeaderContainer.Add(m_ShortcutKeysConsumeInputsToggle);
+            lowerSectionsContainer.Add(m_ShortcutKeysConsumeInputsToggle);
 
             m_ShortcutKeysConsumeInputsHelpBox = new HelpBox(
                 "Please note that enabling Improved Shortcut Support will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls. "
@@ -377,7 +395,7 @@ namespace UnityEngine.InputSystem.Editor
                 + "However conflicts would not occur between actions which belong to different Action Assets. "
                 + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. ",
                 HelpBoxMessageType.None);
-            m_HeaderContainer.Add(m_ShortcutKeysConsumeInputsHelpBox);
+            lowerSectionsContainer.Add(m_ShortcutKeysConsumeInputsHelpBox);
 
             m_IMGUIContainer = new IMGUIContainer(() => DrawSettingsGUI(includeUIToolkitHeader: true));
             m_RootElement.Add(m_IMGUIContainer);
