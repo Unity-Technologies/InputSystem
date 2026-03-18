@@ -20,6 +20,7 @@ namespace UnityEngine.InputSystem.Editor
     /// </remarks>
     internal static class EditorInputControlLayoutCache
     {
+        
         /// <summary>
         /// Iterate over all control layouts in the system.
         /// </summary>
