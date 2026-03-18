@@ -214,6 +214,7 @@ namespace UnityEngine.InputSystem.Editor
             var titleLabel = new Label("Input Settings");
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             titleLabel.style.fontSize = 19;
+            titleLabel.style.marginBottom = 12;
             m_RootElement.Add(titleLabel);
 
             m_HeaderContainer = new VisualElement();
@@ -262,6 +263,8 @@ namespace UnityEngine.InputSystem.Editor
                 () => m_CompensateForScreenOrientation,
                 m_CompensateForScreenOrientationContent,
                 RefreshUIToolkitHeaderState);
+            m_CompensateForScreenOrientationToggle.style.marginTop = 12;
+            m_CompensateForScreenOrientationToggle.style.marginBottom = 12;
             m_HeaderContainer.Add(m_CompensateForScreenOrientationToggle);
 
             m_DefaultDeadzoneMinField = CreateFloatField(
