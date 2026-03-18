@@ -54,13 +54,16 @@ namespace UnityEngine.InputSystem.Editor
         public override void OnActivate(string searchContext, VisualElement rootElement)
         {
             base.OnActivate(searchContext, rootElement);
+            m_RootElement = rootElement;
             InputSystem.onSettingsChange += OnSettingsChange;
             Undo.undoRedoPerformed += OnUndoRedo;
+            BuildUI();
         }
 
         public override void OnDeactivate()
         {
             base.OnDeactivate();
+            m_RootElement = null;
             InputSystem.onSettingsChange -= OnSettingsChange;
             Undo.undoRedoPerformed -= OnUndoRedo;
         }
@@ -90,6 +93,14 @@ namespace UnityEngine.InputSystem.Editor
 
         public override void OnGUI(string searchContext)
         {
+            if (m_RootElement != null)
+                return;
+
+            DrawSettingsGUI(includeUIToolkitHeader: false);
+        }
+
+        private void DrawSettingsGUI(bool includeUIToolkitHeader)
+        {
             InitializeWithCurrentSettingsIfNecessary();
 
             if (m_AvailableInputSettingsAssets.Length == 0)
@@ -112,22 +123,25 @@ namespace UnityEngine.InputSystem.Editor
 
                 EditorGUI.BeginChangeCheck();
 
-                EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
-                if (InputSystem.settings?.updateMode == InputSettings.UpdateMode.ProcessEventsManually)
-                    CustomUpdateModeHelpBox();
+                if (!includeUIToolkitHeader)
+                {
+                    EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
+                    if (InputSystem.settings?.updateMode == InputSettings.UpdateMode.ProcessEventsManually)
+                        CustomUpdateModeHelpBox();
 
-                var runInBackground = Application.runInBackground;
-                using (new EditorGUI.DisabledScope(!runInBackground))
-                    EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
-                if (!runInBackground)
-                    EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
+                    var runInBackground = Application.runInBackground;
+                    using (new EditorGUI.DisabledScope(!runInBackground))
+                        EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
+                    if (!runInBackground)
+                        EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
 
 #if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
-                EditorGUILayout.PropertyField(m_ScrollDeltaBehavior, m_ScrollDeltaBehaviorContent);
+                    EditorGUILayout.PropertyField(m_ScrollDeltaBehavior, m_ScrollDeltaBehaviorContent);
 #endif
 
-                EditorGUILayout.Space();
-                EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
+                    EditorGUILayout.Space();
+                    EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
+                }
 
                 // NOTE: We do NOT make showing this one conditional on whether runInBackground is actually set in the
                 //       player settings as regardless of whether it's on or not, Unity will force it on in standalone
@@ -186,20 +200,195 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
+        private void BuildUI()
+        {
+            if (m_RootElement == null)
+                return;
+
+            InitializeWithCurrentSettingsIfNecessary();
+            m_RootElement.Clear();
+
+            var titleLabel = new Label("Input Settings");
+            titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            titleLabel.style.fontSize = 19;
+            m_RootElement.Add(titleLabel);
+
+            m_HeaderContainer = new VisualElement();
+            m_RootElement.Add(m_HeaderContainer);
+
+            m_UpdateModeDropdown = CreateEnumDropdown(
+                () => m_UpdateMode,
+                m_UpdateModeContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_UpdateModeDropdown);
+
+            m_UpdateModeHelpContainer = new VisualElement();
+
+            m_UpdateModeHelpBox = new HelpBox(
+                "This is not recommended, the default update mode is dynamic update and should only be changed for compelling reasons. Please refer to the documentation.",
+                HelpBoxMessageType.Warning);
+            m_UpdateModeHelpContainer.Add(m_UpdateModeHelpBox);
+
+            m_UpdateModeReadMoreButton = new Button(OpenUpdateModeDocumentation)
+            {
+                text = "Read more"
+            };
+            m_UpdateModeHelpContainer.Add(m_UpdateModeReadMoreButton);
+            m_HeaderContainer.Add(m_UpdateModeHelpContainer);
+
+            m_BackgroundBehaviorDropdown = CreateEnumDropdown(
+                () => m_BackgroundBehavior,
+                m_BackgroundBehaviorContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_BackgroundBehaviorDropdown);
+
+            m_BackgroundBehaviorHelpBox = new HelpBox(
+                "Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.",
+                HelpBoxMessageType.Info);
+            m_HeaderContainer.Add(m_BackgroundBehaviorHelpBox);
+
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+            m_ScrollDeltaBehaviorDropdown = CreateEnumDropdown(
+                () => m_ScrollDeltaBehavior,
+                m_ScrollDeltaBehaviorContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_ScrollDeltaBehaviorDropdown);
+#endif
+
+            m_CompensateForScreenOrientationToggle = CreateToggle(
+                () => m_CompensateForScreenOrientation,
+                m_CompensateForScreenOrientationContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_CompensateForScreenOrientationToggle);
+
+            m_IMGUIContainer = new IMGUIContainer(() => DrawSettingsGUI(includeUIToolkitHeader: true));
+            m_RootElement.Add(m_IMGUIContainer);
+
+            RefreshUIToolkitHeaderState();
+        }
+
+        private DropdownField CreateEnumDropdown(Func<SerializedProperty> propertyAccessor, GUIContent content, Action onValueChanged)
+        {
+            var dropdown = new DropdownField(content.text)
+            {
+                tooltip = content.tooltip
+            };
+            dropdown.RegisterValueChangedCallback(evt =>
+            {
+                var property = propertyAccessor();
+                if (property == null)
+                    return;
+
+                var newIndex = dropdown.choices?.IndexOf(evt.newValue) ?? -1;
+                if (newIndex == -1 || property.enumValueIndex == newIndex)
+                    return;
+
+                property.enumValueIndex = newIndex;
+                Apply();
+                onValueChanged?.Invoke();
+            });
+
+            return dropdown;
+        }
+
+        private Toggle CreateToggle(Func<SerializedProperty> propertyAccessor, GUIContent content, Action onValueChanged)
+        {
+            var toggle = new Toggle(content.text)
+            {
+                tooltip = content.tooltip
+            };
+            toggle.RegisterValueChangedCallback(evt =>
+            {
+                var property = propertyAccessor();
+                if (property == null || property.boolValue == evt.newValue)
+                    return;
+
+                property.boolValue = evt.newValue;
+                Apply();
+                onValueChanged?.Invoke();
+            });
+
+            return toggle;
+        }
+
+        private void RefreshUIToolkitHeaderState()
+        {
+            if (m_HeaderContainer == null)
+                return;
+
+            var hasSettings = m_SettingsObject != null;
+            var hasSettingsAsset = m_AvailableInputSettingsAssets != null && m_AvailableInputSettingsAssets.Length != 0;
+            var canEditSettings = hasSettings && hasSettingsAsset;
+
+            UpdateDropdownChoices(m_UpdateModeDropdown, m_UpdateMode);
+            if (m_UpdateModeDropdown != null)
+                m_UpdateModeDropdown.SetEnabled(canEditSettings && m_UpdateMode != null);
+
+            var showManualUpdateModeHelp = hasSettings &&
+                m_UpdateMode != null &&
+                m_UpdateMode.intValue == (int)InputSettings.UpdateMode.ProcessEventsManually;
+            if (m_UpdateModeHelpContainer != null)
+                m_UpdateModeHelpContainer.style.display = showManualUpdateModeHelp ? DisplayStyle.Flex : DisplayStyle.None;
+
+            UpdateDropdownChoices(m_BackgroundBehaviorDropdown, m_BackgroundBehavior);
+            if (m_BackgroundBehaviorDropdown != null)
+                m_BackgroundBehaviorDropdown.SetEnabled(canEditSettings && Application.runInBackground && m_BackgroundBehavior != null);
+
+            if (m_BackgroundBehaviorHelpBox != null)
+            {
+                var showRunInBackgroundHelp = hasSettings && !Application.runInBackground;
+                m_BackgroundBehaviorHelpBox.style.display = showRunInBackgroundHelp ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+            UpdateDropdownChoices(m_ScrollDeltaBehaviorDropdown, m_ScrollDeltaBehavior);
+            if (m_ScrollDeltaBehaviorDropdown != null)
+                m_ScrollDeltaBehaviorDropdown.SetEnabled(canEditSettings && m_ScrollDeltaBehavior != null);
+#endif
+
+            if (m_CompensateForScreenOrientationToggle != null)
+            {
+                m_CompensateForScreenOrientationToggle.SetEnabled(canEditSettings && m_CompensateForScreenOrientation != null);
+                m_CompensateForScreenOrientationToggle.SetValueWithoutNotify(m_CompensateForScreenOrientation?.boolValue ?? false);
+            }
+        }
+
+        private static void UpdateDropdownChoices(DropdownField dropdown, SerializedProperty property)
+        {
+            if (dropdown == null)
+                return;
+
+            if (property == null)
+            {
+                dropdown.choices = Array.Empty<string>().ToList();
+                dropdown.SetValueWithoutNotify(string.Empty);
+                return;
+            }
+
+            dropdown.choices = property.enumDisplayNames.ToList();
+            if (property.enumValueIndex >= 0 && property.enumValueIndex < dropdown.choices.Count)
+                dropdown.SetValueWithoutNotify(dropdown.choices[property.enumValueIndex]);
+        }
+
         private void CustomUpdateModeHelpBox()
         {
             var message =
-                "This is not recommended, the default update mode  is dynamic update and should only be changed for compelling reasons.\nPlease refer to the documentation.";
-            Uri link = new Uri(InputSystem.kDocUrl + "/manual/Settings.html#update-mode");
+                "This is not recommended, the default update mode is dynamic update and should only be changed for compelling reasons.\nPlease refer to the documentation.";
             GUILayout.BeginHorizontal(EditorStyles.helpBox);
             GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.ExpandWidth(false));
             GUILayout.BeginVertical();
             GUILayout.Label(message, EditorStyles.label);
             if (GUILayout.Button("Read more", EditorStyles.linkLabel))
-                System.Diagnostics.Process.Start(link.AbsoluteUri);
+                OpenUpdateModeDocumentation();
             EditorGUIUtility.AddCursorRect(GUILayoutUtility.GetLastRect(), MouseCursor.Link);
             GUILayout.EndVertical();
             GUILayout.EndHorizontal();
+        }
+
+        private static void OpenUpdateModeDocumentation()
+        {
+            var link = new Uri(InputSystem.kDocUrl + "/manual/Settings.html#update-mode");
+            System.Diagnostics.Process.Start(link.AbsoluteUri);
         }
 
         private static void ShowPlatformSettings()
@@ -402,11 +591,13 @@ namespace UnityEngine.InputSystem.Editor
             if (m_Settings != null && EditorUtility.GetDirtyCount(m_Settings) != m_SettingsDirtyCount)
                 m_Settings.OnChange();
             InitializeWithCurrentSettingsIfNecessary();
+            RefreshUIToolkitHeaderState();
         }
 
         private void OnSettingsChange()
         {
             InitializeWithCurrentSettingsIfNecessary();
+            RefreshUIToolkitHeaderState();
 
             ////REVIEW: leads to double-repaint when the settings change is initiated by us; problem?
             Repaint();
@@ -470,6 +661,19 @@ namespace UnityEngine.InputSystem.Editor
         private GUIContent m_ShortcutKeysConsumeInputsContent;
 
         [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
+        [NonSerialized] private VisualElement m_RootElement;
+        [NonSerialized] private VisualElement m_HeaderContainer;
+        [NonSerialized] private VisualElement m_UpdateModeHelpContainer;
+        [NonSerialized] private IMGUIContainer m_IMGUIContainer;
+        [NonSerialized] private DropdownField m_UpdateModeDropdown;
+        [NonSerialized] private DropdownField m_BackgroundBehaviorDropdown;
+#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
+        [NonSerialized] private DropdownField m_ScrollDeltaBehaviorDropdown;
+#endif
+        [NonSerialized] private Toggle m_CompensateForScreenOrientationToggle;
+        [NonSerialized] private HelpBox m_UpdateModeHelpBox;
+        [NonSerialized] private Button m_UpdateModeReadMoreButton;
+        [NonSerialized] private HelpBox m_BackgroundBehaviorHelpBox;
 
         private static InputSettingsProvider s_Instance;
 
