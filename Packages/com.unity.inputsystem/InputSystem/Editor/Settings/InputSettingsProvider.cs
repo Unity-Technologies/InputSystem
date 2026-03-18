@@ -175,9 +175,12 @@ namespace UnityEngine.InputSystem.Editor
 
                 m_SupportedDevices.DoLayoutList();
 
-                EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
-                EditorGUILayout.Space();
-                m_iOSProvider.OnGUI();
+                if (!includeUIToolkitHeader)
+                {
+                    EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
+                    EditorGUILayout.Space();
+                    m_iOSProvider.OnGUI();
+                }
 
                 EditorGUILayout.Space();
                 EditorGUILayout.LabelField("Editor", EditorStyles.boldLabel);
@@ -321,6 +324,12 @@ namespace UnityEngine.InputSystem.Editor
                 RefreshUIToolkitHeaderState);
             m_HeaderContainer.Add(m_MultiTapDelayTimeField);
 
+            m_iOSProvider.CreateGUI(m_HeaderContainer, () =>
+            {
+                Apply();
+                RefreshUIToolkitHeaderState();
+            });
+
             m_IMGUIContainer = new IMGUIContainer(() => DrawSettingsGUI(includeUIToolkitHeader: true));
             m_RootElement.Add(m_IMGUIContainer);
 
@@ -441,6 +450,7 @@ namespace UnityEngine.InputSystem.Editor
             UpdateFloatField(m_DefaultHoldTimeField, m_DefaultHoldTime, canEditSettings);
             UpdateFloatField(m_TapRadiusField, m_TapRadius, canEditSettings);
             UpdateFloatField(m_MultiTapDelayTimeField, m_MultiTapDelayTime, canEditSettings);
+            m_iOSProvider?.RefreshUIToolkitState(canEditSettings);
         }
 
         private static void UpdateDropdownChoices(DropdownField dropdown, SerializedProperty property)
@@ -673,7 +683,10 @@ namespace UnityEngine.InputSystem.Editor
                 }
             };
 
-            m_iOSProvider = new InputSettingsiOSProvider(m_SettingsObject);
+            if (m_iOSProvider == null)
+                m_iOSProvider = new InputSettingsiOSProvider(m_SettingsObject);
+            else
+                m_iOSProvider.Update(m_SettingsObject);
         }
 
         private void Apply()
