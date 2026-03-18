@@ -6,8 +6,6 @@ using UnityEditorInternal;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
-////TODO: detect if new input backends are enabled and put UI in here to enable them if needed
-
 #pragma warning disable CS0414
 namespace UnityEngine.InputSystem.Editor
 {
