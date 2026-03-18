@@ -1347,7 +1347,15 @@ namespace UnityEngine.InputSystem.UI
         public InputActionReference move
         {
             get => m_MoveAction;
-            set => SwapAction(ref m_MoveAction, value, m_ActionsHooked, m_OnMoveDelegate);
+            set
+            {
+                SwapAction(ref m_MoveAction, value, m_ActionsHooked, m_OnMoveDelegate);
+                // Because moveAction is the only action cached in the navigation state,
+                // we need to read new action's current value to avoid stale state from the previous action.
+                m_NavigationState.move = m_MoveAction?.action != null && m_MoveAction.action.enabled
+                    ? m_MoveAction.action.ReadValue<Vector2>()
+                    : Vector2.zero;
+            }
         }
 
         /// <summary>
