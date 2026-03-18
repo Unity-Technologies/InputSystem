@@ -190,19 +190,22 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
                 }
 
-                EditorGUILayout.Space();
-                EditorGUILayout.LabelField("Improved Shortcut Support", EditorStyles.boldLabel);
-                EditorGUILayout.Space();
-                EditorGUILayout.PropertyField(m_ShortcutKeysConsumeInputs, m_ShortcutKeysConsumeInputsContent);
-                if (m_ShortcutKeysConsumeInputs.boolValue)
-                    EditorGUILayout.HelpBox("Please note that enabling Improved Shortcut Support will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls. "
-                        + "Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first. "
-                        + "Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls. "
-                        + "This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered. "
-                        + "These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys. "
-                        + "However conflicts would not occur between actions which belong to different Action Assets. "
-                        + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. "
-                        , MessageType.None);
+                if (!includeUIToolkitHeader)
+                {
+                    EditorGUILayout.Space();
+                    EditorGUILayout.LabelField("Improved Shortcut Support", EditorStyles.boldLabel);
+                    EditorGUILayout.Space();
+                    EditorGUILayout.PropertyField(m_ShortcutKeysConsumeInputs, m_ShortcutKeysConsumeInputsContent);
+                    if (m_ShortcutKeysConsumeInputs.boolValue)
+                        EditorGUILayout.HelpBox("Please note that enabling Improved Shortcut Support will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls. "
+                            + "Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first. "
+                            + "Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls. "
+                            + "This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered. "
+                            + "These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys. "
+                            + "However conflicts would not occur between actions which belong to different Action Assets. "
+                            + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. "
+                            , MessageType.None);
+                }
 
                 if (EditorGUI.EndChangeCheck())
                     Apply();
@@ -344,6 +347,28 @@ namespace UnityEngine.InputSystem.Editor
                 RefreshUIToolkitHeaderState);
             m_HeaderContainer.Add(m_EditorInputBehaviorInPlayModeDropdown);
 
+            var shortcutSupportTitleLabel = new Label("Improved Shortcut Support");
+            shortcutSupportTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            shortcutSupportTitleLabel.style.marginTop = 12;
+            m_HeaderContainer.Add(shortcutSupportTitleLabel);
+
+            m_ShortcutKeysConsumeInputsToggle = CreateToggle(
+                () => m_ShortcutKeysConsumeInputs,
+                m_ShortcutKeysConsumeInputsContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_ShortcutKeysConsumeInputsToggle);
+
+            m_ShortcutKeysConsumeInputsHelpBox = new HelpBox(
+                "Please note that enabling Improved Shortcut Support will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls. "
+                + "Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first. "
+                + "Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls. "
+                + "This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered. "
+                + "These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys. "
+                + "However conflicts would not occur between actions which belong to different Action Assets. "
+                + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. ",
+                HelpBoxMessageType.None);
+            m_HeaderContainer.Add(m_ShortcutKeysConsumeInputsHelpBox);
+
             m_IMGUIContainer = new IMGUIContainer(() => DrawSettingsGUI(includeUIToolkitHeader: true));
             m_RootElement.Add(m_IMGUIContainer);
 
@@ -468,6 +493,18 @@ namespace UnityEngine.InputSystem.Editor
             UpdateDropdownChoices(m_EditorInputBehaviorInPlayModeDropdown, m_EditorInputBehaviorInPlayMode);
             if (m_EditorInputBehaviorInPlayModeDropdown != null)
                 m_EditorInputBehaviorInPlayModeDropdown.SetEnabled(canEditSettings && m_EditorInputBehaviorInPlayMode != null);
+
+            if (m_ShortcutKeysConsumeInputsToggle != null)
+            {
+                m_ShortcutKeysConsumeInputsToggle.SetEnabled(canEditSettings && m_ShortcutKeysConsumeInputs != null);
+                m_ShortcutKeysConsumeInputsToggle.SetValueWithoutNotify(m_ShortcutKeysConsumeInputs?.boolValue ?? false);
+            }
+
+            if (m_ShortcutKeysConsumeInputsHelpBox != null)
+                m_ShortcutKeysConsumeInputsHelpBox.style.display =
+                    m_ShortcutKeysConsumeInputs != null && m_ShortcutKeysConsumeInputs.boolValue
+                        ? DisplayStyle.Flex
+                        : DisplayStyle.None;
 
             m_iOSProvider?.RefreshUIToolkitState(canEditSettings);
         }
@@ -803,6 +840,7 @@ namespace UnityEngine.InputSystem.Editor
 #endif
         [NonSerialized] private DropdownField m_EditorInputBehaviorInPlayModeDropdown;
         [NonSerialized] private Toggle m_CompensateForScreenOrientationToggle;
+        [NonSerialized] private Toggle m_ShortcutKeysConsumeInputsToggle;
         [NonSerialized] private FloatField m_DefaultDeadzoneMinField;
         [NonSerialized] private FloatField m_DefaultDeadzoneMaxField;
         [NonSerialized] private FloatField m_DefaultButtonPressPointField;
@@ -815,6 +853,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private HelpBox m_UpdateModeHelpBox;
         [NonSerialized] private Button m_UpdateModeReadMoreButton;
         [NonSerialized] private HelpBox m_BackgroundBehaviorHelpBox;
+        [NonSerialized] private HelpBox m_ShortcutKeysConsumeInputsHelpBox;
 
         private static InputSettingsProvider s_Instance;
 
