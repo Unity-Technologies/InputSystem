@@ -150,14 +150,10 @@ namespace UnityEngine.InputSystem.Editor
 
                     EditorGUILayout.Space();
                     EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
-                }
 
                 // NOTE: We do NOT make showing this one conditional on whether runInBackground is actually set in the
                 //       player settings as regardless of whether it's on or not, Unity will force it on in standalone
                 //       development players.
-
-                if (!includeUIToolkitHeader)
-                {
                     EditorGUILayout.Space();
                     EditorGUILayout.Separator();
                     EditorGUILayout.Space();
@@ -171,10 +167,7 @@ namespace UnityEngine.InputSystem.Editor
                     EditorGUILayout.PropertyField(m_DefaultHoldTime, m_DefaultHoldTimeContent);
                     EditorGUILayout.PropertyField(m_TapRadius, m_TapRadiusContent);
                     EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
-                }
 
-                if (!includeUIToolkitHeader)
-                {
                     EditorGUILayout.Space();
                     EditorGUILayout.Separator();
                     EditorGUILayout.Space();
@@ -185,25 +178,16 @@ namespace UnityEngine.InputSystem.Editor
                         + "as supported will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
 
                     m_SupportedDevices.DoLayoutList();
-                }
 
-                if (!includeUIToolkitHeader)
-                {
                     EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
                     EditorGUILayout.Space();
                     m_iOSProvider.OnGUI();
-                }
 
-                if (!includeUIToolkitHeader)
-                {
                     EditorGUILayout.Space();
                     EditorGUILayout.LabelField("Editor", EditorStyles.boldLabel);
                     EditorGUILayout.Space();
                     EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
-                }
 
-                if (!includeUIToolkitHeader)
-                {
                     EditorGUILayout.Space();
                     EditorGUILayout.LabelField("Improved Shortcut Support", EditorStyles.boldLabel);
                     EditorGUILayout.Space();
