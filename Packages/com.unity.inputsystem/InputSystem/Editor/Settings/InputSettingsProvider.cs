@@ -331,6 +331,15 @@ namespace UnityEngine.InputSystem.Editor
                 RefreshUIToolkitHeaderState);
             m_HeaderContainer.Add(m_MultiTapDelayTimeField);
 
+            m_SupportedDevicesHelpBox = new HelpBox(
+                "Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
+                + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
+                + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
+                + "as supported will appear under 'Unsupported Devices' in the input debugger.",
+                HelpBoxMessageType.None);
+            m_SupportedDevicesHelpBox.style.marginTop = 48;
+            m_HeaderContainer.Add(m_SupportedDevicesHelpBox);
+
             m_iOSProvider.CreateGUI(m_HeaderContainer, () =>
             {
                 Apply();
@@ -369,14 +378,6 @@ namespace UnityEngine.InputSystem.Editor
                 + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. ",
                 HelpBoxMessageType.None);
             m_HeaderContainer.Add(m_ShortcutKeysConsumeInputsHelpBox);
-
-            m_SupportedDevicesHelpBox = new HelpBox(
-                "Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
-                + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
-                + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
-                + "as supported will appear under 'Unsupported Devices' in the input debugger.",
-                HelpBoxMessageType.None);
-            m_HeaderContainer.Add(m_SupportedDevicesHelpBox);
 
             m_IMGUIContainer = new IMGUIContainer(() => DrawSettingsGUI(includeUIToolkitHeader: true));
             m_RootElement.Add(m_IMGUIContainer);
