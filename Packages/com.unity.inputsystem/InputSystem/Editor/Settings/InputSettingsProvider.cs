@@ -531,8 +531,8 @@ namespace UnityEngine.InputSystem.Editor
             if (m_ShortcutKeysConsumeInputsHelpBox != null)
                 m_ShortcutKeysConsumeInputsHelpBox.style.display =
                     m_ShortcutKeysConsumeInputs != null && m_ShortcutKeysConsumeInputs.boolValue
-                        ? DisplayStyle.Flex
-                        : DisplayStyle.None;
+                    ? DisplayStyle.Flex
+                    : DisplayStyle.None;
 
             m_iOSProvider?.RefreshUIToolkitState(canEditSettings);
         }
