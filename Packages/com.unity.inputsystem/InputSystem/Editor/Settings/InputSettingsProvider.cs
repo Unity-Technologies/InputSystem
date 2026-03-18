@@ -182,10 +182,13 @@ namespace UnityEngine.InputSystem.Editor
                     m_iOSProvider.OnGUI();
                 }
 
-                EditorGUILayout.Space();
-                EditorGUILayout.LabelField("Editor", EditorStyles.boldLabel);
-                EditorGUILayout.Space();
-                EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
+                if (!includeUIToolkitHeader)
+                {
+                    EditorGUILayout.Space();
+                    EditorGUILayout.LabelField("Editor", EditorStyles.boldLabel);
+                    EditorGUILayout.Space();
+                    EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
+                }
 
                 EditorGUILayout.Space();
                 EditorGUILayout.LabelField("Improved Shortcut Support", EditorStyles.boldLabel);
@@ -330,6 +333,17 @@ namespace UnityEngine.InputSystem.Editor
                 RefreshUIToolkitHeaderState();
             });
 
+            var editorTitleLabel = new Label("Editor");
+            editorTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            editorTitleLabel.style.marginTop = 12;
+            m_HeaderContainer.Add(editorTitleLabel);
+
+            m_EditorInputBehaviorInPlayModeDropdown = CreateEnumDropdown(
+                () => m_EditorInputBehaviorInPlayMode,
+                m_EditorInputBehaviorInPlayModeContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_EditorInputBehaviorInPlayModeDropdown);
+
             m_IMGUIContainer = new IMGUIContainer(() => DrawSettingsGUI(includeUIToolkitHeader: true));
             m_RootElement.Add(m_IMGUIContainer);
 
@@ -450,6 +464,11 @@ namespace UnityEngine.InputSystem.Editor
             UpdateFloatField(m_DefaultHoldTimeField, m_DefaultHoldTime, canEditSettings);
             UpdateFloatField(m_TapRadiusField, m_TapRadius, canEditSettings);
             UpdateFloatField(m_MultiTapDelayTimeField, m_MultiTapDelayTime, canEditSettings);
+
+            UpdateDropdownChoices(m_EditorInputBehaviorInPlayModeDropdown, m_EditorInputBehaviorInPlayMode);
+            if (m_EditorInputBehaviorInPlayModeDropdown != null)
+                m_EditorInputBehaviorInPlayModeDropdown.SetEnabled(canEditSettings && m_EditorInputBehaviorInPlayMode != null);
+
             m_iOSProvider?.RefreshUIToolkitState(canEditSettings);
         }
 
@@ -782,6 +801,7 @@ namespace UnityEngine.InputSystem.Editor
 #if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
         [NonSerialized] private DropdownField m_ScrollDeltaBehaviorDropdown;
 #endif
+        [NonSerialized] private DropdownField m_EditorInputBehaviorInPlayModeDropdown;
         [NonSerialized] private Toggle m_CompensateForScreenOrientationToggle;
         [NonSerialized] private FloatField m_DefaultDeadzoneMinField;
         [NonSerialized] private FloatField m_DefaultDeadzoneMaxField;
