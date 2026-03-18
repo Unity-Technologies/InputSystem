@@ -147,19 +147,22 @@ namespace UnityEngine.InputSystem.Editor
                 //       player settings as regardless of whether it's on or not, Unity will force it on in standalone
                 //       development players.
 
-                EditorGUILayout.Space();
-                EditorGUILayout.Separator();
-                EditorGUILayout.Space();
+                if (!includeUIToolkitHeader)
+                {
+                    EditorGUILayout.Space();
+                    EditorGUILayout.Separator();
+                    EditorGUILayout.Space();
 
-                EditorGUILayout.PropertyField(m_DefaultDeadzoneMin, m_DefaultDeadzoneMinContent);
-                EditorGUILayout.PropertyField(m_DefaultDeadzoneMax, m_DefaultDeadzoneMaxContent);
-                EditorGUILayout.PropertyField(m_DefaultButtonPressPoint, m_DefaultButtonPressPointContent);
-                EditorGUILayout.PropertyField(m_ButtonReleaseThreshold, m_ButtonReleaseThresholdContent);
-                EditorGUILayout.PropertyField(m_DefaultTapTime, m_DefaultTapTimeContent);
-                EditorGUILayout.PropertyField(m_DefaultSlowTapTime, m_DefaultSlowTapTimeContent);
-                EditorGUILayout.PropertyField(m_DefaultHoldTime, m_DefaultHoldTimeContent);
-                EditorGUILayout.PropertyField(m_TapRadius, m_TapRadiusContent);
-                EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
+                    EditorGUILayout.PropertyField(m_DefaultDeadzoneMin, m_DefaultDeadzoneMinContent);
+                    EditorGUILayout.PropertyField(m_DefaultDeadzoneMax, m_DefaultDeadzoneMaxContent);
+                    EditorGUILayout.PropertyField(m_DefaultButtonPressPoint, m_DefaultButtonPressPointContent);
+                    EditorGUILayout.PropertyField(m_ButtonReleaseThreshold, m_ButtonReleaseThresholdContent);
+                    EditorGUILayout.PropertyField(m_DefaultTapTime, m_DefaultTapTimeContent);
+                    EditorGUILayout.PropertyField(m_DefaultSlowTapTime, m_DefaultSlowTapTimeContent);
+                    EditorGUILayout.PropertyField(m_DefaultHoldTime, m_DefaultHoldTimeContent);
+                    EditorGUILayout.PropertyField(m_TapRadius, m_TapRadiusContent);
+                    EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
+                }
 
                 EditorGUILayout.Space();
                 EditorGUILayout.Separator();
@@ -261,6 +264,60 @@ namespace UnityEngine.InputSystem.Editor
                 RefreshUIToolkitHeaderState);
             m_HeaderContainer.Add(m_CompensateForScreenOrientationToggle);
 
+            m_DefaultDeadzoneMinField = CreateFloatField(
+                () => m_DefaultDeadzoneMin,
+                m_DefaultDeadzoneMinContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_DefaultDeadzoneMinField);
+
+            m_DefaultDeadzoneMaxField = CreateFloatField(
+                () => m_DefaultDeadzoneMax,
+                m_DefaultDeadzoneMaxContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_DefaultDeadzoneMaxField);
+
+            m_DefaultButtonPressPointField = CreateFloatField(
+                () => m_DefaultButtonPressPoint,
+                m_DefaultButtonPressPointContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_DefaultButtonPressPointField);
+
+            m_ButtonReleaseThresholdField = CreateFloatField(
+                () => m_ButtonReleaseThreshold,
+                m_ButtonReleaseThresholdContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_ButtonReleaseThresholdField);
+
+            m_DefaultTapTimeField = CreateFloatField(
+                () => m_DefaultTapTime,
+                m_DefaultTapTimeContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_DefaultTapTimeField);
+
+            m_DefaultSlowTapTimeField = CreateFloatField(
+                () => m_DefaultSlowTapTime,
+                m_DefaultSlowTapTimeContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_DefaultSlowTapTimeField);
+
+            m_DefaultHoldTimeField = CreateFloatField(
+                () => m_DefaultHoldTime,
+                m_DefaultHoldTimeContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_DefaultHoldTimeField);
+
+            m_TapRadiusField = CreateFloatField(
+                () => m_TapRadius,
+                m_TapRadiusContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_TapRadiusField);
+
+            m_MultiTapDelayTimeField = CreateFloatField(
+                () => m_MultiTapDelayTime,
+                m_MultiTapDelayTimeContent,
+                RefreshUIToolkitHeaderState);
+            m_HeaderContainer.Add(m_MultiTapDelayTimeField);
+
             m_IMGUIContainer = new IMGUIContainer(() => DrawSettingsGUI(includeUIToolkitHeader: true));
             m_RootElement.Add(m_IMGUIContainer);
 
@@ -311,6 +368,26 @@ namespace UnityEngine.InputSystem.Editor
             return toggle;
         }
 
+        private FloatField CreateFloatField(Func<SerializedProperty> propertyAccessor, GUIContent content, Action onValueChanged)
+        {
+            var field = new FloatField(content.text)
+            {
+                tooltip = content.tooltip
+            };
+            field.RegisterValueChangedCallback(evt =>
+            {
+                var property = propertyAccessor();
+                if (property == null || Mathf.Approximately(property.floatValue, evt.newValue))
+                    return;
+
+                property.floatValue = evt.newValue;
+                Apply();
+                onValueChanged?.Invoke();
+            });
+
+            return field;
+        }
+
         private void RefreshUIToolkitHeaderState()
         {
             if (m_HeaderContainer == null)
@@ -351,6 +428,16 @@ namespace UnityEngine.InputSystem.Editor
                 m_CompensateForScreenOrientationToggle.SetEnabled(canEditSettings && m_CompensateForScreenOrientation != null);
                 m_CompensateForScreenOrientationToggle.SetValueWithoutNotify(m_CompensateForScreenOrientation?.boolValue ?? false);
             }
+
+            UpdateFloatField(m_DefaultDeadzoneMinField, m_DefaultDeadzoneMin, canEditSettings);
+            UpdateFloatField(m_DefaultDeadzoneMaxField, m_DefaultDeadzoneMax, canEditSettings);
+            UpdateFloatField(m_DefaultButtonPressPointField, m_DefaultButtonPressPoint, canEditSettings);
+            UpdateFloatField(m_ButtonReleaseThresholdField, m_ButtonReleaseThreshold, canEditSettings);
+            UpdateFloatField(m_DefaultTapTimeField, m_DefaultTapTime, canEditSettings);
+            UpdateFloatField(m_DefaultSlowTapTimeField, m_DefaultSlowTapTime, canEditSettings);
+            UpdateFloatField(m_DefaultHoldTimeField, m_DefaultHoldTime, canEditSettings);
+            UpdateFloatField(m_TapRadiusField, m_TapRadius, canEditSettings);
+            UpdateFloatField(m_MultiTapDelayTimeField, m_MultiTapDelayTime, canEditSettings);
         }
 
         private static void UpdateDropdownChoices(DropdownField dropdown, SerializedProperty property)
@@ -368,6 +455,15 @@ namespace UnityEngine.InputSystem.Editor
             dropdown.choices = property.enumDisplayNames.ToList();
             if (property.enumValueIndex >= 0 && property.enumValueIndex < dropdown.choices.Count)
                 dropdown.SetValueWithoutNotify(dropdown.choices[property.enumValueIndex]);
+        }
+
+        private static void UpdateFloatField(FloatField field, SerializedProperty property, bool canEditSettings)
+        {
+            if (field == null)
+                return;
+
+            field.SetEnabled(canEditSettings && property != null);
+            field.SetValueWithoutNotify(property?.floatValue ?? 0f);
         }
 
         private void CustomUpdateModeHelpBox()
@@ -671,6 +767,15 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private DropdownField m_ScrollDeltaBehaviorDropdown;
 #endif
         [NonSerialized] private Toggle m_CompensateForScreenOrientationToggle;
+        [NonSerialized] private FloatField m_DefaultDeadzoneMinField;
+        [NonSerialized] private FloatField m_DefaultDeadzoneMaxField;
+        [NonSerialized] private FloatField m_DefaultButtonPressPointField;
+        [NonSerialized] private FloatField m_ButtonReleaseThresholdField;
+        [NonSerialized] private FloatField m_DefaultTapTimeField;
+        [NonSerialized] private FloatField m_DefaultSlowTapTimeField;
+        [NonSerialized] private FloatField m_DefaultHoldTimeField;
+        [NonSerialized] private FloatField m_TapRadiusField;
+        [NonSerialized] private FloatField m_MultiTapDelayTimeField;
         [NonSerialized] private HelpBox m_UpdateModeHelpBox;
         [NonSerialized] private Button m_UpdateModeReadMoreButton;
         [NonSerialized] private HelpBox m_BackgroundBehaviorHelpBox;
