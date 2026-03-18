@@ -168,10 +168,11 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.Separator();
                 EditorGUILayout.Space();
 
-                EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
-                    + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
-                    + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
-                    + "as supported will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
+                if (!includeUIToolkitHeader)
+                    EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
+                        + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
+                        + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
+                        + "as supported will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
 
                 m_SupportedDevices.DoLayoutList();
 
@@ -368,6 +369,14 @@ namespace UnityEngine.InputSystem.Editor
                 + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. ",
                 HelpBoxMessageType.None);
             m_HeaderContainer.Add(m_ShortcutKeysConsumeInputsHelpBox);
+
+            m_SupportedDevicesHelpBox = new HelpBox(
+                "Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
+                + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
+                + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
+                + "as supported will appear under 'Unsupported Devices' in the input debugger.",
+                HelpBoxMessageType.None);
+            m_HeaderContainer.Add(m_SupportedDevicesHelpBox);
 
             m_IMGUIContainer = new IMGUIContainer(() => DrawSettingsGUI(includeUIToolkitHeader: true));
             m_RootElement.Add(m_IMGUIContainer);
@@ -854,6 +863,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private Button m_UpdateModeReadMoreButton;
         [NonSerialized] private HelpBox m_BackgroundBehaviorHelpBox;
         [NonSerialized] private HelpBox m_ShortcutKeysConsumeInputsHelpBox;
+        [NonSerialized] private HelpBox m_SupportedDevicesHelpBox;
 
         private static InputSettingsProvider s_Instance;
 
