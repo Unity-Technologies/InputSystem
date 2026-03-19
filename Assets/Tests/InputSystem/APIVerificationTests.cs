@@ -587,6 +587,50 @@ class APIVerificationTests
         public System.UInt32 stateOffset;
         public System.UInt32 deltaStateSizeInBytes { get; }
         public System.UInt32 buttons;
+        public bool GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref System.UInt32 offset);
+        public System.UInt32 sizeInBytes { get; set; }
+        public System.UInt32 sizeInBytes { get; }
+        public static System.UInt32 updateCount { get; }
+        public const System.UInt32 AutomaticOffset = 4294967294;
+        public const System.UInt32 InvalidOffset = 4294967295;
+        public System.UInt32 bitOffset { get; set; }
+        public System.UInt32 byteOffset { get; set; }
+        public System.UInt32 version { get; }
+        public System.UInt32 version;
+        public System.UInt32 stateSizeInBytes { get; }
+        public const System.UInt32 InvalidId = 0;
+        public System.UInt32 id { get; }
+        public System.UInt32 parentBoneIndex { get; set; }
+        public System.UInt32 customSize;
+        public System.UInt32 samplesAvailable;
+        public System.UInt32 samplesQueued;
+        public System.UInt32 frequencyHz;
+        public System.UInt32 maxBufferSize;
+        public System.UInt32 numChannels;
+        public System.UInt32 frequencyHz { get; }
+        public System.UInt32 maxBufferSize { get; }
+        public System.UInt32 numChannels { get; }
+        public HapticCapabilities(System.UInt32 numChannels, System.UInt32 frequencyHz, System.UInt32 maxBufferSize) {}
+        public System.UInt32 samplesAvailable { get; }
+        public System.UInt32 samplesQueued { get; }
+        public HapticState(System.UInt32 samplesQueued, System.UInt32 samplesAvailable) {}
+        public PrimitiveValue(System.UInt16 value) {}
+        public PrimitiveValue(System.UInt32 value) {}
+        public PrimitiveValue(System.UInt64 value) {}
+        public static PrimitiveValue FromUInt16(System.UInt16 value);
+        public static PrimitiveValue FromUInt32(System.UInt32 value);
+        public static PrimitiveValue FromUInt64(System.UInt64 value);
+        public static PrimitiveValue op_Implicit(System.UInt16 value);
+        public static PrimitiveValue op_Implicit(System.UInt32 value);
+        public static PrimitiveValue op_Implicit(System.UInt64 value);
+        public System.UInt16 ToUInt16(System.IFormatProvider provider = default(System.IFormatProvider));
+        public System.UInt32 ToUInt32(System.IFormatProvider provider = default(System.IFormatProvider));
+        public System.UInt64 ToUInt64(System.IFormatProvider provider = default(System.IFormatProvider));
+        public System.UInt64 handle { get; }
+        public InputUserAccountHandle(string apiName, System.UInt64 handle) {}
+        public FourCC(char a, char b =  , char c =  , char d =  ) {}
+        public static string ToHumanReadableString(string path, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
+        public static string ToHumanReadableString(string path, out string deviceLayoutName, out string controlPath, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
     ")]
     // Api scraper seems to be unstable with fields with default values, sometimes "= 0;" appears (locally) and sometimes (on CI) doesn't.
     [Property("Exclusions", @"1.0.0
