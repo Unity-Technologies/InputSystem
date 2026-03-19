@@ -577,6 +577,16 @@ class APIVerificationTests
         Wrap = 8,
         public System.UInt32 bit { get; set; }
         public System.UInt32 offset { get; set; }
+        public System.UInt32 sizeInBits { get; set; }
+        public InputControlLayout.Builder.ControlBuilder WithBitOffset(System.UInt32 bit);
+        public InputControlLayout.Builder.ControlBuilder WithByteOffset(System.UInt32 offset);
+        public InputControlLayout.Builder.ControlBuilder WithSizeInBits(System.UInt32 sizeInBits);
+        public System.UInt32 bit { get; }
+        public System.UInt32 offset { get; }
+        public System.UInt32 sizeInBits { get; }
+        public System.UInt32 stateOffset;
+        public System.UInt32 deltaStateSizeInBytes { get; }
+        public System.UInt32 buttons;
     ")]
     // Api scraper seems to be unstable with fields with default values, sometimes "= 0;" appears (locally) and sometimes (on CI) doesn't.
     [Property("Exclusions", @"1.0.0
