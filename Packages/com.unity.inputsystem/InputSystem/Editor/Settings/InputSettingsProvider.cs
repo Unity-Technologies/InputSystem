@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             InitializeWithCurrentSettingsIfNecessary();
 
-            if (m_AvailableInputSettingsAssets.Length == 0)
+            if (!includeUIToolkitHeader && m_AvailableInputSettingsAssets.Length == 0)
             {
                 EditorGUILayout.HelpBox(
                     "Settings for the new input system are stored in an asset. Click the button below to create a settings asset you can edit.",
@@ -215,6 +215,23 @@ namespace UnityEngine.InputSystem.Editor
 
             InitializeWithCurrentSettingsIfNecessary();
             m_RootElement.Clear();
+
+            m_CreateSettingsAssetContainer = new VisualElement();
+            m_CreateSettingsAssetContainer.style.marginBottom = 12;
+            m_RootElement.Add(m_CreateSettingsAssetContainer);
+
+            m_CreateSettingsAssetHelpBox = new HelpBox(
+                "Settings for the new input system are stored in an asset. Click the button below to create a settings asset you can edit.",
+                HelpBoxMessageType.Info);
+            m_CreateSettingsAssetContainer.Add(m_CreateSettingsAssetHelpBox);
+
+            m_CreateSettingsAssetButton = new Button(() => CreateNewSettingsAsset("Assets/InputSystem.inputsettings.asset"))
+            {
+                text = "Create settings asset"
+            };
+            m_CreateSettingsAssetButton.style.marginTop = 6;
+            m_CreateSettingsAssetButton.style.height = 30;
+            m_CreateSettingsAssetContainer.Add(m_CreateSettingsAssetButton);
 
             var titleLabel = new Label("Input Settings");
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
@@ -457,6 +474,9 @@ namespace UnityEngine.InputSystem.Editor
             var hasSettings = m_SettingsObject != null;
             var hasSettingsAsset = m_AvailableInputSettingsAssets != null && m_AvailableInputSettingsAssets.Length != 0;
             var canEditSettings = hasSettings && hasSettingsAsset;
+
+            if (m_CreateSettingsAssetContainer != null)
+                m_CreateSettingsAssetContainer.style.display = hasSettingsAsset ? DisplayStyle.None : DisplayStyle.Flex;
 
             UpdateDropdownChoices(m_UpdateModeDropdown, m_UpdateMode);
             if (m_UpdateModeDropdown != null)
@@ -840,6 +860,7 @@ namespace UnityEngine.InputSystem.Editor
 
         [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
         [NonSerialized] private VisualElement m_RootElement;
+        [NonSerialized] private VisualElement m_CreateSettingsAssetContainer;
         [NonSerialized] private VisualElement m_HeaderContainer;
         [NonSerialized] private VisualElement m_UpdateModeHelpContainer;
         [NonSerialized] private IMGUIContainer m_IMGUIContainer;
@@ -860,6 +881,8 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private FloatField m_DefaultHoldTimeField;
         [NonSerialized] private FloatField m_TapRadiusField;
         [NonSerialized] private FloatField m_MultiTapDelayTimeField;
+        [NonSerialized] private HelpBox m_CreateSettingsAssetHelpBox;
+        [NonSerialized] private Button m_CreateSettingsAssetButton;
         [NonSerialized] private HelpBox m_UpdateModeHelpBox;
         [NonSerialized] private Button m_UpdateModeReadMoreButton;
         [NonSerialized] private HelpBox m_BackgroundBehaviorHelpBox;
