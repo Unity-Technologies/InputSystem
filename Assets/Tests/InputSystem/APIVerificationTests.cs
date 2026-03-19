@@ -567,6 +567,16 @@ class APIVerificationTests
         OmitDevice = 2,
         UseShortNames = 4,
         BufferedBytes = 256,
+        Constant = 1,
+        NonLinear = 16,
+        NoPreferred = 32,
+        NullState = 64,
+        Relative = 4,
+        Variable = 2,
+        Volatile = 128,
+        Wrap = 8,
+        public System.UInt32 bit { get; set; }
+        public System.UInt32 offset { get; set; }
     ")]
     // Api scraper seems to be unstable with fields with default values, sometimes "= 0;" appears (locally) and sometimes (on CI) doesn't.
     [Property("Exclusions", @"1.0.0
