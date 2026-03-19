@@ -1,0 +1,3 @@
+slack_channel: input-team-pr-notiff
+timezone: 'America/New_York'
+schedule: '0 9,13 * * 1-5'
