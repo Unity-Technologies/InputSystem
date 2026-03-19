@@ -642,6 +642,11 @@ class APIVerificationTests
         public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> previous { get; }
         public void CopyFrom(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> record);
         public bool Equals(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> other);
+        public System.UInt16 buttons;
+        public System.UInt16 clickCount;
+        public System.UInt64 handle;
+        public SteamHandle(System.UInt64 handle) {}
+        public static System.UInt64 op_Explicit(UnityEngine.InputSystem.Steam.SteamHandle<TObject> handle);
     ")]
     // Api scraper seems to be unstable with fields with default values, sometimes "= 0;" appears (locally) and sometimes (on CI) doesn't.
     [Property("Exclusions", @"1.0.0
