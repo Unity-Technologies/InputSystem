@@ -557,6 +557,16 @@ class APIVerificationTests
         public static string GetBindingDisplayString(this InputAction action, InputBinding bindingMask, InputBinding.DisplayStringOptions options = );
         public static string GetBindingDisplayString(this InputAction action, InputBinding.DisplayStringOptions options = , string group = default(string));
         public static string GetBindingDisplayString(this InputAction action, int bindingIndex, out string deviceLayoutName, out string controlPath, InputBinding.DisplayStringOptions options = );
+        public string ToDisplayString(InputBinding.DisplayStringOptions options = , InputControl control = default(InputControl));
+        public string ToDisplayString(out string deviceLayoutName, out string controlPath, InputBinding.DisplayStringOptions options = , InputControl control = default(InputControl));
+        DontIncludeInteractions = 4,
+        DontOmitDevice = 2,
+        DontUseShortDisplayNames = 1,
+        IgnoreBindingOverrides = 8,
+        protected System.UInt32 stateOffsetRelativeToDeviceRoot { get; }
+        OmitDevice = 2,
+        UseShortNames = 4,
+        BufferedBytes = 256,
     ")]
     // Api scraper seems to be unstable with fields with default values, sometimes "= 0;" appears (locally) and sometimes (on CI) doesn't.
     [Property("Exclusions", @"1.0.0
