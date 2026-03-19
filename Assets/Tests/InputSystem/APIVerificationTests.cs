@@ -631,6 +631,17 @@ class APIVerificationTests
         public FourCC(char a, char b =  , char c =  , char d =  ) {}
         public static string ToHumanReadableString(string path, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
         public static string ToHumanReadableString(string path, out string deviceLayoutName, out string controlPath, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
+        public class InputStateHistory<TValue> : InputStateHistory, System.Collections.Generic.IEnumerable<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.Generic.IReadOnlyCollection<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.Generic.IReadOnlyList<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.IEnumerable where TValue : struct, new()
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> this[int index] { get; set; }
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> AddRecord(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> record);
+        public System.Collections.Generic.IEnumerator<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>> GetEnumerator();
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> RecordStateChange(UnityEngine.InputSystem.InputControl<TValue> control, TValue value, double time = -1d);
+        public struct Record : System.IEquatable<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> next { get; }
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> owner { get; }
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> previous { get; }
+        public void CopyFrom(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> record);
+        public bool Equals(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> other);
     ")]
     // Api scraper seems to be unstable with fields with default values, sometimes "= 0;" appears (locally) and sometimes (on CI) doesn't.
     [Property("Exclusions", @"1.0.0
