@@ -233,7 +233,7 @@ namespace UnityEngine.InputSystem.Editor
             m_CreateSettingsAssetButton.style.height = 30;
             m_CreateSettingsAssetContainer.Add(m_CreateSettingsAssetButton);
 
-            var titleLabel = new Label("Input Settings");
+            var titleLabel = new Label("Settings");
             titleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             titleLabel.style.fontSize = 19;
             titleLabel.style.marginBottom = 12;
