@@ -148,52 +148,68 @@ namespace UnityEngine.InputSystem
 
             // If shortcut support is disabled, we simply put put all bindings at complexity=1 and
             // in their own group.
-            var disableControlGrouping = true; // !InputSystem.settings.shortcutKeysConsumeInput;
+            //var disableControlGrouping = true; // !InputSystem.settings.shortcutKeysConsumeInput;
 
             var currentGroup = 1u;
+
             for (var i = 0; i < totalControlCount; ++i)
             {
                 var control = controls[i];
-                var bindingIndex = controlIndexToBindingIndex[i];
-                ref var binding = ref bindingStates[bindingIndex];
+
+                int bindingIndex = controlIndexToBindingIndex[i];
+                ref BindingState binding = ref bindingStates[bindingIndex];
 
                 ////REVIEW: take processors and interactions into account??
 
                 // Compute complexity.
                 var complexity = 1;
-                if (binding.isPartOfComposite && !disableControlGrouping)
-                {
-                    var compositeBindingIndex = binding.compositeOrCompositeBindingIndex;
+                Debug.Log("Name " + control.name + " Action count " + memory.actionCount + " memory action state " + memory.actionStates[0].controlIndex);
 
-                    for (var n = compositeBindingIndex + 1; n < totalBindingCount; ++n)
+                /*if (binding.isPartOfComposite && !disableControlGrouping)
+                {*/
+                //int compositeBindingIndex = binding.compositeOrCompositeBindingIndex;
+
+                /*for (var n = compositeBindingIndex + 1; n < totalBindingCount; ++n)
+                {
+                    ref BindingState partBinding = ref bindingStates[n];
+                    if (partBinding.actionIndex == 10)
                     {
-                        ref var partBinding = ref bindingStates[n];
-                        if (!partBinding.isPartOfComposite || partBinding.compositeOrCompositeBindingIndex != compositeBindingIndex)
-                            break;
-                        ++complexity;
+                        complexity = 2;
+                        Debug.Log("Complexity was set to 2");
+                        break;
                     }
+                    /*if (!partBinding.isPartOfComposite || partBinding.compositeOrCompositeBindingIndex != compositeBindingIndex)
+                        break;#1#
+                    //++complexity;
+                }*/
+                if (binding.actionIndex == 10)
+                {
+                    complexity = 2;
+                    Debug.Log("Complexity was set to 2");
                 }
+
+                /*}*/
                 controlGroupingAndComplexity[i * 2 + 1] = (ushort)complexity;
 
                 // Compute grouping. If already set, skip.
                 if (controlGroupingAndComplexity[i * 2] == 0)
                 {
-                    if (!disableControlGrouping)
+                    //if (!disableControlGrouping)
+                    //{
+                    for (var n = 0; n < totalControlCount; ++n)
                     {
-                        for (var n = 0; n < totalControlCount; ++n)
-                        {
-                            // NOTE: We could compute group numbers based on device index + control offsets
-                            //       and thus make them work globally in a stable way. But we'd need a mechanism
-                            //       to then determine ordering of actions globally such that it is clear which
-                            //       action gets a first shot at an input.
+                        // NOTE: We could compute group numbers based on device index + control offsets
+                        //       and thus make them work globally in a stable way. But we'd need a mechanism
+                        //       to then determine ordering of actions globally such that it is clear which
+                        //       action gets a first shot at an input.
 
-                            var otherControl = controls[n];
-                            if (control != otherControl)
-                                continue;
+                        var otherControl = controls[n];
+                        if (control != otherControl)
+                            continue;
 
-                            controlGroupingAndComplexity[n * 2] = (ushort)currentGroup;
-                        }
+                        controlGroupingAndComplexity[n * 2] = (ushort)currentGroup;
                     }
+                    //}
 
                     controlGroupingAndComplexity[i * 2] = (ushort)currentGroup;
 
@@ -556,7 +572,7 @@ namespace UnityEngine.InputSystem
             // Restore action states.
             for (var actionIndex = 0; actionIndex < totalActionCount; ++actionIndex)
             {
-                ref var oldActionState = ref oldState.actionStates[actionIndex];
+                ref TriggerState oldActionState = ref oldState.actionStates[actionIndex];
                 ref var newActionState = ref actionStates[actionIndex];
 
                 newActionState.lastCanceledInUpdate = oldActionState.lastCanceledInUpdate;
