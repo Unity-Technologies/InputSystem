@@ -89,14 +89,6 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        public override void OnGUI(string searchContext)
-        {
-            if (m_RootElement != null)
-                return;
-
-            DrawSettingsGUI(includeUIToolkitHeader: false);
-        }
-
         private void DrawSupportedDevicesGUI()
         {
             InitializeWithCurrentSettingsIfNecessary();
@@ -105,106 +97,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 Debug.Assert(m_Settings != null);
                 m_SupportedDevices.DoLayoutList();
-            }
-        }
-
-        private void DrawSettingsGUI(bool includeUIToolkitHeader)
-        {
-            InitializeWithCurrentSettingsIfNecessary();
-
-            if (!includeUIToolkitHeader && m_AvailableInputSettingsAssets.Length == 0)
-            {
-                EditorGUILayout.HelpBox(
-                    "Settings for the new input system are stored in an asset. Click the button below to create a settings asset you can edit.",
-                    MessageType.Info);
-                if (GUILayout.Button("Create settings asset", GUILayout.Height(30)))
-                    CreateNewSettingsAsset("Assets/InputSystem.inputsettings.asset");
-                GUILayout.Space(20);
-            }
-
-            using (new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
-            {
-                EditorGUILayout.Space();
-                EditorGUILayout.Separator();
-                EditorGUILayout.Space();
-
-                Debug.Assert(m_Settings != null);
-
-                EditorGUI.BeginChangeCheck();
-
-                if (!includeUIToolkitHeader)
-                {
-                    EditorGUILayout.PropertyField(m_UpdateMode, m_UpdateModeContent);
-                    if (InputSystem.settings?.updateMode == InputSettings.UpdateMode.ProcessEventsManually)
-                        CustomUpdateModeHelpBox();
-
-                    var runInBackground = Application.runInBackground;
-                    using (new EditorGUI.DisabledScope(!runInBackground))
-                        EditorGUILayout.PropertyField(m_BackgroundBehavior, m_BackgroundBehaviorContent);
-                    if (!runInBackground)
-                        EditorGUILayout.HelpBox("Focus change behavior can only be changed if 'Run In Background' is enabled in Player Settings.", MessageType.Info);
-
-#if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
-                    EditorGUILayout.PropertyField(m_ScrollDeltaBehavior, m_ScrollDeltaBehaviorContent);
-#endif
-
-                    EditorGUILayout.Space();
-                    EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
-
-                // NOTE: We do NOT make showing this one conditional on whether runInBackground is actually set in the
-                //       player settings as regardless of whether it's on or not, Unity will force it on in standalone
-                //       development players.
-                    EditorGUILayout.Space();
-                    EditorGUILayout.Separator();
-                    EditorGUILayout.Space();
-
-                    EditorGUILayout.PropertyField(m_DefaultDeadzoneMin, m_DefaultDeadzoneMinContent);
-                    EditorGUILayout.PropertyField(m_DefaultDeadzoneMax, m_DefaultDeadzoneMaxContent);
-                    EditorGUILayout.PropertyField(m_DefaultButtonPressPoint, m_DefaultButtonPressPointContent);
-                    EditorGUILayout.PropertyField(m_ButtonReleaseThreshold, m_ButtonReleaseThresholdContent);
-                    EditorGUILayout.PropertyField(m_DefaultTapTime, m_DefaultTapTimeContent);
-                    EditorGUILayout.PropertyField(m_DefaultSlowTapTime, m_DefaultSlowTapTimeContent);
-                    EditorGUILayout.PropertyField(m_DefaultHoldTime, m_DefaultHoldTimeContent);
-                    EditorGUILayout.PropertyField(m_TapRadius, m_TapRadiusContent);
-                    EditorGUILayout.PropertyField(m_MultiTapDelayTime, m_MultiTapDelayTimeContent);
-
-                    EditorGUILayout.Space();
-                    EditorGUILayout.Separator();
-                    EditorGUILayout.Space();
-
-                    EditorGUILayout.HelpBox("Leave 'Supported Devices' empty if you want the input system to support all input devices it can recognize. If, however, "
-                        + "you are only interested in a certain set of devices, adding them here will narrow the scope of what's presented in the editor "
-                        + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
-                        + "as supported will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
-
-                    m_SupportedDevices.DoLayoutList();
-
-                    EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
-                    EditorGUILayout.Space();
-                    m_iOSProvider.OnGUI();
-
-                    EditorGUILayout.Space();
-                    EditorGUILayout.LabelField("Editor", EditorStyles.boldLabel);
-                    EditorGUILayout.Space();
-                    EditorGUILayout.PropertyField(m_EditorInputBehaviorInPlayMode, m_EditorInputBehaviorInPlayModeContent);
-
-                    EditorGUILayout.Space();
-                    EditorGUILayout.LabelField("Improved Shortcut Support", EditorStyles.boldLabel);
-                    EditorGUILayout.Space();
-                    EditorGUILayout.PropertyField(m_ShortcutKeysConsumeInputs, m_ShortcutKeysConsumeInputsContent);
-                    if (m_ShortcutKeysConsumeInputs.boolValue)
-                        EditorGUILayout.HelpBox("Please note that enabling Improved Shortcut Support will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls. "
-                            + "Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first. "
-                            + "Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls. "
-                            + "This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered. "
-                            + "These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys. "
-                            + "However conflicts would not occur between actions which belong to different Action Assets. "
-                            + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. "
-                            , MessageType.None);
-                }
-
-                if (EditorGUI.EndChangeCheck())
-                    Apply();
             }
         }
 
@@ -396,9 +288,6 @@ namespace UnityEngine.InputSystem.Editor
                 HelpBoxMessageType.None);
             lowerSectionsContainer.Add(m_ShortcutKeysConsumeInputsHelpBox);
 
-            m_IMGUIContainer = new IMGUIContainer(() => DrawSettingsGUI(includeUIToolkitHeader: true));
-            m_RootElement.Add(m_IMGUIContainer);
-
             RefreshUIToolkitHeaderState();
         }
 
@@ -563,21 +452,6 @@ namespace UnityEngine.InputSystem.Editor
 
             field.SetEnabled(canEditSettings && property != null);
             field.SetValueWithoutNotify(property?.floatValue ?? 0f);
-        }
-
-        private void CustomUpdateModeHelpBox()
-        {
-            var message =
-                "This is not recommended, the default update mode is dynamic update and should only be changed for compelling reasons.\nPlease refer to the documentation.";
-            GUILayout.BeginHorizontal(EditorStyles.helpBox);
-            GUILayout.Label(EditorGUIUtility.IconContent("console.warnicon"), GUILayout.ExpandWidth(false));
-            GUILayout.BeginVertical();
-            GUILayout.Label(message, EditorStyles.label);
-            if (GUILayout.Button("Read more", EditorStyles.linkLabel))
-                OpenUpdateModeDocumentation();
-            EditorGUIUtility.AddCursorRect(GUILayoutUtility.GetLastRect(), MouseCursor.Link);
-            GUILayout.EndVertical();
-            GUILayout.EndHorizontal();
         }
 
         private static void OpenUpdateModeDocumentation()
