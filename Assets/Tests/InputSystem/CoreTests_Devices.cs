@@ -5353,6 +5353,83 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    [TestCase(true, true)]
+    [TestCase(true, false)]
+    [TestCase(false, true)]
+    [TestCase(false, false)]
+    /*
+     *                                                       Ignore focus | ResetAndDisableNonBackgroundDevices | ResetAndDisableAllDevices
+     * runinbackground true & device runinbackground true           run                 run                         dont run
+     * runinbackground true & device runinbackground false          run                 dont run                    dont run
+     * runinbackground false & device runinbackground true          dont run            dont run                    dont run
+     * runinbackground false & device runinbackground false         dont run            dont run                    dont run
+
+     * in editor run in background is always true and gameview is treated as gain/lose focus
+     ** in development players on desktop platforms, the setting run in background is force-enabled during the build process.
+     *** on platforms such as Android and iOS, the app will not run when it is not in the foreground
+     */
+    public unsafe void Devices_GamepadCanSkipEventsWhileInBackground(bool runInBackground, bool runDeviceInBackground)
+    {
+        InputSystem.runInBackground = runInBackground;
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices;
+
+        var time = 0;
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var pressAction = new InputAction("Press", binding: "<Gamepad>/buttonSouth");
+        var performedCount = 0;
+
+        long DeviceCallback(string device, InputDeviceCommand* command, bool canRunInBackground)
+        {
+            if (command->type == QueryCanRunInBackground.Type)
+            {
+                ((QueryCanRunInBackground*)command)->canRunInBackground = canRunInBackground;
+                return InputDeviceCommand.GenericSuccess;
+            }
+            return InputDeviceCommand.GenericFailure;
+        }
+
+        runtime.SetDeviceCommandCallback(gamepad,
+            (id, command) =>
+                DeviceCallback("Gamepad", command, runDeviceInBackground));
+
+        pressAction.performed += ctx =>
+        {
+            performedCount++;
+        };
+        pressAction.Enable();
+
+        Assert.That(gamepad.enabled, Is.True);
+
+        // Lose focus
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        Assert.That(gamepad.canRunInBackground, Is.EqualTo(runDeviceInBackground));
+
+        // Device should only be enabled if app runs in background and device can run in background
+        if (runInBackground && runDeviceInBackground)
+            Assert.That(gamepad.enabled, Is.True);
+        else
+            Assert.That(gamepad.enabled, Is.False);
+
+        // Simulate noisy controller sending many events while in background
+        for (int i = 0; i < 100; i++)
+        {
+            Press(gamepad.buttonSouth, queueEventOnly: true, time: time++);
+            Release(gamepad.buttonSouth, queueEventOnly: true, time: time++);
+        }
+
+        InputSystem.Update(InputUpdateType.Dynamic);
+
+        // If device should be disabled, events should have been discarded
+        if (runInBackground && runDeviceInBackground)
+            Assert.That(performedCount, Is.EqualTo(100));
+        else
+            Assert.That(performedCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanMarkDeviceAsBeingAbleToRunInBackground_ThroughIOCTL()
     {
         var deviceId = runtime.ReportNewInputDevice<Gamepad>();

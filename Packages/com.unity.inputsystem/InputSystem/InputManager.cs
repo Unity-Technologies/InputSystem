@@ -3918,7 +3918,7 @@ namespace UnityEngine.InputSystem
             {
                 EnableOrDisableDevice(device, true, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
             }
-            else if (device.enabled && !runInBackground)
+            else if (!runInBackground)
             {
                 bool requestSync = device.RequestSync();
                 // Try to sync. If it fails and we didn't run in the background, perform
@@ -3934,7 +3934,7 @@ namespace UnityEngine.InputSystem
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateDeviceStateOnFocusLost(InputDevice device, bool runInBackground)
         {
-            if (!device.enabled || !runInBackground)
+            if (!device.enabled)
                 return;
 
             switch (m_Settings.backgroundBehavior)
@@ -3948,7 +3948,7 @@ namespace UnityEngine.InputSystem
                 case InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices:
                 {
                     // Disable the device. This will also soft-reset it.
-                    if (!ShouldRunDeviceInBackground(device))
+                    if (!ShouldRunDeviceInBackground(device) || !runInBackground)
                         EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
                 }
                 break;
