@@ -89,17 +89,6 @@ namespace UnityEngine.InputSystem.Editor
             }
         }
 
-        private void DrawSupportedDevicesGUI()
-        {
-            InitializeWithCurrentSettingsIfNecessary();
-
-            using (new EditorGUI.DisabledScope(m_AvailableInputSettingsAssets.Length == 0))
-            {
-                Debug.Assert(m_Settings != null);
-                m_SupportedDevices.DoLayoutList();
-            }
-        }
-
         private void BuildUI()
         {
             if (m_RootElement == null)
@@ -244,7 +233,40 @@ namespace UnityEngine.InputSystem.Editor
             m_SupportedDevicesHelpBox.style.marginTop = 48;
             m_HeaderContainer.Add(m_SupportedDevicesHelpBox);
 
-            m_RootElement.Add(new IMGUIContainer(DrawSupportedDevicesGUI));
+            var supportedDevicesContainer = new VisualElement();
+            m_RootElement.Add(supportedDevicesContainer);
+
+            m_SupportedDevicesListView = new ListView
+            {
+                selectionType = UIElements.SelectionType.Single,
+                reorderable = true,
+                showBorder = true,
+                fixedItemHeight = 22
+            };
+            m_SupportedDevicesListView.makeItem = MakeSupportedDevicesItem;
+            m_SupportedDevicesListView.bindItem = BindSupportedDevicesItem;
+            m_SupportedDevicesListView.itemIndexChanged += OnSupportedDevicesReordered;
+            m_SupportedDevicesListView.selectionChanged += _ => RefreshSupportedDevicesButtonsState();
+            supportedDevicesContainer.Add(m_SupportedDevicesListView);
+
+            var supportedDevicesButtonsContainer = new VisualElement();
+            supportedDevicesButtonsContainer.style.flexDirection = FlexDirection.Row;
+            supportedDevicesButtonsContainer.style.justifyContent = Justify.FlexEnd;
+            supportedDevicesButtonsContainer.style.marginTop = 4;
+            supportedDevicesContainer.Add(supportedDevicesButtonsContainer);
+
+            m_AddSupportedDeviceButton = new Button(AddSupportedDevice)
+            {
+                text = "Add"
+            };
+            supportedDevicesButtonsContainer.Add(m_AddSupportedDeviceButton);
+
+            m_RemoveSupportedDeviceButton = new Button(RemoveSupportedDevice)
+            {
+                text = "Remove"
+            };
+            m_RemoveSupportedDeviceButton.style.marginLeft = 4;
+            supportedDevicesButtonsContainer.Add(m_RemoveSupportedDeviceButton);
 
             var lowerSectionsContainer = new VisualElement();
             m_RootElement.Add(lowerSectionsContainer);
@@ -355,6 +377,136 @@ namespace UnityEngine.InputSystem.Editor
             return field;
         }
 
+        private VisualElement MakeSupportedDevicesItem()
+        {
+            var row = new VisualElement();
+            row.style.flexDirection = FlexDirection.Row;
+            row.style.alignItems = Align.Center;
+
+            var icon = new Image
+            {
+                name = "icon",
+                scaleMode = ScaleMode.ScaleToFit
+            };
+            icon.style.width = 20;
+            icon.style.height = 20;
+            icon.style.marginRight = 4;
+            row.Add(icon);
+
+            var label = new Label
+            {
+                name = "label"
+            };
+            label.style.flexGrow = 1;
+            row.Add(label);
+
+            return row;
+        }
+
+        private void BindSupportedDevicesItem(VisualElement element, int index)
+        {
+            var icon = element.Q<Image>("icon");
+            var label = element.Q<Label>("label");
+            var layoutName = m_Settings != null && index >= 0 && index < m_Settings.supportedDevices.Count
+                ? m_Settings.supportedDevices[index]
+                : string.Empty;
+
+            if (icon != null)
+                icon.image = string.IsNullOrEmpty(layoutName) ? null : EditorInputControlLayoutCache.GetIconForLayout(layoutName);
+            if (label != null)
+                label.text = layoutName;
+        }
+
+        private void AddSupportedDevice()
+        {
+            if (m_SupportedDevicesProperty == null)
+                return;
+
+            var dropdown = new InputControlPickerDropdown(
+                new InputControlPickerState(),
+                path =>
+                {
+                    ////REVIEW: Why are we converting from a layout into a plain string here instead of just using path strings in supportedDevices?
+                    ////        Why not just have InputSettings.supportedDevices be a list of paths?
+                    var layoutName = InputControlPath.TryGetDeviceLayout(path) ?? path;
+                    var existingIndex = m_Settings.supportedDevices.IndexOf(x => x == layoutName);
+                    if (existingIndex != -1)
+                    {
+                        m_SupportedDevicesListView?.SetSelection(existingIndex);
+                        RefreshSupportedDevicesButtonsState();
+                        return;
+                    }
+
+                    var numDevices = m_SupportedDevicesProperty.arraySize;
+                    m_SupportedDevicesProperty.InsertArrayElementAtIndex(numDevices);
+                    m_SupportedDevicesProperty.GetArrayElementAtIndex(numDevices).stringValue = layoutName;
+                    Apply();
+                    RefreshUIToolkitHeaderState();
+                    m_SupportedDevicesListView?.SetSelection(numDevices);
+                },
+                mode: InputControlPicker.Mode.PickDevice);
+
+            var buttonRect = m_AddSupportedDeviceButton?.worldBound ?? default;
+            dropdown.Show(buttonRect);
+        }
+
+        private void RemoveSupportedDevice()
+        {
+            if (m_SupportedDevicesProperty == null || m_SupportedDevicesListView == null)
+                return;
+
+            var index = m_SupportedDevicesListView.selectedIndex;
+            if (index < 0 || index >= m_SupportedDevicesProperty.arraySize)
+                return;
+
+            m_SupportedDevicesProperty.DeleteArrayElementAtIndex(index);
+            Apply();
+            RefreshUIToolkitHeaderState();
+
+            if (m_SupportedDevicesProperty.arraySize > 0)
+                m_SupportedDevicesListView.SetSelection(Mathf.Min(index, m_SupportedDevicesProperty.arraySize - 1));
+        }
+
+        private void OnSupportedDevicesReordered(int oldIndex, int newIndex)
+        {
+            if (m_SupportedDevicesProperty == null || oldIndex == newIndex)
+                return;
+
+            m_SupportedDevicesProperty.MoveArrayElement(oldIndex, newIndex);
+            Apply();
+            RefreshUIToolkitHeaderState();
+            m_SupportedDevicesListView?.SetSelection(newIndex);
+        }
+
+        private void RefreshSupportedDevicesButtonsState()
+        {
+            var hasSettingsAsset = m_AvailableInputSettingsAssets != null && m_AvailableInputSettingsAssets.Length != 0;
+            var canEditSettings = m_SettingsObject != null && hasSettingsAsset;
+
+            if (m_SupportedDevicesListView != null)
+                m_SupportedDevicesListView.SetEnabled(canEditSettings);
+            if (m_AddSupportedDeviceButton != null)
+                m_AddSupportedDeviceButton.SetEnabled(canEditSettings);
+            if (m_RemoveSupportedDeviceButton != null)
+                m_RemoveSupportedDeviceButton.SetEnabled(canEditSettings && m_SupportedDevicesListView != null && m_SupportedDevicesListView.selectedIndex >= 0);
+        }
+
+        private void RefreshSupportedDevicesList()
+        {
+            if (m_SupportedDevicesListView == null)
+                return;
+
+            m_SupportedDevicesListItems ??= new System.Collections.Generic.List<string>();
+            m_SupportedDevicesListItems.Clear();
+
+            if (m_Settings != null)
+                m_SupportedDevicesListItems.AddRange(m_Settings.supportedDevices);
+
+            m_SupportedDevicesListView.itemsSource = m_SupportedDevicesListItems;
+            m_SupportedDevicesListView.Rebuild();
+            RefreshSupportedDevicesButtonsState();
+        }
+
         private void RefreshUIToolkitHeaderState()
         {
             if (m_HeaderContainer == null)
@@ -408,6 +560,7 @@ namespace UnityEngine.InputSystem.Editor
             UpdateFloatField(m_DefaultHoldTimeField, m_DefaultHoldTime, canEditSettings);
             UpdateFloatField(m_TapRadiusField, m_TapRadius, canEditSettings);
             UpdateFloatField(m_MultiTapDelayTimeField, m_MultiTapDelayTime, canEditSettings);
+            RefreshSupportedDevicesList();
 
             UpdateDropdownChoices(m_EditorInputBehaviorInPlayModeDropdown, m_EditorInputBehaviorInPlayMode);
             if (m_EditorInputBehaviorInPlayModeDropdown != null)
@@ -589,59 +742,8 @@ namespace UnityEngine.InputSystem.Editor
             m_TapRadiusContent = new GUIContent("Tap Radius", "Maximum distance between two finger taps on a touch screen device allowed for the system to consider this a tap of the same touch (as opposed to a new touch).");
             m_MultiTapDelayTimeContent = new GUIContent("MultiTap Delay Time", "Default delay to be allowed between taps for MultiTap interactions. Also used by by touch devices to count multi taps.");
             m_ShortcutKeysConsumeInputsContent = new GUIContent("Enable Input Consumption", "Actions are exclusively triggered and will consume/block other actions sharing the same input. E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.");
+            m_SupportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
 
-            // Initialize ReorderableList for list of supported devices.
-            var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
-            m_SupportedDevices = new ReorderableList(m_SettingsObject, supportedDevicesProperty)
-            {
-                drawHeaderCallback =
-                    rect => { EditorGUI.LabelField(rect, m_SupportedDevicesText); },
-                onChangedCallback =
-                    list => { Apply(); },
-                onAddDropdownCallback =
-                    (rect, list) =>
-                {
-                    var dropdown = new InputControlPickerDropdown(
-                        new InputControlPickerState(),
-                        path =>
-                        {
-                            ////REVIEW: Why are we converting from a layout into a plain string here instead of just using path strings in supportedDevices?
-                            ////        Why not just have InputSettings.supportedDevices be a list of paths?
-                            var layoutName = InputControlPath.TryGetDeviceLayout(path) ?? path;
-                            var existingIndex = m_Settings.supportedDevices.IndexOf(x => x == layoutName);
-                            if (existingIndex != -1)
-                            {
-                                m_SupportedDevices.index = existingIndex;
-                                return;
-                            }
-                            var numDevices = supportedDevicesProperty.arraySize;
-                            supportedDevicesProperty.InsertArrayElementAtIndex(numDevices);
-                            supportedDevicesProperty.GetArrayElementAtIndex(numDevices)
-                                .stringValue = layoutName;
-                            m_SupportedDevices.index = numDevices;
-                            Apply();
-                        },
-                        mode: InputControlPicker.Mode.PickDevice);
-                    dropdown.Show(rect);
-                },
-                drawElementCallback =
-                    (rect, index, isActive, isFocused) =>
-                {
-                    var layoutName = m_Settings.supportedDevices[index];
-                    var icon = EditorInputControlLayoutCache.GetIconForLayout(layoutName);
-                    if (icon != null)
-                    {
-                        var iconRect = rect;
-                        iconRect.width = 20;
-                        rect.x += 20;
-                        rect.width -= 20;
-
-                        GUI.Label(iconRect, icon);
-                    }
-
-                    EditorGUI.LabelField(rect, layoutName);
-                }
-            };
 
             if (m_iOSProvider == null)
                 m_iOSProvider = new InputSettingsiOSProvider(m_SettingsObject);
@@ -705,14 +807,11 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_TapRadius;
         [NonSerialized] private SerializedProperty m_MultiTapDelayTime;
         [NonSerialized] private SerializedProperty m_ShortcutKeysConsumeInputs;
+        [NonSerialized] private SerializedProperty m_SupportedDevicesProperty;
 
-        [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;
         [NonSerialized] private GUIContent[] m_AvailableSettingsAssetsOptions;
         [NonSerialized] private int m_CurrentSelectedInputSettingsAsset;
-
-        [NonSerialized] private GUIContent m_SupportedDevicesText = EditorGUIUtility.TrTextContent("Supported Devices");
-        [NonSerialized] private GUIStyle m_NewAssetButtonStyle;
 
         private GUIContent m_UpdateModeContent;
 #if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
@@ -737,13 +836,15 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private VisualElement m_CreateSettingsAssetContainer;
         [NonSerialized] private VisualElement m_HeaderContainer;
         [NonSerialized] private VisualElement m_UpdateModeHelpContainer;
-        [NonSerialized] private IMGUIContainer m_IMGUIContainer;
         [NonSerialized] private DropdownField m_UpdateModeDropdown;
         [NonSerialized] private DropdownField m_BackgroundBehaviorDropdown;
 #if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
         [NonSerialized] private DropdownField m_ScrollDeltaBehaviorDropdown;
 #endif
         [NonSerialized] private DropdownField m_EditorInputBehaviorInPlayModeDropdown;
+        [NonSerialized] private ListView m_SupportedDevicesListView;
+        [NonSerialized] private Button m_AddSupportedDeviceButton;
+        [NonSerialized] private Button m_RemoveSupportedDeviceButton;
         [NonSerialized] private Toggle m_CompensateForScreenOrientationToggle;
         [NonSerialized] private Toggle m_ShortcutKeysConsumeInputsToggle;
         [NonSerialized] private FloatField m_DefaultDeadzoneMinField;
@@ -762,6 +863,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private HelpBox m_BackgroundBehaviorHelpBox;
         [NonSerialized] private HelpBox m_ShortcutKeysConsumeInputsHelpBox;
         [NonSerialized] private HelpBox m_SupportedDevicesHelpBox;
+        [NonSerialized] private System.Collections.Generic.List<string> m_SupportedDevicesListItems;
 
         private static InputSettingsProvider s_Instance;
 
