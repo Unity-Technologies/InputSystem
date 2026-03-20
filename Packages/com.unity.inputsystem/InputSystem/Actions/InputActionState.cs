@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem
         public BindingState* bindingStates => memory.bindingStates;
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
-        public ushort* controlGroupingAndComplexity => memory.controlGroupingAndComplexity;
+        public ushort* controlGroupingAndPriority => memory.controlGroupingAndComplexity;
         public float* controlMagnitudes => memory.controlMagnitudes;
         public uint* enabledControls => (uint*)memory.enabledControls;
 
@@ -162,8 +162,9 @@ namespace UnityEngine.InputSystem
                 ////REVIEW: take processors and interactions into account??
 
                 // Compute complexity.
-                var complexity = 1;
-                Debug.Log("Name " + control.name + " Action count " + memory.actionCount + " memory action state " + memory.actionStates[0].controlIndex);
+                InputBinding inputBinding = GetBinding(bindingIndex);
+                var priority = inputBinding.Priority;
+                Debug.Log("Action Name " + inputBinding.action + " Action count " + memory.actionCount + " memory action state " + memory.actionStates[0].controlIndex);
 
                 /*if (binding.isPartOfComposite && !disableControlGrouping)
                 {*/
@@ -184,15 +185,15 @@ namespace UnityEngine.InputSystem
                 }*/
                 if (binding.actionIndex == 10)
                 {
-                    complexity = 2;
+                    priority = 2;
                     Debug.Log("Complexity was set to 2");
                 }
 
                 /*}*/
-                controlGroupingAndComplexity[i * 2 + 1] = (ushort)complexity;
+                controlGroupingAndPriority[i * 2 + 1] = (ushort)priority;
 
                 // Compute grouping. If already set, skip.
-                if (controlGroupingAndComplexity[i * 2] == 0)
+                if (controlGroupingAndPriority[i * 2] == 0)
                 {
                     //if (!disableControlGrouping)
                     //{
@@ -207,11 +208,11 @@ namespace UnityEngine.InputSystem
                         if (control != otherControl)
                             continue;
 
-                        controlGroupingAndComplexity[n * 2] = (ushort)currentGroup;
+                        controlGroupingAndPriority[n * 2] = (ushort)currentGroup;
                     }
                     //}
 
-                    controlGroupingAndComplexity[i * 2] = (ushort)currentGroup;
+                    controlGroupingAndPriority[i * 2] = (ushort)currentGroup;
 
                     ++currentGroup;
                 }
@@ -1182,7 +1183,7 @@ namespace UnityEngine.InputSystem
                 var bindingStatePtr = &bindingStates[bindingIndex];
                 if (bindingStatePtr->wantsInitialStateCheck)
                     SetInitialStateCheckPending(bindingStatePtr, true);
-                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex, controlGroupingAndComplexity[controlIndex * 2]);
+                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex, controlGroupingAndPriority[controlIndex * 2]);
 
                 SetControlEnabled(controlIndex, true);
             }
@@ -1404,7 +1405,7 @@ namespace UnityEngine.InputSystem
         {
             // We have limits on the numbers of maps, controls, and bindings we allow in any single
             // action state (see TriggerState.kMaxNumXXX).
-            var complexity = controlGroupingAndComplexity[controlIndex * 2 + 1];
+            var complexity = controlGroupingAndPriority[controlIndex * 2 + 1];
             var result = (long)controlIndex;
             result |= (long)bindingIndex << 24;
             result |= (long)mapIndex << 40;
@@ -2494,7 +2495,7 @@ namespace UnityEngine.InputSystem
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
                 // can then reset state monitors in the same group.
                 // NOTE: We don't consume for controls at binding complexity 1. Those we fire in unison.
-                if (controlGroupingAndComplexity[trigger.controlIndex * 2 + 1] > 1 &&
+                if (controlGroupingAndPriority[trigger.controlIndex * 2 + 1] > 1 &&
                     // we can end up switching to performed state from an interaction with a timeout, at which point
                     // the original event will probably have been removed from memory, so make sure to check
                     // we still have one
@@ -4188,7 +4189,7 @@ namespace UnityEngine.InputSystem
             ////REVIEW: make this an array of shorts rather than ints?
             public int* controlIndexToBindingIndex;
 
-            // Two shorts per control. First one is group number. Second one is complexity count.
+            // Two shorts per control. First one is group number. Second one is priority.
             public ushort* controlGroupingAndComplexity;
             public bool controlGroupingInitialized;
 

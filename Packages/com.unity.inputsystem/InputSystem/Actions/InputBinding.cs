@@ -106,6 +106,12 @@ namespace UnityEngine.InputSystem
             set => m_Id = value.ToString();
         }
 
+        public int Priority
+        {
+            get => m_Priority;
+            set => m_Priority = value;
+        }
+
         /// <summary>
         /// Control path being bound to.
         /// </summary>
@@ -396,6 +402,7 @@ namespace UnityEngine.InputSystem
             m_OverridePath = default;
             m_OverrideInteractions = default;
             m_OverrideProcessors = default;
+            m_Priority = default;
         }
 
         public string GetNameOfComposite()
@@ -429,6 +436,7 @@ namespace UnityEngine.InputSystem
 
         [SerializeField] private string m_Name;
         [SerializeField] internal string m_Id;
+        [SerializeField] internal int m_Priority;
         [Tooltip("Path of the control to bind to. Matched at runtime to controls from InputDevices present at the time.\n\nCan either be "
             + "graphically from the control picker dropdown UI or edited manually in text mode by clicking the 'T' button. Internally, both "
             + "methods result in control path strings that look like, for example, \"<Gamepad>/buttonSouth\".")]
