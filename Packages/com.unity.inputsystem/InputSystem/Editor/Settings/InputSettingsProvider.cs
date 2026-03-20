@@ -233,8 +233,10 @@ namespace UnityEngine.InputSystem.Editor
             m_SupportedDevicesHelpBox.style.marginTop = 48;
             m_HeaderContainer.Add(m_SupportedDevicesHelpBox);
 
-            var supportedDevicesContainer = new VisualElement();
-            m_RootElement.Add(supportedDevicesContainer);
+            var supportedDevicesTitleLabel = new Label("Supported Devices");
+            supportedDevicesTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            supportedDevicesTitleLabel.style.marginTop = 6;
+            m_HeaderContainer.Add(supportedDevicesTitleLabel);
 
             m_SupportedDevicesListView = new ListView
             {
@@ -247,13 +249,13 @@ namespace UnityEngine.InputSystem.Editor
             m_SupportedDevicesListView.bindItem = BindSupportedDevicesItem;
             m_SupportedDevicesListView.itemIndexChanged += OnSupportedDevicesReordered;
             m_SupportedDevicesListView.selectionChanged += _ => RefreshSupportedDevicesButtonsState();
-            supportedDevicesContainer.Add(m_SupportedDevicesListView);
+            m_HeaderContainer.Add(m_SupportedDevicesListView);
 
             var supportedDevicesButtonsContainer = new VisualElement();
             supportedDevicesButtonsContainer.style.flexDirection = FlexDirection.Row;
             supportedDevicesButtonsContainer.style.justifyContent = Justify.FlexEnd;
             supportedDevicesButtonsContainer.style.marginTop = 4;
-            supportedDevicesContainer.Add(supportedDevicesButtonsContainer);
+            m_HeaderContainer.Add(supportedDevicesButtonsContainer);
 
             m_AddSupportedDeviceButton = new Button(AddSupportedDevice)
             {
@@ -268,10 +270,7 @@ namespace UnityEngine.InputSystem.Editor
             m_RemoveSupportedDeviceButton.style.marginLeft = 4;
             supportedDevicesButtonsContainer.Add(m_RemoveSupportedDeviceButton);
 
-            var lowerSectionsContainer = new VisualElement();
-            m_RootElement.Add(lowerSectionsContainer);
-
-            m_iOSProvider.CreateGUI(lowerSectionsContainer, () =>
+            m_iOSProvider.CreateGUI(m_HeaderContainer, () =>
             {
                 Apply();
                 RefreshUIToolkitHeaderState();
@@ -280,24 +279,24 @@ namespace UnityEngine.InputSystem.Editor
             var editorTitleLabel = new Label("Editor");
             editorTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             editorTitleLabel.style.marginTop = 12;
-            lowerSectionsContainer.Add(editorTitleLabel);
+            m_HeaderContainer.Add(editorTitleLabel);
 
             m_EditorInputBehaviorInPlayModeDropdown = CreateEnumDropdown(
                 () => m_EditorInputBehaviorInPlayMode,
                 m_EditorInputBehaviorInPlayModeContent,
                 RefreshUIToolkitHeaderState);
-            lowerSectionsContainer.Add(m_EditorInputBehaviorInPlayModeDropdown);
+            m_HeaderContainer.Add(m_EditorInputBehaviorInPlayModeDropdown);
 
             var shortcutSupportTitleLabel = new Label("Improved Shortcut Support");
             shortcutSupportTitleLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
             shortcutSupportTitleLabel.style.marginTop = 12;
-            lowerSectionsContainer.Add(shortcutSupportTitleLabel);
+            m_HeaderContainer.Add(shortcutSupportTitleLabel);
 
             m_ShortcutKeysConsumeInputsToggle = CreateToggle(
                 () => m_ShortcutKeysConsumeInputs,
                 m_ShortcutKeysConsumeInputsContent,
                 RefreshUIToolkitHeaderState);
-            lowerSectionsContainer.Add(m_ShortcutKeysConsumeInputsToggle);
+            m_HeaderContainer.Add(m_ShortcutKeysConsumeInputsToggle);
 
             m_ShortcutKeysConsumeInputsHelpBox = new HelpBox(
                 "Please note that enabling Improved Shortcut Support will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls. "
@@ -308,7 +307,7 @@ namespace UnityEngine.InputSystem.Editor
                 + "However conflicts would not occur between actions which belong to different Action Assets. "
                 + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. ",
                 HelpBoxMessageType.None);
-            lowerSectionsContainer.Add(m_ShortcutKeysConsumeInputsHelpBox);
+            m_HeaderContainer.Add(m_ShortcutKeysConsumeInputsHelpBox);
 
             RefreshUIToolkitHeaderState();
         }
