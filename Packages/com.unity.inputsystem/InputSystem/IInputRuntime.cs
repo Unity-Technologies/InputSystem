@@ -187,6 +187,10 @@ namespace UnityEngine.InputSystem.LowLevel
         void SendAnalytic(InputAnalytics.IInputAnalytic analytic);
         #endif // UNITY_ANALYTICS || UNITY_EDITOR
 
+        void LogDeviceConnectedInsight(InputDeviceDescription description);
+        void LogDeviceDisconnectedInsight(InputDeviceDescription description);
+        void LogInputActionInsight(InputAction action);
+
         #if UNITY_EDITOR
         Action<PlayModeStateChange> onPlayModeChanged { get; set; }
         Action onProjectChange { get; set; }

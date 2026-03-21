@@ -2639,6 +2639,8 @@ namespace UnityEngine.InputSystem
             // Parse description, if need be.
             var description = device?.description ?? InputDeviceDescription.FromJson(deviceDescriptor);
 
+            m_Runtime.LogDeviceConnectedInsight(description);
+
             // Add it.
             var markAsRemoved = false;
             try
@@ -3710,6 +3712,8 @@ namespace UnityEngine.InputSystem
                         case DeviceRemoveEvent.Type:
                         {
                             RemoveDevice(device, keepOnListOfAvailableDevices: false);
+
+                            m_Runtime.LogDeviceDisconnectedInsight(device.description);
 
                             // If it's a native device with a description, put it on the list of disconnected
                             // devices.

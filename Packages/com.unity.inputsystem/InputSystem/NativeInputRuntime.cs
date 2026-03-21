@@ -4,6 +4,8 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngineInternal.Input;
+using UnityEngine.InputSystem.Layouts;
+
 
 #if UNITY_EDITOR
 using System.Reflection;
@@ -442,6 +444,27 @@ namespace UnityEngine.InputSystem.LowLevel
         #endif //ENABLE_CLOUD_SERVICES_ANALYTICS
         }
 
-        #endif // UNITY_ANALYTICS || UNITY_EDITOR
+        public void LogDeviceConnectedInsight(InputDeviceDescription description)
+        {
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS && !UNITY_EDITOR
+            NativeInputSystem.LogDeviceConnectedInsight(description.serial, description.product, description.interfaceName, description.version);
+#endif
+        }
+
+        public void LogDeviceDisconnectedInsight(InputDeviceDescription description)
+        {
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS && !UNITY_EDITOR
+            NativeInputSystem.LogDeviceDisconnectedInsight(description.serial);
+#endif
+        }
+
+        public void LogInputActionInsight(InputAction action)
+        {
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS && !UNITY_EDITOR
+            NativeInputSystem.LogInputActionInsight(action.name, action.type.ToString());
+#endif
+        }
+
+#endif // UNITY_ANALYTICS || UNITY_EDITOR
     }
 }

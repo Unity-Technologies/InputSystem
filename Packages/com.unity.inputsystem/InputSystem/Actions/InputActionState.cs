@@ -6,7 +6,6 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
-using Unity.Profiling;
 using UnityEngine.InputSystem.Utilities;
 
 using ProfilerMarker = Unity.Profiling.ProfilerMarker;
@@ -957,6 +956,14 @@ namespace UnityEngine.InputSystem
                 NotifyListenersOfActionChange(InputActionChange.ActionEnabled, map.m_SingletonAction);
             else
                 NotifyListenersOfActionChange(InputActionChange.ActionMapEnabled, map);
+
+#if UNITY_INPUT_SYSTEM_SUPPORTS_INSIGHTS
+            // also report all actions to insights
+            foreach (var inputAction in map.actions)
+            {
+                InputSystem.s_Manager.m_Runtime.LogInputActionInsight( inputAction );
+            }
+#endif
         }
 
         private void EnableControls(InputActionMap map)
