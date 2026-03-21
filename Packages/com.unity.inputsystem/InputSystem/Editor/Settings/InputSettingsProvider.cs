@@ -2,7 +2,6 @@
 using System;
 using System.Linq;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
