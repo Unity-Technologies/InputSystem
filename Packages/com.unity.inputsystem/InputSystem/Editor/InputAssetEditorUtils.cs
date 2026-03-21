@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using UnityEditor;
+using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -19,7 +20,7 @@ namespace UnityEngine.InputSystem.Editor
             InvalidPath,
 
             /// <summary>
-            /// The dialog was cancelled by the user and the path is invalid.
+            /// The dialog was canceled by the user and the path is invalid.
             /// </summary>
             Cancelled,
 
@@ -82,13 +83,15 @@ namespace UnityEngine.InputSystem.Editor
             return asset;
         }
 
-        public static void DrawMakeActiveGui<T>(T current, T target, string targetName, string entity, Action<T> apply, bool allowAssignActive = true)
+        public static VisualElement CreateMakeActiveGui<T>(T current, T target, string targetName, string entity, Action<T> apply, bool allowAssignActive = true)
             where T : ScriptableObject
         {
+            var container = new VisualElement();
+
             if (current == target)
             {
-                EditorGUILayout.HelpBox($"These actions are assigned as the {entity}.", MessageType.Info);
-                return;
+                container.Add(new HelpBox($"These actions are assigned as the {entity}.", HelpBoxMessageType.Info));
+                return container;
             }
 
             string currentlyActiveAssetsPath = null;
@@ -96,11 +99,19 @@ namespace UnityEngine.InputSystem.Editor
                 currentlyActiveAssetsPath = AssetDatabase.GetAssetPath(current);
             if (!string.IsNullOrEmpty(currentlyActiveAssetsPath))
                 currentlyActiveAssetsPath = $" The actions currently assigned as the {entity} are: {currentlyActiveAssetsPath}. ";
-            EditorGUILayout.HelpBox($"These actions are not assigned as the {entity} for the Input System. {currentlyActiveAssetsPath??""}", MessageType.Warning);
-            GUI.enabled = allowAssignActive;
-            if (GUILayout.Button($"Assign as the {entity}", EditorStyles.miniButton))
-                apply(target);
-            GUI.enabled = true;
+
+            container.Add(new HelpBox(
+                $"These actions are not assigned as the {entity} for the Input System. {currentlyActiveAssetsPath ?? ""}",
+                HelpBoxMessageType.Warning));
+
+            var assignButton = new Button(() => apply(target))
+            {
+                text = $"Assign as the {entity}"
+            };
+            assignButton.SetEnabled(allowAssignActive);
+            container.Add(assignButton);
+
+            return container;
         }
 
         public static bool IsValidFileExtension(string path)

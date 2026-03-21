@@ -39,7 +39,7 @@ namespace UnityEngine.InputSystem.Editor
             EditorGUILayout.Space();
 
             // Project-wide Input Actions Asset UI.
-            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.actions, inputActionAsset,
+            InputAssetEditorUtils.CreateMakeActiveGui(InputSystem.actions, inputActionAsset,
                 inputActionAsset ? inputActionAsset.name : "Null", "Project-wide Input Actions",
                 (value) => InputSystem.actions = value, !EditorApplication.isPlayingOrWillChangePlaymode);
 

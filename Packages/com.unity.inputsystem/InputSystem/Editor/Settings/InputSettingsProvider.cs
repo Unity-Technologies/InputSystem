@@ -489,17 +489,21 @@ namespace UnityEngine.InputSystem.Editor
     [CustomEditor(typeof(InputSettings))]
     internal class InputSettingsEditor : UnityEditor.Editor
     {
-        public override void OnInspectorGUI()
+        public override VisualElement CreateInspectorGUI()
         {
-            EditorGUILayout.Space();
+            var root = new VisualElement();
 
-            if (GUILayout.Button("Open Input Settings Window", GUILayout.Height(30)))
-                InputSettingsProvider.Open();
+            var openButton = new Button(() => InputSettingsProvider.Open())
+            {
+                text = "Open Input Settings Window",
+                style = { height = 30 }
+            };
+            root.Add(openButton);
 
-            EditorGUILayout.Space();
+            root.Add(InputAssetEditorUtils.CreateMakeActiveGui(InputSystem.settings, target as InputSettings,
+                target.name, "settings", (value) => InputSystem.settings = value));
 
-            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.settings, target as InputSettings,
-                target.name, "settings", (value) => InputSystem.settings = value);
+            return root;
         }
 
         protected override bool ShouldHideOpenButton()
