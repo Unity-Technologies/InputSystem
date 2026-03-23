@@ -1,9 +1,6 @@
 using System;
 using UnityEngine.InputSystem;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEngine.InputSystem.Editor;
-#endif
 using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
@@ -24,7 +21,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] public InputManager.SerializedState managerState;
         [SerializeField] public InputRemoting.SerializedState remotingState;
 #if UNITY_EDITOR
-        [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
+        //[SerializeField] public InputEditorUserSettings.SerializedState userSettings;
         [SerializeField] public string systemObject;
 #endif
         ////TODO: make these saved states capable of surviving domain reloads
@@ -95,7 +92,7 @@ namespace UnityEngine.InputSystem
             }
 
             systemState.remoteConnection = InputSystem.remoteConnection;
-            systemState.userSettings = InputEditorUserSettings.s_Settings;
+            //systemState.userSettings = InputEditorUserSettings.s_Settings;
         }
 
         public void OnAfterDeserialize()

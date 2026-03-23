@@ -18,6 +18,8 @@ using Unity.Profiling;
 using UnityEngine.Networking.PlayerConnection;
 
 using System.Linq;
+using UnityEditor;
+using EditorHelpers = UnityEngine.Rendering.VirtualTexturing.EditorHelpers;
 
 #if UNITY_EDITOR
 using CustomBindingPathValidator = System.Func<string, System.Action>;
@@ -855,7 +857,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputBinding.processors"/>
         /// <seealso cref="InputAction.processors"/>
         /// <seealso cref="InputControlLayout.ControlItem.processors"/>
-        /// <seealso cref="UnityEngine.InputSystem.Editor.InputParameterEditor{TObject}"/>
+        /// <seealso cref="Editor.InputParameterEditor{TObject}"/>
         public static void RegisterProcessor(Type type, string name = null)
         {
             s_Manager.RegisterProcessor(type, name);
@@ -964,7 +966,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputBinding.processors"/>
         /// <seealso cref="InputAction.processors"/>
         /// <seealso cref="InputControlLayout.ControlItem.processors"/>
-        /// <seealso cref="UnityEngine.InputSystem.Editor.InputParameterEditor{TObject}"/>
+        /// <seealso cref="Editor.InputParameterEditor{TObject}"/>
         public static void RegisterProcessor<T>(string name = null)
         {
             RegisterProcessor(typeof(T), name);
@@ -3064,7 +3066,7 @@ namespace UnityEngine.InputSystem
 
                 // Track reference to enable including it in built Players, note that it will discard any non-persisted
                 // object reference
-                ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = value;
+                //ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild = value;
                 #endif // UNITY_EDITOR
 
                 // Update underlying value
@@ -3377,7 +3379,7 @@ namespace UnityEngine.InputSystem
         internal static InputRemoting s_Remote;
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-        private static RemoteInputPlayerConnection s_RemoteConnection;
+        internal static RemoteInputPlayerConnection s_RemoteConnection;
         internal static RemoteInputPlayerConnection remoteConnection => s_RemoteConnection;
 
         internal static void SetUpRemoting()
@@ -3511,7 +3513,7 @@ namespace UnityEngine.InputSystem
                 s_Manager.runtime.onPlayModeChanged = OnPlayModeChange;
                 s_Manager.runtime.onProjectChange = OnProjectChange;
 
-                InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
+                //InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
                 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
                 InputSystem.PerformDefaultPluginInitialization();
@@ -3531,7 +3533,7 @@ namespace UnityEngine.InputSystem
 
                     s_DomainStateManager = existingSystemStateManagers[0];
                     s_Manager.RestoreStateWithoutDevices(s_DomainStateManager.systemState.managerState);
-                    InputDebuggerWindow.ReviveAfterDomainReload();
+                    //InputDebuggerWindow.ReviveAfterDomainReload();
 
                     // Restore remoting state.
                     s_RemoteConnection = s_DomainStateManager.systemState.remoteConnection;
@@ -3544,7 +3546,7 @@ namespace UnityEngine.InputSystem
                     s_Manager.m_SavedAvailableDevices = s_DomainStateManager.systemState.managerState.availableDevices;
 
                     // Restore editor settings.
-                    InputEditorUserSettings.s_Settings = s_DomainStateManager.systemState.userSettings;
+                    //InputEditorUserSettings.s_Settings = s_DomainStateManager.systemState.userSettings;
 
                     // Get rid of saved state.
                     s_DomainStateManager.systemState = new InputSystemState();
@@ -3556,17 +3558,17 @@ namespace UnityEngine.InputSystem
                 s_DomainStateManager.hideFlags = HideFlags.HideAndDontSave;
 
                 // See if we have a remembered settings object.
-                if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey, out InputSettings settingsAsset))
+                /*if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey, out InputSettings settingsAsset))
                 {
-                    s_Manager.settings = settingsAsset;
+                     s_Manager.settings = settingsAsset;
                 }
 
                 // See if we have a saved actions object
                 var savedActions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
-                if (savedActions != null)
-                    s_Manager.actions = savedActions;
+                 if (savedActions != null)
+                     s_Manager.actions = savedActions;
 
-                InputEditorUserSettings.Load();
+                InputEditorUserSettings.Load();*/
 
                 SetUpRemoting();
             }
@@ -3581,7 +3583,7 @@ namespace UnityEngine.InputSystem
             // this would cancel the import of large assets that are dependent on the InputSystem package and import it as a dependency.
             EditorApplication.delayCall += ShowRestartWarning;
 
-            RunInitialUpdate();
+            //RunInitialUpdate();
 
             EnableActions();
 
@@ -3591,7 +3593,7 @@ namespace UnityEngine.InputSystem
         private static void ShowRestartWarning()
         {
             if (!s_DomainStateManager.newInputBackendsCheckedAsEnabled &&
-                !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
+                //!EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
                 !Application.isBatchMode)
             {
                 const string dialogText = "The new Input System Package is installed, but not configured to enable native device input, such as keyboard, mouse, or gamepad actions. " +
@@ -3616,8 +3618,8 @@ namespace UnityEngine.InputSystem
 #endif
                 if (userChoseEnableAndRestart)
                 {
-                    EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
-                    EditorHelpers.RestartEditorAndRecompileScripts();
+                    /*EditorPlayerSettingHelpers.newSystemBackendsEnabled = true;
+                    EditorHelpers.RestartEditorAndRecompileScripts();*/
                 }
             }
             s_DomainStateManager.newInputBackendsCheckedAsEnabled = true;
@@ -3692,7 +3694,7 @@ namespace UnityEngine.InputSystem
             ////TODO: use dirty count to find whether settings have actually changed
             // May have added, removed, moved, or renamed settings asset. Force a refresh
             // of the UI.
-            InputSettingsProvider.ForceReload();
+            //InputSettingsProvider.ForceReload();
 
             // Also, if the asset holding our current settings got deleted, switch back to a
             // temporary settings object.
@@ -3732,6 +3734,8 @@ namespace UnityEngine.InputSystem
             EnableActions();
         }
 
+#endif
+
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         internal static void InitializeInPlayer(IInputRuntime runtime, InputSettings settings)
         {
@@ -3749,7 +3753,7 @@ namespace UnityEngine.InputSystem
             EnableActions();
         }
 
-#endif
+#endif //DEVELOPMENT_BUILD || UNITY_EDITOR
 
 #if UNITY_INCLUDE_TESTS
         //
@@ -3775,7 +3779,7 @@ namespace UnityEngine.InputSystem
 #endif // UNITY_INCLUDE_TESTS
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void RunInitialUpdate()
+        internal static void RunInitialUpdate()
         {
             // Request an initial Update so that user methods such as Start and Awake
             // can access the input devices.
@@ -3920,7 +3924,7 @@ namespace UnityEngine.InputSystem
             // NOTE: Does not destroy InputSystemObject. We want to destroy input system
             //       state repeatedly during tests but we want to not create InputSystemObject
             //       over and over.
-            s_Manager.Destroy();
+            //s_Manager.Destroy();
             if (s_RemoteConnection != null)
                 Object.DestroyImmediate(s_RemoteConnection);
             s_Manager = null;

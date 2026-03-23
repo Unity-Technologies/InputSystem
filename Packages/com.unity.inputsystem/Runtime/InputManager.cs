@@ -21,7 +21,7 @@ using UnityEngine.Assemblies;
 #endif
 
 #if UNITY_EDITOR
-using UnityEngine.InputSystem.Editor;
+//using UnityEngine.InputSystem.Editor;
 using CustomBindingPathValidator = System.Func<string, System.Action>;
 #endif
 
@@ -1915,7 +1915,7 @@ namespace UnityEngine.InputSystem
         private void InitializeActions()
         {
 #if UNITY_EDITOR
-            m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+            //m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
 #else
             m_Actions = null;
             var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
@@ -2375,9 +2375,9 @@ namespace UnityEngine.InputSystem
         private bool m_HaveSentStartupAnalytics;
         #endif
 
-        private IInputRuntime m_Runtime;
+        internal IInputRuntime m_Runtime;
         private InputMetrics m_Metrics;
-        private InputSettings m_Settings;
+        internal InputSettings m_Settings;
 
         // Extract as booleans (from m_Settings) because feature check is in the hot path
 

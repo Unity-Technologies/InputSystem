@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 #if UNITY_EDITOR
-using UnityEngine.InputSystem.Editor;
+//using UnityEngine.InputSystem.Editor;
 #endif
 using UnityEngine.InputSystem.LowLevel;
 
@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem
             s_Manager.runtime.onPlayModeChanged = InputSystem.OnPlayModeChange;
             s_Manager.runtime.onProjectChange = InputSystem.OnProjectChange;
 
-            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
+            //InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
 
             if (enableRemoting)
                 InputSystem.SetUpRemoting();
@@ -71,9 +71,9 @@ namespace UnityEngine.InputSystem
                 Object.DestroyImmediate(InputSystem.s_RemoteConnection);
 
 #if UNITY_EDITOR
-            EditorInputControlLayoutCache.Clear();
+            /*EditorInputControlLayoutCache.Clear();
             InputDeviceDebuggerWindow.s_OnToolbarGUIActions.Clear();
-            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
+            InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();*/
 #endif
 
             InputSystem.s_Manager = null;
