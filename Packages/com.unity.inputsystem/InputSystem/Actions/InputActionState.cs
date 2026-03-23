@@ -157,39 +157,16 @@ namespace UnityEngine.InputSystem
                 var control = controls[i];
 
                 int bindingIndex = controlIndexToBindingIndex[i];
-                ref BindingState binding = ref bindingStates[bindingIndex];
 
                 ////REVIEW: take processors and interactions into account??
 
-                // Compute complexity.
-                InputBinding inputBinding = GetBinding(bindingIndex);
-                var priority = inputBinding.Priority;
-                Debug.Log("Action Name " + inputBinding.action + " Action count " + memory.actionCount + " memory action state " + memory.actionStates[0].controlIndex);
+                var action = GetActionOrNull(bindingIndex);
+                var priority = action != null ? action.Priority : 0;
+                if (priority < 0)
+                    priority = 0;
+                else if (priority > 65535)
+                    priority = 65535;
 
-                /*if (binding.isPartOfComposite && !disableControlGrouping)
-                {*/
-                //int compositeBindingIndex = binding.compositeOrCompositeBindingIndex;
-
-                /*for (var n = compositeBindingIndex + 1; n < totalBindingCount; ++n)
-                {
-                    ref BindingState partBinding = ref bindingStates[n];
-                    if (partBinding.actionIndex == 10)
-                    {
-                        complexity = 2;
-                        Debug.Log("Complexity was set to 2");
-                        break;
-                    }
-                    /*if (!partBinding.isPartOfComposite || partBinding.compositeOrCompositeBindingIndex != compositeBindingIndex)
-                        break;#1#
-                    //++complexity;
-                }*/
-                if (binding.actionIndex == 10)
-                {
-                    priority = 2;
-                    Debug.Log("Complexity was set to 2");
-                }
-
-                /*}*/
                 controlGroupingAndPriority[i * 2 + 1] = (ushort)priority;
 
                 // Compute grouping. If already set, skip.

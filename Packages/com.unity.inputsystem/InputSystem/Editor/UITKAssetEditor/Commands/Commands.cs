@@ -535,14 +535,14 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
-        public static Command ChangeBindingPriority(SerializedInputBinding binding, int priority)
+        public static Command ChangeActionPriority(SerializedInputAction inputAction, int priority)
         {
             return (in InputActionsEditorState state) =>
             {
-                var priorityProperty = binding.wrappedProperty.FindPropertyRelative(nameof(InputBinding.m_Priority));
+                var priorityProperty = inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Priority));
                 priorityProperty.intValue = Mathf.Clamp(priority, 0, 65535);
                 state.serializedObject.ApplyModifiedProperties();
-                state.m_Analytics?.RegisterBindingEdit();
+                state.m_Analytics?.RegisterActionEdit();
                 return state;
             };
         }

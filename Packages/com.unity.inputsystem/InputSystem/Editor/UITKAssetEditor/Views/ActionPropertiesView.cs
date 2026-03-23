@@ -89,6 +89,20 @@ namespace UnityEngine.InputSystem.Editor
                 Dispatch(Commands.ChangeActionControlType(inputAction, 0));
             }
 
+            var priorityField = new IntegerField("Priority")
+            {
+                tooltip = InputActionsEditorConstants.ActionPriorityTooltip
+            };
+            var priorityLabel = priorityField.Q<Label>();
+            priorityLabel.style.minWidth = m_DropdownLabelWidth;
+            priorityLabel.style.width = m_DropdownLabelWidth;
+            priorityField.SetValueWithoutNotify(inputAction.priority);
+            priorityField.RegisterValueChangedCallback(evt =>
+            {
+                Dispatch(Commands.ChangeActionPriority(inputAction, evt.newValue));
+            });
+            rootElement.Add(priorityField);
+
             if (inputAction.type != InputActionType.Value)
             {
                 var initialStateCheck = new Toggle("Initial State Check")

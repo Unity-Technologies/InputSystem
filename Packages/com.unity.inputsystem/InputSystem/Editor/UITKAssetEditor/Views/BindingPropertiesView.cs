@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System.Linq;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
@@ -14,7 +13,6 @@ namespace UnityEngine.InputSystem.Editor
         private readonly Foldout m_ParentFoldout;
         private CompositeBindingPropertiesView m_CompositeBindingPropertiesView;
         private CompositePartBindingPropertiesView m_CompositePartBindingPropertiesView;
-        private const int k_PriorityLabelWidth = 90;
 
         public BindingPropertiesView(VisualElement root, Foldout foldout, StateContainer stateContainer)
             : base(root, stateContainer)
@@ -51,12 +49,10 @@ namespace UnityEngine.InputSystem.Editor
             {
                 m_ParentFoldout.text = "Composite";
                 m_CompositeBindingPropertiesView = CreateChildView(new CompositeBindingPropertiesView(rootElement, stateContainer));
-                DrawPriorityField(binding.Value);
             }
             else if (binding.Value.isPartOfComposite)
             {
                 m_CompositePartBindingPropertiesView = CreateChildView(new CompositePartBindingPropertiesView(rootElement, stateContainer));
-                DrawPriorityField(binding.Value);
                 DrawMatchingControlPaths(viewState);
                 DrawControlSchemeToggles(viewState, binding.Value);
             }
@@ -72,29 +68,9 @@ namespace UnityEngine.InputSystem.Editor
                 var controlPathContainer = new IMGUIContainer(controlPathEditor.OnGUI);
                 rootElement.Add(controlPathContainer);
 
-                DrawPriorityField(binding.Value);
                 DrawMatchingControlPaths(viewState);
                 DrawControlSchemeToggles(viewState, binding.Value);
             }
-        }
-
-        private void DrawPriorityField(SerializedInputBinding binding)
-        {
-            var priorityField = new IntegerField("Priority")
-            {
-                tooltip = InputActionsEditorConstants.BindingPriorityTooltip
-            };
-            var priorityLabel = priorityField.Q<Label>();
-            priorityLabel.style.minWidth = k_PriorityLabelWidth;
-            priorityLabel.style.width = k_PriorityLabelWidth;
-
-            var priorityProperty = binding.wrappedProperty.FindPropertyRelative(nameof(InputBinding.m_Priority));
-            priorityField.SetValueWithoutNotify(priorityProperty.intValue);
-            priorityField.RegisterValueChangedCallback(evt =>
-            {
-                Dispatch(Commands.ChangeBindingPriority(binding, evt.newValue));
-            });
-            rootElement.Add(priorityField);
         }
 
         static bool s_showMatchingLayouts = false;

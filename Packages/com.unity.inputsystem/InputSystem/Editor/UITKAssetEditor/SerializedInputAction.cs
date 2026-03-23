@@ -20,6 +20,7 @@ namespace UnityEngine.InputSystem.Editor
             processors = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Processors)).stringValue;
             propertyPath = wrappedProperty.propertyPath;
             initialStateCheck = ReadInitialStateCheck(serializedProperty);
+            priority = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Priority)).intValue;
             actionTypeTooltip = serializedProperty.FindPropertyRelative(nameof(InputAction.m_Type)).GetTooltip();
             expectedControlTypeTooltip = serializedProperty.FindPropertyRelative(nameof(InputAction.m_ExpectedControlType)).GetTooltip();
         }
@@ -32,6 +33,7 @@ namespace UnityEngine.InputSystem.Editor
         public string processors { get; }
         public string propertyPath { get; }
         public bool initialStateCheck { get; }
+        public int priority { get; }
         public string actionTypeTooltip { get; }
         public string expectedControlTypeTooltip { get; }
         public SerializedProperty wrappedProperty { get; }
@@ -60,6 +62,7 @@ namespace UnityEngine.InputSystem.Editor
                 && interactions == other.interactions
                 && processors == other.processors
                 && initialStateCheck == other.initialStateCheck
+                && priority == other.priority
                 && actionTypeTooltip == other.actionTypeTooltip
                 && expectedControlTypeTooltip == other.expectedControlTypeTooltip
                 && propertyPath == other.propertyPath;
@@ -79,6 +82,7 @@ namespace UnityEngine.InputSystem.Editor
             hashCode.Add(interactions);
             hashCode.Add(processors);
             hashCode.Add(initialStateCheck);
+            hashCode.Add(priority);
             hashCode.Add(actionTypeTooltip);
             hashCode.Add(expectedControlTypeTooltip);
             hashCode.Add(propertyPath);

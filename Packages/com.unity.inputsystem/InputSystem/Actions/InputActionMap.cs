@@ -1521,16 +1521,9 @@ namespace UnityEngine.InputSystem
             public string action;
             public bool isComposite;
             public bool isPartOfComposite;
-            public int priority;
 
             public InputBinding ToBinding()
             {
-                var clampedPriority = priority;
-                if (clampedPriority < 0)
-                    clampedPriority = 0;
-                else if (clampedPriority > 65535)
-                    clampedPriority = 65535;
-
                 return new InputBinding
                 {
                     name = string.IsNullOrEmpty(name) ? null : name,
@@ -1542,7 +1535,6 @@ namespace UnityEngine.InputSystem
                     groups = string.IsNullOrEmpty(groups) ? null : groups,
                     isComposite = isComposite,
                     isPartOfComposite = isPartOfComposite,
-                    m_Priority = clampedPriority,
                 };
             }
 
@@ -1559,7 +1551,6 @@ namespace UnityEngine.InputSystem
                     groups = binding.groups,
                     isComposite = binding.isComposite,
                     isPartOfComposite = binding.isPartOfComposite,
-                    priority = binding.m_Priority,
                 };
             }
         }
@@ -1577,6 +1568,7 @@ namespace UnityEngine.InputSystem
             public string interactions;
             public bool passThrough;
             public bool initialStateCheck;
+            public int priority;
 
             // Bindings can either be on the action itself (in which case the action name
             // for each binding is implied) or listed separately in the action file.
@@ -1606,6 +1598,12 @@ namespace UnityEngine.InputSystem
                         actionType = InputActionType.Button;
                 }
 
+                var clampedPriority = priority;
+                if (clampedPriority < 0)
+                    clampedPriority = 0;
+                else if (clampedPriority > 65535)
+                    clampedPriority = 65535;
+
                 return new InputAction(actionName ?? name, actionType)
                 {
                     m_Id = string.IsNullOrEmpty(id) ? null : id,
@@ -1615,6 +1613,7 @@ namespace UnityEngine.InputSystem
                     m_Processors = processors,
                     m_Interactions = interactions,
                     wantsInitialStateCheck = initialStateCheck,
+                    m_Priority = clampedPriority,
                 };
             }
         }
@@ -1629,6 +1628,7 @@ namespace UnityEngine.InputSystem
             public string processors;
             public string interactions;
             public bool initialStateCheck;
+            public int priority;
 
             public static WriteActionJson FromAction(InputAction action)
             {
@@ -1641,6 +1641,7 @@ namespace UnityEngine.InputSystem
                     processors = action.processors,
                     interactions = action.interactions,
                     initialStateCheck = action.wantsInitialStateCheck,
+                    priority = action.m_Priority,
                 };
             }
         }
