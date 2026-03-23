@@ -1521,9 +1521,16 @@ namespace UnityEngine.InputSystem
             public string action;
             public bool isComposite;
             public bool isPartOfComposite;
+            public int priority;
 
             public InputBinding ToBinding()
             {
+                var clampedPriority = priority;
+                if (clampedPriority < 0)
+                    clampedPriority = 0;
+                else if (clampedPriority > 65535)
+                    clampedPriority = 65535;
+
                 return new InputBinding
                 {
                     name = string.IsNullOrEmpty(name) ? null : name,
@@ -1535,6 +1542,7 @@ namespace UnityEngine.InputSystem
                     groups = string.IsNullOrEmpty(groups) ? null : groups,
                     isComposite = isComposite,
                     isPartOfComposite = isPartOfComposite,
+                    m_Priority = clampedPriority,
                 };
             }
 
@@ -1551,6 +1559,7 @@ namespace UnityEngine.InputSystem
                     groups = binding.groups,
                     isComposite = binding.isComposite,
                     isPartOfComposite = binding.isPartOfComposite,
+                    priority = binding.m_Priority,
                 };
             }
         }

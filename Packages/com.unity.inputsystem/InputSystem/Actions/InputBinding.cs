@@ -106,6 +106,17 @@ namespace UnityEngine.InputSystem
             set => m_Id = value.ToString();
         }
 
+        /// <summary>
+        /// Priority of this binding when multiple bindings resolve to the same control.
+        /// </summary>
+        /// <value>Effective range at runtime is 0–65535; the value is combined with control grouping data as an unsigned 16-bit integer.</value>
+        /// <remarks>
+        /// This influences how the input system handles overlapping bindings on a shared control—for example whether
+        /// a performed action can mark the underlying input event as handled, which affects further processing for
+        /// other bindings in the same group. Values 0–1 follow one path; values greater than 1 follow another when
+        /// the input system resolves overlapping bindings on the same control. Values outside the 0–65535 range are
+        /// truncated when stored in the internal representation.
+        /// </remarks>
         public int Priority
         {
             get => m_Priority;

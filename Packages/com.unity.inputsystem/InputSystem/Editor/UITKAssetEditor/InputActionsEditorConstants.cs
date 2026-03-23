@@ -34,6 +34,11 @@ namespace UnityEngine.InputSystem.Editor
             + "immediately trigger if any of its bound controls are currently in a non-default state. "
             + "This check happens implicitly for Value actions but can be explicitly enabled for Button and Pass-Through actions.";
 
+        public const string BindingPriorityTooltip =
+            "Priority when several bindings share the same control. Effective range is 0–65535 at runtime (unsigned 16-bit). "
+            + "It affects how overlapping bindings are processed—for example whether a performed action can mark the input "
+            + "event as handled. Values 0–1 behave differently from values greater than 1 in that regard.";
+
         public struct CommandEvents
         {
             public const string Rename = "Rename";

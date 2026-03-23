@@ -30,6 +30,7 @@ namespace UnityEngine.InputSystem.Editor
                 ? bindingGroups.Split(InputBinding.kSeparatorString, StringSplitOptions.RemoveEmptyEntries)
                 : Array.Empty<string>();
             flags = (InputBinding.Flags)serializedProperty.FindPropertyRelative(nameof(InputBinding.m_Flags)).intValue;
+            priority = serializedProperty.FindPropertyRelative(nameof(InputBinding.m_Priority)).intValue;
             indexOfBinding = serializedProperty.GetIndexOfArrayElement();
             isComposite = (flags & InputBinding.Flags.Composite) == InputBinding.Flags.Composite;
             isPartOfComposite = (flags & InputBinding.Flags.PartOfComposite) == InputBinding.Flags.PartOfComposite;
@@ -48,6 +49,7 @@ namespace UnityEngine.InputSystem.Editor
         public string propertyPath { get; }
         public string[] controlSchemes { get; }
         public InputBinding.Flags flags { get; }
+        public int priority { get; }
 
         /// <summary>
         /// The index of this binding in the array that it is stored in.
@@ -85,6 +87,7 @@ namespace UnityEngine.InputSystem.Editor
                 && processors == other.processors
                 && action == other.action
                 && flags == other.flags
+                && priority == other.priority
                 && indexOfBinding == other.indexOfBinding
                 && isComposite == other.isComposite
                 && isPartOfComposite == other.isPartOfComposite
@@ -107,6 +110,7 @@ namespace UnityEngine.InputSystem.Editor
             hashCode.Add(processors);
             hashCode.Add(action);
             hashCode.Add((int)flags);
+            hashCode.Add(priority);
             hashCode.Add(indexOfBinding);
             hashCode.Add(isComposite);
             hashCode.Add(isPartOfComposite);
