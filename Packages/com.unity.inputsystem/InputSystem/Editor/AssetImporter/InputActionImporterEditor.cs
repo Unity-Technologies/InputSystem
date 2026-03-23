@@ -16,6 +16,7 @@ namespace UnityEngine.InputSystem.Editor
     [CustomEditor(typeof(InputActionImporter))]
     internal class InputActionImporterEditor : ScriptedImporterEditor
     {
+#if UNITY_6000_0_OR_NEWER
         public override VisualElement CreateInspectorGUI()
         {
             var root = new VisualElement();
@@ -100,7 +101,6 @@ namespace UnityEngine.InputSystem.Editor
             var codeGenContainer = new VisualElement();
             root.Add(codeGenContainer);
 
-            // File path with browse button
             string defaultFileName = "";
             if (inputActionAsset != null)
             {
@@ -140,7 +140,6 @@ namespace UnityEngine.InputSystem.Editor
             browseButton.style.minWidth = 25;
             pathRow.Add(browseButton);
 
-            // Class name
             string typeName = inputActionAsset != null
                 ? CSharpCodeHelpers.MakeTypeName(inputActionAsset.name)
                 : null;
@@ -162,7 +161,6 @@ namespace UnityEngine.InputSystem.Editor
                     ? DisplayStyle.Flex : DisplayStyle.None;
             });
 
-            // Namespace
             var namespaceField = new TextField("C# Class Namespace") { bindingPath = "m_WrapperCodeNamespace" };
             SetupPlaceholder(namespaceField, "<Global namespace>");
             codeGenContainer.Add(namespaceField);
@@ -180,7 +178,6 @@ namespace UnityEngine.InputSystem.Editor
                     ? DisplayStyle.Flex : DisplayStyle.None;
             });
 
-            // Show/hide code gen fields based on toggle
             var generateProp = serializedObject.FindProperty("m_GenerateWrapperCode");
             codeGenContainer.style.display = generateProp.boolValue ? DisplayStyle.Flex : DisplayStyle.None;
 
@@ -223,6 +220,91 @@ namespace UnityEngine.InputSystem.Editor
             placeholder.style.display = string.IsNullOrEmpty(textField.value)
                 ? DisplayStyle.Flex : DisplayStyle.None;
         }
+#else
+        public override void OnInspectorGUI()
+        {
+            var inputActionAsset = GetAsset();
+
+            serializedObject.Update();
+
+            EditorGUILayout.Space();
+
+            if (inputActionAsset == null)
+                EditorGUILayout.HelpBox("The currently selected object is not an editable input action asset.",
+                    MessageType.Info);
+
+            using (new EditorGUI.DisabledScope(inputActionAsset == null))
+            {
+                if (GUILayout.Button(GetOpenEditorButtonText(inputActionAsset), GUILayout.Height(30)))
+                    OpenEditor(inputActionAsset);
+            }
+
+            EditorGUILayout.Space();
+
+            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.actions, inputActionAsset,
+                inputActionAsset ? inputActionAsset.name : "Null", "Project-wide Input Actions",
+                (value) => InputSystem.actions = value, !EditorApplication.isPlayingOrWillChangePlaymode);
+
+            EditorGUILayout.Space();
+
+            var generateWrapperCodeProperty = serializedObject.FindProperty("m_GenerateWrapperCode");
+            EditorGUILayout.PropertyField(generateWrapperCodeProperty, m_GenerateWrapperCodeLabel);
+            if (generateWrapperCodeProperty.boolValue)
+            {
+                var wrapperCodePathProperty = serializedObject.FindProperty("m_WrapperCodePath");
+                var wrapperClassNameProperty = serializedObject.FindProperty("m_WrapperClassName");
+                var wrapperCodeNamespaceProperty = serializedObject.FindProperty("m_WrapperCodeNamespace");
+
+                EditorGUILayout.BeginHorizontal();
+
+                string defaultFileName = "";
+                if (inputActionAsset != null)
+                {
+                    var assetPath = AssetDatabase.GetAssetPath(inputActionAsset);
+                    defaultFileName = Path.ChangeExtension(assetPath, ".cs");
+                }
+
+                wrapperCodePathProperty.PropertyFieldWithDefaultText(m_WrapperCodePathLabel, defaultFileName);
+
+                if (GUILayout.Button("…", EditorStyles.miniButton, GUILayout.MaxWidth(20)))
+                {
+                    var fileName = EditorUtility.SaveFilePanel("Location for generated C# file",
+                        Path.GetDirectoryName(defaultFileName),
+                        Path.GetFileName(defaultFileName), "cs");
+                    if (!string.IsNullOrEmpty(fileName))
+                    {
+                        if (fileName.StartsWith(Application.dataPath))
+                            fileName = "Assets/" + fileName.Substring(Application.dataPath.Length + 1);
+
+                        wrapperCodePathProperty.stringValue = fileName;
+                    }
+                }
+                EditorGUILayout.EndHorizontal();
+
+                string typeName = null;
+                if (inputActionAsset != null)
+                    typeName = CSharpCodeHelpers.MakeTypeName(inputActionAsset?.name);
+                wrapperClassNameProperty.PropertyFieldWithDefaultText(m_WrapperClassNameLabel, typeName ?? "<Class name>");
+
+                if (!CSharpCodeHelpers.IsEmptyOrProperIdentifier(wrapperClassNameProperty.stringValue))
+                    EditorGUILayout.HelpBox("Must be a valid C# identifier", MessageType.Error);
+
+                wrapperCodeNamespaceProperty.PropertyFieldWithDefaultText(m_WrapperCodeNamespaceLabel, "<Global namespace>");
+
+                if (!CSharpCodeHelpers.IsEmptyOrProperNamespaceName(wrapperCodeNamespaceProperty.stringValue))
+                    EditorGUILayout.HelpBox("Must be a valid C# namespace name", MessageType.Error);
+            }
+
+            serializedObject.ApplyModifiedProperties();
+
+            ApplyRevertGUI();
+        }
+
+        private readonly GUIContent m_GenerateWrapperCodeLabel = EditorGUIUtility.TrTextContent("Generate C# Class");
+        private readonly GUIContent m_WrapperCodePathLabel = EditorGUIUtility.TrTextContent("C# Class File");
+        private readonly GUIContent m_WrapperClassNameLabel = EditorGUIUtility.TrTextContent("C# Class Name");
+        private readonly GUIContent m_WrapperCodeNamespaceLabel = EditorGUIUtility.TrTextContent("C# Class Namespace");
+#endif
 
         private InputActionAsset GetAsset()
         {
