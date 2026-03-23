@@ -10,8 +10,7 @@
         "UnityEditor.TestRunner",
         "Unity.PerformanceTesting",
         "Unity.Coding.Editor",
-        "Unity.InputSystem.ForUI",
-        "Unity.InputSystem.Editor"
+        "Unity.InputSystem.ForUI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

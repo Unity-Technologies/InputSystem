@@ -4,8 +4,7 @@
     "references": [
         "Unity.InputSystem",
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
-        "Unity.InputSystem.Editor"
+        "UnityEditor.TestRunner"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

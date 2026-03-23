@@ -2,7 +2,6 @@
     "name": "Unity.InputSystem.Samples.Tests",
     "rootNamespace": "",
     "references": [
-        "GUID:75469ad4d38634e559750d17036d5f7c",
         "GUID:dc04f38471c3a459fb4d31124ee9127d",
         "GUID:0e27b928aa4d07c46ac4346b2411cb62",
         "GUID:27619889b8ba8c24980f49ee34dbb44a",
@@ -10,8 +9,7 @@
         "GUID:043547d79c83ab74e9bcfef914059964",
         "GUID:157556569ac93a94fb6a763f50476339",
         "GUID:813ed4fded4e24cc69d83a9178f8fede",
-        "GUID:d46adbc216ac24e9a86f26d7a54b2384",
-        "GUID:92e8d8d0b9a5e4f44b24c3e04451d190"
+        "GUID:d46adbc216ac24e9a86f26d7a54b2384"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
