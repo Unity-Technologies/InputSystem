@@ -119,6 +119,7 @@ namespace UnityEngine.InputSystem.Editor
 
             var pathField = new TextField("C# Class File") { bindingPath = "m_WrapperCodePath" };
             pathField.style.flexGrow = 1;
+            pathField.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             SetupPlaceholder(pathField, defaultFileName);
             pathRow.Add(pathField);
 
@@ -150,6 +151,7 @@ namespace UnityEngine.InputSystem.Editor
                 : null;
 
             var classNameField = new TextField("C# Class Name") { bindingPath = "m_WrapperClassName" };
+            classNameField.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             SetupPlaceholder(classNameField, typeName ?? "<Class name>");
             codeGenContainer.Add(classNameField);
 
@@ -168,6 +170,7 @@ namespace UnityEngine.InputSystem.Editor
 
             // Namespace
             var namespaceField = new TextField("C# Class Namespace") { bindingPath = "m_WrapperCodeNamespace" };
+            namespaceField.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             SetupPlaceholder(namespaceField, "<Global namespace>");
             codeGenContainer.Add(namespaceField);
 
