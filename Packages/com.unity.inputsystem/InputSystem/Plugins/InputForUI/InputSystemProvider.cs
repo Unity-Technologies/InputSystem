@@ -17,6 +17,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         DefaultInputActions m_DefaultInputActions;
         InputActionAsset m_InputActionAsset;
+        InputActionMap m_UIActionMap;
+        bool m_ShouldDisableUIActionMapOnUnregister;
 
         // Note that these are plain action references instead since InputActionReference do
         // not provide any value when this integration doesn't have any UI. If this integration
@@ -636,14 +638,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_RightClickAction = FindActionAndRegisterCallback(Actions.RightClickAction, OnRightClickPerformed);
             m_ScrollWheelAction = FindActionAndRegisterCallback(Actions.ScrollWheelAction, OnScrollWheelPerformed);
 
-            // When adding new actions, don't forget to add them to UnregisterActions
-            if (InputSystem.actions == null)
-            {
-                // If we've not loaded a user-created set of actions, just enable the UI actions from our defaults.
-                m_InputActionAsset.FindActionMap("UI", true).Enable();
-            }
-            else
-                m_InputActionAsset.Enable();
+            // Only touch the UI map so we don't change the enabled state of unrelated maps.
+            m_UIActionMap = m_InputActionAsset?.FindActionMap("UI", true);
+            m_ShouldDisableUIActionMapOnUnregister = m_UIActionMap != null && !m_UIActionMap.enabled;
+            if (m_ShouldDisableUIActionMapOnUnregister)
+                m_UIActionMap.Enable();
         }
 
         void UnregisterAction(ref InputAction action, Action<InputAction.CallbackContext> callback = null)
@@ -664,8 +663,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             UnregisterAction(ref m_RightClickAction, OnRightClickPerformed);
             UnregisterAction(ref m_ScrollWheelAction, OnScrollWheelPerformed);
 
-            if (m_InputActionAsset != null && m_InputActionAsset != InputSystem.actions)
-                m_InputActionAsset.Disable();
+            if (m_ShouldDisableUIActionMapOnUnregister && m_UIActionMap != null)
+                m_UIActionMap.Disable();
+
+            m_UIActionMap = null;
+            m_ShouldDisableUIActionMapOnUnregister = false;
         }
 
         void SelectInputActionAsset()
