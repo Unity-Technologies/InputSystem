@@ -691,7 +691,7 @@ namespace UnityEngine.InputSystem
         /// These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys.
         /// However conflicts would not occur between actions which belong to different Action Assets.
         /// </remarks>
-        /*public bool shortcutKeysConsumeInput
+        public bool shortcutKeysConsumeInput
         {
             get => m_ShortcutKeysConsumeInputs;
             set
@@ -702,7 +702,7 @@ namespace UnityEngine.InputSystem
                 m_ShortcutKeysConsumeInputs = value;
                 OnChange();
             }
-        }*/
+        }
 
         /// <summary>
         /// Enable or disable an internal feature by its name.
@@ -1054,7 +1054,7 @@ namespace UnityEngine.InputSystem
                 a.maxQueuedEventsPerUpdate == b.maxQueuedEventsPerUpdate &&
                 CompareSets(a.supportedDevices, b.supportedDevices) &&
                 a.disableRedundantEventsMerging == b.disableRedundantEventsMerging &&
-                //a.shortcutKeysConsumeInput == b.shortcutKeysConsumeInput &&
+                a.shortcutKeysConsumeInput == b.shortcutKeysConsumeInput &&
 
                 CompareFeatureFlag(a, b, InputFeatureNames.kUseOptimizedControls) &&
                 CompareFeatureFlag(a, b, InputFeatureNames.kUseReadValueCaching) &&

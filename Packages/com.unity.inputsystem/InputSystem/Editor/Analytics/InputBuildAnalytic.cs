@@ -188,7 +188,7 @@ namespace UnityEngine.InputSystem.Editor
                 max_queued_events_per_update = settings.maxQueuedEventsPerUpdate;
                 supported_devices = settings.supportedDevices.ToArray();
                 disable_redundant_events_merging = settings.disableRedundantEventsMerging;
-                shortcut_keys_consume_input = false; // settings.shortcutKeysConsumeInput;
+                shortcut_keys_consume_input = settings.shortcutKeysConsumeInput;
 
                 feature_optimized_controls_enabled = settings.IsFeatureEnabled(InputFeatureNames.kUseOptimizedControls);
                 feature_read_value_caching_enabled = settings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching);

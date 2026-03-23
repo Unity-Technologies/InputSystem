@@ -450,7 +450,7 @@ partial class CoreTests
             Assert.That(data.max_queued_events_per_update, Is.EqualTo(defaultSettings.maxQueuedEventsPerUpdate));
             Assert.That(data.supported_devices, Is.EqualTo(defaultSettings.supportedDevices));
             Assert.That(data.disable_redundant_events_merging, Is.EqualTo(defaultSettings.disableRedundantEventsMerging));
-            //Assert.That(data.shortcut_keys_consume_input, Is.EqualTo(defaultSettings.shortcutKeysConsumeInput));
+            Assert.That(data.shortcut_keys_consume_input, Is.EqualTo(defaultSettings.shortcutKeysConsumeInput));
 
             Assert.That(data.feature_optimized_controls_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseOptimizedControls)));
             Assert.That(data.feature_read_value_caching_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching)));
@@ -498,7 +498,7 @@ partial class CoreTests
             customSettings.maxQueuedEventsPerUpdate = 12;
             customSettings.supportedDevices = Array.Empty<string>();
             customSettings.disableRedundantEventsMerging = true;
-            //customSettings.shortcutKeysConsumeInput = true;
+            customSettings.shortcutKeysConsumeInput = true;
 
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
@@ -544,7 +544,7 @@ partial class CoreTests
             Assert.That(data.max_queued_events_per_update, Is.EqualTo(customSettings.maxQueuedEventsPerUpdate));
             Assert.That(data.supported_devices, Is.EqualTo(customSettings.supportedDevices));
             Assert.That(data.disable_redundant_events_merging, Is.EqualTo(customSettings.disableRedundantEventsMerging));
-            //Assert.That(data.shortcut_keys_consume_input, Is.EqualTo(customSettings.shortcutKeysConsumeInput));
+            Assert.That(data.shortcut_keys_consume_input, Is.EqualTo(customSettings.shortcutKeysConsumeInput));
 
             Assert.That(data.feature_optimized_controls_enabled, Is.True);
             Assert.That(data.feature_read_value_caching_enabled, Is.True);

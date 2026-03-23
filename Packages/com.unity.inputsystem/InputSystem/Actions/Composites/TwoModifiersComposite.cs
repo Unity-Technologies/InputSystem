@@ -224,7 +224,7 @@ namespace UnityEngine.InputSystem.Composites
 #pragma warning restore CS0618
                     modifiersOrder = ModifiersOrder.Unordered;
                 else
-                    modifiersOrder = /*InputSystem.settings.shortcutKeysConsumeInput ? ModifiersOrder.Ordered :*/ ModifiersOrder.Unordered;
+                    modifiersOrder = InputSystem.settings.shortcutKeysConsumeInput ? ModifiersOrder.Ordered : ModifiersOrder.Unordered;
             }
         }
 
