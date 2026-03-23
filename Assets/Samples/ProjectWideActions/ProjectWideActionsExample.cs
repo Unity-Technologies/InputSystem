@@ -109,6 +109,16 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
                 var moveVal = move.ReadValue<Vector2>() * 10.0f * Time.deltaTime;
                 cube.transform.Translate(new Vector3(moveVal.x, moveVal.y, 0));
             }
+
+            if (shiftB.IsPressed())
+            {
+                Debug.Log("SHIFT + B WAS PRESSED");
+            }
+
+            if (b.IsPressed())
+            {
+                Debug.Log("B WAS PRESSED");
+            }
         }
     } // class ProjectWideActionsExample
 } // namespace UnityEngine.InputSystem.Samples.ProjectWideActions

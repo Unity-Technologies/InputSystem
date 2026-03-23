@@ -517,7 +517,7 @@
                 {
                     "name": "One Modifier",
                     "id": "5d7ab5f3-36e5-4c42-837c-490da85bf8e7",
-                    "path": "OneModifier",
+                    "path": "OneModifier(modifiersOrder=1)",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
