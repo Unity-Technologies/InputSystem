@@ -21,6 +21,10 @@ namespace UnityEngine.InputSystem.Editor
             var root = new VisualElement();
             var inputActionAsset = GetAsset();
 
+            // ScriptedImporterEditor in 2019.2 now requires explicitly updating the SerializedObject
+            // like in other types of editors.
+            serializedObject.Update();
+
             if (inputActionAsset == null)
             {
                 root.Add(new HelpBox(
