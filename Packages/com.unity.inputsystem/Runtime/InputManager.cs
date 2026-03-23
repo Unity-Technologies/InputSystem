@@ -1105,7 +1105,7 @@ namespace UnityEngine.InputSystem
             // is useful to ensure that things like keyboard, mouse, and pen keep working in the editor
             // even if not supported as devices in the game.
             #if UNITY_EDITOR
-            if (m_AddDevicesNotSupportedByProject)
+            if (m_AddDevicesNotSupportedByProject?.Invoke() ?? false)
                 return true;
             #endif
 
@@ -2328,7 +2328,7 @@ namespace UnityEngine.InputSystem
         internal double m_EnterPlayModeTime;
 
         // Editor settings (set by InputSystemEditorInitializer)
-        internal bool m_AddDevicesNotSupportedByProject;
+        internal Func<bool> m_AddDevicesNotSupportedByProject;
 
         // Editor callback to get project-wide actions
         internal static Func<InputActionAsset> s_GetProjectWideActions;

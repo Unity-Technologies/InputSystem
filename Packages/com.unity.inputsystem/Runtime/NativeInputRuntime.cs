@@ -335,14 +335,14 @@ namespace UnityEngine.InputSystem.LowLevel
 
         #if UNITY_EDITOR
 
-        // These fields are set by InputSystemEditorInitializer to avoid direct Editor dependencies
-        internal bool m_IsInPlayMode;
-        internal bool m_IsEditorActive = true;
-        internal bool m_IsEditorPaused;
+        // These delegates are set by InputSystemEditorInitializer to avoid direct Editor dependencies
+        internal Func<bool> m_IsInPlayMode;
+        internal Func<bool> m_IsEditorActive;
+        internal Func<bool> m_IsEditorPaused;
 
-        public bool isInPlayMode => m_IsInPlayMode;
-        public bool isEditorActive => m_IsEditorActive;
-        public bool isEditorPaused => m_IsEditorPaused;
+        public bool isInPlayMode => m_IsInPlayMode?.Invoke() ?? false;
+        public bool isEditorActive => m_IsEditorActive?.Invoke() ?? true;
+        public bool isEditorPaused => m_IsEditorPaused?.Invoke() ?? false;
 
         // Unity Remote callbacks - set by Editor
         internal Action<Func<IntPtr, bool>> m_SetUnityRemoteMessageHandler;

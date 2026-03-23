@@ -115,19 +115,6 @@ namespace UnityEngine.InputSystem.Editor
 
         #endregion
 
-        private static void UpdateEditorState()
-        {
-            if (InputRuntime.s_Instance is NativeInputRuntime nativeRuntime)
-            {
-                nativeRuntime.m_IsInPlayMode = EditorApplication.isPlaying;
-                nativeRuntime.m_IsEditorPaused = EditorApplication.isPaused;
-                nativeRuntime.m_IsEditorActive = InternalEditorUtility.isApplicationActive;
-            }
-
-            // Update Editor settings
-            InputSystem.s_Manager.m_AddDevicesNotSupportedByProject = InputEditorUserSettings.addDevicesNotSupportedByProject;
-        }
-
         private static void RegisterSetupApiUsage(int api)
         {
             InputExitPlayModeAnalytic.Register((InputExitPlayModeAnalytic.Api)api);
@@ -195,8 +182,6 @@ namespace UnityEngine.InputSystem.Editor
 
                 EditorApplication.playModeStateChanged += OnEditorPlayModeStateChanged;
                 EditorApplication.projectChanged += OnEditorProjectChanged;
-                //TODO EDITOR CODE SPLIT: this doesn't make sense, needs to be removed
-                EditorApplication.update += UpdateEditorState;
 
                 InputSystem.s_Manager.runtime.onPlayModeChanged = InputSystem.OnPlayModeChange;
                 InputSystem.s_Manager.runtime.onProjectChange = InputSystem.OnProjectChange;
@@ -278,12 +263,9 @@ namespace UnityEngine.InputSystem.Editor
             UnityEngine.InputSystem.UI.InputSystemUIInputModule.s_OnReset = OnUIInputModuleReset;
 #endif
 
-            // TODO EDITOR CODE SPLIT: check this is correct
-            UpdateEditorState();
-
             InputActionAsset.s_OnMarkAsDirty = DirtyAssetTracker.TrackDirtyInputActionAsset;
             InputManager.s_GetProjectWideActions = () => ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
-            InputSystem.s_Manager.m_AddDevicesNotSupportedByProject = InputEditorUserSettings.addDevicesNotSupportedByProject;
+            InputSystem.s_Manager.m_AddDevicesNotSupportedByProject = () => InputEditorUserSettings.addDevicesNotSupportedByProject;
 
             InputSystem.s_OnPlayModeChangeCallback = change => OnPlayModeChange((PlayModeStateChange)change);
             InputSystem.s_OnProjectChangeCallback = OnProjectChange;
@@ -300,6 +282,10 @@ namespace UnityEngine.InputSystem.Editor
 
             if (InputRuntime.s_Instance is NativeInputRuntime nativeRuntime)
             {
+                nativeRuntime.m_IsInPlayMode = () => EditorApplication.isPlaying;
+                nativeRuntime.m_IsEditorPaused = () => EditorApplication.isPaused;
+                nativeRuntime.m_IsEditorActive = () => InternalEditorUtility.isApplicationActive;
+
                 nativeRuntime.m_RegisterWantsToQuit = RegisterWantsToQuit;
                 nativeRuntime.m_UnregisterWantsToQuit = UnregisterWantsToQuit;
 
