@@ -55,7 +55,12 @@ namespace UnityEngine.InputSystem
     {
         static InputSystem()
         {
+            // [InitializeOnLoad] only works in the editor and is managed by the static constructor in
+            // InputSystemEditorInitializer class.
+            // Here we only need to make sure that the static constructor is called in the player.
+            #if !UNITY_EDITOR
             GlobalInitialize(calledFromCtor: true);
+            #endif
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -3430,6 +3435,13 @@ namespace UnityEngine.InputSystem
             s_OnPlayModeChangeCallback?.Invoke(change);
         }
 
+        internal static Action s_OnProjectChangeCallback;
+
+        internal static void OnProjectChange()
+        {
+            s_OnProjectChangeCallback?.Invoke();
+        }
+
         /// <summary>
         /// Callback for editor-side global initialization. Set by InputSystemEditorInitializer.
         /// The bool parameter is <c>calledFromCtor</c>.
@@ -3439,7 +3451,7 @@ namespace UnityEngine.InputSystem
 
         #endif
 
-        internal static Func<bool> s_EditorIsDomainReloadDisabledCallback;
+        internal static Func<bool> s_IsDomainReloadDisabled;
 
         private static void GlobalInitialize(bool calledFromCtor)
         {
@@ -3462,7 +3474,7 @@ namespace UnityEngine.InputSystem
             {
                 RunInitialUpdate();
             }
-#endif // UNITY_EDITOR
+            #endif // UNITY_EDITOR
         }
 
         // Initialization is triggered by accessing InputSystem. Some parts (like InputActions)

@@ -1372,8 +1372,10 @@ namespace UnityEngine.InputSystem
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeGlobalPlayerState()
         {
-            if (!InputSystem.s_EditorIsDomainReloadDisabledCallback())
+            #if UNITY_EDITOR
+            if (!InputSystem.s_IsDomainReloadDisabled())
                 return;
+            #endif
 
             // Touch GlobalState doesn't require Dispose operations
             s_GlobalState = new PlayerInput.GlobalState
