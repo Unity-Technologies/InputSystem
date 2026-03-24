@@ -4,7 +4,7 @@ using System.IO;
 
 ////TODO: event diagnostics should have a bool here
 
-namespace UnityEngine.InputSystem.Editor
+namespace UnityEngine.InputSystem
 {
     /// <summary>
     /// Settings that are local to the current user and specific to the input system's use in the editor.
@@ -12,6 +12,8 @@ namespace UnityEngine.InputSystem.Editor
     /// <remarks>
     /// These settings are not stored in assets in the project along with the other input settings.
     /// Instead, they are serialized to JSON and stored in the project's Library/ folder.
+    ///
+    /// They are currently part of the Runtime code because they don't have any particular Editor dependency.
     /// </remarks>
     internal static class InputEditorUserSettings
     {

@@ -3369,8 +3369,6 @@ namespace UnityEngine.InputSystem
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         private static RemoteInputPlayerConnection s_RemoteConnection;
 
-        //TODO decide if we want to have a setter
-        // This was a quick fix necessary after FEPM
         internal static RemoteInputPlayerConnection remoteConnection
         {
             get => s_RemoteConnection;

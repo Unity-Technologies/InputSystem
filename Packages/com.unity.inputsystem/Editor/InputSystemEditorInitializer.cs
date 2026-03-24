@@ -209,7 +209,7 @@ namespace UnityEngine.InputSystem.Editor
                     InputSystem.s_Manager.m_SavedDeviceStates = s_StateManager.systemState.managerState.devices;
                     InputSystem.s_Manager.m_SavedAvailableDevices = s_StateManager.systemState.managerState.availableDevices;
 
-                    // InputEditorUserSettings.s_Settings = s_StateManager.systemState.userSettings;
+                    InputEditorUserSettings.s_Settings = s_StateManager.systemState.userSettings;
 
                     s_StateManager.systemState = new InputSystemState();
                 }
@@ -233,10 +233,8 @@ namespace UnityEngine.InputSystem.Editor
                 SetUpEditorRemoting();
             }
 
-            //TODO EDITOR CODE SPLIT: fix this
-            // Debug.Assert(settings != null);
-            // Debug.Assert(HasNativeObject(settings), "InputSettings has lost its native object");
-
+            Debug.Assert(InputSystem.settings != null);
+            Debug.Assert(HasNativeObject(InputSystem.settings), "InputSettings has lost its native object");
 
             UnityRemoteSupport.Initialize();
 

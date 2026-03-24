@@ -21,7 +21,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] public InputManager.SerializedState managerState;
         [SerializeField] public InputRemoting.SerializedState remotingState;
 #if UNITY_EDITOR
-        // [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
+        [SerializeField] public InputEditorUserSettings.SerializedState userSettings;
         [SerializeField] public string systemObject;
 #endif
         ////TODO: make these saved states capable of surviving domain reloads

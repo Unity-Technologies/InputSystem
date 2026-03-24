@@ -70,8 +70,7 @@ namespace UnityEngine.InputSystem
             }
 
             systemState.remoteConnection = InputSystem.remoteConnection;
-            //TODO: fix
-            // systemState.userSettings = InputEditorUserSettings.s_Settings;
+            systemState.userSettings = InputEditorUserSettings.s_Settings;
         }
 
         public void OnAfterDeserialize()
