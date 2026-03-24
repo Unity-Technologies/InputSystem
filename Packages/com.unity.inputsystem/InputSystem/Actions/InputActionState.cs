@@ -161,11 +161,8 @@ namespace UnityEngine.InputSystem
                 ////REVIEW: take processors and interactions into account??
 
                 var action = GetActionOrNull(bindingIndex);
-                var priority = action != null ? action.Priority : 0;
-                if (priority < 0)
-                    priority = 0;
-                else if (priority > 65535)
-                    priority = 65535;
+
+                var priority = Math.Clamp(action != null ? action.Priority : 0, 0, 65536);
 
                 controlGroupingAndPriority[i * 2 + 1] = (ushort)priority;
 
