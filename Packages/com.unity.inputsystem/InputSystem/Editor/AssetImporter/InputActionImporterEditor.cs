@@ -142,7 +142,6 @@ namespace UnityEngine.InputSystem.Editor
                 text = "…"
             };
             browseButton.style.width = 25;
-            browseButton.style.minWidth = 25;
             pathRow.Add(browseButton);
 
             // Class name
@@ -206,7 +205,6 @@ namespace UnityEngine.InputSystem.Editor
             var placeholderLabel = new Label(placeholder);
             placeholderLabel.pickingMode = PickingMode.Ignore;
             placeholderLabel.style.position = Position.Absolute;
-            placeholderLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
             placeholderLabel.style.opacity = 0.5f;
             placeholderLabel.style.paddingLeft = 2;
 
