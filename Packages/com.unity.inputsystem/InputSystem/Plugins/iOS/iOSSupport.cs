@@ -37,6 +37,12 @@ namespace UnityEngine.InputSystem.iOS
                     .WithDeviceClass("iOSGameController")
                     .WithProduct("DualSense Wireless Controller"));
 
+            InputSystem.RegisterLayout<SwitchProControlleriOS>("SwitchProGamepadiOS",
+                matches: new InputDeviceMatcher()
+                    .WithInterface("iOS")
+                    .WithDeviceClass("iOSGameController")
+                    .WithProduct("Pro Controller"));
+
             InputSystem.RegisterLayoutMatcher("GravitySensor",
                 new InputDeviceMatcher()
                     .WithInterface("iOS")
@@ -53,7 +59,7 @@ namespace UnityEngine.InputSystem.iOS
             InputSystem.RegisterLayout<iOSStepCounter>();
             // Don't add devices for InputTestRuntime
             // TODO: Maybe there should be a better place for adding device from C#
-            if (InputSystem.s_Manager.m_Runtime is NativeInputRuntime)
+            if (InputSystem.manager.runtime is NativeInputRuntime)
             {
                 if (iOSStepCounter.IsAvailable())
                     InputSystem.AddDevice<iOSStepCounter>();

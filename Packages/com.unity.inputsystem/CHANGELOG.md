@@ -9,13 +9,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed a `NullReferenceException` thrown when removing all action maps [UUM-137116](https://jira.unity3d.com/browse/UUM-137116)
+- Simplified default setting messaging by consolidating repetitive messages into a single HelpBox.
+- Fixed a `NullPointerReferenceException` thrown in `InputManagerStateMonitors.FireStateChangeNotifications` logging by adding validation [UUM-136095].
+- Fixed auto-save not working for Input System actions in Project Settings when both the Project Settings and Input System Actions windows were open [UUM-134035](https://jira.unity3d.com/browse/UUM-134035)
 - Improved New Input System warning dialog, Native Device Inputs Not Enabled [UUM-132151].
 - Fixed caching for InputControlPath display name [ISX-2501](https://jira.unity3d.com/browse/ISX-2501)
+- Fixed editor closing and not saving the input asset when clicking cancel in the dialog prompt [UUM-134748](https://jira.unity3d.com/browse/UUM-134748)
+- Fixed the input actions editor window entering a corrupt state when restarting Unity after the asset was edited. [UUM-134737](https://jira.unity3d.com/browse/UUM-134737)
+- Fixed `buttonSouth` returning the state of the east button (and so on for all the compass named buttons) when using a Nintendo Switch Pro Controller on iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
+- Fixed `aButton` returning the state of the east button (and so on for all the letter named buttons) when using a Nintendo Switch Pro Controller on Standalone & iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
 
 ### Changed
 
 ### Added
 
+- Support for entering the play mode with domain reload turned off (i.e. Faster Enter Playmode feature) [ISX-2411]
 
 ## [1.19.0] - 2026-02-24
 
@@ -31,6 +40,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Align title font size with toolbar style in `Input Action` window.
 - Updated Action Properties headers to use colors consistent with GameObject component headers.
 - Fixed misaligned Virtual Cursor when changing resolution [ISXB-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1119)
+- Fixed OnScreenStick ignoring dynamic-origin presses when isolated input actions were enabled. [ISXB-1027](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1027)
 - Fixed an issue where `IndexOutOfRangeException` was thrown from `InputManagerStateMonitors.AddStateChangeMonitor` when attempting to enable an action map from within an `InputAction.cancel` callback when using control schemes. (ISXB-1767).
 
 ### Added

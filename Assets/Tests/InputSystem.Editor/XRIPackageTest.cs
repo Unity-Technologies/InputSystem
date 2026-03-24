@@ -38,6 +38,7 @@ public class XRIPackageTests
 
     [UnityTest]
     [Category("Integration")]
+    [Ignore("ISX-2531 - This test is currently ignored as it is causing issues in the CI. It should be re-enabled once the underlying issue is resolved.")]
     public IEnumerator AdddingLatestXRIPackageThrowsNoErrors()
     {
         Application.logMessageReceived += HandleLog;

@@ -814,8 +814,8 @@ internal class HIDTests : CoreTestsFixture
             }.ToJson());
         InputSystem.Update();
 
-        InputSystem.SaveAndReset();
-        InputSystem.Restore();
+        m_StateManager.SaveAndReset(enableRemoting: false, runtime: null);
+        m_StateManager.Restore();
 
         var hid = (HID)InputSystem.devices.First(x => x is HID);
 
