@@ -187,6 +187,7 @@ namespace UnityEngine.InputSystem.Editor
                 InputSystem.s_Manager.runtime.onProjectChange = InputSystem.OnProjectChange;
 
                 InputEditorUserSettings.s_Settings = new InputEditorUserSettings.SerializedState();
+                InputSystem.onSettingsChange += OnSettingsChanged;
 
                 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
                 InputSystem.PerformDefaultPluginInitialization();
