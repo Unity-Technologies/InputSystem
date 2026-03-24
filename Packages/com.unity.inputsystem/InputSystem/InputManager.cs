@@ -923,15 +923,14 @@ namespace UnityEngine.InputSystem
             // of a device.
             newDevice.m_DeviceId = oldDevice.m_DeviceId;
             newDevice.m_Description = oldDevice.m_Description;
-            if (oldDevice.native)
-                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.Native;
-            if (oldDevice.remote)
-                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
-            if (!oldDevice.enabled)
-            {
-                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.DisabledStateHasBeenQueriedFromRuntime;
-                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.DisabledInFrontend;
-            }
+            const InputDevice.DeviceFlags preservedFlagsMask = InputDevice.DeviceFlags.Native |
+                                                               InputDevice.DeviceFlags.Remote |
+                                                               InputDevice.DeviceFlags.DisabledStateHasBeenQueriedFromRuntime |
+                                                               InputDevice.DeviceFlags.DisabledInFrontend |
+                                                               InputDevice.DeviceFlags.DisabledWhileInBackground |
+                                                               InputDevice.DeviceFlags.DisabledInRuntime;
+            newDevice.m_DeviceFlags &= ~(newDevice.m_DeviceFlags & preservedFlagsMask); // clear bits
+            newDevice.m_DeviceFlags |= (oldDevice.m_DeviceFlags & preservedFlagsMask);  // copy bits
 
             // Re-add.
             AddDevice(newDevice);
@@ -3272,6 +3271,18 @@ namespace UnityEngine.InputSystem
             } // k_InputUpdateProfilerMarker
         }
 
+        private static bool IsSystemEvent(FourCC eventType)
+        {
+            switch (eventType)
+            {
+                case DeviceRemoveEvent.Type:
+                case DeviceConfigurationEvent.Type:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private unsafe void ProcessEventBuffer(InputUpdateType updateType, ref InputEventBuffer eventBuffer, double currentTime, bool timesliceEvents, bool dropStatusEvents)
         {
@@ -3362,14 +3373,9 @@ namespace UnityEngine.InputSystem
                     if (ShouldDeferEventBetweenEditorAndPlayerUpdates(updateType, currentEventType, device))
                         continue;
 #endif // UNITY_EDITOR
-
                     // If device is disabled, we let the event through only in certain cases.
-                    // Removal and configuration change events should always be processed.
-                    if (device != null && !device.enabled &&
-                        currentEventType != DeviceRemoveEvent.Type &&
-                        currentEventType != DeviceConfigurationEvent.Type &&
-                        (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime |
-                                                 InputDevice.DeviceFlags.DisabledWhileInBackground)) != 0)
+                    // System events (e.g. device removal and configuration change) should always be processed.
+                    if (device != null && !device.enabled && !IsSystemEvent(currentEventType))
                     {
 #if UNITY_EDITOR
                         // If the device is disabled in the backend, getting events for them
