@@ -919,18 +919,24 @@ namespace UnityEngine.InputSystem
             var newDevice = InputDevice.Build<InputDevice>(newLayout, oldDevice.m_Variants,
                 deviceDescription: oldDevice.m_Description);
 
-            // Preserve device properties that should not be changed by the re-creation
-            // of a device.
+            // Preserve device properties that should not be changed by the re-creation of a device.
+            var preserveFlags = oldDevice.m_DeviceFlags & (InputDevice.DeviceFlags.HasEventMerger |
+                InputDevice.DeviceFlags.HasStateCallbacks | InputDevice.DeviceFlags.HasEventPreProcessor);
             newDevice.m_DeviceId = oldDevice.m_DeviceId;
             newDevice.m_Description = oldDevice.m_Description;
+            newDevice.m_DeviceFlags |= preserveFlags;
             if (oldDevice.native)
                 newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.Native;
             if (oldDevice.remote)
                 newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
             if (!oldDevice.enabled)
             {
-                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.DisabledStateHasBeenQueriedFromRuntime;
-                newDevice.m_DeviceFlags |= InputDevice.DeviceFlags.DisabledInFrontend;
+                var disableFlags = InputDevice.DeviceFlags.DisabledStateHasBeenQueriedFromRuntime;
+                disableFlags |= oldDevice.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInFrontend;
+                disableFlags |= oldDevice.m_DeviceFlags & InputDevice.DeviceFlags.DisabledWhileInBackground;
+                disableFlags |= oldDevice.m_DeviceFlags & InputDevice.DeviceFlags.DisabledInRuntime;
+
+                newDevice.m_DeviceFlags |= disableFlags;
             }
 
             // Re-add.
