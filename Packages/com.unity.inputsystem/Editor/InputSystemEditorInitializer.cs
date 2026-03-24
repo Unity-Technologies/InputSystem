@@ -250,59 +250,93 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void InitializeEditorHooks()
         {
-            InputSystem.s_OnActionsChanging = ValidateAndTrackActions;
-            InputSystem.s_ShouldEnableActions = ShouldEnableActions;
-            InputAnalytics.s_IsNewSystemBackendsEnabled = ShouldEnableActionsNewBackend;
-            InputAnalytics.s_IsOldSystemBackendsEnabled = ShouldEnableActionsOldBackend;
-
-            InputActionSetupExtensions.s_ApiUsageCallback = RegisterSetupApiUsage;
-            InputActionSetupExtensions.s_SuppressAnalytics = SuppressSetupAnalytics;
-
+            RegisterPlayModeHooks();
+            RegisterAnalyticsHooks();
+            RegisterAssetDatabaseHooks();
 #if UNITY_INPUT_SYSTEM_ENABLE_UI || PACKAGE_DOCS_GENERATION
-            UnityEngine.InputSystem.UI.InputSystemUIInputModule.s_OnReset = OnUIInputModuleReset;
+            RegisterUIModuleHooks();
 #endif
+            RegisterNativeInputRuntimeHooks();
+            RegisterRemotingHooks();
+            RegisterAssemblyReloadHooks();
+            RegisterTestHooks();
+        }
 
-            InputActionAsset.s_OnMarkAsDirty = DirtyAssetTracker.TrackDirtyInputActionAsset;
-            InputManager.s_GetProjectWideActions = () => ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
-            InputSystem.s_Manager.m_AddDevicesNotSupportedByProject = () => InputEditorUserSettings.addDevicesNotSupportedByProject;
-
+        private static void RegisterPlayModeHooks()
+        {
+            InputSystem.s_ShouldEnableActions = ShouldEnableActions;
             InputSystem.s_OnPlayModeChangeCallback = change => OnPlayModeChange((PlayModeStateChange)change);
             InputSystem.s_OnProjectChangeCallback = OnProjectChange;
-
             InputSystem.s_IsDomainReloadDisabled = IsDomainReloadDisabledForPlayMode;
             InputSystem.s_EditorGlobalInitializeCallback = OnGlobalInitialize;
 
-            // Register test hook callbacks
+            InputSystem.s_Manager.m_AddDevicesNotSupportedByProject = () => InputEditorUserSettings.addDevicesNotSupportedByProject;
+        }
+
+        private static void RegisterAnalyticsHooks()
+        {
+            InputAnalytics.s_IsNewSystemBackendsEnabled = ShouldEnableActionsNewBackend;
+            InputAnalytics.s_IsOldSystemBackendsEnabled = ShouldEnableActionsOldBackend;
+            InputActionSetupExtensions.s_ApiUsageCallback = RegisterSetupApiUsage;
+            InputActionSetupExtensions.s_SuppressAnalytics = SuppressSetupAnalytics;
+        }
+
+        private static void RegisterAssetDatabaseHooks()
+        {
+            InputSystem.s_OnActionsChanging = ValidateAndTrackActions;
+            InputActionAsset.s_OnMarkAsDirty = DirtyAssetTracker.TrackDirtyInputActionAsset;
+            InputManager.s_GetProjectWideActions = () => ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
+
+            InputActionReference.s_IsSubAsset = AssetDatabase.IsSubAsset;
+            InputActionReference.s_GetAssetPath = AssetDatabase.GetAssetPath;
+            InputActionReference.s_LoadMainAssetAtPath = AssetDatabase.LoadMainAssetAtPath;
+        }
+
+#if UNITY_INPUT_SYSTEM_ENABLE_UI || PACKAGE_DOCS_GENERATION
+        private static void RegisterUIModuleHooks()
+        {
+            UnityEngine.InputSystem.UI.InputSystemUIInputModule.s_OnReset = OnUIInputModuleReset;
+        }
+
+#endif
+
+        private static void RegisterNativeInputRuntimeHooks()
+        {
+            if (InputRuntime.s_Instance is not NativeInputRuntime nativeRuntime)
+                return;
+
+            nativeRuntime.m_IsInPlayMode = () => EditorApplication.isPlaying;
+            nativeRuntime.m_IsEditorPaused = () => EditorApplication.isPaused;
+            nativeRuntime.m_IsEditorActive = () => InternalEditorUtility.isApplicationActive;
+
+            nativeRuntime.m_RegisterWantsToQuit = RegisterWantsToQuit;
+            nativeRuntime.m_UnregisterWantsToQuit = UnregisterWantsToQuit;
+
+            nativeRuntime.m_SetUnityRemoteMessageHandler = SetUnityRemoteMessageHandler;
+            nativeRuntime.m_SetUnityRemoteGyroEnabledCallback = SetUnityRemoteGyroEnabled;
+            nativeRuntime.m_SetUnityRemoteGyroUpdateIntervalCallback = SetUnityRemoteGyroUpdateInterval;
+
+            nativeRuntime.m_SendEditorAnalytic = SendEditorAnalytic;
+        }
+
+        private static void RegisterRemotingHooks()
+        {
+            RemoteInputPlayerConnection.s_GetInstance = RemoteInputPlayerConnectionEditor.GetInstance;
+        }
+
+        private static void RegisterAssemblyReloadHooks()
+        {
+            EnhancedTouch.EnhancedTouchSupport.s_BeforeAssemblyReloadCallback = RegisterBeforeAssemblyReload;
+            EnhancedTouch.EnhancedTouchSupport.s_UnregisterBeforeAssemblyReloadCallback = UnregisterBeforeAssemblyReload;
+        }
+
+        private static void RegisterTestHooks()
+        {
             InputSystem.s_TestHookInitializeForPlayModeTests = TestHook_InitializeForPlayModeTests;
 #if !ENABLE_CORECLR
             InputSystem.s_TestHookSimulateDomainReload = TestHook_SimulateDomainReload;
 #endif
             InputSystem.s_TestHookEditorCleanup = TestHook_EditorCleanup;
-
-            if (InputRuntime.s_Instance is NativeInputRuntime nativeRuntime)
-            {
-                nativeRuntime.m_IsInPlayMode = () => EditorApplication.isPlaying;
-                nativeRuntime.m_IsEditorPaused = () => EditorApplication.isPaused;
-                nativeRuntime.m_IsEditorActive = () => InternalEditorUtility.isApplicationActive;
-
-                nativeRuntime.m_RegisterWantsToQuit = RegisterWantsToQuit;
-                nativeRuntime.m_UnregisterWantsToQuit = UnregisterWantsToQuit;
-
-                nativeRuntime.m_SetUnityRemoteMessageHandler = SetUnityRemoteMessageHandler;
-                nativeRuntime.m_SetUnityRemoteGyroEnabledCallback = SetUnityRemoteGyroEnabled;
-                nativeRuntime.m_SetUnityRemoteGyroUpdateIntervalCallback = SetUnityRemoteGyroUpdateInterval;
-
-                nativeRuntime.m_SendEditorAnalytic = SendEditorAnalytic;
-            }
-
-            RemoteInputPlayerConnection.s_GetInstance = RemoteInputPlayerConnectionEditor.GetInstance;
-
-            EnhancedTouch.EnhancedTouchSupport.s_BeforeAssemblyReloadCallback = RegisterBeforeAssemblyReload;
-            EnhancedTouch.EnhancedTouchSupport.s_UnregisterBeforeAssemblyReloadCallback = UnregisterBeforeAssemblyReload;
-
-            InputActionReference.s_IsSubAsset = AssetDatabase.IsSubAsset;
-            InputActionReference.s_GetAssetPath = AssetDatabase.GetAssetPath;
-            InputActionReference.s_LoadMainAssetAtPath = AssetDatabase.LoadMainAssetAtPath;
         }
 
         private static void SetUpEditorRemoting()
