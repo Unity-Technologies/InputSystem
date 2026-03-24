@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 
+- Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.
+
 ### Added
 
 - Support for entering the play mode with domain reload turned off (i.e. Faster Enter Playmode feature) [ISX-2411]
