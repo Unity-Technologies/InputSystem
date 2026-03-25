@@ -19,6 +19,9 @@ namespace UnityEngine.InputSystem.Editor
         public override VisualElement CreateInspectorGUI()
         {
             var root = new VisualElement();
+            root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(
+                InputActionsEditorConstants.PackagePath +
+                "/InputSystem/Editor/AssetImporter/InputActionImporterEditor.uss"));
             var inputActionAsset = GetAsset();
 
             // ScriptedImporterEditor in 2019.2 now requires explicitly updating the SerializedObject
@@ -36,15 +39,12 @@ namespace UnityEngine.InputSystem.Editor
             {
                 text = GetOpenEditorButtonText(inputActionAsset)
             };
-            editButton.style.height = 30;
-            editButton.style.marginTop = 4;
-            editButton.style.marginBottom = 4;
+            editButton.AddToClassList("input-action-importer-editor__edit-button");
             editButton.SetEnabled(inputActionAsset != null);
             root.Add(editButton);
 
             var projectWideContainer = new VisualElement();
-            projectWideContainer.style.marginTop = 6;
-            projectWideContainer.style.marginBottom = 6;
+            projectWideContainer.AddToClassList("input-action-importer-editor__project-wide-container");
             root.Add(projectWideContainer);
             BuildProjectWideSection(projectWideContainer, inputActionAsset);
 
@@ -113,12 +113,11 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             var pathRow = new VisualElement();
-            pathRow.style.flexDirection = FlexDirection.Row;
-            pathRow.style.alignItems = Align.Center;
+            pathRow.AddToClassList("input-action-importer-editor__path-row");
             codeGenContainer.Add(pathRow);
 
             var pathField = new TextField("C# Class File") { bindingPath = "m_WrapperCodePath" };
-            pathField.style.flexGrow = 1;
+            pathField.AddToClassList("input-action-importer-editor__path-field");
             pathField.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             SetupPlaceholder(pathField, defaultFileName);
             pathRow.Add(pathField);
@@ -141,7 +140,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 text = "…"
             };
-            browseButton.style.width = 25;
+            browseButton.AddToClassList("input-action-importer-editor__browse-button");
             pathRow.Add(browseButton);
 
             // Class name
@@ -204,9 +203,7 @@ namespace UnityEngine.InputSystem.Editor
 
             var placeholderLabel = new Label(placeholder);
             placeholderLabel.pickingMode = PickingMode.Ignore;
-            placeholderLabel.style.position = Position.Absolute;
-            placeholderLabel.style.opacity = 0.5f;
-            placeholderLabel.style.paddingLeft = 2;
+            placeholderLabel.AddToClassList("input-action-importer-editor__placeholder");
 
             textField.RegisterCallback<GeometryChangedEvent>(_ =>
             {
