@@ -127,6 +127,8 @@
         },
         "PVP-92-3": {
           "errors": [
+            "Runtime/Plugins/iOS/IOSGameController.cs: .Switch;",
+            "Runtime/Plugins/Switch/SwitchProController.cs: .Switch\n",
             "Runtime/Plugins/Switch/SwitchProControllerHID.cs: .Switch.",
             "Runtime/Plugins/Switch/SwitchProControllerHID.cs: .Switch\n",
             "Runtime/Plugins/Switch/SwitchSupportHID.cs: .Switch\n",

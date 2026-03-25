@@ -59,6 +59,8 @@ namespace UnityEngine.InputSystem.Editor
             return cutActionMapIndex ?? -1;
         }
     }
+
+    [Serializable]
     internal struct InputActionsEditorState
     {
         public int selectedActionMapIndex { get {return m_selectedActionMapIndex; } }

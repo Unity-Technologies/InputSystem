@@ -98,7 +98,7 @@ internal class InputActionReferenceEditorTestsWithScene
         EditorPrefsTestUtils.DisableDomainReload();
     }
 
-    private static InputActionBehaviour GetBehaviour() => Object.FindFirstObjectByType<InputActionBehaviour>();
+    private static InputActionBehaviour GetBehaviour() => Object.FindAnyObjectByType<InputActionBehaviour>();
     private static InputActionAsset GetAsset() => AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
 
     // For unclear reason, NUnit fails to assert throwing exceptions after transition into play-mode.
