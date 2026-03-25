@@ -558,10 +558,10 @@ class APIVerificationTests
         public static string GetBindingDisplayString(this InputAction action, InputBinding.DisplayStringOptions options = , string group = default(string));
         public static string GetBindingDisplayString(this InputAction action, int bindingIndex, out string deviceLayoutName, out string controlPath, InputBinding.DisplayStringOptions options = );
         public string ToDisplayString(InputBinding.DisplayStringOptions options = , InputControl control = default(InputControl));
-        public string ToDisplayString(out string deviceLayoutName, out string controlPath, InputBinding.DisplayStringOptions options = , InputControl control = default(InputControl));        
+        public string ToDisplayString(out string deviceLayoutName, out string controlPath, InputBinding.DisplayStringOptions options = , InputControl control = default(InputControl));
         public static string ToHumanReadableString(string path, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
-        public static string ToHumanReadableString(string path, out string deviceLayoutName, out string controlPath, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));        
-        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> RecordStateChange(UnityEngine.InputSystem.InputControl<TValue> control, TValue value, double time = -1d);        
+        public static string ToHumanReadableString(string path, out string deviceLayoutName, out string controlPath, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> RecordStateChange(UnityEngine.InputSystem.InputControl<TValue> control, TValue value, double time = -1d);
     ")]
     // New scraper version (com.unity.coding:0.1.0-preview.26) is able to qualify nested types inside a generic class.
     [Property("Exclusions", @"1.0.0
