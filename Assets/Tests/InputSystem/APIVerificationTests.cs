@@ -759,7 +759,7 @@ class APIVerificationTests
             .Replace("uint.MinValue", "0");
         // Normalize hex literals (0xFF -> 255).
         line = s_HexLiteralRegex.Replace(line,
-                    m => Convert.ToUInt64(m.Groups[1].Value, 16).ToString());
+            m => Convert.ToUInt64(m.Groups[1].Value, 16).ToString());
         // Normalize bitwise shift expressions (1 << 8 -> 256).
         line = s_ShiftExprRegex.Replace(line,
             m => (ulong.Parse(m.Groups[1].Value) << int.Parse(m.Groups[2].Value)).ToString());
@@ -799,7 +799,7 @@ class APIVerificationTests
 
             ++pos; // Move past the closing ']'.
 
-            // The attribute must be followed by a space. 
+            // The attribute must be followed by a space.
             // If it is the last character there is nothing else to strip, so out.
             if (pos >= line.Length || line[pos] != ' ')
                 return line;
