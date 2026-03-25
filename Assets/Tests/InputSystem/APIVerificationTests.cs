@@ -605,6 +605,57 @@ class APIVerificationTests
     [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.LowLevel", "public struct KeyboardState : IInputStateTypeInfo", "public fixed byte keys[14];")]
     // Allow Key.IMESelected to be marked as Obsolete
     [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem", "public enum Key", "IMESelected = 111,")]
+
+#if !UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+    // Steam support is conditional (#if UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT) and absent when
+    // the steam plugin is not installed, so all Steam types are excluded from the comparison.
+    [Property("Exclusions", @"1.0.0
+        namespace UnityEngine.InputSystem.Steam
+        public interface ISteamControllerAPI
+        public void ActivateActionSet(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> actionSetHandle);
+        public void ActivateActionSetLayer(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> actionSetLayerHandle);
+        public void DeactivateActionSetLayer(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> actionSetLayerHandle);
+        public void DeactivateAllActionSetLayers(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle);
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> GetActionSetHandle(string actionSetName);
+        public int GetActiveActionSetLayers(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, out UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> handlesOut);
+        public SteamAnalogActionData GetAnalogActionData(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, UnityEngine.InputSystem.Steam.SteamHandle<InputAction> analogActionHandle);
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputAction> GetAnalogActionHandle(string actionName);
+        public int GetConnectedControllers(UnityEngine.InputSystem.Steam.SteamHandle<SteamController>[] outHandles);
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> GetCurrentActionSet(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle);
+        public SteamDigitalActionData GetDigitalActionData(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, UnityEngine.InputSystem.Steam.SteamHandle<InputAction> digitalActionHandle);
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputAction> GetDigitalActionHandle(string actionName);
+        public void RunFrame();
+        public struct SteamAnalogActionData
+        public bool active { get; set; }
+        public Vector2 position { get; set; }
+        public abstract class SteamController : InputDevice
+        public bool autoActivateSets { get; set; }
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> currentSteamActionSet { get; }
+        public abstract UnityEngine.InputSystem.Utilities.ReadOnlyArray<SteamController.SteamActionSetInfo> steamActionSets { get; }
+        public UnityEngine.InputSystem.Steam.SteamHandle<SteamController> steamControllerHandle { get; }
+        protected SteamController() {}
+        public void ActivateSteamActionSet(UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> actionSet);
+        protected abstract void ResolveSteamActions(ISteamControllerAPI api);
+        protected abstract void Update(ISteamControllerAPI api);
+        public struct SteamActionSetInfo
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> handle { get; set; }
+        public struct SteamDigitalActionData
+        public bool active { get; set; }
+        public bool pressed { get; set; }
+        public struct SteamHandle<TObject> : System.IEquatable<UnityEngine.InputSystem.Steam.SteamHandle<TObject>>
+        public bool Equals(UnityEngine.InputSystem.Steam.SteamHandle<TObject> other);
+        public static bool operator ==(UnityEngine.InputSystem.Steam.SteamHandle<TObject> a, UnityEngine.InputSystem.Steam.SteamHandle<TObject> b);
+        public static bool operator !=(UnityEngine.InputSystem.Steam.SteamHandle<TObject> a, UnityEngine.InputSystem.Steam.SteamHandle<TObject> b);
+        namespace UnityEngine.InputSystem.Steam.Editor
+        public static class SteamIGAConverter
+        public static string ConvertInputActionsToSteamIGA(System.Collections.Generic.IEnumerable<InputActionMap> actionMaps, string locale = @""english"");
+        public static string ConvertInputActionsToSteamIGA(InputActionAsset asset, string locale = @""english"");
+        public static string GenerateInputDeviceFromSteamIGA(string vdf, string namespaceAndClassName);
+        public static string GetSteamControllerInputType(InputAction action);
+        public static System.Collections.Generic.Dictionary<string, object> ParseVDF(string vdf);
+    ")]
+#endif
+
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();
