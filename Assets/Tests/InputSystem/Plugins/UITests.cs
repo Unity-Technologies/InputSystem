@@ -4607,6 +4607,7 @@ internal partial class UITests : CoreTestsFixture
         IPointerMoveHandler, IPointerExitHandler, IPointerUpHandler, IMoveHandler, ISelectHandler, IDeselectHandler,
         IInitializePotentialDragHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, ISubmitHandler, ICancelHandler, IScrollHandler
     {
+        [Serializable]
         public struct Event
         {
             public EventType type { get; }
