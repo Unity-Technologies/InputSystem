@@ -850,7 +850,7 @@ class APIVerificationTests
                 if (scopeStack[i].StartsWith("namespace"))
                 {
                     if (namespaceScope.Length == 0)
-                        namespaceScope = scopeStack[i].Substring(scopeStack[i].IndexOf(' ') + 1);
+                        namespaceScope = scopeStack[i].Substring(scopeStack[i].IndexOf(' ') + 1).Trim();
                 }
                 else if (typeScope.Length == 0)
                 {
