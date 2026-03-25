@@ -52,8 +52,7 @@ namespace UnityEngine.InputSystem
                 managerState = InputSystem.manager.SaveState(),
                 remotingState = InputSystem.remoting?.SaveState() ?? new InputRemoting.SerializedState(),
 #if UNITY_EDITOR
-                // userSettings = InputEditorUserSettings.s_Settings,
-                systemObject = JsonUtility.ToJson(InputSystemEditorInitializer.stateManager),
+                userSettings = InputEditorUserSettings.s_Settings,
                 systemObject = JsonUtility.ToJson(InputSystemEditorInitializer.domainStateManager),
 #endif
                 inputActionState = InputActionState.SaveAndResetState(),
@@ -142,8 +141,7 @@ namespace UnityEngine.InputSystem
             else InputSystem.manager.ApplySettings();
 
 #if UNITY_EDITOR
-            // InputEditorUserSettings.s_Settings = state.userSettings;
-            JsonUtility.FromJsonOverwrite(state.systemObject, InputSystemEditorInitializer.stateManager);
+            InputEditorUserSettings.s_Settings = state.userSettings;
             JsonUtility.FromJsonOverwrite(state.systemObject, InputSystemEditorInitializer.domainStateManager);
 #endif
 
