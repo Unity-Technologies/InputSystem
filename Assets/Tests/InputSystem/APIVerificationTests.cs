@@ -258,7 +258,7 @@ class APIVerificationTests
 
     // The .api files are platform-specific so we can only compare on the platform
     // they were built on.
-    #if UNITY_EDITOR_WIN
+#if UNITY_EDITOR_WIN
 
     // We disable "API Verification" tests running as part of the validation suite as they give us
     // false positives (specifically, for setters having changes accessibility from private to protected).
@@ -541,6 +541,56 @@ class APIVerificationTests
         public InputTestFixture.ActionConstraint Performed(InputAction action, InputControl control = default(InputControl), System.Nullable<double> time = default(System.Nullable<double>), System.Nullable<double> duration = default(System.Nullable<double>));
         public InputTestFixture.ActionConstraint Started(InputAction action, InputControl control = default(InputControl), System.Nullable<double> time = default(System.Nullable<double>));
     ")]
+    // API scraper output for these built-in XR controller types differs depending on installed XR replacement packages.
+    [Property("Exclusions", @"1.0.0
+        public class DaydreamController : UnityEngine.InputSystem.XR.XRController
+        public class GearVRTrackedController : UnityEngine.InputSystem.XR.XRController
+        public class OculusTouchController : UnityEngine.InputSystem.XR.XRControllerWithRumble
+        public class HandedViveTracker : ViveTracker
+        public class OpenVRControllerWMR : UnityEngine.InputSystem.XR.XRController
+        public class OpenVROculusTouchController : UnityEngine.InputSystem.XR.XRControllerWithRumble
+        public class ViveWand : UnityEngine.InputSystem.XR.XRControllerWithRumble
+    ")]
+    // API scraper in 1.0.0 emitted incomplete default argument expressions for these overloads.
+    [Property("Exclusions", @"1.0.0
+        public static string GetBindingDisplayString(this InputAction action, int bindingIndex, InputBinding.DisplayStringOptions options = );
+        public static string GetBindingDisplayString(this InputAction action, InputBinding bindingMask, InputBinding.DisplayStringOptions options = );
+        public static string GetBindingDisplayString(this InputAction action, InputBinding.DisplayStringOptions options = , string group = default(string));
+        public static string GetBindingDisplayString(this InputAction action, int bindingIndex, out string deviceLayoutName, out string controlPath, InputBinding.DisplayStringOptions options = );
+        public string ToDisplayString(InputBinding.DisplayStringOptions options = , InputControl control = default(InputControl));
+        public string ToDisplayString(out string deviceLayoutName, out string controlPath, InputBinding.DisplayStringOptions options = , InputControl control = default(InputControl));
+        DontIncludeInteractions = 4,
+        DontOmitDevice = 2,
+        DontUseShortDisplayNames = 1,
+        IgnoreBindingOverrides = 8,
+        OmitDevice = 2,
+        UseShortNames = 4,
+        BufferedBytes = 256,
+        Constant = 1,
+        NonLinear = 16,
+        NoPreferred = 32,
+        NullState = 64,
+        Relative = 4,
+        Variable = 2,
+        Volatile = 128,
+        Wrap = 8,
+        public FourCC(char a, char b =  , char c =  , char d =  ) {}
+        public static string ToHumanReadableString(string path, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
+        public static string ToHumanReadableString(string path, out string deviceLayoutName, out string controlPath, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
+        public class InputStateHistory<TValue> : InputStateHistory, System.Collections.Generic.IEnumerable<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.Generic.IReadOnlyCollection<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.Generic.IReadOnlyList<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.IEnumerable where TValue : struct, new()
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> this[int index] { get; set; }
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> AddRecord(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> record);
+        public System.Collections.Generic.IEnumerator<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>> GetEnumerator();
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> RecordStateChange(UnityEngine.InputSystem.InputControl<TValue> control, TValue value, double time = -1d);
+        public struct Record : System.IEquatable<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> next { get; }
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> owner { get; }
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> previous { get; }
+        public void CopyFrom(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> record);
+        public bool Equals(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> other);
+        public SteamHandle(ulong handle) {}
+        public static ulong op_Explicit(UnityEngine.InputSystem.Steam.SteamHandle<TObject> handle);
+    ")]
     // Api scraper seems to be unstable with fields with default values, sometimes "= 0;" appears (locally) and sometimes (on CI) doesn't.
     [Property("Exclusions", @"1.0.0
         public int negative = 0;
@@ -555,6 +605,57 @@ class APIVerificationTests
     [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.LowLevel", "public struct KeyboardState : IInputStateTypeInfo", "public fixed byte keys[14];")]
     // Allow Key.IMESelected to be marked as Obsolete
     [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem", "public enum Key", "IMESelected = 111,")]
+
+#if !UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+    // Steam support is conditional (#if UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT) and absent when
+    // the steam plugin is not installed, so all Steam types are excluded from the comparison.
+    [Property("Exclusions", @"1.0.0
+        namespace UnityEngine.InputSystem.Steam
+        public interface ISteamControllerAPI
+        public void ActivateActionSet(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> actionSetHandle);
+        public void ActivateActionSetLayer(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> actionSetLayerHandle);
+        public void DeactivateActionSetLayer(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> actionSetLayerHandle);
+        public void DeactivateAllActionSetLayers(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle);
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> GetActionSetHandle(string actionSetName);
+        public int GetActiveActionSetLayers(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, out UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> handlesOut);
+        public SteamAnalogActionData GetAnalogActionData(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, UnityEngine.InputSystem.Steam.SteamHandle<InputAction> analogActionHandle);
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputAction> GetAnalogActionHandle(string actionName);
+        public int GetConnectedControllers(UnityEngine.InputSystem.Steam.SteamHandle<SteamController>[] outHandles);
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> GetCurrentActionSet(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle);
+        public SteamDigitalActionData GetDigitalActionData(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, UnityEngine.InputSystem.Steam.SteamHandle<InputAction> digitalActionHandle);
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputAction> GetDigitalActionHandle(string actionName);
+        public void RunFrame();
+        public struct SteamAnalogActionData
+        public bool active { get; set; }
+        public Vector2 position { get; set; }
+        public abstract class SteamController : InputDevice
+        public bool autoActivateSets { get; set; }
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> currentSteamActionSet { get; }
+        public abstract UnityEngine.InputSystem.Utilities.ReadOnlyArray<SteamController.SteamActionSetInfo> steamActionSets { get; }
+        public UnityEngine.InputSystem.Steam.SteamHandle<SteamController> steamControllerHandle { get; }
+        protected SteamController() {}
+        public void ActivateSteamActionSet(UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> actionSet);
+        protected abstract void ResolveSteamActions(ISteamControllerAPI api);
+        protected abstract void Update(ISteamControllerAPI api);
+        public struct SteamActionSetInfo
+        public UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> handle { get; set; }
+        public struct SteamDigitalActionData
+        public bool active { get; set; }
+        public bool pressed { get; set; }
+        public struct SteamHandle<TObject> : System.IEquatable<UnityEngine.InputSystem.Steam.SteamHandle<TObject>>
+        public bool Equals(UnityEngine.InputSystem.Steam.SteamHandle<TObject> other);
+        public static bool operator ==(UnityEngine.InputSystem.Steam.SteamHandle<TObject> a, UnityEngine.InputSystem.Steam.SteamHandle<TObject> b);
+        public static bool operator !=(UnityEngine.InputSystem.Steam.SteamHandle<TObject> a, UnityEngine.InputSystem.Steam.SteamHandle<TObject> b);
+        namespace UnityEngine.InputSystem.Steam.Editor
+        public static class SteamIGAConverter
+        public static string ConvertInputActionsToSteamIGA(System.Collections.Generic.IEnumerable<InputActionMap> actionMaps, string locale = @""english"");
+        public static string ConvertInputActionsToSteamIGA(InputActionAsset asset, string locale = @""english"");
+        public static string GenerateInputDeviceFromSteamIGA(string vdf, string namespaceAndClassName);
+        public static string GetSteamControllerInputType(InputAction action);
+        public static System.Collections.Generic.Dictionary<string, object> ParseVDF(string vdf);
+    ")]
+#endif
+
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
         var currentVersion = CoreTests.PackageJson.ReadVersion();
@@ -611,7 +712,7 @@ class APIVerificationTests
             var line = oldApiContents[i];
             if (line.Trim().StartsWith("{"))
             {
-                scopeStack.Add(oldApiContents[i - 1]);
+                scopeStack.Add(i > 0 ? oldApiContents[i - 1] : string.Empty);
             }
             else if (line.Trim().StartsWith("}"))
             {
@@ -623,33 +724,97 @@ class APIVerificationTests
         }
     }
 
+    // Matches hex literals (0xFF).
+    private static readonly Regex s_HexLiteralRegex =
+        new Regex(@"\b0x([0-9a-fA-F]+)\b", RegexOptions.Compiled);
+    // Matches bitwise shift expressions (1 << 8).
+    private static readonly Regex s_ShiftExprRegex =
+        new Regex(@"\b(\d+) << (\d+)\b", RegexOptions.Compiled);
+
     private static string FilterIgnoredChanges(string line)
     {
         if (line.Length == 0)
             return line;
+
+        // Older API scraper versions emitted fully-qualified C# primitive type names (System.UInt32),
+        // while newer versions emit C# language aliases (uint). Normalize to aliases so that a scraper
+        // version change does not produce false-positive breaking change reports.
+        line = line
+            .Replace("System.UInt64", "ulong")
+            .Replace("System.UInt32", "uint")
+            .Replace("System.UInt16", "ushort")
+            .Replace("System.Int64", "long")
+            .Replace("System.Int32", "int")
+            .Replace("System.Int16", "short")
+            .Replace("System.Boolean", "bool")
+            .Replace("System.Single", "float")
+            .Replace("System.Double", "double")
+            .Replace("System.Byte", "byte")
+            .Replace("System.SByte", "sbyte")
+            .Replace("System.Char", "char");
+
+        // Normalize constant expressions that different scraper versions emit differently.
+        // Older scrapers resolved expressions to decimal; newer scrapers may keep symbolic forms.
+        line = line.Replace("uint.MaxValue", "4294967295")
+            .Replace("uint.MinValue", "0");
+        // Normalize hex literals (0xFF -> 255).
+        line = s_HexLiteralRegex.Replace(line,
+            m => Convert.ToUInt64(m.Groups[1].Value, 16).ToString());
+        // Normalize bitwise shift expressions (1 << 8 -> 256).
+        line = s_ShiftExprRegex.Replace(line,
+            m => (ulong.Parse(m.Groups[1].Value) << int.Parse(m.Groups[2].Value)).ToString());
 
         var pos = 0;
         while (true)
         {
             // Skip whitespace.
             while (pos < line.Length && char.IsWhiteSpace(line[pos]))
+            {
                 ++pos;
+            }
 
-            if (pos < line.Length && line[pos] != '[')
+            if (pos >= line.Length || line[pos] != '[')
+            {
                 return line;
+            }
 
             var startPos = pos;
             ++pos;
-            while (pos < line.Length + 1 && !(line[pos] == ']' && line[pos + 1] == ' '))
-                ++pos;
-            ++pos;
 
-            var length = pos - startPos - 2;
-            var attribute = line.Substring(startPos + 1, length);
-            if (!attribute.StartsWith("System.Obsolete"))
+            // Find the matching closing ']' using bracket depth tracking.
+            // This correctly handles new[] syntax in attribute arguments:
+            //   [InputControl(aliases = new[] {@"a", @"b"})] public uint buttons;
+            var depth = 1;
+            while (pos < line.Length && depth > 0)
+            {
+                if (line[pos] == '[') depth++;
+                else if (line[pos] == ']') depth--;
+                if (depth > 0) ++pos;
+            }
+
+            if (pos >= line.Length)
+            {
+                return line; // No matching ']' found, so out.
+            }
+
+            ++pos; // Move past the closing ']'.
+
+            // The attribute must be followed by a space.
+            // If it is the last character there is nothing else to strip, so out.
+            if (pos >= line.Length || line[pos] != ' ')
+                return line;
+
+            // Extract the content between '[' and ']'.
+            var closingBracket = pos - 1; // pos is now one past ']'
+            var attributeContent = line.Substring(startPos + 1, closingBracket - startPos - 1);
+            if (!attributeContent.StartsWith("System.Obsolete"))
             {
                 line = line.Substring(0, startPos) + line.Substring(pos + 1); // Snip space after ']'.
-                pos -= length + 2;
+                pos = startPos;
+            }
+            else
+            {
+                ++pos; // Skip the space after the kept Obsolete attribute.
             }
         }
     }
@@ -679,12 +844,21 @@ class APIVerificationTests
             var namespaceScope = string.Empty;
             var typeScope = string.Empty;
 
+            // Walk inside-out so we pick up the innermost namespace and type scopes first.
             for (var i = scopeStack.Count - 1; i >= 0; i--)
             {
                 if (scopeStack[i].StartsWith("namespace"))
-                    namespaceScope = scopeStack[i].Substring(scopeStack[i].IndexOf(' ') + 1);
-                else
+                {
+                    if (namespaceScope.Length == 0)
+                        namespaceScope = scopeStack[i].Substring(scopeStack[i].IndexOf(' ') + 1).Trim();
+                }
+                else if (typeScope.Length == 0)
+                {
                     typeScope = scopeStack[i].Trim();
+                }
+
+                if (namespaceScope.Length > 0 && typeScope.Length > 0)
+                    break;
             }
 
             return namespaceScope == Namespace && typeScope == Type && Members.Contains(member.Trim());
