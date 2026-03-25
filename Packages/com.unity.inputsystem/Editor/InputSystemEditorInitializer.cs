@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Profiling;
 using UnityEditor;
 using UnityEditor.Networking.PlayerConnection;
 using UnityEditorInternal;
@@ -17,6 +18,8 @@ namespace UnityEngine.InputSystem.Editor
     {
         private static InputSystemStateManager s_StateManager;
         internal static InputSystemStateManager stateManager => s_StateManager;
+
+        static readonly ProfilerMarker k_InputInitializeInEditorMarker = new ProfilerMarker("InputSystem.InitializeInEditor");
 
         static InputSystemEditorInitializer()
         {
@@ -134,7 +137,7 @@ namespace UnityEngine.InputSystem.Editor
 
             if (asset != null)
             {
-                UnityEngine.InputSystem.UI.Editor.InputSystemUIInputModuleEditor.ReassignActions(module, asset);
+                UI.Editor.InputSystemUIInputModuleEditor.ReassignActions(module, asset);
             }
         }
 
@@ -169,6 +172,8 @@ namespace UnityEngine.InputSystem.Editor
 
         internal static void InitializeInEditor(bool calledFromCtor, IInputRuntime runtime = null)
         {
+            k_InputInitializeInEditorMarker.Begin();
+
             bool globalReset = calledFromCtor || !IsDomainReloadDisabledForPlayMode();
 
             // We must initialize a new InputManager object first thing since other parts
@@ -178,8 +183,8 @@ namespace UnityEngine.InputSystem.Editor
                 if (InputSystem.s_Manager != null)
                     InputSystem.s_Manager.Dispose();
 
+                // Settings object should get set by an actual InputSettings asset.
                 InputSystem.s_Manager = InputManager.CreateAndInitialize(runtime ?? NativeInputRuntime.instance, null);
-
                 EditorApplication.playModeStateChanged += OnEditorPlayModeStateChanged;
                 EditorApplication.projectChanged += OnEditorProjectChanged;
 
@@ -199,19 +204,30 @@ namespace UnityEngine.InputSystem.Editor
             {
                 if (globalReset)
                 {
+                    ////FIXME: does not preserve action map state
+
+                    // If we're coming back out of a domain reload. We're restoring part of the
+                    // InputManager state here but we're still waiting from layout registrations
+                    // that happen during domain initialization.
+
                     s_StateManager = existingStateManagers[0];
                     InputSystem.s_Manager.RestoreStateWithoutDevices(s_StateManager.systemState.managerState);
                     InputDebuggerWindow.ReviveAfterDomainReload();
 
+                    // Restore remoting state.
                     InputSystem.remoteConnection = s_StateManager.systemState.remoteConnection;
                     InputSystem.SetUpRemoting();
                     InputSystem.s_Remote.RestoreState(s_StateManager.systemState.remotingState, InputSystem.s_Manager);
 
+                    // Get s_Manager to restore devices on first input update. By that time we
+                    // should have all (possibly updated) layout information in place.
                     InputSystem.s_Manager.m_SavedDeviceStates = s_StateManager.systemState.managerState.devices;
                     InputSystem.s_Manager.m_SavedAvailableDevices = s_StateManager.systemState.managerState.availableDevices;
 
+                    // Restore editor settings.
                     InputEditorUserSettings.s_Settings = s_StateManager.systemState.userSettings;
 
+                    // Get rid of saved state.
                     s_StateManager.systemState = new InputSystemState();
                 }
             }
@@ -220,12 +236,14 @@ namespace UnityEngine.InputSystem.Editor
                 s_StateManager = ScriptableObject.CreateInstance<InputSystemStateManager>();
                 s_StateManager.hideFlags = HideFlags.HideAndDontSave;
 
+                // See if we have a settings asset in our EditorBuildSettings.
                 if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
                     out InputSettings settingsAsset))
                 {
                     InputSystem.s_Manager.settings = settingsAsset;
                 }
 
+                // See if we have a saved actions object
                 var savedActions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
                 if (savedActions != null)
                     InputSystem.s_Manager.actions = savedActions;
@@ -239,6 +257,12 @@ namespace UnityEngine.InputSystem.Editor
 
             UnityRemoteSupport.Initialize();
 
+            // If native backends for new input system aren't enabled, ask user whether we should enable them
+            // (requires restart). We only ask once per session and don't ask when running in batch mode.
+            // The warning is delayed to delay call (called a short while after the Asset are loaded, on Inspector
+            // update) to make sure it doesn't pop up while the editor is still loading or assets are not fully loaded -
+            // this would cancel the import of large assets that are dependent on the InputSystem package and import
+            // it as a dependency.
             EditorApplication.delayCall += ShowRestartWarning;
 
             InputSystem.RunInitialUpdate();
@@ -246,6 +270,8 @@ namespace UnityEngine.InputSystem.Editor
             InputSystem.EnableActions();
 
             InitializeEditorHooks();
+
+            k_InputInitializeInEditorMarker.End();
         }
 
         private static void InitializeEditorHooks()
