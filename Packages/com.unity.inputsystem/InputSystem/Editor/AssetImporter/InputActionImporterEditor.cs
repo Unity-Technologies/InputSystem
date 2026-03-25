@@ -91,6 +91,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 text = "Assign as the Project-wide Input Actions"
             };
+            assignButton.AddToClassList("input-action-importer-editor__assign-button");
             assignButton.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);
             container.Add(assignButton);
         }

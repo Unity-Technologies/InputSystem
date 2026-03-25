@@ -1,7 +1,14 @@
 .input-action-importer-editor__edit-button {
-    height: 30px;
+    min-height: 30px;
     margin-top: 4px;
     margin-bottom: 4px;
+    white-space: normal;
+    overflow: hidden;
+}
+
+.input-action-importer-editor__assign-button {
+    white-space: normal;
+    overflow: hidden;
 }
 
 .input-action-importer-editor__project-wide-container {
