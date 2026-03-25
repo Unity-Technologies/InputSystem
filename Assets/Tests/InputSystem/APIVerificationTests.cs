@@ -258,7 +258,7 @@ class APIVerificationTests
 
     // The .api files are platform-specific so we can only compare on the platform
     // they were built on.
-    #if UNITY_EDITOR_WIN
+#if UNITY_EDITOR_WIN
 
     // We disable "API Verification" tests running as part of the validation suite as they give us
     // false positives (specifically, for setters having changes accessibility from private to protected).
@@ -563,7 +563,6 @@ class APIVerificationTests
         DontOmitDevice = 2,
         DontUseShortDisplayNames = 1,
         IgnoreBindingOverrides = 8,
-        protected System.UInt32 stateOffsetRelativeToDeviceRoot { get; }
         OmitDevice = 2,
         UseShortNames = 4,
         BufferedBytes = 256,
@@ -575,59 +574,6 @@ class APIVerificationTests
         Variable = 2,
         Volatile = 128,
         Wrap = 8,
-        public System.UInt32 bit { get; set; }
-        public System.UInt32 offset { get; set; }
-        public System.UInt32 sizeInBits { get; set; }
-        public InputControlLayout.Builder.ControlBuilder WithBitOffset(System.UInt32 bit);
-        public InputControlLayout.Builder.ControlBuilder WithByteOffset(System.UInt32 offset);
-        public InputControlLayout.Builder.ControlBuilder WithSizeInBits(System.UInt32 sizeInBits);
-        public System.UInt32 bit { get; }
-        public System.UInt32 offset { get; }
-        public System.UInt32 sizeInBits { get; }
-        public System.UInt32 stateOffset;
-        public System.UInt32 deltaStateSizeInBytes { get; }
-        public System.UInt32 buttons;
-        public bool GetStateOffsetForEvent(InputControl control, InputEventPtr eventPtr, ref System.UInt32 offset);
-        public System.UInt32 sizeInBytes { get; set; }
-        public System.UInt32 sizeInBytes { get; }
-        public static System.UInt32 updateCount { get; }
-        public const System.UInt32 AutomaticOffset = 4294967294;
-        public const System.UInt32 InvalidOffset = 4294967295;
-        public System.UInt32 bitOffset { get; set; }
-        public System.UInt32 byteOffset { get; set; }
-        public System.UInt32 version { get; }
-        public System.UInt32 version;
-        public System.UInt32 stateSizeInBytes { get; }
-        public const System.UInt32 InvalidId = 0;
-        public System.UInt32 id { get; }
-        public System.UInt32 parentBoneIndex { get; set; }
-        public System.UInt32 customSize;
-        public System.UInt32 samplesAvailable;
-        public System.UInt32 samplesQueued;
-        public System.UInt32 frequencyHz;
-        public System.UInt32 maxBufferSize;
-        public System.UInt32 numChannels;
-        public System.UInt32 frequencyHz { get; }
-        public System.UInt32 maxBufferSize { get; }
-        public System.UInt32 numChannels { get; }
-        public HapticCapabilities(System.UInt32 numChannels, System.UInt32 frequencyHz, System.UInt32 maxBufferSize) {}
-        public System.UInt32 samplesAvailable { get; }
-        public System.UInt32 samplesQueued { get; }
-        public HapticState(System.UInt32 samplesQueued, System.UInt32 samplesAvailable) {}
-        public PrimitiveValue(System.UInt16 value) {}
-        public PrimitiveValue(System.UInt32 value) {}
-        public PrimitiveValue(System.UInt64 value) {}
-        public static PrimitiveValue FromUInt16(System.UInt16 value);
-        public static PrimitiveValue FromUInt32(System.UInt32 value);
-        public static PrimitiveValue FromUInt64(System.UInt64 value);
-        public static PrimitiveValue op_Implicit(System.UInt16 value);
-        public static PrimitiveValue op_Implicit(System.UInt32 value);
-        public static PrimitiveValue op_Implicit(System.UInt64 value);
-        public System.UInt16 ToUInt16(System.IFormatProvider provider = default(System.IFormatProvider));
-        public System.UInt32 ToUInt32(System.IFormatProvider provider = default(System.IFormatProvider));
-        public System.UInt64 ToUInt64(System.IFormatProvider provider = default(System.IFormatProvider));
-        public System.UInt64 handle { get; }
-        public InputUserAccountHandle(string apiName, System.UInt64 handle) {}
         public FourCC(char a, char b =  , char c =  , char d =  ) {}
         public static string ToHumanReadableString(string path, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
         public static string ToHumanReadableString(string path, out string deviceLayoutName, out string controlPath, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
@@ -642,11 +588,8 @@ class APIVerificationTests
         public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> previous { get; }
         public void CopyFrom(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> record);
         public bool Equals(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> other);
-        public System.UInt16 buttons;
-        public System.UInt16 clickCount;
-        public System.UInt64 handle;
-        public SteamHandle(System.UInt64 handle) {}
-        public static System.UInt64 op_Explicit(UnityEngine.InputSystem.Steam.SteamHandle<TObject> handle);
+        public SteamHandle(ulong handle) {}
+        public static ulong op_Explicit(UnityEngine.InputSystem.Steam.SteamHandle<TObject> handle);
     ")]
     // Api scraper seems to be unstable with fields with default values, sometimes "= 0;" appears (locally) and sometimes (on CI) doesn't.
     [Property("Exclusions", @"1.0.0
@@ -735,6 +678,32 @@ class APIVerificationTests
         if (line.Length == 0)
             return line;
 
+        // Older API scraper versions emitted fully-qualified C# primitive type names (e.g. System.UInt32),
+        // while newer versions emit C# language aliases (e.g. uint). Normalize to aliases so that a scraper
+        // version change does not produce false-positive breaking change reports.
+        line = line
+            .Replace("System.UInt64", "ulong")
+            .Replace("System.UInt32", "uint")
+            .Replace("System.UInt16", "ushort")
+            .Replace("System.Int64", "long")
+            .Replace("System.Int32", "int")
+            .Replace("System.Int16", "short")
+            .Replace("System.Boolean", "bool")
+            .Replace("System.Single", "float")
+            .Replace("System.Double", "double")
+            .Replace("System.Byte", "byte")
+            .Replace("System.SByte", "sbyte")
+            .Replace("System.Char", "char");
+
+        // Normalize constant expressions that different scraper versions emit differently.
+        // Older scrapers resolved expressions to decimal; newer scrapers may keep symbolic forms.
+        line = line.Replace("uint.MaxValue", "4294967295")
+            .Replace("uint.MinValue", "0");
+        line = Regex.Replace(line, @"\b0x([0-9a-fA-F]+)\b",
+            m => Convert.ToUInt64(m.Groups[1].Value, 16).ToString());
+        line = Regex.Replace(line, @"\b(\d+) << (\d+)\b",
+            m => (ulong.Parse(m.Groups[1].Value) << int.Parse(m.Groups[2].Value)).ToString());
+
         var pos = 0;
         while (true)
         {
@@ -742,21 +711,44 @@ class APIVerificationTests
             while (pos < line.Length && char.IsWhiteSpace(line[pos]))
                 ++pos;
 
-            if (pos < line.Length && line[pos] != '[')
+            if (pos >= line.Length || line[pos] != '[')
                 return line;
 
             var startPos = pos;
             ++pos;
-            while (pos < line.Length + 1 && !(line[pos] == ']' && line[pos + 1] == ' '))
-                ++pos;
-            ++pos;
 
-            var length = pos - startPos - 2;
-            var attribute = line.Substring(startPos + 1, length);
-            if (!attribute.StartsWith("System.Obsolete"))
+            // Find the matching closing ']' using bracket depth tracking.
+            // This correctly handles new[] syntax in attribute arguments, e.g.:
+            //   [InputControl(aliases = new[] {@"a", @"b"})] public uint buttons;
+            // The old scraper used Mono.Cecil.CustomAttributeArgument[] (inner ] followed by ,)
+            // but the new scraper uses new[] {...} where the inner ] is followed by a space,
+            // which the old naive scan would incorrectly treat as the end of the attribute.
+            var depth = 1;
+            while (pos < line.Length && depth > 0)
+            {
+                if (line[pos] == '[') depth++;
+                else if (line[pos] == ']') depth--;
+                if (depth > 0) ++pos;
+            }
+
+            if (pos >= line.Length)
+                return line; // No matching ']' found, bail out.
+
+            ++pos; // Move past the closing ']'.
+
+            // The attribute must be followed by a space to have any content after it.
+            if (pos >= line.Length || line[pos] != ' ')
+                return line;
+
+            var attributeContent = line.Substring(startPos + 1, pos - startPos - 2);
+            if (!attributeContent.StartsWith("System.Obsolete"))
             {
                 line = line.Substring(0, startPos) + line.Substring(pos + 1); // Snip space after ']'.
-                pos -= length + 2;
+                pos = startPos;
+            }
+            else
+            {
+                ++pos; // Skip the space after the kept Obsolete attribute.
             }
         }
     }
