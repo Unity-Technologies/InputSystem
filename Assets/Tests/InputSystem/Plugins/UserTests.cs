@@ -1268,8 +1268,21 @@ internal class UserTests : CoreTestsFixture
         ++InputUser.listenForUnpairedDeviceActivity;
         InputUser.onUnpairedDeviceUsed += (control, eventPtr) => Assert.Fail("Should not react!");
 
-        runtime.PlayerFocusLost();
-
+        // Process the focus event before pressing the button to ensure correct update type selection.
+        //
+        // Issue: When Update() is called without an update type, it uses defaultUpdateType which checks
+        // focus state. However, scheduled focus events aren't processed until an update runs, so the
+        // focus check sees stale state and selects the wrong update type.
+        //
+        // Workaround: Run a dynamic update first to process the focus event, ensuring the subsequent
+        // button press correctly uses editor update type.
+        //
+        // Alternative: Queue the button press and explicitly call an editor update to process both events.
+        //
+        // Proper fix: Remove defaultUpdateType and split editor/player loops, or always specify the
+        // update type explicitly when calling Update().
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
+        InputSystem.Update(InputUpdateType.Dynamic);
         Press(gamepad.buttonSouth);
 
         Assert.That(gamepad.buttonSouth.isPressed, Is.True);
