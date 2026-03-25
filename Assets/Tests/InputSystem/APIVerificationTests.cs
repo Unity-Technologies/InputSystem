@@ -589,13 +589,14 @@ class APIVerificationTests
     [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.LowLevel", "public struct KeyboardState : IInputStateTypeInfo", "public fixed byte keys[14];")]
     // Allow Key.IMESelected to be marked as Obsolete
     [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem", "public enum Key", "IMESelected = 111,")]
-
     // Steam support is conditional (#if UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT) and absent when
     // the steam plugin is not installed, so all Steam types are excluded from the comparison.
     [Property("Exclusions", @"1.0.0
         public SteamHandle(ulong handle) {}
         public static ulong op_Explicit(UnityEngine.InputSystem.Steam.SteamHandle<TObject> handle);
+    ")]
 #if !UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+    [Property("Exclusions", @"1.0.0
         namespace UnityEngine.InputSystem.Steam
         public interface ISteamControllerAPI
         public void ActivateActionSet(UnityEngine.InputSystem.Steam.SteamHandle<SteamController> controllerHandle, UnityEngine.InputSystem.Steam.SteamHandle<InputActionMap> actionSetHandle);
@@ -639,8 +640,8 @@ class APIVerificationTests
         public static string GenerateInputDeviceFromSteamIGA(string vdf, string namespaceAndClassName);
         public static string GetSteamControllerInputType(InputAction action);
         public static System.Collections.Generic.Dictionary<string, object> ParseVDF(string vdf);
-#endif
     ")]
+#endif
 
     public void API_MinorVersionsHaveNoBreakingChanges()
     {
