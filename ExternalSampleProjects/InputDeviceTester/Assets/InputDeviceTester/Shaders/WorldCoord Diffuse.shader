@@ -18,7 +18,8 @@ SubShader {
         HLSLPROGRAM
         #pragma vertex vert
         #pragma fragment frag
-        #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
+        #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
+        #pragma multi_compile _ _SHADOWS_SOFT
         #pragma multi_compile _ _ADDITIONAL_LIGHTS
         #pragma multi_compile_fog
 
@@ -67,17 +68,19 @@ SubShader {
             half4 texXZ = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.positionWS.xz * _BaseScale.y);
             half4 texYZ = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.positionWS.yz * _BaseScale.x);
 
-            half3 mask = half3(
+            half3 blendWeights = abs(half3(
                 dot(normalWS, half3(0, 0, 1)),
                 dot(normalWS, half3(0, 1, 0)),
-                dot(normalWS, half3(1, 0, 0)));
+                dot(normalWS, half3(1, 0, 0))));
+            blendWeights /= (blendWeights.x + blendWeights.y + blendWeights.z);
 
-            half4 tex = texXY * abs(mask.x) + texXZ * abs(mask.y) + texYZ * abs(mask.z);
+            half4 tex = texXY * blendWeights.x + texXZ * blendWeights.y + texYZ * blendWeights.z;
             half4 albedo = tex * _Color;
 
-            Light mainLight = GetMainLight();
+            float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
+            Light mainLight = GetMainLight(shadowCoord);
             half NdotL = saturate(dot(normalWS, mainLight.direction));
-            half3 diffuse = albedo.rgb * mainLight.color * NdotL;
+            half3 diffuse = albedo.rgb * mainLight.color * (NdotL * mainLight.distanceAttenuation * mainLight.shadowAttenuation);
 
             half3 ambient = SampleSH(normalWS) * albedo.rgb;
             half3 finalColor = ambient + diffuse;
@@ -100,11 +103,13 @@ SubShader {
         HLSLPROGRAM
         #pragma vertex ShadowVert
         #pragma fragment ShadowFrag
+        #pragma multi_compile _ _CASTING_PUNCTUAL_LIGHT_SHADOW
 
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 
         float3 _LightDirection;
+        float3 _LightPosition;
 
         struct Attributes
         {
@@ -122,7 +127,14 @@ SubShader {
             Varyings output;
             float3 posWS    = TransformObjectToWorld(input.positionOS.xyz);
             float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
-            output.positionCS = TransformWorldToHClip(ApplyShadowBias(posWS, normalWS, _LightDirection));
+
+            #if _CASTING_PUNCTUAL_LIGHT_SHADOW
+                float3 lightDir = normalize(_LightPosition - posWS);
+            #else
+                float3 lightDir = _LightDirection;
+            #endif
+
+            output.positionCS = TransformWorldToHClip(ApplyShadowBias(posWS, normalWS, lightDir));
             #if UNITY_REVERSED_Z
                 output.positionCS.z = min(output.positionCS.z, UNITY_NEAR_CLIP_VALUE);
             #else

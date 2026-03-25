@@ -1,4 +1,4 @@
-Shader "Samples/SimpleDemo/SimpleLit"
+Shader "Samples/InGameHints/SimpleLit"
 {
     Properties
     {

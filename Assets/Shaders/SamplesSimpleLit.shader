@@ -101,11 +101,13 @@ Shader "Samples/SimpleLit"
             HLSLPROGRAM
             #pragma vertex ShadowVert
             #pragma fragment ShadowFrag
+            #pragma multi_compile _ _CASTING_PUNCTUAL_LIGHT_SHADOW
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 
             float3 _LightDirection;
+            float3 _LightPosition;
 
             struct Attributes
             {
@@ -123,7 +125,14 @@ Shader "Samples/SimpleLit"
                 Varyings output;
                 float3 posWS    = TransformObjectToWorld(input.positionOS.xyz);
                 float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
-                output.positionCS = TransformWorldToHClip(ApplyShadowBias(posWS, normalWS, _LightDirection));
+
+                #if _CASTING_PUNCTUAL_LIGHT_SHADOW
+                    float3 lightDir = normalize(_LightPosition - posWS);
+                #else
+                    float3 lightDir = _LightDirection;
+                #endif
+
+                output.positionCS = TransformWorldToHClip(ApplyShadowBias(posWS, normalWS, lightDir));
                 #if UNITY_REVERSED_Z
                     output.positionCS.z = min(output.positionCS.z, UNITY_NEAR_CLIP_VALUE);
                 #else
