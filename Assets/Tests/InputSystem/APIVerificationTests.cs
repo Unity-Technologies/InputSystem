@@ -712,7 +712,7 @@ class APIVerificationTests
             var line = oldApiContents[i];
             if (line.Trim().StartsWith("{"))
             {
-                scopeStack.Add(oldApiContents[i - 1]);
+                scopeStack.Add(i > 0 ? oldApiContents[i - 1] : string.Empty);
             }
             else if (line.Trim().StartsWith("}"))
             {
@@ -724,13 +724,20 @@ class APIVerificationTests
         }
     }
 
+    // Matches hex literals (0xFF).
+    private static readonly Regex s_HexLiteralRegex =
+        new Regex(@"\b0x([0-9a-fA-F]+)\b", RegexOptions.Compiled);
+    // Matches bitwise shift expressions (1 << 8).
+    private static readonly Regex s_ShiftExprRegex =
+        new Regex(@"\b(\d+) << (\d+)\b", RegexOptions.Compiled);
+
     private static string FilterIgnoredChanges(string line)
     {
         if (line.Length == 0)
             return line;
 
-        // Older API scraper versions emitted fully-qualified C# primitive type names (e.g. System.UInt32),
-        // while newer versions emit C# language aliases (e.g. uint). Normalize to aliases so that a scraper
+        // Older API scraper versions emitted fully-qualified C# primitive type names (System.UInt32),
+        // while newer versions emit C# language aliases (uint). Normalize to aliases so that a scraper
         // version change does not produce false-positive breaking change reports.
         line = line
             .Replace("System.UInt64", "ulong")
@@ -750,9 +757,11 @@ class APIVerificationTests
         // Older scrapers resolved expressions to decimal; newer scrapers may keep symbolic forms.
         line = line.Replace("uint.MaxValue", "4294967295")
             .Replace("uint.MinValue", "0");
-        line = Regex.Replace(line, @"\b0x([0-9a-fA-F]+)\b",
-            m => Convert.ToUInt64(m.Groups[1].Value, 16).ToString());
-        line = Regex.Replace(line, @"\b(\d+) << (\d+)\b",
+        // Normalize hex literals (0xFF -> 255).
+        line = s_HexLiteralRegex.Replace(line,
+                    m => Convert.ToUInt64(m.Groups[1].Value, 16).ToString());
+        // Normalize bitwise shift expressions (1 << 8 -> 256).
+        line = s_ShiftExprRegex.Replace(line,
             m => (ulong.Parse(m.Groups[1].Value) << int.Parse(m.Groups[2].Value)).ToString());
 
         var pos = 0;
@@ -760,20 +769,21 @@ class APIVerificationTests
         {
             // Skip whitespace.
             while (pos < line.Length && char.IsWhiteSpace(line[pos]))
+            {
                 ++pos;
+            }
 
             if (pos >= line.Length || line[pos] != '[')
+            {
                 return line;
+            }
 
             var startPos = pos;
             ++pos;
 
             // Find the matching closing ']' using bracket depth tracking.
-            // This correctly handles new[] syntax in attribute arguments, e.g.:
+            // This correctly handles new[] syntax in attribute arguments:
             //   [InputControl(aliases = new[] {@"a", @"b"})] public uint buttons;
-            // The old scraper used Mono.Cecil.CustomAttributeArgument[] (inner ] followed by ,)
-            // but the new scraper uses new[] {...} where the inner ] is followed by a space,
-            // which the old naive scan would incorrectly treat as the end of the attribute.
             var depth = 1;
             while (pos < line.Length && depth > 0)
             {
@@ -783,15 +793,20 @@ class APIVerificationTests
             }
 
             if (pos >= line.Length)
-                return line; // No matching ']' found, bail out.
+            {
+                return line; // No matching ']' found, so out.
+            }
 
             ++pos; // Move past the closing ']'.
 
-            // The attribute must be followed by a space to have any content after it.
+            // The attribute must be followed by a space. 
+            // If it is the last character there is nothing else to strip, so out.
             if (pos >= line.Length || line[pos] != ' ')
                 return line;
 
-            var attributeContent = line.Substring(startPos + 1, pos - startPos - 2);
+            // Extract the content between '[' and ']'.
+            var closingBracket = pos - 1; // pos is now one past ']'
+            var attributeContent = line.Substring(startPos + 1, closingBracket - startPos - 1);
             if (!attributeContent.StartsWith("System.Obsolete"))
             {
                 line = line.Substring(0, startPos) + line.Substring(pos + 1); // Snip space after ']'.
@@ -829,12 +844,21 @@ class APIVerificationTests
             var namespaceScope = string.Empty;
             var typeScope = string.Empty;
 
+            // Walk inside-out so we pick up the innermost namespace and type scopes first.
             for (var i = scopeStack.Count - 1; i >= 0; i--)
             {
                 if (scopeStack[i].StartsWith("namespace"))
-                    namespaceScope = scopeStack[i].Substring(scopeStack[i].IndexOf(' ') + 1);
-                else
+                {
+                    if (namespaceScope.Length == 0)
+                        namespaceScope = scopeStack[i].Substring(scopeStack[i].IndexOf(' ') + 1);
+                }
+                else if (typeScope.Length == 0)
+                {
                     typeScope = scopeStack[i].Trim();
+                }
+
+                if (namespaceScope.Length > 0 && typeScope.Length > 0)
+                    break;
             }
 
             return namespaceScope == Namespace && typeScope == Type && Members.Contains(member.Trim());
