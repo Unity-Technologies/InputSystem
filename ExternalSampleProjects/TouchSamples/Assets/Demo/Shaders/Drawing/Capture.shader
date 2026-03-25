@@ -5,6 +5,116 @@ Shader "Hidden/Drawing/Capture"
         _MainTex ("Texture", 2D) = "white" {}
     }
 
+    // URP SubShader — non-premultiplied variant
+    SubShader
+    {
+        Tags { "RenderType"="Transparent" "Queue"="Transparent" "RenderPipeline"="UniversalPipeline" "Premultiplied"="False" }
+        LOD 100
+
+        Pass
+        {
+            Blend SrcAlpha OneMinusSrcAlpha, OneMinusDstAlpha One
+            ZWrite Off
+
+            HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _MainTex_ST;
+            CBUFFER_END
+
+            struct Attributes
+            {
+                float4 positionOS : POSITION;
+                float2 uv : TEXCOORD0;
+                float4 color : COLOR0;
+            };
+
+            struct Varyings
+            {
+                float2 uv : TEXCOORD0;
+                float4 positionCS : SV_POSITION;
+                float4 color : COLOR0;
+            };
+
+            Varyings vert(Attributes input)
+            {
+                Varyings output;
+                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                output.uv = TRANSFORM_TEX(input.uv, _MainTex);
+                output.color = input.color;
+                return output;
+            }
+
+            half4 frag(Varyings input) : SV_Target
+            {
+                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv) * input.color;
+                return col;
+            }
+            ENDHLSL
+        }
+    }
+
+    // URP SubShader — premultiplied variant
+    SubShader
+    {
+        Tags { "RenderType"="Transparent" "Queue"="Transparent" "RenderPipeline"="UniversalPipeline" "Premultiplied"="True" }
+        LOD 100
+
+        Pass
+        {
+            Blend One OneMinusSrcAlpha, OneMinusDstAlpha One
+            ZWrite Off
+
+            HLSLPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _MainTex_ST;
+            CBUFFER_END
+
+            struct Attributes
+            {
+                float4 positionOS : POSITION;
+                float2 uv : TEXCOORD0;
+            };
+
+            struct Varyings
+            {
+                float2 uv : TEXCOORD0;
+                float4 positionCS : SV_POSITION;
+            };
+
+            Varyings vert(Attributes input)
+            {
+                Varyings output;
+                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                output.uv = TRANSFORM_TEX(input.uv, _MainTex);
+                return output;
+            }
+
+            half4 frag(Varyings input) : SV_Target
+            {
+                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
+                return col;
+            }
+            ENDHLSL
+        }
+    }
+
+    // Built-in RP SubShader — non-premultiplied (fallback)
     SubShader
     {
         Tags { "RenderType"="Transparent" "Queue"="Transparent" "Premultiplied"="False" }
@@ -48,7 +158,6 @@ Shader "Hidden/Drawing/Capture"
 
             fixed4 frag (v2f i) : SV_Target
             {
-                // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv) * i.color;
                 return col;
             }
@@ -56,6 +165,7 @@ Shader "Hidden/Drawing/Capture"
         }
     }
 
+    // Built-in RP SubShader — premultiplied (fallback)
     SubShader
     {
         Tags { "RenderType"="Transparent" "Queue"="Transparent" "Premultiplied"="True" }
@@ -96,7 +206,6 @@ Shader "Hidden/Drawing/Capture"
 
             fixed4 frag (v2f i) : SV_Target
             {
-                // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
                 return col;
             }
