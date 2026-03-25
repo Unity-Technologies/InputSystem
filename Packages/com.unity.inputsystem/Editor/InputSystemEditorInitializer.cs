@@ -16,8 +16,8 @@ namespace UnityEngine.InputSystem.Editor
     [InitializeOnLoad]
     internal static class InputSystemEditorInitializer
     {
-        private static InputSystemStateManager s_StateManager;
-        internal static InputSystemStateManager stateManager => s_StateManager;
+        private static InputSystemStateManager s_DomainStateManager;
+        internal static InputSystemStateManager domainStateManager => s_DomainStateManager;
 
         static readonly ProfilerMarker k_InputInitializeInEditorMarker = new ProfilerMarker("InputSystem.InitializeInEditor");
 
@@ -210,31 +210,31 @@ namespace UnityEngine.InputSystem.Editor
                     // InputManager state here but we're still waiting from layout registrations
                     // that happen during domain initialization.
 
-                    s_StateManager = existingStateManagers[0];
-                    InputSystem.s_Manager.RestoreStateWithoutDevices(s_StateManager.systemState.managerState);
+                    s_DomainStateManager = existingStateManagers[0];
+                    InputSystem.s_Manager.RestoreStateWithoutDevices(s_DomainStateManager.systemState.managerState);
                     InputDebuggerWindow.ReviveAfterDomainReload();
 
                     // Restore remoting state.
-                    InputSystem.remoteConnection = s_StateManager.systemState.remoteConnection;
+                    InputSystem.remoteConnection = s_DomainStateManager.systemState.remoteConnection;
                     InputSystem.SetUpRemoting();
-                    InputSystem.s_Remote.RestoreState(s_StateManager.systemState.remotingState, InputSystem.s_Manager);
+                    InputSystem.s_Remote.RestoreState(s_DomainStateManager.systemState.remotingState, InputSystem.s_Manager);
 
                     // Get s_Manager to restore devices on first input update. By that time we
                     // should have all (possibly updated) layout information in place.
-                    InputSystem.s_Manager.m_SavedDeviceStates = s_StateManager.systemState.managerState.devices;
-                    InputSystem.s_Manager.m_SavedAvailableDevices = s_StateManager.systemState.managerState.availableDevices;
+                    InputSystem.s_Manager.m_SavedDeviceStates = s_DomainStateManager.systemState.managerState.devices;
+                    InputSystem.s_Manager.m_SavedAvailableDevices = s_DomainStateManager.systemState.managerState.availableDevices;
 
                     // Restore editor settings.
-                    InputEditorUserSettings.s_Settings = s_StateManager.systemState.userSettings;
+                    InputEditorUserSettings.s_Settings = s_DomainStateManager.systemState.userSettings;
 
                     // Get rid of saved state.
-                    s_StateManager.systemState = new InputSystemState();
+                    s_DomainStateManager.systemState = new InputSystemState();
                 }
             }
             else
             {
-                s_StateManager = ScriptableObject.CreateInstance<InputSystemStateManager>();
-                s_StateManager.hideFlags = HideFlags.HideAndDontSave;
+                s_DomainStateManager = ScriptableObject.CreateInstance<InputSystemStateManager>();
+                s_DomainStateManager.hideFlags = HideFlags.HideAndDontSave;
 
                 // See if we have a settings asset in our EditorBuildSettings.
                 if (EditorBuildSettings.TryGetConfigObject(InputSettingsProvider.kEditorBuildSettingsConfigKey,
@@ -425,7 +425,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void ShowRestartWarning()
         {
-            if (!s_StateManager.newInputBackendsCheckedAsEnabled &&
+            if (!s_DomainStateManager.newInputBackendsCheckedAsEnabled &&
                 !EditorPlayerSettingHelpers.newSystemBackendsEnabled &&
                 !Application.isBatchMode)
             {
@@ -455,7 +455,7 @@ namespace UnityEngine.InputSystem.Editor
                     EditorHelpers.RestartEditorAndRecompileScripts();
                 }
             }
-            s_StateManager.newInputBackendsCheckedAsEnabled = true;
+            s_DomainStateManager.newInputBackendsCheckedAsEnabled = true;
             EditorApplication.delayCall -= ShowRestartWarning;
         }
 
@@ -480,17 +480,17 @@ namespace UnityEngine.InputSystem.Editor
             switch (change)
             {
                 case PlayModeStateChange.ExitingEditMode:
-                    s_StateManager.settings = JsonUtility.ToJson(InputSystem.settings);
-                    s_StateManager.exitEditModeTime = InputRuntime.s_Instance.currentTime;
-                    s_StateManager.enterPlayModeTime = 0;
+                    s_DomainStateManager.settings = JsonUtility.ToJson(InputSystem.settings);
+                    s_DomainStateManager.exitEditModeTime = InputRuntime.s_Instance.currentTime;
+                    s_DomainStateManager.enterPlayModeTime = 0;
 
-                    InputSystem.s_Manager.m_ExitEditModeTime = s_StateManager.exitEditModeTime;
+                    InputSystem.s_Manager.m_ExitEditModeTime = s_DomainStateManager.exitEditModeTime;
                     InputSystem.s_Manager.m_EnterPlayModeTime = 0;
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
-                    s_StateManager.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
-                    InputSystem.s_Manager.m_EnterPlayModeTime = s_StateManager.enterPlayModeTime;
+                    s_DomainStateManager.enterPlayModeTime = InputRuntime.s_Instance.currentTime;
+                    InputSystem.s_Manager.m_EnterPlayModeTime = s_DomainStateManager.enterPlayModeTime;
                     InputSystem.s_Manager.SyncAllDevicesAfterEnteringPlayMode();
                     break;
 
@@ -514,10 +514,10 @@ namespace UnityEngine.InputSystem.Editor
                     InputActionReference.InvalidateAll();
 
                     // Restore settings.
-                    if (!string.IsNullOrEmpty(s_StateManager.settings))
+                    if (!string.IsNullOrEmpty(s_DomainStateManager.settings))
                     {
-                        JsonUtility.FromJsonOverwrite(s_StateManager.settings, InputSystem.settings);
-                        s_StateManager.settings = null;
+                        JsonUtility.FromJsonOverwrite(s_DomainStateManager.settings, InputSystem.settings);
+                        s_DomainStateManager.settings = null;
                         InputSystem.settings.OnChange();
                     }
 
@@ -579,8 +579,8 @@ namespace UnityEngine.InputSystem.Editor
         {
             InputSystem.s_Manager.TestHook_RemoveDevicesForSimulatedDomainReload();
 
-            s_StateManager.OnBeforeSerialize();
-            s_StateManager = null;
+            s_DomainStateManager.OnBeforeSerialize();
+            s_DomainStateManager = null;
             InputSystem.s_Manager = null;
             InputSystem.s_PluginsInitialized = false;
             InitializeInEditor(calledFromCtor: true, runtime);

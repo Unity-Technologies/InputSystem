@@ -54,6 +54,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
                 // userSettings = InputEditorUserSettings.s_Settings,
                 systemObject = JsonUtility.ToJson(InputSystemEditorInitializer.stateManager),
+                systemObject = JsonUtility.ToJson(InputSystemEditorInitializer.domainStateManager),
 #endif
                 inputActionState = InputActionState.SaveAndResetState(),
                 touchState = EnhancedTouch.Touch.SaveAndResetState(),
@@ -143,6 +144,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
             // InputEditorUserSettings.s_Settings = state.userSettings;
             JsonUtility.FromJsonOverwrite(state.systemObject, InputSystemEditorInitializer.stateManager);
+            JsonUtility.FromJsonOverwrite(state.systemObject, InputSystemEditorInitializer.domainStateManager);
 #endif
 
             // Get devices that keep global lists (like Gamepad) to re-initialize them
