@@ -99,8 +99,6 @@ namespace UnityEngine.InputSystem.LowLevel
                         {
                             eventBufferPtr->eventCount = 0;
                             eventBufferPtr->sizeInBytes = 0;
-                            eventBufferPtr->capacityInBytes = 0;
-                            eventBufferPtr->eventBuffer = (void*)0;
                         }
                     };
                 else
