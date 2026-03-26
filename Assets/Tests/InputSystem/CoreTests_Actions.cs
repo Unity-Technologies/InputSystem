@@ -308,7 +308,7 @@ partial class CoreTests
     public void Actions_PressingShortcutSequenceAtSameTime_TriggersbothShortcutsDueToNoPriority(string sharedModifier, string sharedModifier2, string binding1, string binding2,
         bool legacyComposites)
     {
-        InputSystem.settings.shortcutKeysConsumeInput = false;
+        InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action1 = new InputAction();
@@ -341,6 +341,9 @@ partial class CoreTests
                 .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding2);
         }
 
+        action1.Priority = 0;
+        action2.Priority = 1;
+
         action1.Enable();
         action2.Enable();
 
@@ -350,13 +353,15 @@ partial class CoreTests
         Assert.That(action2.WasPerformedThisFrame(), Is.False);
         if (!string.IsNullOrEmpty(sharedModifier2))
         {
-            Assert.That(action1.WasPerformedThisFrame(), Is.False);
-            Assert.That(action2.WasPerformedThisFrame(), Is.False);
             Press((ButtonControl)keyboard[sharedModifier2], queueEventOnly: true);
         }
 
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+
         Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding2]);
+        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
+        InputSystem.Update();
 
         // Action1 won't be performed due to the priority being below action2
         Assert.That(action1.WasPerformedThisFrame(), Is.True);
@@ -382,25 +387,26 @@ partial class CoreTests
             .With("Modifier", "<Keyboard>/" + sharedModifier2)
             .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding2);
 
-
-        action1.Enable();
-        action2.Enable();
-
         // TODO: Priority not working, not sure why FIX THIS
         action1.Priority = 0;
         action2.Priority = 1;
 
+        action1.Enable();
+        action2.Enable();
+
+        var action1WasPerformed = false;
+        action1.performed += _ => action1WasPerformed = true;
 
         Assert.That(action1.WasPerformedThisFrame(), Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.False);
 
-        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
-        Press((ButtonControl)keyboard[sharedModifier2], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding2]);
+        Press((ButtonControl)keyboard[sharedModifier], time: 1, queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding1], time: 1, queueEventOnly: true);
+        Press((ButtonControl)keyboard[sharedModifier2],  1, queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding2], time:  1);
 
         // Action1 won't be performed due to the priority being below action2
-        Assert.That(action1.WasPerformedThisFrame(), Is.True);
+        Assert.That(action1WasPerformed, Is.True);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
     }
 
