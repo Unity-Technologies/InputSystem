@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.
+- Changed the UI for `InputSystem.inputsettings` asset to use UI Toolkit framework.
 
 ### Added
 
