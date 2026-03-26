@@ -34,6 +34,7 @@ namespace UnityEngine.InputSystem.Editor
                     "The currently selected object is not an editable input action asset.",
                     HelpBoxMessageType.Info));
             }
+
             var editButton = new Button(() => OpenEditor(inputActionAsset))
             {
                 text = GetOpenEditorButtonText(inputActionAsset)
@@ -61,7 +62,9 @@ namespace UnityEngine.InputSystem.Editor
         private void BuildProjectWideSection(VisualElement container, InputActionAsset inputActionAsset)
         {
             container.Clear();
+
             var currentActions = InputSystem.actions;
+
             if (currentActions == inputActionAsset)
             {
                 container.Add(new HelpBox(
