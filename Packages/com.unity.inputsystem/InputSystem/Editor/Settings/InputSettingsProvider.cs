@@ -211,7 +211,11 @@ namespace UnityEngine.InputSystem.Editor
         {
             // Create and install the settings. This will lead to an InputSystem.onSettingsChange event which in turn
             // will cause us to re-initialize.
-            InputSystem.settings = InputAssetEditorUtils.CreateAsset(ScriptableObject.CreateInstance<InputSettings>(), relativePath);
+            var settings = ScriptableObject.CreateInstance<InputSettings>();
+            var icon = InputActionAssetIconLoader.LoadSettingsIcon();
+            if (icon != null)
+                EditorGUIUtility.SetIconForObject(settings, icon);
+            InputSystem.settings = InputAssetEditorUtils.CreateAsset(settings, relativePath);
         }
 
         private static void CreateNewSettingsAsset()
@@ -489,6 +493,13 @@ namespace UnityEngine.InputSystem.Editor
     [CustomEditor(typeof(InputSettings))]
     internal class InputSettingsEditor : UnityEditor.Editor
     {
+        private void OnEnable()
+        {
+            var icon = InputActionAssetIconLoader.LoadSettingsIcon();
+            if (icon != null)
+                EditorGUIUtility.SetIconForObject(target, icon);
+        }
+
         public override void OnInspectorGUI()
         {
             EditorGUILayout.Space();

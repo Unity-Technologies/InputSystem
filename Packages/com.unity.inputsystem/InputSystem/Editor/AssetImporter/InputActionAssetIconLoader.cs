@@ -13,6 +13,7 @@ namespace UnityEngine.InputSystem.Editor
     {
         private const string kActionIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png";
         private const string kAssetIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputActionAsset.png";
+        private const string kSettingsIcon = "Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputSettings.png";
 
         /// <summary>
         /// Attempts to load the icon associated with an <see cref="InputActionAsset"/>.
@@ -31,6 +32,15 @@ namespace UnityEngine.InputSystem.Editor
         internal static Texture2D LoadActionIcon()
         {
             return (Texture2D)EditorGUIUtility.Load(kActionIcon);
+        }
+
+        /// <summary>
+        /// Attempts to load the icon associated with an <see cref="InputSettings"/> asset.
+        /// </summary>
+        /// <returns>Icon resource reference or <code>null</code> if the resource could not be loaded.</returns>
+        internal static Texture2D LoadSettingsIcon()
+        {
+            return (Texture2D)EditorGUIUtility.Load(kSettingsIcon);
         }
     }
 }
