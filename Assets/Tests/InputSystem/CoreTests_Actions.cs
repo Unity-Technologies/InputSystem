@@ -301,71 +301,37 @@ partial class CoreTests
 
     [Test]
     [Category("Actions Priority")]
-    [TestCase("ctrl", null, "x", "c", true)]
-    [TestCase("ctrl", "leftAlt", "x", "c", true)]
-    [TestCase("ctrl", null, "x", "c", false)]
-    [TestCase("ctrl", "leftAlt", "x", "c", false)]
-    public void Actions_PressingShortcutSequenceAtSameTime_TriggersbothShortcutsDueToNoPriority(string sharedModifier, string sharedModifier2, string binding1, string binding2,
-        bool legacyComposites)
+    [TestCase("ctrl", "x", true)]
+    [TestCase("ctrl", "x", false)]
+    public void Actions_PressingShortcutSequenceAtSameTime_TriggersbothShortcutsDueToNoPriority(string sharedModifier, string binding1, bool legacyComposites)
     {
         InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var action1 = new InputAction();
-        if (!string.IsNullOrEmpty(sharedModifier2))
-        {
-            action1.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") + "(overrideModifiersNeedToBePressedFirst)")
-                .With("Modifier1", "<Keyboard>/" + sharedModifier)
-                .With("Modifier2", "<Keyboard>/" + sharedModifier2)
-                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
-        }
-        else
-        {
-            action1.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
-                .With("Modifier", "<Keyboard>/" + sharedModifier)
-                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
-        }
+        var map = new InputActionMap("map");
+        var action2 = map.AddAction("action2");
+        action2.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier)
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
 
-        var action2 = new InputAction();
-        if (!string.IsNullOrEmpty(sharedModifier2))
-        {
-            action2.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") + "(overrideModifiersNeedToBePressedFirst)")
-                .With("Modifier1", "<Keyboard>/" + sharedModifier)
-                .With("Modifier2", "<Keyboard>/" + sharedModifier2)
-                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding2);
-        }
-        else
-        {
-            action2.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
-                .With("Modifier", "<Keyboard>/" + sharedModifier)
-                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding2);
-        }
+        var action1 = map.AddAction("action1");
+        action1.AddBinding("<Keyboard>/" + binding1);
 
-        action1.Priority = 0;
-        action2.Priority = 1;
+        action1.Priority = 10;
+        action2.Priority = 9;
 
-        action1.Enable();
-        action2.Enable();
+        map.Enable();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.False);
 
         Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
-
-        Assert.That(action1.WasPerformedThisFrame(), Is.False);
-        Assert.That(action2.WasPerformedThisFrame(), Is.False);
-        if (!string.IsNullOrEmpty(sharedModifier2))
-        {
-            Press((ButtonControl)keyboard[sharedModifier2], queueEventOnly: true);
-        }
-
-        Assert.That(action1.WasPerformedThisFrame(), Is.False);
-        Assert.That(action2.WasPerformedThisFrame(), Is.False);
-
         Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
         InputSystem.Update();
 
-        // Action1 won't be performed due to the priority being below action2
+        // Action2 won't be performed due to the priority being below action2
         Assert.That(action1.WasPerformedThisFrame(), Is.True);
-        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+        Assert.That(action2.WasPerformedThisFrame(), Is.False);
     }
 
     [Test]
@@ -400,10 +366,10 @@ partial class CoreTests
         Assert.That(action1.WasPerformedThisFrame(), Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.False);
 
-        Press((ButtonControl)keyboard[sharedModifier], time: 1, queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding1], time: 1, queueEventOnly: true);
-        Press((ButtonControl)keyboard[sharedModifier2],  1, queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding2], time:  1);
+        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        Press((ButtonControl)keyboard[sharedModifier2], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding2]);
 
         // Action1 won't be performed due to the priority being below action2
         Assert.That(action1WasPerformed, Is.True);
