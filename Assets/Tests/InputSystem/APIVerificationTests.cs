@@ -551,7 +551,7 @@ class APIVerificationTests
         public class OpenVROculusTouchController : UnityEngine.InputSystem.XR.XRControllerWithRumble
         public class ViveWand : UnityEngine.InputSystem.XR.XRControllerWithRumble
     ")]
-    // API scraper in 1.0.0 emitted incomplete default argument expressions for these overloads.
+    // New scraper version (com.unity.coding:0.1.0-preview.26) includes default argument expressions for these overloads.
     [Property("Exclusions", @"1.0.0
         public static string GetBindingDisplayString(this InputAction action, int bindingIndex, InputBinding.DisplayStringOptions options = );
         public static string GetBindingDisplayString(this InputAction action, InputBinding bindingMask, InputBinding.DisplayStringOptions options = );
@@ -559,37 +559,21 @@ class APIVerificationTests
         public static string GetBindingDisplayString(this InputAction action, int bindingIndex, out string deviceLayoutName, out string controlPath, InputBinding.DisplayStringOptions options = );
         public string ToDisplayString(InputBinding.DisplayStringOptions options = , InputControl control = default(InputControl));
         public string ToDisplayString(out string deviceLayoutName, out string controlPath, InputBinding.DisplayStringOptions options = , InputControl control = default(InputControl));
-        DontIncludeInteractions = 4,
-        DontOmitDevice = 2,
-        DontUseShortDisplayNames = 1,
-        IgnoreBindingOverrides = 8,
-        OmitDevice = 2,
-        UseShortNames = 4,
-        BufferedBytes = 256,
-        Constant = 1,
-        NonLinear = 16,
-        NoPreferred = 32,
-        NullState = 64,
-        Relative = 4,
-        Variable = 2,
-        Volatile = 128,
-        Wrap = 8,
-        public FourCC(char a, char b =  , char c =  , char d =  ) {}
         public static string ToHumanReadableString(string path, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
         public static string ToHumanReadableString(string path, out string deviceLayoutName, out string controlPath, InputControlPath.HumanReadableStringOptions options = InputControlPath.HumanReadableStringOptions.None, InputControl control = default(InputControl));
-        public class InputStateHistory<TValue> : InputStateHistory, System.Collections.Generic.IEnumerable<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.Generic.IReadOnlyCollection<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.Generic.IReadOnlyList<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.IEnumerable where TValue : struct, new()
+        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> RecordStateChange(UnityEngine.InputSystem.InputControl<TValue> control, TValue value, double time = -1d);
+    ")]
+    // New scraper version (com.unity.coding:0.1.0-preview.26) is able to qualify nested types inside a generic class.
+    [Property("Exclusions", @"1.0.0
         public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> this[int index] { get; set; }
         public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> AddRecord(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> record);
         public System.Collections.Generic.IEnumerator<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>> GetEnumerator();
-        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> RecordStateChange(UnityEngine.InputSystem.InputControl<TValue> control, TValue value, double time = -1d);
         public struct Record : System.IEquatable<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>
         public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> next { get; }
-        public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> owner { get; }
         public UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> previous { get; }
         public void CopyFrom(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> record);
         public bool Equals(UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue> other);
-        public SteamHandle(ulong handle) {}
-        public static ulong op_Explicit(UnityEngine.InputSystem.Steam.SteamHandle<TObject> handle);
+        public class InputStateHistory<TValue> : InputStateHistory, System.Collections.Generic.IEnumerable<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.Generic.IReadOnlyCollection<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.Generic.IReadOnlyList<UnityEngine.InputSystem.LowLevel.InputStateHistory<TValue>>, System.Collections.IEnumerable where TValue : struct, new()
     ")]
     // Api scraper seems to be unstable with fields with default values, sometimes "= 0;" appears (locally) and sometimes (on CI) doesn't.
     [Property("Exclusions", @"1.0.0
@@ -605,10 +589,13 @@ class APIVerificationTests
     [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem.LowLevel", "public struct KeyboardState : IInputStateTypeInfo", "public fixed byte keys[14];")]
     // Allow Key.IMESelected to be marked as Obsolete
     [ScopedExclusionProperty("1.0.0", "UnityEngine.InputSystem", "public enum Key", "IMESelected = 111,")]
-
-#if !UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
     // Steam support is conditional (#if UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT) and absent when
     // the steam plugin is not installed, so all Steam types are excluded from the comparison.
+    [Property("Exclusions", @"1.0.0
+        public SteamHandle(ulong handle) {}
+        public static ulong op_Explicit(UnityEngine.InputSystem.Steam.SteamHandle<TObject> handle);
+    ")]
+#if !UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
     [Property("Exclusions", @"1.0.0
         namespace UnityEngine.InputSystem.Steam
         public interface ISteamControllerAPI
