@@ -303,7 +303,7 @@ partial class CoreTests
     [Category("Actions Priority")]
     [TestCase("ctrl", "x", true)]
     [TestCase("ctrl", "x", false)]
-    public void Actions_PressingShortcutSequenceAtSameTime_TriggersbothShortcutsDueToNoPriority(string sharedModifier, string binding1, bool legacyComposites)
+    public void Actions_PressingModifierShortcutWithSameBinding_TriggersHighestPriorityAction(string sharedModifier, string binding1, bool legacyComposites)
     {
         InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -336,29 +336,27 @@ partial class CoreTests
 
     [Test]
     [Category("Actions Priority")]
-    [TestCase("ctrl", "shift", "x", "c", false)]
-    public void Actions_PressingTwoShortcutsSequenceAtSameTime_TriggersOneShortcutDueToPriority(string sharedModifier, string sharedModifier2, string binding1, string binding2,
-        bool legacyComposites)
+    [TestCase("ctrl", "shift", "x", false)]
+    public void Actions_PressingTwoShortcutAtSameTime_TriggersOneShortcutDueToPriority(string sharedModifier, string sharedModifier2, string binding1, bool legacyComposites)
     {
         InputSystem.settings.shortcutKeysConsumeInput = true;
-
         var keyboard = InputSystem.AddDevice<Keyboard>();
-        var action1 = new InputAction();
+
+        var map = new InputActionMap("map");
+        var action1 = map.AddAction("action1");
         action1.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
             .With("Modifier", "<Keyboard>/" + sharedModifier)
             .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
 
-        var action2 = new InputAction();
+        var action2 = map.AddAction("action2");
         action2.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
             .With("Modifier", "<Keyboard>/" + sharedModifier2)
-            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding2);
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
 
-        // TODO: Priority not working, not sure why FIX THIS
         action1.Priority = 0;
         action2.Priority = 1;
 
-        action1.Enable();
-        action2.Enable();
+        map.Enable();
 
         var action1WasPerformed = false;
         action1.performed += _ => action1WasPerformed = true;
@@ -367,12 +365,12 @@ partial class CoreTests
         Assert.That(action2.WasPerformedThisFrame(), Is.False);
 
         Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
         Press((ButtonControl)keyboard[sharedModifier2], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding2]);
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        InputSystem.Update();
 
         // Action1 won't be performed due to the priority being below action2
-        Assert.That(action1WasPerformed, Is.True);
+        Assert.That(action1WasPerformed, Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
     }
 
