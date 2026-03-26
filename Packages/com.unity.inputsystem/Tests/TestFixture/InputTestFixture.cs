@@ -12,6 +12,7 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.InputSystem.XR;
+using UnityEngineInternal.Input;
 #if UNITY_6000_5_OR_NEWER
 using UnityEngine.Assemblies;
 #endif
@@ -841,6 +842,23 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// Utility function for manually scheduling an InputFocusEvent.
+        /// This is useful for testing how the system reacts to focus changes.
+        /// </summary>
+        /// <param name="applicationHasFocus">The focus state to be scheduled.</param>
+        public unsafe void ScheduleFocusChangedEvent(bool applicationHasFocus)
+        {
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+            // For now we only set application focus. In the future we want to add support for other focus as well
+            FocusFlags state = applicationHasFocus ? FocusFlags.ApplicationFocus : FocusFlags.None;
+            var evt = InputFocusEvent.Create(state);
+            InputSystem.QueueEvent(new InputEventPtr((InputEvent*)&evt.baseEvent));
+#else
+            runtime.InvokePlayerFocusChanged(applicationHasFocus);
+#endif
+        }
+
+        /// <summary>
         /// The input runtime used during testing.
         /// </summary>
         internal InputTestRuntime runtime { get; private set; }
@@ -1035,7 +1053,7 @@ namespace UnityEngine.InputSystem
             return Application.isEditor && !Application.isPlaying;
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         /// <summary>
         /// Represents an analytics registration event captured by test harness.
         /// </summary>
@@ -1130,6 +1148,6 @@ namespace UnityEngine.InputSystem
             CollectAnalytics((_) => true);
         }
 
-        #endif
+#endif
     }
 }
