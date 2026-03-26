@@ -509,7 +509,11 @@ PlayerSettings:
   webGLLinkerTarget: 1
   webGLThreadsSupport: 0
   webGLWasmStreaming: 0
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    Android: URP_COMPATIBILITY_MODE
+    Standalone: URP_COMPATIBILITY_MODE
+    iPhone: URP_COMPATIBILITY_MODE
+    tvOS: URP_COMPATIBILITY_MODE
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}
