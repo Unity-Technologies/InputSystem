@@ -19,6 +19,12 @@ namespace UnityEngine.InputSystem.Editor
         public override VisualElement CreateInspectorGUI()
         {
             var root = new VisualElement();
+<<<<<<< input/uitoolkit-input-asset
+=======
+            root.styleSheets.Add(AssetDatabase.LoadAssetAtPath<StyleSheet>(
+                InputActionsEditorConstants.PackagePath +
+                "/InputSystem/Editor/AssetImporter/InputActionImporterEditor.uss"));
+>>>>>>> develop
             var inputActionAsset = GetAsset();
 
             // ScriptedImporterEditor in 2019.2 now requires explicitly updating the SerializedObject
@@ -31,20 +37,32 @@ namespace UnityEngine.InputSystem.Editor
                     "The currently selected object is not an editable input action asset.",
                     HelpBoxMessageType.Info));
             }
+<<<<<<< input/uitoolkit-input-asset
             
+=======
+
+>>>>>>> develop
             var editButton = new Button(() => OpenEditor(inputActionAsset))
             {
                 text = GetOpenEditorButtonText(inputActionAsset)
             };
+<<<<<<< input/uitoolkit-input-asset
             editButton.style.height = 30;
             editButton.style.marginTop = 4;
             editButton.style.marginBottom = 4;
+=======
+            editButton.AddToClassList("input-action-importer-editor__edit-button");
+>>>>>>> develop
             editButton.SetEnabled(inputActionAsset != null);
             root.Add(editButton);
 
             var projectWideContainer = new VisualElement();
+<<<<<<< input/uitoolkit-input-asset
             projectWideContainer.style.marginTop = 6;
             projectWideContainer.style.marginBottom = 6;
+=======
+            projectWideContainer.AddToClassList("input-action-importer-editor__project-wide-container");
+>>>>>>> develop
             root.Add(projectWideContainer);
             BuildProjectWideSection(projectWideContainer, inputActionAsset);
 
@@ -62,15 +80,22 @@ namespace UnityEngine.InputSystem.Editor
         private void BuildProjectWideSection(VisualElement container, InputActionAsset inputActionAsset)
         {
             container.Clear();
+<<<<<<< input/uitoolkit-input-asset
 
             var currentActions = InputSystem.actions;
 
+=======
+
+            var currentActions = InputSystem.actions;
+
+>>>>>>> develop
             if (currentActions == inputActionAsset)
             {
                 container.Add(new HelpBox(
                     "These actions are assigned as the Project-wide Input Actions.",
                     HelpBoxMessageType.Info));
                 return;
+<<<<<<< input/uitoolkit-input-asset
             }
 
             var message = "These actions are not assigned as the Project-wide Input Actions for the Input System.";
@@ -104,6 +129,42 @@ namespace UnityEngine.InputSystem.Editor
             var codeGenContainer = new VisualElement();
             root.Add(codeGenContainer);
 
+=======
+            }
+
+            var message = "These actions are not assigned as the Project-wide Input Actions for the Input System.";
+            if (currentActions != null)
+            {
+                var currentPath = AssetDatabase.GetAssetPath(currentActions);
+                if (!string.IsNullOrEmpty(currentPath))
+                    message += $" The actions currently assigned as the Project-wide Input Actions are: {currentPath}. ";
+            }
+
+            container.Add(new HelpBox(message, HelpBoxMessageType.Warning));
+
+            var assignButton = new Button(() =>
+            {
+                InputSystem.actions = inputActionAsset;
+                BuildProjectWideSection(container, inputActionAsset);
+            })
+            {
+                text = "Assign as the Project-wide Input Actions"
+            };
+            assignButton.AddToClassList("input-action-importer-editor__assign-button");
+            assignButton.SetEnabled(!EditorApplication.isPlayingOrWillChangePlaymode);
+            container.Add(assignButton);
+        }
+
+        private void BuildCodeGenerationSection(VisualElement root, InputActionAsset inputActionAsset)
+        {
+            var generateField = new PropertyField(
+                serializedObject.FindProperty("m_GenerateWrapperCode"), "Generate C# Class");
+            root.Add(generateField);
+
+            var codeGenContainer = new VisualElement();
+            root.Add(codeGenContainer);
+
+>>>>>>> develop
             // File path with browse button
             string defaultFileName = "";
             if (inputActionAsset != null)
@@ -113,12 +174,20 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             var pathRow = new VisualElement();
+<<<<<<< input/uitoolkit-input-asset
             pathRow.style.flexDirection = FlexDirection.Row;
             pathRow.style.alignItems = Align.Center;
             codeGenContainer.Add(pathRow);
 
             var pathField = new TextField("C# Class File") { bindingPath = "m_WrapperCodePath" };
             pathField.style.flexGrow = 1;
+=======
+            pathRow.AddToClassList("input-action-importer-editor__path-row");
+            codeGenContainer.Add(pathRow);
+
+            var pathField = new TextField("C# Class File") { bindingPath = "m_WrapperCodePath" };
+            pathField.AddToClassList("input-action-importer-editor__path-field");
+>>>>>>> develop
             pathField.AddToClassList(BaseField<string>.alignedFieldUssClassName);
             SetupPlaceholder(pathField, defaultFileName);
             pathRow.Add(pathField);
@@ -141,8 +210,12 @@ namespace UnityEngine.InputSystem.Editor
             {
                 text = "…"
             };
+<<<<<<< input/uitoolkit-input-asset
             browseButton.style.width = 25;
             browseButton.style.minWidth = 25;
+=======
+            browseButton.AddToClassList("input-action-importer-editor__browse-button");
+>>>>>>> develop
             pathRow.Add(browseButton);
 
             // Class name
@@ -205,10 +278,14 @@ namespace UnityEngine.InputSystem.Editor
 
             var placeholderLabel = new Label(placeholder);
             placeholderLabel.pickingMode = PickingMode.Ignore;
+<<<<<<< input/uitoolkit-input-asset
             placeholderLabel.style.position = Position.Absolute;
             placeholderLabel.style.unityTextAlign = TextAnchor.MiddleLeft;
             placeholderLabel.style.opacity = 0.5f;
             placeholderLabel.style.paddingLeft = 2;
+=======
+            placeholderLabel.AddToClassList("input-action-importer-editor__placeholder");
+>>>>>>> develop
 
             textField.RegisterCallback<GeometryChangedEvent>(_ =>
             {

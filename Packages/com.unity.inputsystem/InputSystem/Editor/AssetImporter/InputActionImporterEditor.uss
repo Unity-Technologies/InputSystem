@@ -1,0 +1,36 @@
+.input-action-importer-editor__edit-button {
+    min-height: 30px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    white-space: normal;
+    overflow: hidden;
+}
+
+.input-action-importer-editor__assign-button {
+    white-space: normal;
+    overflow: hidden;
+}
+
+.input-action-importer-editor__project-wide-container {
+    margin-top: 6px;
+    margin-bottom: 6px;
+}
+
+.input-action-importer-editor__path-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.input-action-importer-editor__path-field {
+    flex-grow: 1;
+}
+
+.input-action-importer-editor__browse-button {
+    width: 25px;
+}
+
+.input-action-importer-editor__placeholder {
+    position: absolute;
+    opacity: 0.5;
+    padding-left: 2px;
+}

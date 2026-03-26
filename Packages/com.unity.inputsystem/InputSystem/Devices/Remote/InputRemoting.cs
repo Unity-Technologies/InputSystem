@@ -380,7 +380,7 @@ namespace UnityEngine.InputSystem
         internal struct RemoteSender
         {
             public int senderId;
-            public InternedString[] layouts; // Each item is the unqualified name of the layout (without namespace)
+            [NonSerialized] public InternedString[] layouts; // Each item is the unqualified name of the layout (without namespace)
             public RemoteInputDevice[] devices;
         }
 

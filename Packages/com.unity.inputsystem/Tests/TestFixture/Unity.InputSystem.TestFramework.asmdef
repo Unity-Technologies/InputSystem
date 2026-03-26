@@ -1,5 +1,6 @@
 {
     "name": "Unity.InputSystem.TestFramework",
+    "rootNamespace": "",
     "references": [
         "Unity.InputSystem",
         "UnityEngine.TestRunner",
@@ -13,13 +14,20 @@
         "nunit.framework.dll"
     ],
     "autoReferenced": false,
-    "defineConstraints": ["UNITY_TESTS_FRAMEWORK"],
+    "defineConstraints": [
+        "UNITY_TESTS_FRAMEWORK"
+    ],
     "versionDefines": [
         {
             "name": "com.unity.test-framework",
             "expression": "",
             "define": "UNITY_TESTS_FRAMEWORK"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.5.0a8",
+            "define": "UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS"
         }
-    ],   
-    "versionDefines": []
+    ],
+    "noEngineReferences": false
 }

@@ -704,7 +704,9 @@ partial class CoreTests
         InputState.AddChangeMonitor(gamepad.leftStick,
             (control, time, eventPtr, monitorIndex) => monitorFired = true);
 
-        runtime.PlayerFocusLost();
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
+        InputSystem.Update(InputUpdateType.Dynamic);
+
         Set(gamepad.leftStick, new Vector2(0.123f, 0.234f), queueEventOnly: true);
         InputSystem.Update(InputUpdateType.Editor);
 
@@ -1676,7 +1678,9 @@ partial class CoreTests
         {
             history.StartRecording();
 
-            runtime.PlayerFocusLost();
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
             Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
             InputSystem.Update(InputUpdateType.Editor);
 
@@ -1696,7 +1700,9 @@ partial class CoreTests
             history.updateMask = InputUpdateType.Editor;
             history.StartRecording();
 
-            runtime.PlayerFocusLost();
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
             Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
             InputSystem.Update(InputUpdateType.Editor);
 
