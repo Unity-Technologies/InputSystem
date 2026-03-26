@@ -3922,22 +3922,13 @@ internal partial class UITests : CoreTestsFixture
     // can have a reference to UITK that doesn't break things in previous versions of Unity.
     [UnityTest]
     [Category("UI")]
-    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
-    [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
-    [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
-#if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
-    [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
-#endif
-#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
-    [Ignore("Disabled to make test suite pass on Linux")]
+#if UNITY_2022_3 && (UNITY_ANDROID || UNITY_IOS)
+    [Ignore("Issue with mouse support on Android and iOS for 2022.3.")]
 #endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
-    public IEnumerator UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule(UIPointerBehavior pointerBehavior)
+    public IEnumerator UI_UIToolkitInputModule_MouseClick_CapturesAndClicksButton()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        var touchscreen = InputSystem.AddDevice<Touchscreen>();
-
         var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
         yield return null;
         Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
@@ -3946,88 +3937,158 @@ internal partial class UITests : CoreTestsFixture
         {
             var objects = scene.GetRootGameObjects();
             var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
-            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
             var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
-            var uiRoot = uiDocument.rootVisualElement;
-            var uiButton = uiRoot.Query<UnityEngine.UIElements.Button>("Button").First();
-            var scrollView = uiRoot.Query<ScrollView>("ScrollView").First();
-
-            uiModule.pointerBehavior = pointerBehavior;
+            var uiButton = uiDocument.rootVisualElement.Query<UnityEngine.UIElements.Button>("Button").First();
 
             var clickReceived = false;
             uiButton.clicked += () => clickReceived = true;
-            // NOTE: We do *NOT* do the following as the gamepad submit action will *not* trigger a ClickEvent.
-            //uiButton.RegisterCallback<ClickEvent>(_ => clickReceived = true);
 
             yield return null;
 
             var buttonCenter = new Vector2(uiButton.worldBound.center.x, Screen.height - uiButton.worldBound.center.y);
-            var buttonOutside = new Vector2(uiButton.worldBound.max.x + 10, Screen.height - uiButton.worldBound.center.y);
-            var scrollViewCenter = new Vector2(scrollView.worldBound.center.x, Screen.height - scrollView.worldBound.center.y);
-
             Set(mouse.position, buttonCenter, queueEventOnly: true);
             Press(mouse.leftButton, queueEventOnly: true);
-
-            ////TODO: look at BaseInput and whether we need to override it in order for IME to go through our codepaths
-            ////TODO: look into or document raycasting aspect (GraphicRaycaster) when using UITK (disable raycaster?)
-            ////TODO: fix scroll wheel bindings on virtual cursor sample
-
             yield return null;
-
             Assert.That(uiButton.HasMouseCapture(), Is.True, "Expected uiButton to have mouse capture");
 
             Release(mouse.leftButton, queueEventOnly: true);
+            yield return null;
+            Assert.That(uiButton.HasMouseCapture(), Is.False, "Expected uiButton to no longer have mouse capture");
+            Assert.That(clickReceived, Is.True, "Expected mouse click callback on UITK button");
+        }
+        finally
+        {
+            if (mouse.added)
+                InputSystem.RemoveDevice(mouse);
+            SceneManager.UnloadSceneAsync(scene);
+        }
+
+        yield return null;
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
+    public IEnumerator UI_UIToolkitInputModule_MouseScroll_MovesScrollView()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
+        yield return null;
+        Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
+
+        try
+        {
+            var objects = scene.GetRootGameObjects();
+            var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
+            var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
+            var scrollView = uiDocument.rootVisualElement.Query<ScrollView>("ScrollView").First();
 
             yield return null;
 
-            Assert.That(uiButton.HasMouseCapture(), Is.False, "Expected uiButton to no longer have mouse capture");
-            Assert.That(clickReceived, Is.True);
-
-            // Put mouse in upper right corner and scroll down.
+            var scrollViewCenter = new Vector2(scrollView.worldBound.center.x, Screen.height - scrollView.worldBound.center.y);
             Assert.That(scrollView.verticalScroller.value, Is.Zero, "Expected verticalScroller to be all the way up");
             Set(mouse.position, scrollViewCenter, queueEventOnly: true);
             yield return null;
             Set(mouse.scroll, new Vector2(0, -100), queueEventOnly: true);
             yield return null;
-
-            ////FIXME: as of a time of writing, this line is broken on trunk due to the bug in UITK
-            // The bug is https://fogbugz.unity3d.com/f/cases/1323488/
-            // just adding a define as a safeguard measure to reenable it when trunk goes to next version cycle
             Assert.That(scrollView.verticalScroller.value, Is.GreaterThan(0));
+        }
+        finally
+        {
+            if (mouse.added)
+                InputSystem.RemoveDevice(mouse);
+            SceneManager.UnloadSceneAsync(scene);
+        }
 
-            // Try a button press with the gamepad.
-            // NOTE: The current version of UITK does not focus the button automatically. Fix for that is in the pipe.
-            //       For now focus the button manually.
+        yield return null;
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
+    public IEnumerator UI_UIToolkitInputModule_GamepadSubmit_ClicksFocusedButton()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
+        yield return null;
+        Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
+
+        try
+        {
+            var objects = scene.GetRootGameObjects();
+            var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
+            var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
+            var uiButton = uiDocument.rootVisualElement.Query<UnityEngine.UIElements.Button>("Button").First();
+
+            yield return null;
+
+            var clickReceived = false;
+            uiButton.clicked += () => clickReceived = true;
             uiButton.Focus();
-            clickReceived = false;
+
             PressAndRelease(gamepad.buttonSouth, queueEventOnly: true);
             yield return null;
+            Assert.That(clickReceived, Is.True, "Expected gamepad submit to click focused UITK button");
+        }
+        finally
+        {
+            if (gamepad.added)
+                InputSystem.RemoveDevice(gamepad);
+            SceneManager.UnloadSceneAsync(scene);
+        }
 
-            Assert.That(clickReceived, Is.True, "Expected to have received click");
+        yield return null;
+    }
 
-            ////TODO: tracked device support (not yet supported by UITK)
+    [UnityTest]
+    [Category("UI")]
+    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
+#if UNITY_2022_3 && (UNITY_ANDROID || UNITY_IOS)
+    [Ignore("Fails on CI for 2022.3 on Android and iOS.")]
+#endif
+    [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
+    public IEnumerator UI_UIToolkitInputModule_MultiTouchPointerOwnership(UIPointerBehavior pointerBehavior)
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+        var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
+        yield return null;
+        Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
 
-            static bool IsActive(VisualElement ve)
-            {
-                return ve.Query<VisualElement>().Active().ToList().Contains(ve);
-            }
+        try
+        {
+            var objects = scene.GetRootGameObjects();
+            var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
+            var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
+            var uiButton = uiDocument.rootVisualElement.Query<UnityEngine.UIElements.Button>("Button").First();
 
-            // Move the mouse away from the button to check that touch inputs are also able to activate it.
-            Set(mouse.position, buttonOutside, queueEventOnly: true);
+            uiModule.pointerBehavior = pointerBehavior;
             yield return null;
-            InputSystem.RemoveDevice(mouse);
+
+            var buttonCenter = new Vector2(uiButton.worldBound.center.x, Screen.height - uiButton.worldBound.center.y);
+            var buttonOutside = new Vector2(uiButton.worldBound.max.x + 10, Screen.height - uiButton.worldBound.center.y);
 
             var uiButtonDownCount = 0;
             var uiButtonUpCount = 0;
-            uiButton.RegisterCallback<PointerDownEvent>(e => uiButtonDownCount++, TrickleDown.TrickleDown);
-            uiButton.RegisterCallback<PointerUpEvent>(e => uiButtonUpCount++, TrickleDown.TrickleDown);
+            var uiButtonDownPointerIds = new List<int>();
+            var uiButtonUpPointerIds = new List<int>();
+            uiButton.RegisterCallback<PointerDownEvent>(eventData =>
+            {
+                uiButtonDownCount++;
+                uiButtonDownPointerIds.Add(eventData.pointerId);
+            }, TrickleDown.TrickleDown);
+            uiButton.RegisterCallback<PointerUpEvent>(eventData =>
+            {
+                uiButtonUpCount++;
+                uiButtonUpPointerIds.Add(eventData.pointerId);
+            }, TrickleDown.TrickleDown);
 
-            // Case 1369081: Make sure button doesn't get "stuck" in an active state when multiple fingers are used.
             BeginTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
             Assert.That(uiButtonDownCount, Is.EqualTo(1), "Expected uiButtonDownCount to be 1");
             Assert.That(uiButtonUpCount, Is.EqualTo(0), "Expected uiButtonUpCount to be 0");
-            Assert.That(IsActive(uiButton), Is.True, "Expected uiButton to be active");
+            Assert.That(uiButtonDownPointerIds, Has.Count.EqualTo(1), "Expected one PointerDown pointerId");
 
             BeginTouch(2, buttonOutside, screen: touchscreen);
             yield return null;
@@ -4038,29 +4099,100 @@ internal partial class UITests : CoreTestsFixture
             if (pointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
             {
                 Assert.That(uiButtonUpCount, Is.EqualTo(1), "Expected uiButtonUpCount to be 1");
-                Assert.That(IsActive(uiButton), Is.False, "Expected uiButton to no longer be active");
+                Assert.That(uiButtonUpPointerIds, Has.Count.EqualTo(1), "Expected one PointerUp pointerId");
             }
             else
             {
                 Assert.That(uiButtonUpCount, Is.EqualTo(0), "Expected uiButtonUpCount to be 0");
-                Assert.That(IsActive(uiButton), Is.True, "Expected uiButton to be active");
+                Assert.That(uiButtonUpPointerIds, Is.Empty, "Expected no PointerUp pointerId from outside touch");
             }
 
             EndTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
             Assert.That(uiButtonDownCount, Is.EqualTo(1), "Expected uiButtonDownCount to be 1");
             Assert.That(uiButtonUpCount, Is.EqualTo(1), "Expected uiButtonUpCount to be 1");
-            Assert.That(IsActive(uiButton), Is.False, "Expected uiButton to no longer be active");
-
-            InputSystem.RemoveDevice(touchscreen);
+            Assert.That(uiButtonUpPointerIds, Has.Count.EqualTo(1), "Expected one PointerUp pointerId after releasing touch #1");
+            Assert.That(uiButtonUpPointerIds[0], Is.EqualTo(uiButtonDownPointerIds[0]),
+                "Expected PointerUp ownership to match the pointer that pressed the button");
+            Assert.That(IsActiveVisualElement(uiButton), Is.False, "Expected uiButton to no longer be active");
         }
         finally
         {
+            if (touchscreen.added)
+                InputSystem.RemoveDevice(touchscreen);
             SceneManager.UnloadSceneAsync(scene);
         }
 
-        // Wait for unload to complete.
         yield return null;
+    }
+
+    [UnityTest]
+    [Category("UI")]
+#if UNITY_2022_3 && (UNITY_ANDROID || UNITY_IOS)
+    [Ignore("Issue with mouse support on Android and iOS for 2022.3.")]
+#endif
+    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
+    [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
+    public IEnumerator UI_UIToolkitInputModule_MultiTouchVisualActiveState_FollowsPointerBehavior(UIPointerBehavior pointerBehavior)
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+        var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
+        yield return null;
+        Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
+
+        try
+        {
+            var objects = scene.GetRootGameObjects();
+            var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
+            var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
+            var uiRoot = uiDocument.rootVisualElement;
+            var uiButton = uiRoot.Query<UnityEngine.UIElements.Button>("Button").First();
+
+            uiModule.pointerBehavior = pointerBehavior;
+
+            yield return null;
+
+            var buttonCenter = new Vector2(uiButton.worldBound.center.x, Screen.height - uiButton.worldBound.center.y);
+            var buttonOutside = new Vector2(uiButton.worldBound.max.x + 10, Screen.height - uiButton.worldBound.center.y);
+
+            // Finger #1 presses and holds on the button.
+            BeginTouch(1, buttonCenter, screen: touchscreen);
+            yield return null;
+            Assert.That(IsActiveVisualElement(uiButton), Is.True, "Expected uiButton to be active while touch #1 is still pressed.");
+
+            // Finger #2 taps outside of the button while finger #1 is still held.
+            BeginTouch(2, buttonOutside, screen: touchscreen);
+            yield return null;
+            EndTouch(2, buttonOutside, screen: touchscreen);
+            yield return null;
+
+            // Desired contract:
+            // - SingleUnifiedPointer: touch #2 can replace current pointer and clear active state.
+            // - Non-unified behaviors: touch #1 is still pressed and should keep the button visually active.
+            if (pointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+                Assert.That(IsActiveVisualElement(uiButton), Is.False, "Expected uiButton to no longer be active in SingleUnifiedPointer mode.");
+            else
+                Assert.That(IsActiveVisualElement(uiButton), Is.True, "Expected uiButton to remain active while touch #1 is still pressed.");
+
+            EndTouch(1, buttonCenter, screen: touchscreen);
+            yield return null;
+            Assert.That(IsActiveVisualElement(uiButton), Is.False, "Expected uiButton to no longer be active after touch #1 is released.");
+        }
+        finally
+        {
+            if (touchscreen.added)
+                InputSystem.RemoveDevice(touchscreen);
+            SceneManager.UnloadSceneAsync(scene);
+        }
+
+        yield return null;
+    }
+
+    private static bool IsActiveVisualElement(VisualElement visualElement)
+    {
+        return visualElement.Query<VisualElement>().Active().ToList().Contains(visualElement);
     }
 
     private class UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup : IPrebuildSetup

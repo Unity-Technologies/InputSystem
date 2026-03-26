@@ -1404,6 +1404,45 @@ partial class CoreTests
         }
     }
 
+    // Regression test for UUM-100125.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InitialStateCheckAfterConfigurationChange_DoesNotTriggerForInactiveTouch()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+        var action = new InputAction(type: InputActionType.Value, binding: "<Touchscreen>/primaryTouch/position");
+        action.Enable();
+
+        // Run the first initial state check from enabling the action.
+        InputSystem.Update();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            BeginTouch(1, new Vector2(123, 234));
+            EndTouch(1, new Vector2(345, 456));
+
+            Assert.That(touchscreen.primaryTouch.isInProgress, Is.False);
+            Assert.That(touchscreen.primaryTouch.position.ReadValue(), Is.Not.EqualTo(default(Vector2)));
+
+            trace.Clear();
+
+            // Configuration change causes full re-resolve and schedules initial state check.
+            InputSystem.QueueConfigChangeEvent(touchscreen);
+            InputSystem.Update();
+            InputSystem.Update();
+
+            // Full re-resolve may cancel the current action state. What must NOT happen is a synthetic
+            // Started/Performed pair from persisted inactive touch state.
+            Assert.AreEqual(1, trace.count);
+            foreach (var eventPtr in trace)
+            {
+                // The trace should only contain a Canceled event for the action.
+                Assert.AreEqual(InputActionPhase.Canceled, eventPtr.phase,
+                    $"inactive touch state should not produce action callbacks, but received {eventPtr.phase}.");
+            }
+        }
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1192972/
     [Test]
     [Category("Actions")]
@@ -12484,17 +12523,20 @@ partial class CoreTests
 
         // Now when enabling actionMap ..
         actionMap.Enable();
-        // On the following update we will trigger OnBeforeUpdate which will rise started/performed
-        // from InputActionState.OnBeforeInitialUpdate as controls are "actuated"
+        // Inactive touches (ended before action was enabled) must NOT produce started/performed from
+        // OnBeforeInitialUpdate. Their persisted state (position, touchId) is non-default due to
+        // dontReset, but only TouchControl.isInProgress should be considered for initial-state check.
+        // Related to UUM-100125 and Actions_InitialStateCheckAfterConfigurationChange_DoesNotTriggerForInactiveTouch.
         InputSystem.Update();
-        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 0)); // started+performed arrive from OnBeforeUpdate
+        Assert.That(values.Count, Is.EqualTo(0));
         values.Clear();
 
-        // Now subsequent touches should not be ignored
         BeginTouch(200, new Vector2(1, 1));
-        Assert.That(values.Count, Is.EqualTo(1));
-        Assert.That(values[0].InputId, Is.EqualTo(200));
-        Assert.That(values[0].Position, Is.EqualTo(new Vector2(1, 1)));
+        // If prepopulated, action was never actuated (synthetic initial-check is suppressed),
+        // so BeginTouch fires started+performed (2 events).
+        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 1));
+        Assert.That(values[values.Count - 1].InputId, Is.EqualTo(200));
+        Assert.That(values[values.Count - 1].Position, Is.EqualTo(new Vector2(1, 1)));
     }
 
     // FIX: This test is currently checking if shortcut support is enabled by testing that the unwanted behaviour exists.
