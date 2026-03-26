@@ -732,7 +732,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Standalone: UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+    Standalone: UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT;URP_COMPATIBILITY_MODE
   additionalCompilerArguments: {}
   platformArchitecture:
     iPhone: 1

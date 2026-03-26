@@ -1,4 +1,4 @@
 {
   "displayName": "InputDeviceTester",
-  "description": "A scene containing UI to visualize the controls on various supported input devices."
+  "description": "A scene containing UI to visualize the controls on various supported input devices. Requires the Universal Render Pipeline (URP) package to be installed for shader compilation."
 }
