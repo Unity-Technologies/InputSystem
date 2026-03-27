@@ -1321,6 +1321,9 @@ namespace UnityEngine.InputSystem
                     if (IsActiveControl(bindingIndex, controlIndex))
                         continue;
 
+                    if (ShouldSkipInitialStateCheck(control))
+                        continue;
+
                     if (!control.CheckStateIsAtDefault())
                     {
                         // Update press times.
@@ -1346,6 +1349,22 @@ namespace UnityEngine.InputSystem
             manager.FireStateChangeNotifications();
 
             k_InputInitialActionStateCheckMarker.End();
+        }
+
+        private static bool ShouldSkipInitialStateCheck(InputControl control)
+        {
+            // UUM-100125
+            // Touch controls intentionally preserve state such as position even when no touch is currently active.
+            // During binding re-resolution this can make inactive touches look actuated and cause invalid triggers.
+            for (var current = control; current != null; current = current.parent)
+            {
+                if (current is TouchControl touchControl)
+                {
+                    return !touchControl.isInProgress;
+                }
+            }
+
+            return false;
         }
 
         // Called from InputManager when one of our state change monitors has fired.
