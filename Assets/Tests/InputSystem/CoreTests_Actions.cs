@@ -329,9 +329,43 @@ partial class CoreTests
         Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
         InputSystem.Update();
 
-        // Action2 won't be performed due to the priority being below action2
+        // Action1 is not performed because action2 has higher priority on the shared key.
         Assert.That(action1.WasPerformedThisFrame(), Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    [TestCase("ctrl", "x", true)]
+    [TestCase("ctrl", "x", false)]
+    public void Actions_Priority_SimpleBindingHigherPriority_PreemptsCompositeOnSharedKey(string sharedModifier, string binding1, bool legacyComposites)
+    {
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("map");
+
+        var action1 = map.AddAction("action1");
+        action1.AddBinding("<Keyboard>/" + binding1);
+
+        var action2 = map.AddAction("action2");
+        action2.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier)
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
+
+        action1.Priority = 10;
+        action2.Priority = 9;
+
+        map.Enable();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+
+        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        InputSystem.Update();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.True);
+        Assert.That(action2.WasPerformedThisFrame(), Is.False);
     }
 
     [Test]
@@ -370,9 +404,170 @@ partial class CoreTests
         Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
         InputSystem.Update();
 
-        // Action1 won't be performed due to the priority being below action2
+        // Action1 is not performed because action2 has higher priority on the shared key.
         Assert.That(action1WasPerformed, Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    [TestCase("ctrl", "shift", "x", false)]
+    [TestCase("ctrl", "shift", "x", true)]
+    public void Actions_Priority_TwoShortcuts_HigherNumericPriorityWins(string sharedModifier, string sharedModifier2, string binding1, bool legacyComposites)
+    {
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap("map");
+        var action1 = map.AddAction("action1");
+        action1.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier)
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
+
+        var action2 = map.AddAction("action2");
+        action2.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier2)
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
+
+        action1.Priority = 2;
+        action2.Priority = 100;
+
+        map.Enable();
+
+        var action1WasPerformed = false;
+        action1.performed += _ => action1WasPerformed = true;
+
+        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
+        Press((ButtonControl)keyboard[sharedModifier2], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        InputSystem.Update();
+
+        Assert.That(action1WasPerformed, Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    [TestCase("ctrl", "shift", "x", false)]
+    [TestCase("ctrl", "shift", "x", true)]
+    public void Actions_Priority_EqualPriority_ConflictingShortcuts_FirstActionInMapWins(string sharedModifier, string sharedModifier2, string binding1, bool legacyComposites)
+    {
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap("map");
+        var action1 = map.AddAction("action1");
+        action1.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier)
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
+
+        var action2 = map.AddAction("action2");
+        action2.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier2)
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
+
+        action1.Priority = 5;
+        action2.Priority = 5;
+
+        map.Enable();
+
+        var action2WasPerformed = false;
+        action2.performed += _ => action2WasPerformed = true;
+
+        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
+        Press((ButtonControl)keyboard[sharedModifier2], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        InputSystem.Update();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.True);
+        Assert.That(action2WasPerformed, Is.False);
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    [TestCase("ctrl", "shift", "x", false)]
+    [TestCase("ctrl", "shift", "x", true)]
+    public void Actions_Priority_BothPrioritiesZero_ConflictingShortcuts_BothPerform(string sharedModifier, string sharedModifier2, string binding1, bool legacyComposites)
+    {
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap("map");
+        var action1 = map.AddAction("action1");
+        action1.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier)
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
+
+        var action2 = map.AddAction("action2");
+        action2.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier2)
+            .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
+
+        action1.Priority = 0;
+        action2.Priority = 0;
+
+        map.Enable();
+
+        var action1WasPerformed = false;
+        var action2WasPerformed = false;
+        action1.performed += _ => action1WasPerformed = true;
+        action2.performed += _ => action2WasPerformed = true;
+
+        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
+        Press((ButtonControl)keyboard[sharedModifier2], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        InputSystem.Update();
+
+        Assert.That(action1WasPerformed, Is.True);
+        Assert.That(action2WasPerformed, Is.True);
+    }
+
+    [Test]
+    [Ignore("Enable once we fix this")]
+    [Category("Actions Priority")]
+    [TestCase("ctrl", "shift", "x", false)]
+    [TestCase("ctrl", "shift", "x", true)]
+    public void Actions_Priority_ShortcutConsumeDisabled_BothPerformDespiteDifferentPriorities(string sharedModifier, string sharedModifier2, string binding1, bool legacyComposites)
+    {
+        var previousShortcutConsume = InputSystem.settings.shortcutKeysConsumeInput;
+        try
+        {
+            InputSystem.settings.shortcutKeysConsumeInput = false;
+            var keyboard = InputSystem.AddDevice<Keyboard>();
+
+            var map = new InputActionMap("map");
+            var action1 = map.AddAction("action1");
+            action1.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+                .With("Modifier", "<Keyboard>/" + sharedModifier)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
+
+            var action2 = map.AddAction("action2");
+            action2.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+                .With("Modifier", "<Keyboard>/" + sharedModifier2)
+                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
+
+            action1.Priority = 0;
+            action2.Priority = 10;
+
+            map.Enable();
+
+            var action1WasPerformed = false;
+            var action2WasPerformed = false;
+            action1.performed += _ => action1WasPerformed = true;
+            action2.performed += _ => action2WasPerformed = true;
+
+            Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
+            Press((ButtonControl)keyboard[sharedModifier2], queueEventOnly: true);
+            Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+            InputSystem.Update();
+
+            Assert.That(action1WasPerformed, Is.True);
+            Assert.That(action2WasPerformed, Is.True);
+        }
+        finally
+        {
+            InputSystem.settings.shortcutKeysConsumeInput = previousShortcutConsume;
+        }
     }
 
     [UnityTest]
@@ -413,7 +608,7 @@ partial class CoreTests
         Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
         InputSystem.Update();
 
-        // Action1 won't be performed due to the priority being below action2
+        // Different letter keys: no conflict on the same control, so both shortcuts can perform despite different priorities.
         Assert.That(action1WasPerformed, Is.True);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
 
@@ -425,7 +620,159 @@ partial class CoreTests
 
         InputSystem.Update();
 
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.False);
+    }
+
+    [UnityTest]
+    [Category("Actions Priority")]
+    public IEnumerator Actions_Priority_TwoNonConflictingShortcuts_ReversedPriorityOrder_BothStillPerform()
+    {
+        string sharedModifier = "ctrl";
+        string binding1 = "x";
+        string binding2 = "c";
+
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap("map");
+        var action1 = map.AddAction("action1");
+        action1.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier)
+            .With("Binding", "<Keyboard>/" + binding1);
+
+        var action2 = map.AddAction("action2");
+        action2.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier)
+            .With("Binding", "<Keyboard>/" + binding2);
+
+        // Higher priority on the first action; letter keys still differ so both should run.
+        action1.Priority = 10;
+        action2.Priority = 0;
+
+        map.Enable();
+
+        var action1WasPerformed = false;
+        action1.performed += _ => action1WasPerformed = true;
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+
+        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
+        InputSystem.Update();
+
+        Assert.That(action1WasPerformed, Is.True);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+
+        yield return null;
+
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
+
+        InputSystem.Update();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+    }
+
+    [UnityTest]
+    [Category("Actions Priority")]
+    public IEnumerator Actions_Priority_TwoNonConflictingShortcuts_EqualHighPriority_BothPerform()
+    {
+        string sharedModifier = "ctrl";
+        string binding1 = "x";
+        string binding2 = "c";
+
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap("map");
+        var action1 = map.AddAction("action1");
+        action1.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier)
+            .With("Binding", "<Keyboard>/" + binding1);
+
+        var action2 = map.AddAction("action2");
+        action2.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier)
+            .With("Binding", "<Keyboard>/" + binding2);
+
+        action1.Priority = 500;
+        action2.Priority = 500;
+
+        map.Enable();
+
+        var action1WasPerformed = false;
+        action1.performed += _ => action1WasPerformed = true;
+
+        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
+        InputSystem.Update();
+
+        Assert.That(action1WasPerformed, Is.True);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+
+        yield return null;
+
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
+
+        InputSystem.Update();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+    }
+
+    [UnityTest]
+    [Category("Actions Priority")]
+    public IEnumerator Actions_Priority_TwoNonConflictingShortcuts_ReverseActionDeclarationOrder_BothPerform()
+    {
+        string sharedModifier = "ctrl";
+        string binding1 = "x";
+        string binding2 = "c";
+
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        var map = new InputActionMap("map");
+        // Add the second shortcut's action first so registration order differs from the original test.
+        var action2 = map.AddAction("action2");
+        action2.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier)
+            .With("Binding", "<Keyboard>/" + binding2);
+
+        var action1 = map.AddAction("action1");
+        action1.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
+            .With("Modifier", "<Keyboard>/" + sharedModifier)
+            .With("Binding", "<Keyboard>/" + binding1);
+
+        action1.Priority = 0;
+        action2.Priority = 1;
+
+        map.Enable();
+
+        var action1WasPerformed = false;
+        action1.performed += _ => action1WasPerformed = true;
+
+        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
+        InputSystem.Update();
+
+        Assert.That(action1WasPerformed, Is.True);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+
+        yield return null;
+
+        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
+        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
+
+        InputSystem.Update();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.False);
     }
 
