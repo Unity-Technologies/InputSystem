@@ -59,6 +59,10 @@ public class InputSystemSettings : AnnotatedSettingsBase
             new PackageOptions()
             {
                 ReleaseOptions = new ReleaseOptions() { IsReleasing = true },
+                ValidationOptions = new ValidationOptions()
+                {
+                    AdditionalUtrArguments = ["--coverage-pkg-version=1.3.0"]
+                },
                 PackJobOptions = new PackJobOptions()
                 {
                     PrePackCommands = new List<Command>()

@@ -56,9 +56,13 @@ internal class SwitchTests : CoreTestsFixture
         Assert.That(currentRight, Is.EqualTo(expectedRight).Using(new Vector2EqualityComparer(0.01f)));
 
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.A), controller.buttonEast);
+        AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.A), controller.aButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.B), controller.buttonSouth);
+        AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.B), controller.bButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.X), controller.buttonNorth);
+        AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.X), controller.xButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.Y), controller.buttonWest);
+        AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.Y), controller.yButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.StickL), controller.leftStickButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.StickR), controller.rightStickButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.L), controller.leftShoulder);
@@ -67,6 +71,12 @@ internal class SwitchTests : CoreTestsFixture
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.ZR), controller.rightTrigger);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.Plus), controller.startButton);
         AssertButtonPress(controller, StateWithButton(SwitchProControllerHIDInputState.Button.Minus), controller.selectButton);
+
+        Assert.Contains("Submit", controller.buttonEast.usages.m_Array);
+        Assert.Contains("PrimaryAction", controller.aButton.usages.m_Array);
+        Assert.Contains("Back", controller.bButton.usages.m_Array);
+        Assert.Contains("Cancel", controller.bButton.usages.m_Array);
+        Assert.Contains("SecondaryAction", controller.yButton.usages.m_Array);
     }
 
     private static SwitchProControllerHIDInputState StateWithButton(SwitchProControllerHIDInputState.Button button)
@@ -168,6 +178,7 @@ internal class SwitchTests : CoreTestsFixture
             });
 
         Assert.That(device, Is.TypeOf<SwitchProControllerHID>());
+        Assert.That(device, Is.InstanceOf(typeof(SwitchProController)));
     }
 
 #endif
