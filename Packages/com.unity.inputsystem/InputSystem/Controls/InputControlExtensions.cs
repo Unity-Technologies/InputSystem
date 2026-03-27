@@ -1114,7 +1114,7 @@ namespace UnityEngine.InputSystem
 
             foreach (var control in eventPtr.EnumerateControls(Enumerate.IgnoreControlsInDefaultState, magnitudeThreshold: magnitude))
             {
-                if (!control.HasValueChangeInEvent(eventPtr))
+                if (!control.HasValueChangeInEvent(eventPtr) && !(control.device is Touchscreen)) // touches can happen to not have a previous state to compare to after the touch started
                     continue;
                 if (buttonControlsOnly && !control.isButton)
                     continue;

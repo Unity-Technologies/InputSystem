@@ -218,6 +218,34 @@ partial class CoreTests
 
         Assert.That(callCount, Is.EqualTo(1));
     }
+    
+    [Test]
+    [Category("Events")]
+    public void Events_OnAnyButtonPressed_WorksWithTouchControls()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        var callCount = 0;
+
+        InputSystem.onAnyButtonPress
+            .Call(ctrl =>
+            {
+                Assert.That(ctrl, Is.SameAs(touch.touches[0].press));
+                ++callCount;
+            });
+
+        Assert.That(callCount, Is.Zero);
+
+        InputSystem.Update();
+
+        SetTouch(0,TouchPhase.Began, new Vector2(12,12));
+        
+        InputSystem.Update();
+
+        Assert.That(callCount, Is.EqualTo(1));
+    }
 
     [Test]
     [Category("Events")]
