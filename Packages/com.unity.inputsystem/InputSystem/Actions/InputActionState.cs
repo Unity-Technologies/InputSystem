@@ -162,29 +162,29 @@ namespace UnityEngine.InputSystem
 
                 var action = GetActionOrNull(bindingIndex);
 
-                var priority = Math.Clamp(action != null ? action.Priority : 0, 0, 65536);
+                var priority = Math.Clamp(action != null && !disableControlGrouping ? action.Priority : 0, 0, 65536);
 
                 controlGroupingAndPriority[i * 2 + 1] = (ushort)priority;
 
                 // Compute grouping. If already set, skip.
                 if (controlGroupingAndPriority[i * 2] == 0)
                 {
-                    //if (!disableControlGrouping)
-                    //{
-                    for (var n = 0; n < totalControlCount; ++n)
+                    if (!disableControlGrouping)
                     {
-                        // NOTE: We could compute group numbers based on device index + control offsets
-                        //       and thus make them work globally in a stable way. But we'd need a mechanism
-                        //       to then determine ordering of actions globally such that it is clear which
-                        //       action gets a first shot at an input.
+                        for (var n = 0; n < totalControlCount; ++n)
+                        {
+                            // NOTE: We could compute group numbers based on device index + control offsets
+                            //       and thus make them work globally in a stable way. But we'd need a mechanism
+                            //       to then determine ordering of actions globally such that it is clear which
+                            //       action gets a first shot at an input.
 
-                        var otherControl = controls[n];
-                        if (control != otherControl)
-                            continue;
+                            var otherControl = controls[n];
+                            if (control != otherControl)
+                                continue;
 
-                        controlGroupingAndPriority[n * 2] = (ushort)currentGroup;
+                            controlGroupingAndPriority[n * 2] = (ushort)currentGroup;
+                        }
                     }
-                    //}
 
                     controlGroupingAndPriority[i * 2] = (ushort)currentGroup;
 

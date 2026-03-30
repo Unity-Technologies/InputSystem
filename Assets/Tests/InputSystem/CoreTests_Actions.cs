@@ -523,7 +523,6 @@ partial class CoreTests
     }
 
     [Test]
-    [Ignore("Enable once we fix this")]
     [Category("Actions Priority")]
     [TestCase("ctrl", "shift", "x", false)]
     [TestCase("ctrl", "shift", "x", true)]
