@@ -58,8 +58,8 @@ internal partial class CoreTests
         };
         yield return new TwoInputActionDataWrapper<InputAction, InputAction>
         {
-            Action1 = map.SetupTestAction("shift", "h"),
-            Action2 = map.SetupTestAction("shift", "ctrl", "h")
+            Action1 = map.SetupTestAction("ctrl", "shift", "h"),
+            Action2 = map.SetupTestAction("shift", "h")
         };
         yield return new TwoInputActionDataWrapper<InputAction, InputAction>
         {
@@ -152,11 +152,10 @@ internal partial class CoreTests
         InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        //var map = new InputActionMap("map");
         var action1 = twoInputActions.Action1;
         var action2 = twoInputActions.Action2;
 
-        // action 1's priority higher so it takes precedence
+        // action 2's priority higher so it takes precedence
         action1.Priority = 1;
         action2.Priority = 2;
 
@@ -172,9 +171,6 @@ internal partial class CoreTests
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
 
         ReleaseBindingsForActions(keyboard, action1, action2);
-
-        // Update again to be sure released is true.
-        InputSystem.Update();
 
         Assert.That(action1.WasPerformedThisFrame(), Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.False);
