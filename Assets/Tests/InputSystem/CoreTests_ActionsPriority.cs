@@ -186,32 +186,32 @@ internal partial class CoreTests
 
         // We swap the order here of Action1 & Action2 so key presses are done backwards, binding before modifiers.
         // This causes the opposite keys foreach test case inside TwoInputActionTestCases to be pressed first.
-        var action1 = twoInputActions.Action2;
-        var action2 = twoInputActions.Action1;
+        var smallerBindingAction = twoInputActions.Action2;
+        var largerBindingAction = twoInputActions.Action1;
 
         // Event though the priority is higher for action2 here, due to the order of the keys being pressed only Action1 will be fired.
-        action1.Priority = 1;
-        action2.Priority = 2;
+        smallerBindingAction.Priority = 1;
+        largerBindingAction.Priority = 2;
 
-        action1.m_ActionMap.Enable();
+        smallerBindingAction.m_ActionMap.Enable();
 
-        Assert.That(action1.WasPerformedThisFrame(), Is.False);
-        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+        Assert.That(smallerBindingAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(largerBindingAction.WasPerformedThisFrame(), Is.False);
 
-        PressBindingsForInputActions(keyboard, action1, action2);
+        PressBindingsForInputActions(keyboard, smallerBindingAction, largerBindingAction);
 
         // action1 is performed because action1 has a higher priority than action2.
-        Assert.That(action1.WasPerformedThisFrame(), Is.True);
-        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+        Assert.That(smallerBindingAction.WasPerformedThisFrame(), Is.True);
+        Assert.That(largerBindingAction.WasPerformedThisFrame(), Is.True);
 
         // Cleanup key presses
-        ReleaseBindingsForActions(keyboard, action1, action2);
+        ReleaseBindingsForActions(keyboard, smallerBindingAction, largerBindingAction);
 
         // Update again to be sure released is true.
         InputSystem.Update();
 
-        Assert.That(action1.WasPerformedThisFrame(), Is.False);
-        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+        Assert.That(smallerBindingAction.WasPerformedThisFrame(), Is.False);
+        Assert.That(largerBindingAction.WasPerformedThisFrame(), Is.False);
     }
 
     [Test]
@@ -261,53 +261,6 @@ internal partial class CoreTests
 
         Assert.That(action1WasPerformed, Is.True);
         Assert.That(action2WasPerformed, Is.True);
-    }
-
-    [Test] // TODO: Darren, Is this what we want in the future? Possibly not after talking to Hakan, we shouldn't disable priority with settings.
-    [Category("Actions Priority")]
-    [TestCase("ctrl", "shift", "x", false)]
-    [TestCase("ctrl", "shift", "x", true)]
-    public void Actions_Priority_ShortcutConsumeDisabled_BothPerformDespiteDifferentPriorities(string sharedModifier, string sharedModifier2, string binding1, bool legacyComposites)
-    {
-        var previousShortcutConsume = InputSystem.settings.shortcutKeysConsumeInput;
-        try
-        {
-            InputSystem.settings.shortcutKeysConsumeInput = false;
-            var keyboard = InputSystem.AddDevice<Keyboard>();
-
-            var map = new InputActionMap("map");
-            var action1 = map.AddAction("action1");
-            action1.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
-                .With("Modifier", "<Keyboard>/" + sharedModifier)
-                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
-
-            var action2 = map.AddAction("action2");
-            action2.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
-                .With("Modifier", "<Keyboard>/" + sharedModifier2)
-                .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding1);
-
-            action1.Priority = 0;
-            action2.Priority = 10;
-
-            map.Enable();
-
-            var action1WasPerformed = false;
-            var action2WasPerformed = false;
-            action1.performed += _ => action1WasPerformed = true;
-            action2.performed += _ => action2WasPerformed = true;
-
-            Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
-            Press((ButtonControl)keyboard[sharedModifier2], queueEventOnly: true);
-            Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
-            InputSystem.Update();
-
-            Assert.That(action1WasPerformed, Is.True);
-            Assert.That(action2WasPerformed, Is.True);
-        }
-        finally
-        {
-            InputSystem.settings.shortcutKeysConsumeInput = previousShortcutConsume;
-        }
     }
 
     private static IEnumerable<TwoInputActionDataWrapper<InputAction, InputAction>> TwoInputActionNoConflictingBindingTestCases()
