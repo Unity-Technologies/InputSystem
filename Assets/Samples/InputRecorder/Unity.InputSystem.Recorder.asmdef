@@ -2,7 +2,7 @@
     "name": "Unity.InputSystem.Recorder",
     "rootNamespace": "",
     "references": [
-        "GUID:d46adbc216ac24e9a86f26d7a54b2384"
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

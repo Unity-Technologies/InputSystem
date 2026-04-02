@@ -2,8 +2,7 @@
     "name": "Unity.InputSystem.TestSupport",
     "rootNamespace": "",
     "references": [
-        "GUID:d46adbc216ac24e9a86f26d7a54b2384",
-        "GUID:92e8d8d0b9a5e4f44b24c3e04451d190"
+        "GUID:75469ad4d38634e559750d17036d5f7c"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

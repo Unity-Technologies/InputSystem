@@ -12,8 +12,8 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using HtmlAgilityPack;
 using UnityEngine.InputSystem.DualShock;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
@@ -212,9 +212,9 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
-    [TestCase("Keyboard", "Runtime/Devices/Precompiled/FastKeyboard.cs")]
-    [TestCase("Mouse", "Runtime/Devices/Precompiled/FastMouse.cs")]
-    [TestCase("Touchscreen", "Runtime/Devices/Precompiled/FastTouchscreen.cs")]
+    [TestCase("Keyboard", "InputSystem/Runtime/Devices/Precompiled/FastKeyboard.cs")]
+    [TestCase("Mouse", "InputSystem/Runtime/Devices/Precompiled/FastMouse.cs")]
+    [TestCase("Touchscreen", "InputSystem/Runtime/Devices/Precompiled/FastTouchscreen.cs")]
     public void API_PrecompiledLayoutsAreUpToDate(string layoutName, string filePath)
     {
         var fullPath = "Packages/com.unity.inputsystem/" + filePath;
@@ -958,7 +958,7 @@ class APIVerificationTests
     [Category("API")]
     public void API_DefaultInputActionsClassIsUpToDate()
     {
-        const string assetFile = "Packages/com.unity.inputsystem/Runtime/Plugins/PlayerInput/DefaultInputActions.inputactions";
+        const string assetFile = "Packages/com.unity.inputsystem/InputSystem/Runtime/Plugins/PlayerInput/DefaultInputActions.inputactions";
         Assert.That(File.Exists(assetFile), Is.True);
 
         var actions = new DefaultInputActions();

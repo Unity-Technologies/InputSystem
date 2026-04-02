@@ -1,9 +1,9 @@
 {
-    "name": "XRDeviceActions",
+    "name": "Unity.InputSystem.ForUI.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:2bafac87e7f4b9b418d9448d219b01ab",
-        "GUID:75469ad4d38634e559750d17036d5f7c"
+        "Unity.InputSystem",
+        "Unity.InputSystem.ForUI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -12,12 +12,6 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [
-        {
-            "name": "com.unity.xr.magicleap",
-            "expression": "",
-            "define": "UNITY_MAGIC_LEAP"
-        }
-    ],
+    "versionDefines": [],
     "noEngineReferences": false
 }
