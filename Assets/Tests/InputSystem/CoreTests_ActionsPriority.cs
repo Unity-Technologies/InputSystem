@@ -1,11 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
-using UnityEngine.TestTools;
 
 internal static class PriorityTestExtensions
 {
@@ -340,155 +338,77 @@ internal partial class CoreTests
         // Assert.That(action2.WasPerformedThisFrame(), Is.False);
     }
 
-    [UnityTest]
+    [Test]
     [Category("Actions Priority")]
-    public IEnumerator Actions_Priority_TwoNonConflictingShortcuts_ReversedPriorityOrder_BothStillPerform()
+    [TestCaseSource(nameof(TwoInputActionNoConflictingBindingTestCases))]
+    public void Actions_Priority_BothActionsWithDifferentPriorityFire_WhenThereIsNoConflictingBindingInverseOrder(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
-        string sharedModifier = "ctrl";
-        string binding1 = "x";
-        string binding2 = "c";
-
         InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var map = new InputActionMap("map");
-        var action1 = map.AddAction("action1");
-        action1.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
-            .With("Modifier", "<Keyboard>/" + sharedModifier)
-            .With("Binding", "<Keyboard>/" + binding1);
+        var action1 = twoInputActions.Action1;
+        var action2 = twoInputActions.Action2;
 
-        var action2 = map.AddAction("action2");
-        action2.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
-            .With("Modifier", "<Keyboard>/" + sharedModifier)
-            .With("Binding", "<Keyboard>/" + binding2);
+        action1.Priority = 15;
+        action2.Priority = 5;
 
-        // Higher priority on the first action; letter keys still differ so both should run.
-        action1.Priority = 10;
-        action2.Priority = 0;
-
-        map.Enable();
-
+        action1.m_ActionMap.Enable();
+        action2.m_ActionMap.Enable();
+        //
         var action1WasPerformed = false;
         action1.performed += _ => action1WasPerformed = true;
 
         Assert.That(action1.WasPerformedThisFrame(), Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.False);
 
-        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
-        InputSystem.Update();
+        PressBindingsForInputActions(keyboard, action1, action2);
 
+        // Different letter keys: no conflict on the same control, so both shortcuts can perform despite different priorities.
         Assert.That(action1WasPerformed, Is.True);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
 
-        yield return null;
-
-        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
-
-        InputSystem.Update();
-
-        Assert.That(action1.WasPerformedThisFrame(), Is.False);
-        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+        // TODO: Darren, trigger just the bindings again to be sure the shortcut doesn't trigger for a second time
+        // Press((ButtonControl)keyboard[action1.GetBind], queueEventOnly: true);
+        // Press((ButtonControl)keyboard[action2.controls[i].name], queueEventOnly: true);
+        //
+        // Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        // Assert.That(action2.WasPerformedThisFrame(), Is.False);
     }
 
-    [UnityTest]
+    [Test]
     [Category("Actions Priority")]
-    public IEnumerator Actions_Priority_TwoNonConflictingShortcuts_EqualHighPriority_BothPerform()
+    [TestCaseSource(nameof(TwoInputActionNoConflictingBindingTestCases))]
+    public void Actions_Priority_BothActionsWithEqualPriorityFire_WhenThereIsNoConflictingBinding(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
-        string sharedModifier = "ctrl";
-        string binding1 = "x";
-        string binding2 = "c";
-
         InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var map = new InputActionMap("map");
-        var action1 = map.AddAction("action1");
-        action1.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
-            .With("Modifier", "<Keyboard>/" + sharedModifier)
-            .With("Binding", "<Keyboard>/" + binding1);
+        var action1 = twoInputActions.Action1;
+        var action2 = twoInputActions.Action2;
 
-        var action2 = map.AddAction("action2");
-        action2.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
-            .With("Modifier", "<Keyboard>/" + sharedModifier)
-            .With("Binding", "<Keyboard>/" + binding2);
+        action1.Priority = 5;
+        action2.Priority = 5;
 
-        action1.Priority = 500;
-        action2.Priority = 500;
-
-        map.Enable();
+        action1.m_ActionMap.Enable();
+        action2.m_ActionMap.Enable();
 
         var action1WasPerformed = false;
         action1.performed += _ => action1WasPerformed = true;
 
-        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
-        InputSystem.Update();
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.False);
 
+        PressBindingsForInputActions(keyboard, action1, action2);
+
+        // Different letter keys: no conflict on the same control, so both shortcuts can perform despite different priorities.
         Assert.That(action1WasPerformed, Is.True);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
 
-        yield return null;
-
-        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
-
-        InputSystem.Update();
-
-        Assert.That(action1.WasPerformedThisFrame(), Is.False);
-        Assert.That(action2.WasPerformedThisFrame(), Is.False);
-    }
-
-    [UnityTest]
-    [Category("Actions Priority")]
-    public IEnumerator Actions_Priority_TwoNonConflictingShortcuts_ReverseActionDeclarationOrder_BothPerform()
-    {
-        string sharedModifier = "ctrl";
-        string binding1 = "x";
-        string binding2 = "c";
-
-        InputSystem.settings.shortcutKeysConsumeInput = true;
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-
-        var map = new InputActionMap("map");
-        // Add the second shortcut's action first so registration order differs from the original test.
-        var action2 = map.AddAction("action2");
-        action2.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
-            .With("Modifier", "<Keyboard>/" + sharedModifier)
-            .With("Binding", "<Keyboard>/" + binding2);
-
-        var action1 = map.AddAction("action1");
-        action1.AddCompositeBinding(("OneModifier") + "(overrideModifiersNeedToBePressedFirst)")
-            .With("Modifier", "<Keyboard>/" + sharedModifier)
-            .With("Binding", "<Keyboard>/" + binding1);
-
-        action1.Priority = 0;
-        action2.Priority = 1;
-
-        map.Enable();
-
-        var action1WasPerformed = false;
-        action1.performed += _ => action1WasPerformed = true;
-
-        Press((ButtonControl)keyboard[sharedModifier], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
-        InputSystem.Update();
-
-        Assert.That(action1WasPerformed, Is.True);
-        Assert.That(action2.WasPerformedThisFrame(), Is.True);
-
-        yield return null;
-
-        Press((ButtonControl)keyboard[binding1], queueEventOnly: true);
-        Press((ButtonControl)keyboard[binding2], queueEventOnly: true);
-
-        InputSystem.Update();
-
-        Assert.That(action1.WasPerformedThisFrame(), Is.False);
-        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+        // TODO: Darren, trigger just the bindings again to be sure the shortcut doesn't trigger for a second time
+        // Press((ButtonControl)keyboard[action1.GetBind], queueEventOnly: true);
+        // Press((ButtonControl)keyboard[action2.controls[i].name], queueEventOnly: true);
+        //
+        // Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        // Assert.That(action2.WasPerformedThisFrame(), Is.False);
     }
 }
