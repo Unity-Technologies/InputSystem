@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 
 namespace UnityEngine.InputSystem.OnScreen
@@ -11,3 +12,4 @@ namespace UnityEngine.InputSystem.OnScreen
         }
     }
 }
+#endif

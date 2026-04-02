@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -5,7 +6,6 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Interactions
 {
-    #if UNITY_EDITOR
     /// <summary>
     /// UI that is displayed when editing <see cref="PressInteraction"/> in the editor.
     /// </summary>
@@ -63,5 +63,5 @@ namespace UnityEngine.InputSystem.Interactions
             + "With ReleaseOnly, the action is performed on release. With PressAndRelease, the action is performed on press and "
             + "canceled on release.");
     }
-    #endif
 }
+#endif

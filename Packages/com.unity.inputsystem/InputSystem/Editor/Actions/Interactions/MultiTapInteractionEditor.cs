@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -5,9 +6,8 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Interactions
 {
-    #if UNITY_EDITOR
     /// <summary>
-    /// UI that is displayed when editing <see cref="HoldInteraction"/> in the editor.
+    /// UI that is displayed when editing <see cref="MultiTapInteraction"/> in the editor.
     /// </summary>
     internal class MultiTapInteractionEditor : InputParameterEditor<MultiTapInteraction>
     {
@@ -68,5 +68,5 @@ namespace UnityEngine.InputSystem.Interactions
         private CustomOrDefaultSetting m_TapTimeSetting;
         private CustomOrDefaultSetting m_TapDelaySetting;
     }
-    #endif
 }
+#endif

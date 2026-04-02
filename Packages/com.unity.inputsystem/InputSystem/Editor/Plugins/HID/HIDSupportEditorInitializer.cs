@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem.Editor;
@@ -31,3 +32,4 @@ namespace UnityEngine.InputSystem.HID.Editor
         }
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Editor;
@@ -5,7 +6,6 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Interactions
 {
-    #if UNITY_EDITOR
     /// <summary>
     /// UI that is displayed when editing <see cref="HoldInteraction"/> in the editor.
     /// </summary>
@@ -43,5 +43,5 @@ namespace UnityEngine.InputSystem.Interactions
         private CustomOrDefaultSetting m_DurationSetting;
         private CustomOrDefaultSetting m_PressPointSetting;
     }
-    #endif
 }
+#endif

@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using Unity.Profiling;
@@ -598,3 +599,4 @@ namespace UnityEngine.InputSystem.Editor
         #endregion
     }
 }
+#endif

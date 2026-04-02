@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using UnityEditor;
 using UnityEngine.InputSystem.Editor;
@@ -5,7 +6,6 @@ using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Composites
 {
-    #if UNITY_EDITOR
     internal class AxisCompositeEditor : InputParameterEditor<AxisComposite>
     {
         private GUIContent m_WhichAxisWinsLabel = new GUIContent("Which Side Wins",
@@ -37,5 +37,5 @@ namespace UnityEngine.InputSystem.Composites
             root.Add(modeField);
         }
     }
-    #endif
 }
+#endif

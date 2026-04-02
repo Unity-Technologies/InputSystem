@@ -1,4 +1,4 @@
-#if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
+#if UNITY_EDITOR && (PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI)
 using UnityEditor;
 using UnityEditor.AnimatedValues;
 using UnityEngine.InputSystem.Editor;

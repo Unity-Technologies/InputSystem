@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
@@ -42,3 +43,4 @@ namespace UnityEngine.InputSystem.Interactions
         private CustomOrDefaultSetting m_PressPointSetting;
     }
 }
+#endif
