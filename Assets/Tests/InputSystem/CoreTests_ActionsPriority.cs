@@ -178,6 +178,44 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions Priority")]
+    [TestCaseSource(nameof(TwoInputActionTestCases))] // TODO: Darren, Should both actions be performed this frame here??
+    public void Actions_Priority_BothActionsArePerformed_DueToKeyPressOrderForShortcut(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
+    {
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // We swap the order here of Action1 & Action2 so key presses are done backwards, binding before modifiers.
+        // This causes the opposite keys foreach test case inside TwoInputActionTestCases to be pressed first.
+        var action1 = twoInputActions.Action2;
+        var action2 = twoInputActions.Action1;
+
+        // Event though the priority is higher for action2 here, due to the order of the keys being pressed only Action1 will be fired.
+        action1.Priority = 1;
+        action2.Priority = 2;
+
+        action1.m_ActionMap.Enable();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+
+        PressBindingsForInputActions(keyboard, action1, action2);
+
+        // action1 is performed because action1 has a higher priority than action2.
+        Assert.That(action1.WasPerformedThisFrame(), Is.True);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+
+        // Cleanup key presses
+        ReleaseBindingsForActions(keyboard, action1, action2);
+
+        // Update again to be sure released is true.
+        InputSystem.Update();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+    }
+
+    [Test]
+    [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionTestCases))]
     public void Actions_Priority_FirstActionFires_WhenPriorityIsEqual(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions) // TODO: This shouldn't be the case. This should fire both!!
     {
