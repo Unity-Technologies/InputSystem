@@ -40,7 +40,7 @@ To get started using the Player Input component, use the following steps:
 2. Assign your [Action Asset](xref:input-system-action-assets) to the **Actions** field. This is usually the default project-wide action asset named "InputSystem_Actions"
     > [!NOTE]
     > Currently, when using project-wide actions all the action maps are enabled by default. It is advisible to manually disable them and manually enable the default map that **Player Input** during `Start()`.
-3. Set up Action responses, by selecting a **Behavior** type from the Behavior menu. The Behavior type you select affects how you should implement the methods that handle your Action responses. See the  [notification behaviors](#notification-behaviors) section further down for details.<br/><br/>![PlayerInput Notification Behavior](Images/PlayerInputNotificationBehaviors.png)<br/><br/>
+3. Set up Action responses, by selecting a **Behavior** type from the Behavior menu. The Behavior type you select affects how you should implement the methods that handle your Action responses. Refer to the  [notification behaviors](#notification-behaviors) section further down for details.<br/><br/>![PlayerInput Notification Behavior](Images/PlayerInputNotificationBehaviors.png)<br/><br/>
 
 ## Configuring the Player Input component
 
@@ -86,7 +86,7 @@ To disable a player's input, call [`PlayerInput.DeactivateInput`](xref:UnityEngi
 
 When `PlayerInput` is disabled, it automatically disables the currently active Action Map ([`PlayerInput.currentActionMap`](xref:UnityEngine.InputSystem.PlayerInput.currentActionMap)) and disassociate any Devices paired to the player.
 
-See the [notification behaviors](#notification-behaviors) section below for how to be notified when player triggers an Action.
+Refer to the [notification behaviors](#notification-behaviors) section below for how to be notified when player triggers an Action.
 
 ### When using **Send Messages** or **Broadcast Messages**
 

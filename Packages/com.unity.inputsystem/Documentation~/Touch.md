@@ -8,7 +8,7 @@ Touch support is divided into:
 * high-level support implemented in the [`EnhancedTouch.Touch`](#enhancedtouchtouch-class) class.
 
 > [!NOTE]
-> You should not use [`Touchscreen`](#touchscreen-device) for polling. If you want to read out touches similar to [`UnityEngine.Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html), see [`EnhancedTouch`](#enhancedtouchtouch-class). If you read out touch state from [`Touchscreen`](#touchscreen-device) directly inside of the `Update` or `FixedUpdate` methods, your app will miss changes in touch state.
+> You should not use [`Touchscreen`](#touchscreen-device) for polling. If you want to read out touches similar to [`UnityEngine.Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html), refer to [`EnhancedTouch`](#enhancedtouchtouch-class). If you read out touch state from [`Touchscreen`](#touchscreen-device) directly inside of the `Update` or `FixedUpdate` methods, your app will miss changes in touch state.
 
 Touch input is supported on Android, iOS, Windows, and the Universal Windows Platform (UWP).
 
@@ -32,7 +32,7 @@ Additional to the [Controls inherited from `Pointer`](xref:input-system-pointers
 
 A touch screen Device consists of multiple [`TouchControls`](xref:UnityEngine.InputSystem.Controls.TouchControl). Each of these represents a potential finger touching the Device. The [`primaryTouch`](xref:UnityEngine.InputSystem.Touchscreen.primaryTouch) Control represents the touch which is currently driving the [`Pointer`](xref:input-system-pointers) representation, and which should be used to interact with the UI. This is usually the first finger that touches the screen.
 
- [`primaryTouch`](xref:UnityEngine.InputSystem.Touchscreen.primaryTouch) is always identical to one of the entries in the [`touches`](xref:UnityEngine.InputSystem.Touchscreen.touches) array. The [`touches`](xref:UnityEngine.InputSystem.Touchscreen.touches) array contains all the touches that the system can track. This array has a fixed size, regardless of how many touches are currently active. If you need an API that only represents active touches, see the higher-level [`EnhancedTouch.Touch` class](#enhancedtouchtouch-class).
+ [`primaryTouch`](xref:UnityEngine.InputSystem.Touchscreen.primaryTouch) is always identical to one of the entries in the [`touches`](xref:UnityEngine.InputSystem.Touchscreen.touches) array. The [`touches`](xref:UnityEngine.InputSystem.Touchscreen.touches) array contains all the touches that the system can track. This array has a fixed size, regardless of how many touches are currently active. If you need an API that only represents active touches, refer to the higher-level [`EnhancedTouch.Touch` class](#enhancedtouchtouch-class).
 
 Each [`TouchControl`](xref:UnityEngine.InputSystem.Controls.TouchControl) on the Device, including [`primaryTouch`](xref:UnityEngine.InputSystem.Touchscreen.primaryTouch), is made up of the following child Controls:
 
@@ -81,7 +81,7 @@ The [`EnhancedTouch.Touch`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch) AP
 
 2. By touch: Each touch is a single finger contact with at least a beginning point ([`PointerPhase.Began`](xref:UnityEngine.InputSystem.TouchPhase)) and an endpoint ([`PointerPhase.Ended`](xref:UnityEngine.InputSystem.TouchPhase) or [`PointerPhase.Cancelled`](xref:UnityEngine.InputSystem.TouchPhase)). Between those two points, an arbitrary number of [`PointerPhase.Moved`](xref:UnityEngine.InputSystem.TouchPhase) and/or [`PointerPhase.Stationary`](xref:UnityEngine.InputSystem.TouchPhase) records exist. All records in a touch have the same [`touchId`](xref:UnityEngine.InputSystem.Controls.TouchControl.touchId). You can use  [Touch.activeTouches](xref:UnityEngine.InputSystem.EnhancedTouch.Touch.activeTouches) to get an array of all currently active touches. This lets you track how a specific touch moves over the screen, which is useful if you want to implement recognition of specific gestures.
 
-See [`EnhancedTouch.Touch` API documentation](xref:UnityEngine.InputSystem.EnhancedTouch.Touch) for more details.
+Refer to [`EnhancedTouch.Touch` API documentation](xref:UnityEngine.InputSystem.EnhancedTouch.Touch) for more details.
 
 > [!NOTE]
 > The [`Touch`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch) and [`Finger`](xref:UnityEngine.InputSystem.EnhancedTouch.Finger) APIs don't generate GC garbage. The bulk of the data is stored in unmanaged memory that is indexed by wrapper structs. All arrays are pre-allocated.

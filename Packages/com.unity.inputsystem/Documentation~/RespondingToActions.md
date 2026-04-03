@@ -292,7 +292,7 @@ When the Action initially enables, it performs an [initial state check](xref:inp
 
 #### Button
 
-This is very similar to [`Value`](xref:UnityEngine.InputSystem.InputActionType.Value), but [`Button`](xref:UnityEngine.InputSystem.InputActionType.Button) type Actions can only be bound to [`ButtonControl`](xref:UnityEngine.InputSystem.Controls.ButtonControl) Controls, and don't perform an initial state check like [`Value`](xref:UnityEngine.InputSystem.InputActionType.Value) Actions do (see the Value section above). Use this for inputs that trigger an Action once every time they are pressed. The initial state check is usually not useful in such cases, because it can trigger actions if the button is still held down from a previous press when the Action was enabled.
+This is very similar to [`Value`](xref:UnityEngine.InputSystem.InputActionType.Value), but [`Button`](xref:UnityEngine.InputSystem.InputActionType.Button) type Actions can only be bound to [`ButtonControl`](xref:UnityEngine.InputSystem.Controls.ButtonControl) Controls, and don't perform an initial state check like [`Value`](xref:UnityEngine.InputSystem.InputActionType.Value) Actions do (refer to the Value section above). Use this for inputs that trigger an Action once every time they are pressed. The initial state check is usually not useful in such cases, because it can trigger actions if the button is still held down from a previous press when the Action was enabled.
 
 #### Pass-Through
 
@@ -300,10 +300,10 @@ This is very similar to [`Value`](xref:UnityEngine.InputSystem.InputActionType.V
 
 ### Debugging Actions
 
-To see currently enabled Actions and their bound Controls, use the [Input Debugger](xref:input-system-debugging#debugging-actions).
+To refer to currently enabled Actions and their bound Controls, use the [Input Debugger](xref:input-system-debugging#debugging-actions).
 
 You can also use the [`InputActionVisualizer`](xref:input-system-debugging#inputactionvisualizer) component from the Visualizers sample to get an on-screen visualization of an Action's value and Interaction state in real-time.
 
 ### Using Actions with multiple players
 
-You can use the same Action definitions for multiple local players (for example, in a local co-op game). For more information, see documentation on the [Player Input Manager](xref:input-system-player-input-manager) component.
+You can use the same Action definitions for multiple local players (for example, in a local co-op game). For more information, refer to documentation on the [Player Input Manager](xref:input-system-player-input-manager) component.

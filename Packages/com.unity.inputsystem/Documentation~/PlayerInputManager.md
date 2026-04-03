@@ -13,12 +13,12 @@ The [`Player Input`](xref:input-system-player-input) system facilitates setting 
 |Property|Description|
 |--------|-----------|
 |[`Notification Behavior`](xref:UnityEngine.InputSystem.PlayerInputManager.notificationBehavior)|How the [`PlayerInputManager`](xref:UnityEngine.InputSystem.PlayerInput) component notifies game code about changes to the connected players. [This works the same way as for the `PlayerInput` component](xref:input-system-player-input#notification-behaviors).|
-|[`Join Behavior`](xref:UnityEngine.InputSystem.PlayerInputManager.joinBehavior)|Determines the mechanism by which players can join when joining is enabled. See documentation on [join behaviors](#join-behaviors).|
+|[`Join Behavior`](xref:UnityEngine.InputSystem.PlayerInputManager.joinBehavior)|Determines the mechanism by which players can join when joining is enabled. Refer to documentation on [join behaviors](#join-behaviors).|
 |[`Player Prefab`](xref:UnityEngine.InputSystem.PlayerInputManager.playerPrefab)|A prefab that represents a player in the game. The [`PlayerInputManager`](xref:UnityEngine.InputSystem.PlayerInputManager) component creates an instance of this prefab whenever a new player joins. This prefab must have one [`PlayerInput`](xref:input-system-player-input) component in its hierarchy.|
 |[`Joining Enabled By Default`](xref:UnityEngine.InputSystem.PlayerInputManager.joiningEnabled)|While this is enabled, new players can join via the mechanism determined by [`Join Behavior`](xref:UnityEngine.InputSystem.PlayerInputManager.joinBehavior).|
 |[`Limit Number of Players`](xref:UnityEngine.InputSystem.PlayerInputManager.maxPlayerCount)|Enable this if you want to limit the number of players who can join the game.|
 |[`Max Player Count`](xref:UnityEngine.InputSystem.PlayerInputManager.maxPlayerCount)(Only shown when `Limit number of Players` is enabled.)|The maximum number of players allowed to join the game.|
-|[`Enable Split-Screen`](xref:UnityEngine.InputSystem.PlayerInputManager.splitScreen)|If enabled, each player is automatically assigned a portion of the available screen area. See documentation on [split-screen](#split-screen) multiplayer.|
+|[`Enable Split-Screen`](xref:UnityEngine.InputSystem.PlayerInputManager.splitScreen)|If enabled, each player is automatically assigned a portion of the available screen area. Refer to documentation on [split-screen](#split-screen) multiplayer.|
 
 ### Join behaviors
 
@@ -42,7 +42,7 @@ If you enable the [`Split-Screen`](xref:UnityEngine.InputSystem.PlayerInputManag
 |[`Set Fixed Number`](xref:UnityEngine.InputSystem.PlayerInputManager.fixedNumberOfSplitScreens)|If this value is greater than zero, the [`PlayerInputManager`](xref:UnityEngine.InputSystem.PlayerInputManager) always splits the screen into a fixed number of rectangles, regardless of the actual number of players.|
 |[`Screen Rectangle`](xref:UnityEngine.InputSystem.PlayerInputManager.splitScreenArea)|The normalized screen rectangle available for allocating player split-screens into.|
 
-By default, any player in the game can interact with any UI elements. However, in split-screen setups, your game can have screen-space UIs that are restricted to just one specific camera. See the [UI Input](xref:input-system-player-input#ui-input) section on the Player Input component page on how to set this up using the Player Input component, [`InputSystemUIInputModule`](xref:input-system-ui-support#setting-up-ui-input) and [`MultiplayerEventSystem`](xref:input-system-ui-support#multiplayer-uis) components.
+By default, any player in the game can interact with any UI elements. However, in split-screen setups, your game can have screen-space UIs that are restricted to just one specific camera. Refer to the [UI Input](xref:input-system-player-input#ui-input) section on the Player Input component page on how to set this up using the Player Input component, [`InputSystemUIInputModule`](xref:input-system-ui-support#setting-up-ui-input) and [`MultiplayerEventSystem`](xref:input-system-ui-support#multiplayer-uis) components.
 
 ### `PlayerInputManager` notifications
 

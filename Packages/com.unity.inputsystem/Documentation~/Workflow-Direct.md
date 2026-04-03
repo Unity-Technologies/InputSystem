@@ -57,6 +57,6 @@ If you choose to use this technique:
 
 You can find an example of this workflow in the sample projects included with the input system package. To find it, in the Project window, look in **Assets > Samples > SimpleDemo** and open the scene: **SimpleDemo_UsingState**.
 
-See [Supported Devices](SupportedDevices.html) for more information about devices supported by the input system, and the API to read their states.
+Refer to [Supported Devices](SupportedDevices.html) for more information about devices supported by the input system, and the API to read their states.
 
-For more a more flexible workflow, see the [Actions Workflow](Workflow-Actions.html).
+For more a more flexible workflow, refer to the [Actions Workflow](Workflow-Actions.html).

@@ -103,7 +103,7 @@ Use the gyroscope to measure the angular velocity of a device. This is useful to
 
 ## <a name="gravitysensor"></a>[`GravitySensor`](xref:UnityEngine.InputSystem.GravitySensor)
 
-Use the gravity sensor to determine the direction of the gravity vector relative to a device. This is useful to control content by device orientation. This is usually derived from a hardware `Accelerometer`, by subtracting the effect of linear acceleration (see `LinearAccelerationSensor`). Values are affected by the [__Compensate Orientation__](xref:input-system-settings#compensate-orientation) setting.
+Use the gravity sensor to determine the direction of the gravity vector relative to a device. This is useful to control content by device orientation. This is usually derived from a hardware `Accelerometer`, by subtracting the effect of linear acceleration (refer to `LinearAccelerationSensor`). Values are affected by the [__Compensate Orientation__](xref:input-system-settings#compensate-orientation) setting.
 
 ## <a name="attitudesensor"></a>[`AttitudeSensor`](xref:UnityEngine.InputSystem.AttitudeSensor)
 
@@ -133,7 +133,7 @@ if (attitudeSensor != null)
 
 ## <a name="linearaccelerationsensor"></a>[`LinearAccelerationSensor`](xref:UnityEngine.InputSystem.LinearAccelerationSensor)
 
-Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. Linear acceleration is the acceleration of a device unaffected by gravity. This is usually derived from a hardware `Accelerometer`, by subtracting the effect of gravity (see `GravitySensor`). Values are affected by the [__Compensate Orientation__](xref:input-system-settings#compensate-orientation) setting.
+Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. Linear acceleration is the acceleration of a device unaffected by gravity. This is usually derived from a hardware `Accelerometer`, by subtracting the effect of gravity (refer to `GravitySensor`). Values are affected by the [__Compensate Orientation__](xref:input-system-settings#compensate-orientation) setting.
 
 ## <a name="magneticfieldsensor"></a>[`MagneticFieldSensor`](xref:UnityEngine.InputSystem.MagneticFieldSensor)
 

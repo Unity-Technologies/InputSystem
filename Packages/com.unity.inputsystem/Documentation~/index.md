@@ -19,4 +19,4 @@ This **Input System package** is a newer, more flexible system, which allows you
 
 During the installation process for the Input System package, the installer offers to automatically deactivate the older built-in system. ([Read more](xref:input-system-installation))
 
-To get started, see the [Installation](xref:input-system-installation) and [Workflows](xref:input-system-workflows) sections. For a demo project, see the [Warriors demo](https://github.com/UnityTechnologies/InputSystem_Warriors) on GitHub.
+To get started, refer to the [Installation](xref:input-system-installation) and [Workflows](xref:input-system-workflows) sections. For a demo project, refer to the [Warriors demo](https://github.com/UnityTechnologies/InputSystem_Warriors) on GitHub.
