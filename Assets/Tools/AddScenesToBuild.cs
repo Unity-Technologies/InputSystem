@@ -22,7 +22,7 @@ public class AddScenesToBuild : IPreprocessBuildWithReport
     const string kMenuScene = "Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity";
 
     static readonly string[] kExcludedSegments = { "xbox", "xr", "Esc Menu Additive" };
-    static readonly string[] kExcludedRoots    = { "Assets/Tests/", "ExternalSampleProjects/" };
+    static readonly string[] kExcludedRoots    = { "Assets/Tests/", "ExternalSampleProjects/", "Packages/" };
 
     // ── Build callback ──────────────────────────────────────────
 
@@ -57,50 +57,6 @@ public class AddScenesToBuild : IPreprocessBuildWithReport
     static void RefreshManual()
     {
         RefreshBuildScenes(silent: false);
-    }
-
-    [MenuItem("QA Tools/Setup Core Platform Menu Scene")]
-    static void SetupScene()
-    {
-        if (!EditorUtility.DisplayDialog(
-                "Setup Core Platform Menu",
-                "This will create (or overwrite) the Core Platforms Menu scene with a " +
-                "clean setup.  Continue?",
-                "Create", "Cancel"))
-            return;
-
-        var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-
-        var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
-        var cam = camGo.AddComponent<Camera>();
-        cam.clearFlags       = CameraClearFlags.SolidColor;
-        cam.backgroundColor  = new Color32(24, 24, 32, 255);
-        cam.cullingMask      = 0;
-
-        var menuGo = new GameObject("Scene Menu");
-        AddSceneMenuComponent(menuGo);
-
-        EditorSceneManager.SaveScene(scene, kMenuScene);
-        RefreshBuildScenes(silent: false);
-        Debug.Log("Core Platform Menu scene created at " + kMenuScene);
-    }
-
-    /// <summary>
-    /// Adds the SceneMenu component by reflection since it lives in Assembly-CSharp
-    /// which this editor assembly cannot directly reference.
-    /// </summary>
-    static void AddSceneMenuComponent(GameObject target)
-    {
-        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
-        {
-            var type = asm.GetType("SceneMenu");
-            if (type != null && typeof(MonoBehaviour).IsAssignableFrom(type))
-            {
-                target.AddComponent(type);
-                return;
-            }
-        }
-        Debug.LogWarning("SceneMenu type not found — add the component manually.");
     }
 
     // ── Core logic ──────────────────────────────────────────────

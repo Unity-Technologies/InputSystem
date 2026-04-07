@@ -63,9 +63,11 @@ public class SceneMenu : MonoBehaviour
     Canvas m_Canvas;
     Sprite m_RoundSprite;
     TextMeshProUGUI m_Badge;
+    ScrollRect m_ScrollRect;
+    GameObject m_FirstButton;
 
     static readonly string[] kExcludedSegments = { "Core Platform Menu", "Esc Menu" };
-    static readonly string[] kExcludedRoots    = { "Assets/Tests/", "ExternalSampleProjects/" };
+    static readonly string[] kExcludedRoots    = { "Assets/Tests/", "ExternalSampleProjects/", "Packages/" };
 
     #endregion
 
@@ -79,6 +81,41 @@ public class SceneMenu : MonoBehaviour
         m_RoundSprite = CreateRoundedSprite(12);
         DiscoverScenes();
         BuildUI();
+
+        if (m_FirstButton != null && EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(m_FirstButton);
+    }
+
+    void LateUpdate()
+    {
+        if (m_ScrollRect == null || EventSystem.current == null) return;
+
+        var selected = EventSystem.current.currentSelectedGameObject;
+        if (selected == null || !m_Buttons.ContainsValue(selected)) return;
+
+        var selectedRT = selected.GetComponent<RectTransform>();
+        var contentRT  = m_ScrollRect.content;
+        var viewportRT = m_ScrollRect.viewport;
+
+        Vector3[] corners = new Vector3[4];
+        selectedRT.GetWorldCorners(corners);
+        float selWorldTop    = corners[1].y;
+        float selWorldBottom = corners[0].y;
+
+        viewportRT.GetWorldCorners(corners);
+        float vpWorldTop    = corners[1].y;
+        float vpWorldBottom = corners[0].y;
+
+        if (selWorldBottom < vpWorldBottom)
+        {
+            float delta = vpWorldBottom - selWorldBottom + 10f;
+            contentRT.anchoredPosition += new Vector2(0, -delta / m_ScrollRect.transform.lossyScale.y);
+        }
+        else if (selWorldTop > vpWorldTop)
+        {
+            float delta = selWorldTop - vpWorldTop + 10f;
+            contentRT.anchoredPosition += new Vector2(0, delta / m_ScrollRect.transform.lossyScale.y);
+        }
     }
 
     #endregion
@@ -100,7 +137,24 @@ public class SceneMenu : MonoBehaviour
 
     static void SetupEventSystem()
     {
-        if (FindObjectOfType<EventSystem>() != null) return;
+        var activeScene = SceneManager.GetActiveScene();
+        bool hasSceneES = false;
+
+        foreach (var es in FindObjectsOfType<EventSystem>())
+        {
+            if (es.gameObject.scene == activeScene)
+            {
+                hasSceneES = true;
+            }
+            else
+            {
+                es.gameObject.SetActive(false);
+                Destroy(es.gameObject);
+            }
+        }
+
+        if (hasSceneES) return;
+
         var go = new GameObject("EventSystem");
         go.AddComponent<EventSystem>();
         go.AddComponent<InputSystemUIInputModule>();
@@ -325,6 +379,7 @@ public class SceneMenu : MonoBehaviour
         input.textViewport  = ta;
         input.textComponent = txt;
         input.placeholder   = ph;
+        input.navigation    = new Navigation { mode = Navigation.Mode.None };
         input.onValueChanged.AddListener(OnSearchChanged);
     }
 
@@ -344,17 +399,21 @@ public class SceneMenu : MonoBehaviour
         scrollGo.transform.SetParent(parent, false);
         SetLayout(scrollGo, flexH: 1);
 
-        var sr = scrollGo.AddComponent<ScrollRect>();
-        sr.horizontal        = false;
-        sr.movementType      = ScrollRect.MovementType.Elastic;
-        sr.elasticity        = 0.1f;
-        sr.inertia           = true;
-        sr.decelerationRate  = 0.135f;
-        sr.scrollSensitivity = 40;
+        m_ScrollRect = scrollGo.AddComponent<ScrollRect>();
+        m_ScrollRect.horizontal        = false;
+        m_ScrollRect.movementType      = ScrollRect.MovementType.Clamped;
+        m_ScrollRect.inertia           = true;
+        m_ScrollRect.decelerationRate  = 0.135f;
+        m_ScrollRect.scrollSensitivity = 12;
+        var sr = m_ScrollRect;
 
-        // Viewport
+        // Viewport — needs a raycast-target Image so scroll events register
+        // even when the mouse is over empty space between buttons.
         var vp = new GameObject("Viewport", typeof(RectTransform));
         vp.transform.SetParent(scrollGo.transform, false);
+        var vpImg = vp.AddComponent<Image>();
+        vpImg.color = Color.clear;
+        vpImg.raycastTarget = true;
         vp.AddComponent<RectMask2D>();
         Stretch(vp);
         sr.viewport = Rect(vp);
@@ -455,8 +514,9 @@ public class SceneMenu : MonoBehaviour
 
         var headerBtn = headerGo.AddComponent<Button>();
         headerBtn.transition = Selectable.Transition.None;
+        headerBtn.navigation = new Navigation { mode = Navigation.Mode.None };
 
-        var arrow = MakeText("Arrow", headerGo.transform, "\u25BC", 13, kPrimary,
+        var arrow = MakeText("Arrow", headerGo.transform, "v", 14, kPrimary,
             TextAlignmentOptions.MidlineLeft);
         var ar = Rect(arrow);
         ar.anchorMin = Vector2.zero;
@@ -524,12 +584,15 @@ public class SceneMenu : MonoBehaviour
         c.normalColor      = kSurface;
         c.highlightedColor = kSurfaceHover;
         c.pressedColor     = kPrimaryPress;
-        c.selectedColor    = kSurface;
+        c.selectedColor    = kPrimary;
         c.fadeDuration     = 0.08f;
         btn.colors = c;
 
         int idx = entry.buildIndex;
         btn.onClick.AddListener(() => LoadScene(idx));
+
+        if (m_FirstButton == null)
+            m_FirstButton = go;
 
         // Display name
         var nameT = MakeText("Name", go.transform, entry.displayName, 15, kTextPrimary,
@@ -566,7 +629,7 @@ public class SceneMenu : MonoBehaviour
         if (!m_Categories.TryGetValue(key, out var state)) return;
         state.collapsed = !state.collapsed;
         state.grid.SetActive(!state.collapsed);
-        state.arrow.text = state.collapsed ? "\u25B6" : "\u25BC";
+        state.arrow.text = state.collapsed ? ">" : "v";
         m_Categories[key] = state;
     }
 
