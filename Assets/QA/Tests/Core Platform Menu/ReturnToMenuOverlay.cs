@@ -28,6 +28,7 @@ public class ReturnToMenuOverlay : MonoBehaviour
     InputAction m_BackAction;
     GameObject m_ConfirmPanel;
     GameObject m_ReturnButton;
+    Button m_DimmerButton;
     RectTransform m_MenuButtonRect;
     bool m_PanelVisible;
     float m_LastToggleTime;
@@ -153,10 +154,36 @@ public class ReturnToMenuOverlay : MonoBehaviour
         if (m_ConfirmPanel != null)
             m_ConfirmPanel.SetActive(visible);
 
-        if (visible && m_ReturnButton != null)
-            StartCoroutine(SelectNextFrame(m_ReturnButton));
-        else if (!visible && EventSystem.current != null)
+        if (visible)
+        {
+            // Disable dimmer clicks until the pointer that opened the panel is
+            // released, otherwise the trailing PointerUp registers as a click on
+            // the dimmer and immediately closes the panel.
+            if (m_DimmerButton != null)
+            {
+                m_DimmerButton.interactable = false;
+                StartCoroutine(EnableDimmerAfterRelease());
+            }
+
+            if (m_ReturnButton != null)
+                StartCoroutine(SelectNextFrame(m_ReturnButton));
+        }
+        else if (EventSystem.current != null)
+        {
             EventSystem.current.SetSelectedGameObject(null);
+        }
+    }
+
+    IEnumerator EnableDimmerAfterRelease()
+    {
+        while ((Mouse.current != null && Mouse.current.leftButton.isPressed) ||
+               (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed))
+            yield return null;
+
+        yield return null;
+
+        if (m_DimmerButton != null && m_PanelVisible)
+            m_DimmerButton.interactable = true;
     }
 
     IEnumerator SelectNextFrame(GameObject target)
@@ -210,7 +237,7 @@ public class ReturnToMenuOverlay : MonoBehaviour
             return;
         }
 
-        var existing = FindObjectOfType<EventSystem>();
+        var existing = FindAnyObjectByType<EventSystem>();
         if (existing != null && existing.GetComponent<InputSystemUIInputModule>() != null)
             return;
 
@@ -304,7 +331,8 @@ public class ReturnToMenuOverlay : MonoBehaviour
         dimmer.color = kOverlay;
         StretchRT(m_ConfirmPanel);
 
-        m_ConfirmPanel.AddComponent<Button>().onClick.AddListener(() => SetPanelVisible(false));
+        m_DimmerButton = m_ConfirmPanel.AddComponent<Button>();
+        m_DimmerButton.onClick.AddListener(() => SetPanelVisible(false));
 
         // Center card
         var card = new GameObject("Card", typeof(RectTransform));

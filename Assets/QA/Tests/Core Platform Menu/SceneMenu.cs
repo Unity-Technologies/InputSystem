@@ -151,7 +151,7 @@ public class SceneMenu : MonoBehaviour
         var activeScene = SceneManager.GetActiveScene();
         bool hasSceneES = false;
 
-        foreach (var es in FindObjectsOfType<EventSystem>())
+        foreach (var es in FindObjectsByType<EventSystem>(FindObjectsSortMode.None))
         {
             if (es.gameObject.scene == activeScene)
             {
@@ -380,13 +380,13 @@ public class SceneMenu : MonoBehaviour
         var ph = MakeText("Placeholder", textArea.transform, "Search scenes\u2026", 18,
             kTextSecondary, TextAlignmentOptions.MidlineLeft);
         ph.fontStyle = FontStyles.Italic;
-        ph.enableWordWrapping = false;
+        ph.textWrappingMode = TextWrappingModes.NoWrap;
         ph.overflowMode = TextOverflowModes.Ellipsis;
         Stretch(ph.gameObject);
 
         var txt = MakeText("Text", textArea.transform, "", 18,
             kTextPrimary, TextAlignmentOptions.MidlineLeft);
-        txt.enableWordWrapping = false;
+        txt.textWrappingMode = TextWrappingModes.NoWrap;
         Stretch(txt.gameObject);
 
         var input = bar.AddComponent<TMP_InputField>();
@@ -612,7 +612,7 @@ public class SceneMenu : MonoBehaviour
         var nameT = MakeText("Name", go.transform, entry.displayName, 15, kTextPrimary,
             TextAlignmentOptions.Center);
         nameT.overflowMode      = TextOverflowModes.Ellipsis;
-        nameT.enableWordWrapping = false;
+        nameT.textWrappingMode = TextWrappingModes.NoWrap;
         var nr = Rect(nameT);
         nr.anchorMin = new Vector2(0.04f, 0.38f);
         nr.anchorMax = new Vector2(0.96f, 0.94f);
@@ -624,7 +624,7 @@ public class SceneMenu : MonoBehaviour
             var subT = MakeText("Sub", go.transform, entry.subcategory, 11, kTextSecondary,
                 TextAlignmentOptions.Center);
             subT.overflowMode      = TextOverflowModes.Ellipsis;
-            subT.enableWordWrapping = false;
+            subT.textWrappingMode = TextWrappingModes.NoWrap;
             var srr = Rect(subT);
             srr.anchorMin = new Vector2(0.04f, 0.06f);
             srr.anchorMax = new Vector2(0.96f, 0.38f);
