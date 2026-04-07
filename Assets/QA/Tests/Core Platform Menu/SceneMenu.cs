@@ -60,6 +60,7 @@ public class SceneMenu : MonoBehaviour
     readonly List<SceneEntry> m_Scenes = new List<SceneEntry>();
     readonly Dictionary<string, CategoryUI> m_Categories = new Dictionary<string, CategoryUI>();
     readonly Dictionary<int, GameObject> m_Buttons = new Dictionary<int, GameObject>();
+    readonly HashSet<GameObject> m_ButtonSet = new HashSet<GameObject>();
     Canvas m_Canvas;
     Sprite m_RoundSprite;
     TextMeshProUGUI m_Badge;
@@ -86,12 +87,22 @@ public class SceneMenu : MonoBehaviour
             EventSystem.current.SetSelectedGameObject(m_FirstButton);
     }
 
+    void OnDestroy()
+    {
+        if (m_RoundSprite != null)
+        {
+            if (m_RoundSprite.texture != null)
+                Destroy(m_RoundSprite.texture);
+            Destroy(m_RoundSprite);
+        }
+    }
+
     void LateUpdate()
     {
         if (m_ScrollRect == null || EventSystem.current == null) return;
 
         var selected = EventSystem.current.currentSelectedGameObject;
-        if (selected == null || !m_Buttons.ContainsValue(selected)) return;
+        if (selected == null || !m_ButtonSet.Contains(selected)) return;
 
         var selectedRT = selected.GetComponent<RectTransform>();
         var contentRT  = m_ScrollRect.content;
@@ -109,12 +120,12 @@ public class SceneMenu : MonoBehaviour
         if (selWorldBottom < vpWorldBottom)
         {
             float delta = vpWorldBottom - selWorldBottom + 10f;
-            contentRT.anchoredPosition += new Vector2(0, -delta / m_ScrollRect.transform.lossyScale.y);
+            contentRT.anchoredPosition += new Vector2(0, delta / m_ScrollRect.transform.lossyScale.y);
         }
         else if (selWorldTop > vpWorldTop)
         {
             float delta = selWorldTop - vpWorldTop + 10f;
-            contentRT.anchoredPosition += new Vector2(0, delta / m_ScrollRect.transform.lossyScale.y);
+            contentRT.anchoredPosition += new Vector2(0, -delta / m_ScrollRect.transform.lossyScale.y);
         }
     }
 
@@ -146,8 +157,11 @@ public class SceneMenu : MonoBehaviour
             {
                 hasSceneES = true;
             }
-            else
+            else if (es.gameObject.name == "[OverlayEventSystem]")
             {
+                // Clean up the ReturnToMenuOverlay's DDOL EventSystem that may
+                // linger after returning to the menu.  Other persistent
+                // EventSystems (e.g. from a global manager) are left alone.
                 es.gameObject.SetActive(false);
                 Destroy(es.gameObject);
             }
@@ -618,6 +632,7 @@ public class SceneMenu : MonoBehaviour
         }
 
         m_Buttons[entry.buildIndex] = go;
+        m_ButtonSet.Add(go);
     }
 
     #endregion

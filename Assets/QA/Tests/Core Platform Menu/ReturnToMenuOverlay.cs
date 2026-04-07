@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -151,10 +152,17 @@ public class ReturnToMenuOverlay : MonoBehaviour
         if (m_ConfirmPanel != null)
             m_ConfirmPanel.SetActive(visible);
 
-        if (visible && m_ReturnButton != null && EventSystem.current != null)
-            EventSystem.current.SetSelectedGameObject(m_ReturnButton);
+        if (visible && m_ReturnButton != null)
+            StartCoroutine(SelectNextFrame(m_ReturnButton));
         else if (!visible && EventSystem.current != null)
             EventSystem.current.SetSelectedGameObject(null);
+    }
+
+    IEnumerator SelectNextFrame(GameObject target)
+    {
+        yield return null;
+        if (EventSystem.current != null)
+            EventSystem.current.SetSelectedGameObject(target);
     }
 
     // ── Scene suspend / resume ──────────────────────────────────
