@@ -92,7 +92,7 @@ public static class AddScenesToBuild
     static bool IsExcluded(string path)
     {
         for (int i = 0; i < kExcludedSegments.Length; i++)
-            if (kExcludedSegments[i].Length > 0 && path.IndexOf(kExcludedSegments[i], StringComparison.OrdinalIgnoreCase) >= 0)
+            if (!string.IsNullOrEmpty(kExcludedSegments[i]) && path.Contains(kExcludedSegments[i], StringComparison.OrdinalIgnoreCase))
                 return true;
         for (int i = 0; i < kExcludedRoots.Length; i++)
             if (path.StartsWith(kExcludedRoots[i], StringComparison.OrdinalIgnoreCase))

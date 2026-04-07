@@ -151,7 +151,9 @@ public class SceneMenu : MonoBehaviour
         var activeScene = SceneManager.GetActiveScene();
         bool hasSceneES = false;
 
-        foreach (var es in FindObjectsByType<EventSystem>(FindObjectsInactive.Exclude))
+        #pragma warning disable CS0618 // FindObjectsSortMode overload is deprecated in 6000.x but required for 2022.3
+        foreach (var es in FindObjectsByType<EventSystem>(FindObjectsSortMode.None))
+        #pragma warning restore CS0618
         {
             if (es.gameObject.scene == activeScene)
             {
@@ -226,7 +228,7 @@ public class SceneMenu : MonoBehaviour
     static bool IsExcluded(string path)
     {
         for (int i = 0; i < kExcludedSegments.Length; i++)
-            if (kExcludedSegments[i].Length > 0 && path.IndexOf(kExcludedSegments[i], StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            if (!string.IsNullOrEmpty(kExcludedSegments[i]) && path.Contains(kExcludedSegments[i], StringComparison.OrdinalIgnoreCase)) return true;
         for (int i = 0; i < kExcludedRoots.Length; i++)
             if (path.StartsWith(kExcludedRoots[i], StringComparison.OrdinalIgnoreCase)) return true;
         return false;
