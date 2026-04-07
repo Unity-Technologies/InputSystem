@@ -263,11 +263,11 @@ namespace UnityEngine.InputSystem
                 {
                     for (var j = i; j > 0; --j)
                     {
-                        // Sort by complexities only to keep the sort stable
-                        // i.e. don't reverse the order of controls which have the same complexity
-                        var firstComplexity = InputActionState.GetComplexityFromMonitorIndex(listeners[j - 1].monitorIndex);
-                        var secondComplexity = InputActionState.GetComplexityFromMonitorIndex(listeners[j].monitorIndex);
-                        if (firstComplexity >= secondComplexity)
+                        // Sort by priorities only to keep the sort stable
+                        // i.e. don't reverse the order of controls which have the same priority
+                        var firstPriority = InputActionState.GetPriorityFromMonitorIndex(listeners[j - 1].monitorIndex);
+                        var secondPriority = InputActionState.GetPriorityFromMonitorIndex(listeners[j].monitorIndex);
+                        if (firstPriority >= secondPriority)
                             break;
 
                         listeners.SwapElements(j, j - 1);
@@ -408,6 +408,7 @@ namespace UnityEngine.InputSystem
                 if (!previouslyHandled && eventPtr->handled)
                 {
                     var groupIndex = listeners[i].groupIndex;
+                    var handlerPriority = InputActionState.GetPriorityFromMonitorIndex(listener.monitorIndex);
                     for (var n = i + 1; n < signals.length; ++n)
                     {
                         // NOTE: We restrict the preemption logic here to a single monitor. Otherwise,
@@ -419,7 +420,13 @@ namespace UnityEngine.InputSystem
                         //       Note that this implies there there is *NO* preemption between singleton
                         //       InputActions. This isn't intuitive.
                         if (listeners[n].groupIndex == groupIndex && listeners[n].monitor == listener.monitor)
-                            signals.ClearBit(n);
+                        {
+                            // Only clear strictly lower binding priorities so equal priorities still
+                            // fire in unison (same as priority 0, but with consumption among lower tiers).
+                            var candidatePriority = InputActionState.GetPriorityFromMonitorIndex(listeners[n].monitorIndex);
+                            if (candidatePriority < handlerPriority)
+                                signals.ClearBit(n);
+                        }
                     }
                 }
 

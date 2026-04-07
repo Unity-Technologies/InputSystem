@@ -1406,7 +1406,7 @@ namespace UnityEngine.InputSystem
         /// Extract the 'complexity' component from the provided bit packed argument (monitor index).
         /// </summary>
         /// <param name="mapControlAndBindingIndex">Represents a monitor index, which is a bit packed field containing multiple components.</param>
-        internal static int GetComplexityFromMonitorIndex(long mapControlAndBindingIndex)
+        internal static int GetPriorityFromMonitorIndex(long mapControlAndBindingIndex)
         {
             return (int)((mapControlAndBindingIndex >> 48) & 0xff);
         }
@@ -2467,8 +2467,8 @@ namespace UnityEngine.InputSystem
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
 
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
-                // can then reset state monitors in the same group.
-                // NOTE: We don't consume for controls at binding complexity 1. Those we fire in unison.
+                // can then reset state monitors in the same group (strictly lower binding priority only).
+                // NOTE: We don't consume for controls at binding priority 0. Those we fire in unison.
                 if (controlGroupingAndPriority[trigger.controlIndex * 2 + 1] > 0 &&
                     // we can end up switching to performed state from an interaction with a timeout, at which point
                     // the original event will probably have been removed from memory, so make sure to check
