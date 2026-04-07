@@ -110,7 +110,7 @@ internal partial class CoreTests
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionTestCases))]
-    public void Actions_Priority_OnlyOneActionIsPerformed_WhenOnePriorityIsHigherThanOther(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
+    public void Actions_Priority_OnlyOneActionIsFired_WhenOnePriorityIsHigherThanOther(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
         InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -147,7 +147,7 @@ internal partial class CoreTests
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionTestCases))]
-    public void Actions_Priority_OnlyOneActionIsPerformed_WhenOnePriorityIsHigherThanOtherInversePriorityOrder(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
+    public void Actions_Priority_OnlyOneActionIsFired_WhenOnePriorityIsHigherThanOtherInversePriorityOrder(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
         InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -217,7 +217,7 @@ internal partial class CoreTests
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionTestCases))]
-    public void Actions_Priority_FirstActionFires_WhenPriorityIsEqual(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions) // TODO: This shouldn't be the case. This should fire both!!
+    public void Actions_Priority_BothActionFires_WhenPriorityIsEqual(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
         InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -233,7 +233,7 @@ internal partial class CoreTests
         PressBindingsForInputActions(keyboard, action1, action2);
 
         Assert.That(action1.WasPerformedThisFrame(), Is.True);
-        Assert.That(action2.WasPerformedThisFrame(), Is.False);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
     }
 
     [Test]
@@ -316,13 +316,6 @@ internal partial class CoreTests
         // Different letter keys: no conflict on the same control, so both shortcuts can perform despite different priorities.
         Assert.That(action1WasPerformed, Is.True);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
-
-        // TODO: Darren, trigger just the bindings again to be sure the shortcut doesn't trigger for a second time
-        // Press((ButtonControl)keyboard[action1.GetBind], queueEventOnly: true);
-        // Press((ButtonControl)keyboard[action2.controls[i].name], queueEventOnly: true);
-        //
-        // Assert.That(action1.WasPerformedThisFrame(), Is.False);
-        // Assert.That(action2.WasPerformedThisFrame(), Is.False);
     }
 
     [Test]
@@ -353,13 +346,6 @@ internal partial class CoreTests
         // Different letter keys: no conflict on the same control, so both shortcuts can perform despite different priorities.
         Assert.That(action1WasPerformed, Is.True);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
-
-        // TODO: Darren, trigger just the bindings again to be sure the shortcut doesn't trigger for a second time
-        // Press((ButtonControl)keyboard[action1.GetBind], queueEventOnly: true);
-        // Press((ButtonControl)keyboard[action2.controls[i].name], queueEventOnly: true);
-        //
-        // Assert.That(action1.WasPerformedThisFrame(), Is.False);
-        // Assert.That(action2.WasPerformedThisFrame(), Is.False);
     }
 
     [Test]
@@ -390,12 +376,5 @@ internal partial class CoreTests
         // Different letter keys: no conflict on the same control, so both shortcuts can perform despite different priorities.
         Assert.That(action1WasPerformed, Is.True);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
-
-        // TODO: Darren, trigger just the bindings again to be sure the shortcut doesn't trigger for a second time
-        // Press((ButtonControl)keyboard[action1.GetBind], queueEventOnly: true);
-        // Press((ButtonControl)keyboard[action2.controls[i].name], queueEventOnly: true);
-        //
-        // Assert.That(action1.WasPerformedThisFrame(), Is.False);
-        // Assert.That(action2.WasPerformedThisFrame(), Is.False);
     }
 }
