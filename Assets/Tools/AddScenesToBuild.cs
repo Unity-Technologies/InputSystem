@@ -21,7 +21,7 @@ public class AddScenesToBuild : IPreprocessBuildWithReport
 {
     const string kMenuScene = "Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity";
 
-    static readonly string[] kExcludedSegments = { "xbox", "xr", "Esc Menu Additive" };
+    static readonly string[] kExcludedSegments = { "xbox", "xr" };
     static readonly string[] kExcludedRoots    = { "Assets/Tests/", "ExternalSampleProjects/", "Packages/" };
 
     // ── Build callback ──────────────────────────────────────────

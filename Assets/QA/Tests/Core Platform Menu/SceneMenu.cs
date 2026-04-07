@@ -66,7 +66,7 @@ public class SceneMenu : MonoBehaviour
     ScrollRect m_ScrollRect;
     GameObject m_FirstButton;
 
-    static readonly string[] kExcludedSegments = { "Core Platform Menu", "Esc Menu" };
+    static readonly string[] kExcludedSegments = { "Core Platform Menu" };
     static readonly string[] kExcludedRoots    = { "Assets/Tests/", "ExternalSampleProjects/", "Packages/" };
 
     #endregion
