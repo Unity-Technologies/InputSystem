@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using NUnit.Framework;
 using Unity.Collections;
@@ -116,6 +117,35 @@ internal class ArrayHelperTests
         Assert.AreEqual(-1, arr.IndexOfReference(arr[4], 1, 3));
         Assert.AreEqual(1, arr.IndexOfReference(arr[1], 1, 3));
         Assert.AreEqual(2, arr.IndexOfReference(arr[2], 1, 3));
+    }
+
+    [Test]
+    [Category("Utilities")]
+    public void Utilities_HaveDuplicateReferences_DetectsDuplicatesInFullRange()
+    {
+        var withDup = new object[] { new object(), new object(), new object() };
+        withDup[2] = withDup[0]; // duplicate at 0 and 2
+        Assert.That(withDup.HaveDuplicateReferences(0, 3), Is.True);
+
+        var noDup = new object[] { new object(), new object(), new object() };
+        Assert.That(noDup.HaveDuplicateReferences(0, 3), Is.False);
+
+        // Regression test for ISXB-1792: inner loop was "n < count - i" so later pairs were never checked
+        var dupAtEnd = new object[] { new object(), new object(), new object(), new object() };
+        dupAtEnd[3] = dupAtEnd[2]; // duplicate at 2 and 3
+        Assert.That(dupAtEnd.HaveDuplicateReferences(0, 4), Is.True);
+    }
+
+    [Test]
+    [Category("Utilities")]
+    public void Utilities_MergeWithComparer_UsesComparerToDeduplicate()
+    {
+        // Regression test for ISXB-1790: Merge(IEqualityComparer) was calling comparer.Equals(secondValue)
+        // instead of comparer.Equals(x, secondValue), so it compared against the comparer instance.
+        var first = new[] { "a", "b" };
+        var second = new[] { "A", "c" }; // "A" equals "a" with case-insensitive comparer
+        var merged = ArrayHelpers.Merge(first, second, StringComparer.OrdinalIgnoreCase);
+        Assert.That(merged, Is.EqualTo(new[] { "a", "b", "c" }));
     }
 
     [Test]

@@ -16,13 +16,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Improved New Input System warning dialog, Native Device Inputs Not Enabled [UUM-132151].
 - Fixed caching for InputControlPath display name [ISX-2501](https://jira.unity3d.com/browse/ISX-2501)
 - Fixed editor closing and not saving the input asset when clicking cancel in the dialog prompt [UUM-134748](https://jira.unity3d.com/browse/UUM-134748)
+- Fixed an incorrect ArraysHelper.Merge implementation that used the comparer incorrectly [ISXB-1790] (https://jira.unity3d.com/browse/ISXB-1790)
 - Fixed the input actions editor window entering a corrupt state when restarting Unity after the asset was edited. [UUM-134737](https://jira.unity3d.com/browse/UUM-134737)
+- Fixed the Input Actions Editor Window toolbar buttons overlapping each other when the window size is too small [ISXB-1783] (https://jira.unity3d.com/browse/ISXB-1783)
 - Fixed `buttonSouth` returning the state of the east button (and so on for all the compass named buttons) when using a Nintendo Switch Pro Controller on iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
 - Fixed `aButton` returning the state of the east button (and so on for all the letter named buttons) when using a Nintendo Switch Pro Controller on Standalone & iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
 - Fixed an issue where `UIToolkit` `ClickEvent` could be fired on Android after device rotation due to inactive touch state being replayed during action initial state checks [UUM-100125](https://jira.unity3d.com/browse/UUM-100125).
+- Fixed an incorrect ArraysHelper.HaveDuplicateReferences implementation that didn't use its arguments right [ISXB-1792] (https://github.com/Unity-Technologies/InputSystem/pull/2376)
 
 ### Changed
 
+- Migrated sample scenes to use Universal Render Pipeline (URP) with Built-in Render Pipeline fallback shaders. The URP package is now required to run the samples. (ISX-2343)
 - Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.
 
 ### Added
