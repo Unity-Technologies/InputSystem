@@ -151,7 +151,7 @@ public class SceneMenu : MonoBehaviour
         var activeScene = SceneManager.GetActiveScene();
         bool hasSceneES = false;
 
-        foreach (var es in FindObjectsByType<EventSystem>(FindObjectsSortMode.None))
+        foreach (var es in FindObjectsByType<EventSystem>(FindObjectsInactive.Exclude))
         {
             if (es.gameObject.scene == activeScene)
             {
@@ -226,7 +226,7 @@ public class SceneMenu : MonoBehaviour
     static bool IsExcluded(string path)
     {
         for (int i = 0; i < kExcludedSegments.Length; i++)
-            if (path.IndexOf(kExcludedSegments[i], StringComparison.OrdinalIgnoreCase) >= 0) return true;
+            if (kExcludedSegments[i].Length > 0 && path.IndexOf(kExcludedSegments[i], StringComparison.OrdinalIgnoreCase) >= 0) return true;
         for (int i = 0; i < kExcludedRoots.Length; i++)
             if (path.StartsWith(kExcludedRoots[i], StringComparison.OrdinalIgnoreCase)) return true;
         return false;
