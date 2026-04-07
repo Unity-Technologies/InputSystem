@@ -1,47 +1,42 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
-using UnityEditor.Build;
-using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Automatically keeps Build Settings populated with every project scene so the
-/// Core Platform Menu works without manual intervention.
+/// Editor utility that populates Build Settings with every project scene so the
+/// Core Platform Menu can discover them at runtime.
 ///
-/// Scenes are refreshed:
-///   - Before every player build  (IPreprocessBuildWithReport)
-///   - When entering Play Mode    (playModeStateChanged)
-///   - On demand via              QA Tools ▸ Refresh Build Scene List
+/// This script is intentionally passive — it never runs automatically during CI
+/// builds or arbitrary play-mode sessions.  The scene list is only refreshed:
+///
+///   - When entering Play Mode with the menu scene open (for manual testing)
+///   - On demand via  QA Tools > Refresh Build Scene List
 ///
 /// The Core Platforms Menu scene is always placed at build index 0.
 /// </summary>
-public class AddScenesToBuild : IPreprocessBuildWithReport
+public static class AddScenesToBuild
 {
     const string kMenuScene = "Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity";
 
     static readonly string[] kExcludedSegments = { "xbox", "xr" };
-    static readonly string[] kExcludedRoots    = { "Assets/Tests/", "ExternalSampleProjects/", "Packages/" };
+    static readonly string[] kExcludedRoots    = { "ExternalSampleProjects/", "Packages/" };
 
-    // ── Build callback ──────────────────────────────────────────
-
-    public int callbackOrder => -100;
-
-    public void OnPreprocessBuild(BuildReport report)
-    {
-        RefreshBuildScenes(silent: true);
-    }
-
-    // ── Play Mode hook ──────────────────────────────────────────
+    // ── Play Mode hook (menu scene only) ─────────────────────────
 
     [InitializeOnLoadMethod]
     static void RegisterPlayModeHook()
     {
         EditorApplication.playModeStateChanged += state =>
         {
-            if (state == PlayModeStateChange.ExitingEditMode)
-                RefreshBuildScenes(silent: true);
+            if (state != PlayModeStateChange.ExitingEditMode) return;
+
+            var activeScene = SceneManager.GetActiveScene();
+            if (!string.Equals(activeScene.path, kMenuScene, StringComparison.OrdinalIgnoreCase)) return;
+
+            RefreshBuildScenes(silent: true);
         };
     }
 
