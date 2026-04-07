@@ -9,6 +9,8 @@ using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+#pragma warning disable CS0618 // Several TMP/Object APIs are deprecated in 6000.x but required for 2022.3 compatibility
+
 /// <summary>
 /// Drop-in main menu that discovers every scene in Build Settings and presents them
 /// in a searchable, categorised grid.  Creates all UI at runtime — no prefabs or
@@ -151,9 +153,7 @@ public class SceneMenu : MonoBehaviour
         var activeScene = SceneManager.GetActiveScene();
         bool hasSceneES = false;
 
-        #pragma warning disable CS0618 // FindObjectsSortMode overload is deprecated in 6000.x but required for 2022.3
         foreach (var es in FindObjectsByType<EventSystem>(FindObjectsSortMode.None))
-        #pragma warning restore CS0618
         {
             if (es.gameObject.scene == activeScene)
             {
@@ -382,13 +382,13 @@ public class SceneMenu : MonoBehaviour
         var ph = MakeText("Placeholder", textArea.transform, "Search scenes\u2026", 18,
             kTextSecondary, TextAlignmentOptions.MidlineLeft);
         ph.fontStyle = FontStyles.Italic;
-        ph.textWrappingMode = TextWrappingModes.NoWrap;
+        ph.enableWordWrapping = false;
         ph.overflowMode = TextOverflowModes.Ellipsis;
         Stretch(ph.gameObject);
 
         var txt = MakeText("Text", textArea.transform, "", 18,
             kTextPrimary, TextAlignmentOptions.MidlineLeft);
-        txt.textWrappingMode = TextWrappingModes.NoWrap;
+        txt.enableWordWrapping = false;
         Stretch(txt.gameObject);
 
         var input = bar.AddComponent<TMP_InputField>();
@@ -614,7 +614,7 @@ public class SceneMenu : MonoBehaviour
         var nameT = MakeText("Name", go.transform, entry.displayName, 15, kTextPrimary,
             TextAlignmentOptions.Center);
         nameT.overflowMode      = TextOverflowModes.Ellipsis;
-        nameT.textWrappingMode = TextWrappingModes.NoWrap;
+        nameT.enableWordWrapping = false;
         var nr = Rect(nameT);
         nr.anchorMin = new Vector2(0.04f, 0.38f);
         nr.anchorMax = new Vector2(0.96f, 0.94f);
@@ -626,7 +626,7 @@ public class SceneMenu : MonoBehaviour
             var subT = MakeText("Sub", go.transform, entry.subcategory, 11, kTextSecondary,
                 TextAlignmentOptions.Center);
             subT.overflowMode      = TextOverflowModes.Ellipsis;
-            subT.textWrappingMode = TextWrappingModes.NoWrap;
+            subT.enableWordWrapping = false;
             var srr = Rect(subT);
             srr.anchorMin = new Vector2(0.04f, 0.06f);
             srr.anchorMax = new Vector2(0.96f, 0.38f);
