@@ -32,6 +32,7 @@ public class ReturnToMenuOverlay : MonoBehaviour
     bool m_PanelVisible;
     float m_LastToggleTime;
 
+    Camera m_HelperCamera;
     EventSystem m_OwnEventSystem;
     readonly List<GameObject> m_SuspendedRoots = new List<GameObject>();
 
@@ -179,12 +180,20 @@ public class ReturnToMenuOverlay : MonoBehaviour
                 m_SuspendedRoots.Add(root);
             }
         }
+
+        if (m_HelperCamera != null)
+            m_HelperCamera.enabled = true;
+
         ActivateOwnEventSystem();
     }
 
     void ResumeActiveScene()
     {
         DeactivateOwnEventSystem();
+
+        if (m_HelperCamera != null)
+            m_HelperCamera.enabled = false;
+
         foreach (var root in m_SuspendedRoots)
         {
             if (root != null)
@@ -221,6 +230,17 @@ public class ReturnToMenuOverlay : MonoBehaviour
 
     void BuildUI()
     {
+        // Helper camera activates while the scene is suspended so Unity doesn't
+        // show the "No cameras rendering" editor overlay behind the dialog.
+        var camGo = new GameObject("OverlayCamera");
+        camGo.transform.SetParent(transform, false);
+        m_HelperCamera = camGo.AddComponent<Camera>();
+        m_HelperCamera.clearFlags       = CameraClearFlags.SolidColor;
+        m_HelperCamera.backgroundColor  = new Color32(18, 18, 24, 255);
+        m_HelperCamera.cullingMask      = 0;
+        m_HelperCamera.depth            = -100;
+        m_HelperCamera.enabled          = false;
+
         var canvas = gameObject.AddComponent<Canvas>();
         canvas.renderMode   = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 999;
@@ -250,9 +270,11 @@ public class ReturnToMenuOverlay : MonoBehaviour
         m_MenuButtonRect.anchoredPosition = new Vector2(16, -16);
         m_MenuButtonRect.sizeDelta        = new Vector2(120, 44);
 
-        // Button component provides visual hover/press feedback.  onClick is a
-        // secondary path for scenes where the EventSystem routes normally; the
-        // primary click path is the raw polling in Update().
+        // Button component provides visual hover/press feedback only.  No onClick
+        // listener — the actual click is detected by raw polling in Update() which
+        // fires on press.  Adding onClick would cause a double-toggle (open on
+        // press via Update, close on release via onClick) if the hold exceeds the
+        // cooldown window.
         var btn = go.AddComponent<Button>();
         btn.targetGraphic = img;
         var c = btn.colors;
@@ -262,7 +284,6 @@ public class ReturnToMenuOverlay : MonoBehaviour
         c.fadeDuration     = 0.08f;
         btn.colors = c;
         btn.navigation = new Navigation { mode = Navigation.Mode.None };
-        btn.onClick.AddListener(TogglePanel);
 
         var txt = new GameObject("Text", typeof(RectTransform));
         txt.transform.SetParent(go.transform, false);
