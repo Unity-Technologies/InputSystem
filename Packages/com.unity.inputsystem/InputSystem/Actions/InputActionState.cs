@@ -146,10 +146,6 @@ namespace UnityEngine.InputSystem
             if (memory.controlGroupingInitialized)
                 return;
 
-            // If shortcut support is disabled, we simply put put all bindings at complexity=1 and
-            // in their own group.
-            var disableControlGrouping = !InputSystem.settings.shortcutKeysConsumeInput;
-
             var currentGroup = 1u;
 
             for (var i = 0; i < totalControlCount; ++i)
@@ -162,28 +158,25 @@ namespace UnityEngine.InputSystem
 
                 var action = GetActionOrNull(bindingIndex);
 
-                var priority = Math.Clamp(action != null && !disableControlGrouping ? action.Priority : 0, 0, 65536);
+                var priority = Math.Clamp(action != null ? action.Priority : 0, 0, 65535);
 
                 controlGroupingAndPriority[i * 2 + 1] = (ushort)priority;
 
                 // Compute grouping. If already set, skip.
                 if (controlGroupingAndPriority[i * 2] == 0)
                 {
-                    if (!disableControlGrouping)
+                    for (var n = 0; n < totalControlCount; ++n)
                     {
-                        for (var n = 0; n < totalControlCount; ++n)
-                        {
-                            // NOTE: We could compute group numbers based on device index + control offsets
-                            //       and thus make them work globally in a stable way. But we'd need a mechanism
-                            //       to then determine ordering of actions globally such that it is clear which
-                            //       action gets a first shot at an input.
+                        // NOTE: We could compute group numbers based on device index + control offsets
+                        //       and thus make them work globally in a stable way. But we'd need a mechanism
+                        //       to then determine ordering of actions globally such that it is clear which
+                        //       action gets a first shot at an input.
 
-                            var otherControl = controls[n];
-                            if (control != otherControl)
-                                continue;
+                        var otherControl = controls[n];
+                        if (control != otherControl)
+                            continue;
 
-                            controlGroupingAndPriority[n * 2] = (ushort)currentGroup;
-                        }
+                        controlGroupingAndPriority[n * 2] = (ushort)currentGroup;
                     }
 
                     controlGroupingAndPriority[i * 2] = (ushort)currentGroup;

@@ -112,10 +112,8 @@ internal partial class CoreTests
     [TestCaseSource(nameof(TwoInputActionTestCases))]
     public void Actions_Priority_OnlyOneActionIsFired_WhenOnePriorityIsHigherThanOther(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
-        InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        //var map = new InputActionMap("map");
         var action1 = twoInputActions.Action1;
         var action2 = twoInputActions.Action2;
 
@@ -137,9 +135,6 @@ internal partial class CoreTests
         // Cleanup key presses
         ReleaseBindingsForActions(keyboard, action1, action2);
 
-        // Update again to be sure released is true.
-        InputSystem.Update();
-
         Assert.That(action1.WasPerformedThisFrame(), Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.False);
     }
@@ -149,7 +144,6 @@ internal partial class CoreTests
     [TestCaseSource(nameof(TwoInputActionTestCases))]
     public void Actions_Priority_OnlyOneActionIsFired_WhenOnePriorityIsHigherThanOtherInversePriorityOrder(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
-        InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action1 = twoInputActions.Action1;
@@ -166,10 +160,11 @@ internal partial class CoreTests
 
         PressBindingsForInputActions(keyboard, action1, action2);
 
-        // action2 is performed because action1 has a higher priority than action2.
+        // action2 is performed because action2 has a higher priority than action1.
         Assert.That(action1.WasPerformedThisFrame(), Is.False);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
 
+        // Cleanup key presses
         ReleaseBindingsForActions(keyboard, action1, action2);
 
         Assert.That(action1.WasPerformedThisFrame(), Is.False);
@@ -181,7 +176,6 @@ internal partial class CoreTests
     [TestCaseSource(nameof(TwoInputActionTestCases))] // TODO: Darren, Should both actions be performed this frame here??
     public void Actions_Priority_BothActionsArePerformed_DueToKeyPressOrderForShortcut(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
-        InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         // We swap the order here of Action1 & Action2 so key presses are done backwards, binding before modifiers.
@@ -219,7 +213,6 @@ internal partial class CoreTests
     [TestCaseSource(nameof(TwoInputActionTestCases))]
     public void Actions_Priority_BothActionFires_WhenPriorityIsEqual(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
-        InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action1 = twoInputActions.Action1;
@@ -241,7 +234,6 @@ internal partial class CoreTests
     [TestCaseSource(nameof(TwoInputActionTestCases))]
     public void Actions_Priority_BothActionsFire_WhenPriorityIsZero(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
-        InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action1 = twoInputActions.Action1;
@@ -293,7 +285,6 @@ internal partial class CoreTests
     [TestCaseSource(nameof(TwoInputActionNoConflictingBindingTestCases))]
     public void Actions_Priority_BothActionsWithDifferentPriorityFire_WhenThereIsNoConflictingBinding(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
-        InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action1 = twoInputActions.Action1;
@@ -303,8 +294,7 @@ internal partial class CoreTests
         action2.Priority = 1;
 
         action1.m_ActionMap.Enable();
-        action2.m_ActionMap.Enable();
-        //
+
         var action1WasPerformed = false;
         action1.performed += _ => action1WasPerformed = true;
 
@@ -323,7 +313,6 @@ internal partial class CoreTests
     [TestCaseSource(nameof(TwoInputActionNoConflictingBindingTestCases))]
     public void Actions_Priority_BothActionsWithDifferentPriorityFire_WhenThereIsNoConflictingBindingInverseOrder(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
-        InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action1 = twoInputActions.Action1;
@@ -333,8 +322,7 @@ internal partial class CoreTests
         action2.Priority = 5;
 
         action1.m_ActionMap.Enable();
-        action2.m_ActionMap.Enable();
-        //
+
         var action1WasPerformed = false;
         action1.performed += _ => action1WasPerformed = true;
 
@@ -353,7 +341,6 @@ internal partial class CoreTests
     [TestCaseSource(nameof(TwoInputActionNoConflictingBindingTestCases))]
     public void Actions_Priority_BothActionsWithEqualPriorityFire_WhenThereIsNoConflictingBinding(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
     {
-        InputSystem.settings.shortcutKeysConsumeInput = true;
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         var action1 = twoInputActions.Action1;
@@ -363,7 +350,6 @@ internal partial class CoreTests
         action2.Priority = 5;
 
         action1.m_ActionMap.Enable();
-        action2.m_ActionMap.Enable();
 
         var action1WasPerformed = false;
         action1.performed += _ => action1WasPerformed = true;
