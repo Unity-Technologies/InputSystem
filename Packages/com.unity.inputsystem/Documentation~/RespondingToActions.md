@@ -177,6 +177,30 @@ Each callback receives an [`InputAction.CallbackContext`](xref:UnityEngine.Input
 > [!NOTE]
 > The contents of the structure are only valid for the duration of the callback. In particular, it isn't safe to store the received context and later access its properties from outside the callback.
 
+> [!WARNING]
+> Do not enable or disable action maps (or call [`PlayerInput.SwitchCurrentActionMap`](xref:UnityEngine.InputSystem.PlayerInput.SwitchCurrentActionMap(System.String))) from within an action callback. The Input System is in the middle of processing events at that point, and modifying which maps are enabled can corrupt internal state and trigger errors. Instead, defer the switch to the next frame using a flag:
+>
+> ```CSharp
+> bool m_SwitchActionMap;
+> string m_NextActionMap;
+>
+> void OnFire(InputAction.CallbackContext context)
+> {
+>     // Do not switch maps here directly — defer it instead.
+>     m_SwitchActionMap = true;
+>     m_NextActionMap = "UI";
+> }
+>
+> void Update()
+> {
+>     if (m_SwitchActionMap)
+>     {
+>         m_SwitchActionMap = false;
+>         playerInput.SwitchCurrentActionMap(m_NextActionMap);
+>     }
+> }
+> ```
+
 When and how the callbacks are triggered depends on the [Interactions](xref:input-system-interactions) present on the respective Bindings. If the Bindings have no Interactions that apply to them, the [default Interaction](xref:input-system-interactions#default-interaction) applies.
 
 ##### `InputActionMap.actionTriggered` callback
