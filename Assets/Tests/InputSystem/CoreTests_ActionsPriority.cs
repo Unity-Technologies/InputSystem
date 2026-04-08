@@ -91,21 +91,21 @@ internal partial class CoreTests
         for (int i = 0; i < action1.controls.Count; i++)
         {
             Debug.Log("action 1 binding pressed: " + action1.controls[i].path);
-            Press((ButtonControl)keyboard[action1.controls[i].name], queueEventOnly: true);
+            Press((ButtonControl)action1.controls[i], queueEventOnly: true);
         }
 
         for (int i = 0; i < action2.controls.Count; i++)
         {
             Debug.Log("action 2 binding pressed: " + action2.controls[i].name);
-            Press((ButtonControl)keyboard[action2.controls[i].name], queueEventOnly: true);
+            Press((ButtonControl)action2.controls[i], queueEventOnly: true);
         }
 
         if (action3 != null)
         {
-            for (int i = 0; i < action2.controls.Count; i++)
+            for (int i = 0; i < action3.controls.Count; i++)
             {
-                Debug.Log("action 2 binding pressed: " + action2.controls[i].name);
-                Press((ButtonControl)keyboard[action2.controls[i].name], queueEventOnly: true);
+                Debug.Log("action 3 binding pressed: " + action3.controls[i].name);
+                Press((ButtonControl)action3.controls[i], queueEventOnly: true);
             }
         }
 
@@ -117,12 +117,12 @@ internal partial class CoreTests
         // Cleanup key presses
         for (int i = 0; i < action1.controls.Count; i++)
         {
-            Release((ButtonControl)keyboard[action1.controls[i].name], queueEventOnly: true);
+            Release((ButtonControl)action1.controls[i], queueEventOnly: true);
         }
 
         for (int i = 0; i < action2.controls.Count; i++)
         {
-            Release((ButtonControl)keyboard[action2.controls[i].name], queueEventOnly: true);
+            Release((ButtonControl)action2.controls[i], queueEventOnly: true);
         }
 
         InputSystem.Update();
@@ -403,6 +403,7 @@ internal partial class CoreTests
     public void AltShiftW_Only_Triggers_TeamChat(ThreeInputActionDataWrapper<InputAction, InputAction, InputAction> threeInputActions)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
+        threeInputActions.Action1.m_ActionMap.Enable();
         PressBindingsForInputActions(keyboard, threeInputActions.Action1, threeInputActions.Action2);
 
 
