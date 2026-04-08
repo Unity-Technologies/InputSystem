@@ -233,11 +233,11 @@ partial class CoreTests
         action2.Enable();
 
         // State monitors on the space key (all end up in the same group):
-        //   action3 complexity=3
-        //   action2 complexity=2
-        //   action1 complexity=1
-        //   action4 complexity=1
-        //   action5 complexity=1
+        action3.Priority = 3;
+        action2.Priority = 2;
+        action1.Priority = 1;
+        action4.Priority = 1;
+        action5.Priority = 1;
 
         action1.AddBinding("<Keyboard>/space");
         action2.AddCompositeBinding(legacyComposites ? "ButtonWithOneModifier" : "OneModifier")
@@ -525,6 +525,9 @@ partial class CoreTests
         action2.AddCompositeBinding("OneModifier")
             .With("Modifier", "<Keyboard>/shift")
             .With("Binding", "<Keyboard>/space");
+
+        // We now need to set priority for this test to act as it used to with complexity.
+        action2.Priority = 1;
 
         action1.wantsInitialStateCheck = true;
         action2.wantsInitialStateCheck = true;
@@ -1695,6 +1698,8 @@ partial class CoreTests
             .With("Binding", "<Keyboard>/space")
             .With("Modifier", "<Keyboard>/ctrl");
         actionWithModifier.performed += _ => ++ withModiferReceivedCalls;
+        actionWithModifier.Priority = 1;
+
 
         var actionWithoutModifier = map.AddAction("One", type: InputActionType.Button, binding: "<Keyboard>/space");
         actionWithoutModifier.performed += _ => actionWithModifier.Disable();
@@ -11605,9 +11610,9 @@ partial class CoreTests
 
         // Not the most elegant test as we reach into internals here but with the
         // current API, it's not possible to enumerate monitors from outside.
-        Assert.That(InputSystem.manager.m_StateChangeMonitors,
+        Assert.That(InputSystem.manager.m_StateMonitors.m_MonitorsPerDevice,
             Has.All.Matches(
-                (InputManager.StateChangeMonitorsForDevice x) => x.memoryRegions.All(r => r.sizeInBits == 0)));
+                (InputManagerStateMonitors.StateChangeMonitorsForDevice x) => x.memoryRegions.All(r => r.sizeInBits == 0)));
     }
 
     // https://fogbugz.unity3d.com/f/cases/1367442/
@@ -12499,6 +12504,9 @@ partial class CoreTests
             .With("Left", "<Keyboard>/a")
             .With("Right", "<Keyboard>/d");
 
+        // Change test to use Priority.
+        action1.Priority = 1;
+
         var map2 = new InputActionMap("map2");
         var action2 = map2.AddAction(name: "action2");
         action2.AddCompositeBinding("2DVector")
@@ -12524,10 +12532,11 @@ partial class CoreTests
         action2.started += ctx => action2Count++;
         action3.started += ctx => action3Count++;
 
+
         Press(keyboard.wKey);
         if (shortcutsEnabled)
         {
-            // First action with the most bindings is the ONLY one to trigger
+            // This is now handled by priority
             Assert.That(action1Count, Is.EqualTo(1));
             Assert.That(action2Count, Is.EqualTo(0));
             Assert.That(action3Count, Is.EqualTo(0));
