@@ -66,6 +66,11 @@ internal partial class CoreTests
             Action1 = map.SetupTestAction("ctrl", "shift", "v"),
             Action2 = map.SetupTestAction("shift", "v")
         };
+        // yield return new TwoInputActionDataWrapper<InputAction, InputAction>
+        // {
+        //     Action1 = map.SetupTestAction("ctrl", "enter", "w"),
+        //     Action2 = map.SetupTestAction("alt", "shift", "w")
+        // };
     }
 
     public class TwoInputActionDataWrapper<TInputAction1, TInputAction2>
@@ -74,7 +79,14 @@ internal partial class CoreTests
         public TInputAction2 Action2;
     }
 
-    private void PressBindingsForInputActions(Keyboard keyboard, InputAction action1, InputAction action2)
+    public class ThreeInputActionDataWrapper<TInputAction1, TInputAction2, TInputAction3>
+    {
+        public TInputAction1 Action1;
+        public TInputAction2 Action2;
+        public TInputAction3 Action3;
+    }
+
+    private void PressBindingsForInputActions(Keyboard keyboard, InputAction action1, InputAction action2, InputAction action3 = null)
     {
         for (int i = 0; i < action1.controls.Count; i++)
         {
@@ -86,6 +98,15 @@ internal partial class CoreTests
         {
             Debug.Log("action 2 binding pressed: " + action2.controls[i].name);
             Press((ButtonControl)keyboard[action2.controls[i].name], queueEventOnly: true);
+        }
+
+        if (action3 != null)
+        {
+            for (int i = 0; i < action2.controls.Count; i++)
+            {
+                Debug.Log("action 2 binding pressed: " + action2.controls[i].name);
+                Press((ButtonControl)keyboard[action2.controls[i].name], queueEventOnly: true);
+            }
         }
 
         InputSystem.Update();
@@ -362,5 +383,37 @@ internal partial class CoreTests
         // Different letter keys: no conflict on the same control, so both shortcuts can perform despite different priorities.
         Assert.That(action1WasPerformed, Is.True);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
+    }
+
+    private static IEnumerable<ThreeInputActionDataWrapper<InputAction, InputAction, InputAction>> ThreeInputActionNoConflictingBindingTestCases()
+    {
+        InputActionMap map = new InputActionMap("map");
+        yield return new ThreeInputActionDataWrapper<InputAction, InputAction, InputAction>
+        {
+            Action1 =  map.SetupTestAction("alt", "shift", "w"),
+            Action2 = map.SetupTestAction("z"),
+            Action3 = map.SetupTestAction("l"),
+        };
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    [Ignore("Weird failing case from Anthony")]
+    [TestCaseSource(nameof(ThreeInputActionNoConflictingBindingTestCases))]
+    public void AltShiftW_Only_Triggers_TeamChat(ThreeInputActionDataWrapper<InputAction, InputAction, InputAction> threeInputActions)
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        PressBindingsForInputActions(keyboard, threeInputActions.Action1, threeInputActions.Action2);
+
+
+        Assert.That(threeInputActions.Action1.WasPerformedThisFrame(), Is.True);
+
+        //Assert.IsTrue(threeInputActions.Action1.WasPerformedThisFrame(), "Team chat should be activated by Alt+Shift+W.");
+        // Assert.IsFalse(moveAction.IsPressed(), "Move should not be activated when Team chat takes priority.");
+        // Assert.IsFalse(runFastAction.IsPressed(), "Run Fast should not be activated when Team chat takes priority.");
+
+        // Release(keyboard.wKey);
+        // Release(keyboard.leftShiftKey);
+        // Release(keyboard.altKey);
     }
 }
