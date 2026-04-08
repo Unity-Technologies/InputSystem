@@ -46,7 +46,7 @@ namespace UnityEngine.InputSystem
     ///
     /// Manages devices, layouts, and event processing.
     /// </remarks>
-    internal partial class InputManager : IDisposable
+    internal class InputManager : IDisposable
     {
         private InputManager() {}
 
@@ -404,6 +404,24 @@ namespace UnityEngine.InputSystem
         }
 
         public bool isProcessingEvents => m_InputEventStream.isOpen;
+
+        public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex, uint groupIndex)
+            => m_StateMonitors.AddStateChangeMonitor(control, monitor, monitorIndex, groupIndex);
+
+        public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
+            => m_StateMonitors.RemoveStateChangeMonitor(control, monitor, monitorIndex);
+
+        public void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex, int timerIndex)
+            => m_StateMonitors.AddStateChangeMonitorTimeout(control, monitor, time, monitorIndex, timerIndex);
+
+        public void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex, int timerIndex)
+            => m_StateMonitors.RemoveStateChangeMonitorTimeout(monitor, monitorIndex, timerIndex);
+
+        public void SignalStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor)
+            => m_StateMonitors.SignalStateChangeMonitor(control, monitor);
+
+        public unsafe void FireStateChangeNotifications()
+            => m_StateMonitors.FireStateChangeNotifications();
 
 #if UNITY_EDITOR
         /// <summary>
@@ -1487,17 +1505,11 @@ namespace UnityEngine.InputSystem
                 return;
 
             // Remove state monitors while device index is still valid.
-            RemoveStateChangeMonitors(device);
+            m_StateMonitors.OnDeviceRemoved(device);
 
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
             var deviceId = device.deviceId;
-            if (deviceIndex < m_StateChangeMonitors.LengthSafe())
-            {
-                // m_StateChangeMonitors mirrors layout of m_Devices *but* may be shorter.
-                var count = m_StateChangeMonitors.Length;
-                ArrayHelpers.EraseAtWithCapacity(m_StateChangeMonitors, ref count, deviceIndex);
-            }
             ArrayHelpers.EraseAtWithCapacity(m_Devices, ref m_DevicesCount, deviceIndex);
 
             m_DevicesById.Remove(deviceId);
@@ -2207,6 +2219,8 @@ namespace UnityEngine.InputSystem
             InputAnalytics.Initialize(this);
             m_Runtime.onShutdown = () => InputAnalytics.OnShutdown(this);
             #endif
+
+            m_StateMonitors = new InputManagerStateMonitors(() => m_DevicesCount, () => isProcessingEvents, m_Runtime);
         }
 
         internal void InstallGlobals()
@@ -2374,6 +2388,7 @@ namespace UnityEngine.InputSystem
         #endif
 
         private IInputRuntime m_Runtime;
+        internal InputManagerStateMonitors m_StateMonitors;
         private InputMetrics m_Metrics;
         private InputSettings m_Settings;
 
@@ -3331,7 +3346,7 @@ namespace UnityEngine.InputSystem
                 // Normally, we process action timeouts after first processing all events. If we have no
                 // events, we still need to check timeouts.
                 if (shouldProcessActionTimeouts)
-                    ProcessStateChangeMonitorTimeouts();
+                    m_StateMonitors.ProcessTimeouts();
 
                 k_InputUpdateProfilerMarker.End();
                 InvokeAfterUpdateCallback(updateType);
@@ -3764,7 +3779,7 @@ namespace UnityEngine.InputSystem
             m_DiscardOutOfFocusEvents = false;
 
             if (shouldProcessActionTimeouts)
-                ProcessStateChangeMonitorTimeouts();
+                m_StateMonitors.ProcessTimeouts();
 
             k_InputUpdateProfilerMarker.End();
             ////FIXME: need to ensure that if someone calls QueueEvent() from an onAfterUpdate callback, we don't end up with a
@@ -4092,7 +4107,7 @@ namespace UnityEngine.InputSystem
 
             // If state monitors need to be re-sorted, do it now.
             // NOTE: This must happen with the monitors in non-signalled state!
-            SortStateChangeMonitorsIfNecessary(deviceIndex);
+            m_StateMonitors.SortMonitorsForDeviceIfNeeded(deviceIndex);
 
             // Before we update state, let change monitors compare the old and the new state.
             // We do this instead of first updating the front buffer and then comparing to the
@@ -4101,7 +4116,7 @@ namespace UnityEngine.InputSystem
             // state, we can have multiple state events in the same frame yet still get reliable
             // change notifications.
             var haveSignalledMonitors =
-                ProcessStateChangeMonitors(deviceIndex, statePtr,
+                m_StateMonitors.ProcessStateChange(deviceIndex, statePtr,
                     deviceBuffer + stateBlockOfDevice.byteOffset,
                     stateSize, stateOffsetInDevice);
 
@@ -4185,7 +4200,7 @@ namespace UnityEngine.InputSystem
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.
             if (haveSignalledMonitors)
-                FireStateChangeNotifications(deviceIndex, internalTime, eventPtr);
+                m_StateMonitors.FireStateChangeNotifications(deviceIndex, internalTime, eventPtr);
 
             return makeDeviceCurrent;
         }
