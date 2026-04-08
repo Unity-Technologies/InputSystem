@@ -16,10 +16,6 @@
           "ExceptionMessage": "Additions require a new minor or major version.",
           "PackageVersion": "1.19.1"
         },
-    
-        // -------------------------
-        // NDA Keyword Validation
-        // -------------------------
         {
           "ValidationTest": "NDA Keyword Validation",
           "ExceptionMessage": "File 'InputSystem/Runtime/Plugins/iOS/IOSGameController.cs' contains keyword pattern '(?<!(BuildTarget|BuildTargetGroup|BuildSettings|AddressablesPlatform|RuntimePlatform|TargetPlatform|OpCodes|GraphicsDeviceType))\\.switch\\W' which indicates it is specific to restricted targets '-Switch'. It must not be published",
@@ -57,10 +53,6 @@
           "ExceptionMessage": "namespace UnityEngine.InputSystem.Switch.LowLevel",
           "PackageVersion": "1.19.1"
         },
-    
-        // -------------------------
-        // Assembly Definition Validation
-        // -------------------------
         {
           "ValidationTest": "Assembly Definition Validation",
           "ExceptionMessage": "For editor assemblies, 'Editor' should be present in the includePlatform section in: [{Package-Root}/InputSystem/Editor/Plugins/InputForUI/InputSystemForUI.Editor.asmdef]",
