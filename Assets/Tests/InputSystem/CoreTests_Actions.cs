@@ -12504,8 +12504,11 @@ partial class CoreTests
             .With("Left", "<Keyboard>/a")
             .With("Right", "<Keyboard>/d");
 
-        // Change test to use Priority.
-        action1.Priority = 1;
+        if (shortcutsEnabled)
+        {
+            // Change test to use Priority.
+            action1.Priority = 1;
+        }
 
         var map2 = new InputActionMap("map2");
         var action2 = map2.AddAction(name: "action2");
