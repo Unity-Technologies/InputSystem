@@ -112,7 +112,26 @@ namespace UnityEngine.InputSystem
         public BindingState* bindingStates => memory.bindingStates;
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
-        public ushort* controlGroupingAndPriority => memory.controlGroupingAndPriority;
+        private ushort* controlGroupingAndPriority => memory.controlGroupingAndPriority;
+
+        /// <summary>
+        /// Layout of <see cref="UnmanagedMemory.controlGroupingAndPriority"/>: interleaved ushort pairs (group id, binding priority) per control slot.
+        /// </summary>
+        internal static class ControlGroupingTable
+        {
+            public const int Stride = 2;
+
+            public static int GroupElementIndex(int controlIndex) => controlIndex * Stride;
+
+            public static int PriorityElementIndex(int controlIndex) => controlIndex * Stride + 1;
+        }
+
+        private uint GetControlMonitorGroupIndex(int controlIndex) =>
+            controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(controlIndex)];
+
+        private int GetControlBindingPriority(int controlIndex) =>
+            controlGroupingAndPriority[ControlGroupingTable.PriorityElementIndex(controlIndex)];
+
         public float* controlMagnitudes => memory.controlMagnitudes;
         public uint* enabledControls => (uint*)memory.enabledControls;
 
@@ -160,10 +179,10 @@ namespace UnityEngine.InputSystem
 
                 var priority = Math.Clamp(action != null ? action.Priority : 0, 0, 65535);
 
-                controlGroupingAndPriority[i * 2 + 1] = (ushort)priority;
+                controlGroupingAndPriority[ControlGroupingTable.PriorityElementIndex(i)] = (ushort)priority;
 
                 // Compute grouping. If already set, skip.
-                if (controlGroupingAndPriority[i * 2] == 0)
+                if (controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] == 0)
                 {
                     for (var n = 0; n < totalControlCount; ++n)
                     {
@@ -176,10 +195,10 @@ namespace UnityEngine.InputSystem
                         if (control != otherControl)
                             continue;
 
-                        controlGroupingAndPriority[n * 2] = (ushort)currentGroup;
+                        controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(n)] = (ushort)currentGroup;
                     }
 
-                    controlGroupingAndPriority[i * 2] = (ushort)currentGroup;
+                    controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] = (ushort)currentGroup;
 
                     ++currentGroup;
                 }
@@ -1150,7 +1169,8 @@ namespace UnityEngine.InputSystem
                 var bindingStatePtr = &bindingStates[bindingIndex];
                 if (bindingStatePtr->wantsInitialStateCheck)
                     SetInitialStateCheckPending(bindingStatePtr, true);
-                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex, controlGroupingAndPriority[controlIndex * 2]);
+                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex,
+                    GetControlMonitorGroupIndex(controlIndex));
 
                 SetControlEnabled(controlIndex, true);
             }
@@ -1344,19 +1364,21 @@ namespace UnityEngine.InputSystem
                 return;
             #endif
 
-            SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
-            ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
+            var monitorIndex = InputActionStateMonitorIndex.FromPacked(mapControlAndBindingIndex);
+            ProcessControlStateChange(monitorIndex.MapIndex, monitorIndex.ControlIndex, monitorIndex.BindingIndex, time,
+                eventPtr);
         }
 
         void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time,
             long mapControlAndBindingIndex, int interactionIndex)
         {
-            SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
-            ProcessTimeout(time, mapIndex, controlIndex, bindingIndex, interactionIndex);
+            var monitorIndex = InputActionStateMonitorIndex.FromPacked(mapControlAndBindingIndex);
+            ProcessTimeout(time, monitorIndex.MapIndex, monitorIndex.ControlIndex, monitorIndex.BindingIndex,
+                interactionIndex);
         }
 
         /// <summary>
-        /// Bit pack the mapIndex, controlIndex, bindingIndex and complexity components into a single long monitor index value.
+        /// Bit pack the mapIndex, controlIndex, bindingIndex and binding-priority components into a single long monitor index value.
         /// </summary>
         /// <param name="mapIndex">The mapIndex value to pack.</param>
         /// <param name="controlIndex">The controlIndex value to pack.</param>
@@ -1366,42 +1388,14 @@ namespace UnityEngine.InputSystem
         /// monitors. While we could look up map and binding indices from control indices, keeping
         /// all the information together avoids having to unnecessarily jump around in memory to grab
         /// the various pieces of data.
-        /// The complexity component is implicitly derived and does not need to be passed as an argument.
+        /// Priority is read from <see cref="ControlGroupingTable"/> data for <paramref name="controlIndex"/>.
         /// </remarks>
         private long ToCombinedMapAndControlAndBindingIndex(int mapIndex, int controlIndex, int bindingIndex)
         {
             // We have limits on the numbers of maps, controls, and bindings we allow in any single
             // action state (see TriggerState.kMaxNumXXX).
-            var complexity = controlGroupingAndPriority[controlIndex * 2 + 1];
-            var result = (long)controlIndex;
-            result |= (long)bindingIndex << 24;
-            result |= (long)mapIndex << 40;
-            result |= (long)complexity << 48;
-            return result;
-        }
-
-        /// <summary>
-        /// Extract the mapIndex, controlIndex and bindingIndex components from the provided bit packed argument (monitor index).
-        /// </summary>
-        /// <param name="mapControlAndBindingIndex">Represents a monitor index, which is a bit packed field containing multiple components.</param>
-        /// <param name="mapIndex">Will hold the extracted mapIndex value after the function completes.</param>
-        /// <param name="controlIndex">Will hold the extracted controlIndex value after the function completes.</param>
-        /// <param name="bindingIndex">Will hold the extracted bindingIndex value after the function completes.</param>
-        private void SplitUpMapAndControlAndBindingIndex(long mapControlAndBindingIndex, out int mapIndex,
-            out int controlIndex, out int bindingIndex)
-        {
-            controlIndex = (int)(mapControlAndBindingIndex & 0x00ffffff);
-            bindingIndex = (int)((mapControlAndBindingIndex >> 24) & 0xffff);
-            mapIndex = (int)((mapControlAndBindingIndex >> 40) & 0xff);
-        }
-
-        /// <summary>
-        /// Extract the 'complexity' component from the provided bit packed argument (monitor index).
-        /// </summary>
-        /// <param name="mapControlAndBindingIndex">Represents a monitor index, which is a bit packed field containing multiple components.</param>
-        internal static int GetPriorityFromMonitorIndex(long mapControlAndBindingIndex)
-        {
-            return (int)((mapControlAndBindingIndex >> 48) & 0xff);
+            return InputActionStateMonitorIndex.Create(mapIndex, controlIndex, bindingIndex,
+                GetControlBindingPriority(controlIndex)).Packed;
         }
 
         /// <summary>
@@ -2462,7 +2456,7 @@ namespace UnityEngine.InputSystem
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
                 // can then reset state monitors in the same group (strictly lower binding priority only).
                 // NOTE: We don't consume for controls at binding priority 0. Those we fire in unison.
-                if (controlGroupingAndPriority[trigger.controlIndex * 2 + 1] > 0 &&
+                if (GetControlBindingPriority(trigger.controlIndex) > 0 &&
                     // we can end up switching to performed state from an interaction with a timeout, at which point
                     // the original event will probably have been removed from memory, so make sure to check
                     // we still have one

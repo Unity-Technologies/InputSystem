@@ -417,4 +417,126 @@ internal partial class CoreTests
         // Release(keyboard.leftShiftKey);
         // Release(keyboard.altKey);
     }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_ControlGroupingTable_StrideAndElementIndicesMatchInterleavedLayout()
+    {
+        Assert.That(InputActionState.ControlGroupingTable.Stride, Is.EqualTo(2));
+        Assert.That(InputActionState.ControlGroupingTable.GroupElementIndex(3), Is.EqualTo(6));
+        Assert.That(InputActionState.ControlGroupingTable.PriorityElementIndex(3), Is.EqualTo(7));
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_InputActionStateMonitorIndex_RoundTripsComponents()
+    {
+        var index = InputActionStateMonitorIndex.Create(mapIndex: 7, controlIndex: 0x00abcdef, bindingIndex: 0x0bcd,
+            priority: 200);
+
+        Assert.That(index.MapIndex, Is.EqualTo(7));
+        Assert.That(index.ControlIndex, Is.EqualTo(0x00abcdef));
+        Assert.That(index.BindingIndex, Is.EqualTo(0x0bcd));
+        Assert.That(index.Priority, Is.EqualTo(200));
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_InputActionStateMonitorIndex_FromPacked_MatchesCreateOutput()
+    {
+        var created = InputActionStateMonitorIndex.Create(3, 100, 200, 42);
+        var roundTrip = InputActionStateMonitorIndex.FromPacked(created.Packed);
+
+        Assert.That(roundTrip.MapIndex, Is.EqualTo(created.MapIndex));
+        Assert.That(roundTrip.ControlIndex, Is.EqualTo(created.ControlIndex));
+        Assert.That(roundTrip.BindingIndex, Is.EqualTo(created.BindingIndex));
+        Assert.That(roundTrip.Priority, Is.EqualTo(created.Priority));
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_InputActionStateMonitorIndex_PriorityUsesLowEightBitsInPackedRepresentation()
+    {
+        var index = InputActionStateMonitorIndex.Create(0, 1, 0, priority: 300);
+        Assert.That(index.Priority, Is.EqualTo(300 & 0xff));
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_InputActionStateMonitorIndex_ImplicitConversionToLongMatchesPackedProperty()
+    {
+        var index = InputActionStateMonitorIndex.Create(1, 2, 3, 4);
+        long asLong = index;
+        Assert.That(asLong, Is.EqualTo(index.Packed));
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public unsafe void Actions_Priority_ControlGrouping_SamePhysicalControlSharesGroupId()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("priority_group_test");
+        map.AddAction("a", binding: "<Keyboard>/z");
+        map.AddAction("b", binding: "<Keyboard>/z");
+        map.Enable();
+
+        var state = map.m_State;
+        Assert.That(state, Is.Not.Null);
+        Assert.That(state.memory.controlGroupingInitialized, Is.True);
+
+        for (var i = 0; i < state.totalControlCount; ++i)
+        {
+            for (var j = i + 1; j < state.totalControlCount; ++j)
+            {
+                if (state.controls[i] != state.controls[j])
+                    continue;
+
+                var gi = InputActionState.ControlGroupingTable.GroupElementIndex(i);
+                var gj = InputActionState.ControlGroupingTable.GroupElementIndex(j);
+                Assert.That(state.memory.controlGroupingAndPriority[gi], Is.EqualTo(state.memory.controlGroupingAndPriority[gj]));
+                Assert.That(state.memory.controlGroupingAndPriority[gi], Is.Not.EqualTo(0));
+                return;
+            }
+        }
+
+        Assert.Fail("Expected two control slots bound to the same physical control.");
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public unsafe void Actions_Priority_ControlGrouping_WritesPerControlSlotPriorityFromAction()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("priority_per_slot_test");
+        var actionLow = map.AddAction("low", binding: "<Keyboard>/x");
+        var actionHigh = map.AddAction("high", binding: "<Keyboard>/x");
+        actionLow.Priority = 4;
+        actionHigh.Priority = 11;
+        map.Enable();
+
+        var state = map.m_State;
+        Assert.That(state, Is.Not.Null);
+
+        var lowIndex = -1;
+        var highIndex = -1;
+        for (var i = 0; i < state.totalControlCount; ++i)
+        {
+            if (state.controls[i] != keyboard.xKey)
+                continue;
+            var bindingIndex = state.controlIndexToBindingIndex[i];
+            var actionIndex = state.bindingStates[bindingIndex].actionIndex;
+            if (actionIndex == actionLow.m_ActionIndexInState)
+                lowIndex = i;
+            else if (actionIndex == actionHigh.m_ActionIndexInState)
+                highIndex = i;
+        }
+
+        Assert.That(lowIndex, Is.GreaterThanOrEqualTo(0));
+        Assert.That(highIndex, Is.GreaterThanOrEqualTo(0));
+
+        var pLow = InputActionState.ControlGroupingTable.PriorityElementIndex(lowIndex);
+        var pHigh = InputActionState.ControlGroupingTable.PriorityElementIndex(highIndex);
+        Assert.That(state.memory.controlGroupingAndPriority[pLow], Is.EqualTo(4));
+        Assert.That(state.memory.controlGroupingAndPriority[pHigh], Is.EqualTo(11));
+    }
 }

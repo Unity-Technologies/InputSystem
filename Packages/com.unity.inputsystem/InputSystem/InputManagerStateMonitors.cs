@@ -270,12 +270,12 @@ namespace UnityEngine.InputSystem
                 if (!previouslyHandled && eventPtr->handled)
                 {
                     var groupIndex = listeners[i].groupIndex;
-                    var handlerPriority = InputActionState.GetPriorityFromMonitorIndex(listener.monitorIndex);
+                    var handlerPriority = InputActionStateMonitorIndex.FromPacked(listener.monitorIndex).Priority;
                     for (var n = i + 1; n < signals.length; ++n)
                     {
                         if (listeners[n].groupIndex == groupIndex && listeners[n].monitor == listener.monitor)
                         {
-                            var candidatePriority = InputActionState.GetPriorityFromMonitorIndex(listeners[n].monitorIndex);
+                            var candidatePriority = InputActionStateMonitorIndex.FromPacked(listeners[n].monitorIndex).Priority;
                             if (candidatePriority < handlerPriority)
                                 signals.ClearBit(n);
                         }
@@ -412,8 +412,8 @@ namespace UnityEngine.InputSystem
                 {
                     for (var j = i; j > 0; --j)
                     {
-                        var firstPriority = InputActionState.GetPriorityFromMonitorIndex(listeners[j - 1].monitorIndex);
-                        var secondPriority = InputActionState.GetPriorityFromMonitorIndex(listeners[j].monitorIndex);
+                        var firstPriority = InputActionStateMonitorIndex.FromPacked(listeners[j - 1].monitorIndex).Priority;
+                        var secondPriority = InputActionStateMonitorIndex.FromPacked(listeners[j].monitorIndex).Priority;
                         if (firstPriority >= secondPriority)
                             break;
 
