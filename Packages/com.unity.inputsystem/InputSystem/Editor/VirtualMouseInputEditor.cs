@@ -5,7 +5,7 @@ using UnityEngine.InputSystem.UI;
 namespace UnityEngine.InputSystem
 {
     [UnityEditor.CustomEditor(typeof(VirtualMouseInput))]
-    public class VirtualMouseInputEditor : UnityEditor.Editor
+    class VirtualMouseInputEditor : UnityEditor.Editor
     {
         public void OnDisable()
         {
