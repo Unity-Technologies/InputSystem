@@ -5,14 +5,14 @@ using UnityEngine.InputSystem.LowLevel;
 namespace UnityEngine.InputSystem.Processors
 {
     /// <summary>
-    /// If Unity is currently in an <see cref="EditorWindow"/> callback, transforms a 2D coordinate from
+    /// If Unity is currently in an <c>EditorWindow</c> callback, transforms a 2D coordinate from
     /// player window space into window space of the current EditorWindow.
     /// </summary>
     /// <remarks>
     /// This processor is only available in the editor. Also, it only works on devices that
     /// support the <see cref="QueryEditorWindowCoordinatesCommand"/> request.
     ///
-    /// Outside of <see cref="EditorWindow"/> callbacks, this processor does nothing and just passes through
+    /// Outside of <c>EditorWindow</c> callbacks, this processor does nothing and just passes through
     /// the coordinates it receives.
     /// </remarks>
     /// <seealso cref="Pointer.position"/>
