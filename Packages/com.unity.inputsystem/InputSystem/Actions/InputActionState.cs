@@ -112,7 +112,7 @@ namespace UnityEngine.InputSystem
         public BindingState* bindingStates => memory.bindingStates;
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
-        public ushort* controlGroupingAndPriority => memory.controlGroupingAndComplexity;
+        public ushort* controlGroupingAndPriority => memory.controlGroupingAndPriority;
         public float* controlMagnitudes => memory.controlMagnitudes;
         public uint* enabledControls => (uint*)memory.enabledControls;
 
@@ -4157,7 +4157,7 @@ namespace UnityEngine.InputSystem
             public int* controlIndexToBindingIndex;
 
             // Two shorts per control. First one is group number. Second one is priority.
-            public ushort* controlGroupingAndComplexity;
+            public ushort* controlGroupingAndPriority;
             public bool controlGroupingInitialized;
 
             public ActionMapIndices* mapIndices;
@@ -4204,7 +4204,7 @@ namespace UnityEngine.InputSystem
                 controlMagnitudes = (float*)AllocFromBlob(ref ptr, controlCount * sizeof(float));
                 compositeMagnitudes = (float*)AllocFromBlob(ref ptr, compositeCount * sizeof(float));
                 controlIndexToBindingIndex = (int*)AllocFromBlob(ref ptr, controlCount * sizeof(int));
-                controlGroupingAndComplexity = (ushort*)AllocFromBlob(ref ptr, controlCount * sizeof(ushort) * 2);
+                controlGroupingAndPriority = (ushort*)AllocFromBlob(ref ptr, controlCount * sizeof(ushort) * 2);
                 actionBindingIndicesAndCounts = (ushort*)AllocFromBlob(ref ptr, actionCount * sizeof(ushort) * 2);
                 actionBindingIndices = (ushort*)AllocFromBlob(ref ptr, bindingCount * sizeof(ushort));
                 enabledControls = (int*)AllocFromBlob(ref ptr, (controlCount + 31) / 32 * sizeof(int));
@@ -4225,7 +4225,7 @@ namespace UnityEngine.InputSystem
                 controlMagnitudes = null;
                 compositeMagnitudes = null;
                 controlIndexToBindingIndex = null;
-                controlGroupingAndComplexity = null;
+                controlGroupingAndPriority = null;
                 actionBindingIndices = null;
                 actionBindingIndicesAndCounts = null;
 
@@ -4251,7 +4251,7 @@ namespace UnityEngine.InputSystem
                 UnsafeUtility.MemCpy(controlMagnitudes, memory.controlMagnitudes, memory.controlCount * sizeof(float));
                 UnsafeUtility.MemCpy(compositeMagnitudes, memory.compositeMagnitudes, memory.compositeCount * sizeof(float));
                 UnsafeUtility.MemCpy(controlIndexToBindingIndex, memory.controlIndexToBindingIndex, memory.controlCount * sizeof(int));
-                UnsafeUtility.MemCpy(controlGroupingAndComplexity, memory.controlGroupingAndComplexity, memory.controlCount * sizeof(ushort) * 2);
+                UnsafeUtility.MemCpy(controlGroupingAndPriority, memory.controlGroupingAndPriority, memory.controlCount * sizeof(ushort) * 2);
                 UnsafeUtility.MemCpy(actionBindingIndicesAndCounts, memory.actionBindingIndicesAndCounts, memory.actionCount * sizeof(ushort) * 2);
                 UnsafeUtility.MemCpy(actionBindingIndices, memory.actionBindingIndices, memory.bindingCount * sizeof(ushort));
                 UnsafeUtility.MemCpy(enabledControls, memory.enabledControls, (memory.controlCount + 31) / 32 * sizeof(int));
