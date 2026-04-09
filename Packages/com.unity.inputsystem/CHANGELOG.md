@@ -25,7 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed an incorrect ArraysHelper.HaveDuplicateReferences implementation that didn't use its arguments right [ISXB-1792] (https://github.com/Unity-Technologies/InputSystem/pull/2376)
 
 ### Changed
-
+- Removed 32-bit compilation check for HID on Windows players, which had no impact anymore. (ISX-2543)
 - Migrated sample scenes to use Universal Render Pipeline (URP) with Built-in Render Pipeline fallback shaders. The URP package is now required to run the samples. (ISX-2343)
 - Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.
 
