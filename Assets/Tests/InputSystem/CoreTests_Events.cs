@@ -218,7 +218,7 @@ partial class CoreTests
 
         Assert.That(callCount, Is.EqualTo(1));
     }
-    
+
     [Test]
     [Category("Events")]
     public void Events_OnAnyButtonPressed_WorksWithTouchControls()
@@ -236,12 +236,13 @@ partial class CoreTests
                 ++callCount;
             });
 
+
         Assert.That(callCount, Is.Zero);
 
         InputSystem.Update();
 
-        SetTouch(0,TouchPhase.Began, new Vector2(12,12));
-        
+        SetTouch(0, TouchPhase.Began, new Vector2(12, 12));
+
         InputSystem.Update();
 
         Assert.That(callCount, Is.EqualTo(1));
