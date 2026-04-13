@@ -351,6 +351,7 @@ namespace UnityEngine.InputSystem.DualShock
         private float? m_HighFrequenceyMotorSpeed;
         protected Color? m_LightBarColor;
         private byte outputSequenceId;
+        private bool m_IsBluetooth;
 
         protected override void FinishSetup()
         {
@@ -419,6 +420,9 @@ namespace UnityEngine.InputSystem.DualShock
         /// for the respective documentation regarding setting rumble and light bar color.</remarks>
         public bool SetMotorSpeedsAndLightBarColor(float? lowFrequency, float? highFrequency, Color? color)
         {
+            if (m_IsBluetooth)
+                return false;
+
             var lf = lowFrequency.HasValue ? lowFrequency.Value : 0;
             var hf = highFrequency.HasValue ? highFrequency.Value : 0;
             var c = color.HasValue ? color.Value : Color.black;
@@ -526,6 +530,7 @@ namespace UnityEngine.InputSystem.DualShock
             var genericReport = (DualSenseHIDGenericInputReport*)stateEvent->state;
             if (genericReport->reportId == DualSenseHIDUSBInputReport.ExpectedReportId)
             {
+                m_IsBluetooth = false;
                 if (stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize1 ||
                     stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize2)
                 {
@@ -543,6 +548,7 @@ namespace UnityEngine.InputSystem.DualShock
             }
             else if (genericReport->reportId == DualSenseHIDBluetoothInputReport.ExpectedReportId)
             {
+                m_IsBluetooth = true;
                 var data = ((DualSenseHIDBluetoothInputReport*)stateEvent->state)->ToHIDInputReport();
                 *((DualSenseHIDInputReport*)stateEvent->state) = data;
                 stateEvent->stateFormat = DualSenseHIDInputReport.Format;
