@@ -1,104 +1,102 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using System;
+using UnityEngine.SceneManagement;
 
-[InitializeOnLoad]
-public class AddScenesToBuild : EditorWindow
+/// <summary>
+/// Editor utility that populates Build Settings with every project scene so the
+/// Core Platform Menu can discover them at runtime.
+///
+/// This script is intentionally passive — it never runs automatically during CI
+/// builds or arbitrary play-mode sessions.  The scene list is only refreshed:
+///
+///   - When entering Play Mode with the menu scene open (for manual testing)
+///   - On demand via  QA Tools > Refresh Build Scene List
+///
+/// The Core Platforms Menu scene is always placed at build index 0.
+/// </summary>
+public static class AddScenesToBuild
 {
-    private const string corePlatformsMenu = "Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity";
+    const string kMenuScene = "Assets/QA/Tests/Core Platform Menu/Core Platforms Menu.unity";
+
+    static readonly string[] kExcludedSegments = { "xbox", "xr" };
+    static readonly string[] kExcludedRoots    = { "ExternalSampleProjects/", "Packages/" };
+
+    // ── Play Mode hook (menu scene only) ─────────────────────────
+
+    [InitializeOnLoadMethod]
+    static void RegisterPlayModeHook()
+    {
+        EditorApplication.playModeStateChanged += state =>
+        {
+            if (state != PlayModeStateChange.ExitingEditMode) return;
+
+            var activeScene = SceneManager.GetActiveScene();
+            if (!string.Equals(activeScene.path, kMenuScene, StringComparison.OrdinalIgnoreCase)) return;
+
+            RefreshBuildScenes(silent: true);
+        };
+    }
+
+    // ── Menu items ──────────────────────────────────────────────
 
     [MenuItem("QA Tools/Open Core Scene Menu")]
     static void OpenScene()
     {
-        EditorSceneManager.OpenScene(corePlatformsMenu);
+        EditorSceneManager.OpenScene(kMenuScene);
     }
 
-    [MenuItem("QA Tools/Add All Core Samples to Build")]
-    private static void AddAllScenesToBuildExcludingXboxAndXR()
+    [MenuItem("QA Tools/Refresh Build Scene List")]
+    static void RefreshManual()
     {
-        // Get all available scenes in the project
-        string[] sceneGuids = AssetDatabase.FindAssets("t:Scene");
-        string[] scenePaths = new string[sceneGuids.Length];
+        RefreshBuildScenes(silent: false);
+    }
 
-        for (int i = 0; i < sceneGuids.Length; i++)
-        {
-            scenePaths[i] = AssetDatabase.GUIDToAssetPath(sceneGuids[i]);
-        }
-        // Filter out scenes in folders containing "xbox" or "xr"
-        List<string> filteredScenePaths = new List<string>();
-        string coreScene = null;
+    // ── Core logic ──────────────────────────────────────────────
 
-        // Find the corePlatformsMenu scene and remove it from the general scene list
-        for (int i = 0; i < scenePaths.Length; i++)
+    static void RefreshBuildScenes(bool silent)
+    {
+        string[] guids = AssetDatabase.FindAssets("t:Scene");
+        var scenePaths = new List<string>();
+        string menuPath = null;
+
+        foreach (string guid in guids)
         {
-            if (scenePaths[i] == corePlatformsMenu)
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            if (string.Equals(path, kMenuScene, StringComparison.OrdinalIgnoreCase))
             {
-                coreScene = scenePaths[i];
+                menuPath = path;
+                continue;
             }
-            else if (!IsPathInExcludedFolder(scenePaths[i]))
-            {
-                filteredScenePaths.Add(scenePaths[i]);
-            }
+            if (!IsExcluded(path))
+                scenePaths.Add(path);
         }
 
-        // Add and ensure "Core Platforms Menu" is at the beginning of the list
-        if (!string.IsNullOrEmpty(coreScene))
-        {
-            filteredScenePaths.Insert(0, coreScene);
-        }
+        scenePaths.Sort(StringComparer.OrdinalIgnoreCase);
 
-        // Update the build settings
-        EditorBuildSettingsScene[] buildScenes = new EditorBuildSettingsScene[filteredScenePaths.Count];
-        for (int i = 0; i < filteredScenePaths.Count; i++)
-        {
-            buildScenes[i] = new EditorBuildSettingsScene(filteredScenePaths[i], true);
-        }
+        if (menuPath != null)
+            scenePaths.Insert(0, menuPath);
+
+        var buildScenes = new EditorBuildSettingsScene[scenePaths.Count];
+        for (int i = 0; i < scenePaths.Count; i++)
+            buildScenes[i] = new EditorBuildSettingsScene(scenePaths[i], true);
+
         EditorBuildSettings.scenes = buildScenes;
-        Debug.Log("All scenes (excluding Xbox and XR) added to build settings.");
+
+        if (!silent)
+            Debug.Log($"Build scene list refreshed — {scenePaths.Count} scenes registered.");
     }
 
-    private static bool IsPathInExcludedFolder(string path)
+    static bool IsExcluded(string path)
     {
-        // Specify folder names to exclude
-        string[] excludedFolders = { "xbox", "xr" };
-
-        // Check if the path or any part of it contains any of the excluded folder names
-        foreach (string folder in excludedFolders)
-        {
-            if (path.Contains(folder, StringComparison.InvariantCultureIgnoreCase))
-            {
+        for (int i = 0; i < kExcludedSegments.Length; i++)
+            if (!string.IsNullOrEmpty(kExcludedSegments[i]) && path.Contains(kExcludedSegments[i], StringComparison.OrdinalIgnoreCase))
                 return true;
-            }
-        }
+        for (int i = 0; i < kExcludedRoots.Length; i++)
+            if (path.StartsWith(kExcludedRoots[i], StringComparison.OrdinalIgnoreCase))
+                return true;
         return false;
-    }
-
-    private static void SaveBuildSettings()
-    {
-        // Save the current build settings to EditorPrefs
-        int sceneCount = EditorBuildSettings.scenes.Length;
-        EditorPrefs.SetInt("BuildSettingsSceneCount", sceneCount);
-        for (int i = 0; i < sceneCount; i++)
-        {
-            EditorPrefs.SetString($"BuildSettingsScenePath_{i}", EditorBuildSettings.scenes[i].path);
-            EditorPrefs.SetBool($"BuildSettingsSceneEnabled_{i}", EditorBuildSettings.scenes[i].enabled);
-        }
-    }
-
-    private static void RestoreBuildSettings()
-    {
-        // Restore the build settings from EditorPrefs
-        int sceneCount = EditorPrefs.GetInt("BuildSettingsSceneCount", 0);
-        EditorBuildSettingsScene[] buildScenes = new EditorBuildSettingsScene[sceneCount];
-        for (int i = 0; i < sceneCount; i++)
-        {
-            string scenePath = EditorPrefs.GetString($"BuildSettingsScenePath_{i}", "");
-            bool sceneEnabled = EditorPrefs.GetBool($"BuildSettingsSceneEnabled_{i}", false);
-
-            buildScenes[i] = new EditorBuildSettingsScene(scenePath, sceneEnabled);
-        }
-        EditorBuildSettings.scenes = buildScenes;
     }
 }

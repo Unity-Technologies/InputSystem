@@ -47,7 +47,7 @@ PlayerSettings:
   defaultScreenWidthWeb: 960
   defaultScreenHeightWeb: 600
   m_StereoRenderingPath: 0
-  m_ActiveColorSpace: 0
+  m_ActiveColorSpace: 1
   m_MTRendering: 1
   m_StackTraceTypes: 010000000100000001000000010000000100000001000000
   iosShowActivityIndicatorOnLoading: -1
@@ -509,7 +509,11 @@ PlayerSettings:
   webGLLinkerTarget: 1
   webGLThreadsSupport: 0
   webGLWasmStreaming: 0
-  scriptingDefineSymbols: {}
+  scriptingDefineSymbols:
+    Android: URP_COMPATIBILITY_MODE
+    Standalone: URP_COMPATIBILITY_MODE
+    iPhone: URP_COMPATIBILITY_MODE
+    tvOS: URP_COMPATIBILITY_MODE
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}

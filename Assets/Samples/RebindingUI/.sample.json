@@ -1,4 +1,4 @@
 {
   "displayName": "Rebinding UI",
-  "description": "An example UI component that demonstrates how to create UI for rebinding actions."
+  "description": "An example UI component that demonstrates how to create UI for rebinding actions. Requires the Universal Render Pipeline (URP) package to be installed for shader compilation."
 }
