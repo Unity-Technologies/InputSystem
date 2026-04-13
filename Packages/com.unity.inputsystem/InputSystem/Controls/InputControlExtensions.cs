@@ -1114,9 +1114,13 @@ namespace UnityEngine.InputSystem
 
             foreach (var control in eventPtr.EnumerateControls(Enumerate.IgnoreControlsInDefaultState, magnitudeThreshold: magnitude))
             {
-                // Continue if the control did change in the event or did not have a previous state to compare to.
+                // Skip if the value didn't change. For IInputStateCallbackReceiver devices (e.g. Touchscreen),
+                // the event may not carry full device state, so fall back to checking the control was at
+                // default (not pressed) before this event.
                 var stateInEvent = control.GetStatePtrFromStateEvent(eventPtr);
-                if (stateInEvent == null || !control.CompareValue(control.currentStatePtr, stateInEvent))
+                var currentState = control.currentStatePtr;
+                if (stateInEvent != null ? !control.CompareValue(currentState, stateInEvent)
+                    : control.CompareValue(currentState, control.defaultStatePtr))
                     continue;
                 if (buttonControlsOnly && !control.isButton)
                     continue;
