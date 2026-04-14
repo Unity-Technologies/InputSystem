@@ -210,7 +210,14 @@ namespace UnityEngine.InputSystem
         public int Priority
         {
             get => m_Priority;
-            set => m_Priority = value;
+            set
+            {
+                if (m_Priority == value)
+                    return;
+
+                m_Priority = value;
+                m_ActionMap?.m_State?.OnActionPriorityChanged(this);
+            }
         }
 
         /// <summary>

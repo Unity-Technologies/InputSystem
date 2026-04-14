@@ -1035,6 +1035,55 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal void OnActionPriorityChanged(InputAction action)
+        {
+            Debug.Assert(action != null, "Action must not be null");
+            Debug.Assert(action.m_ActionMap != null, "Action must have action map");
+
+            if (action == null || action.m_ActionMap == null)
+                return;
+
+            var actionIndex = action.m_ActionIndexInState;
+            if (actionIndex < 0 || actionIndex >= totalActionCount)
+                return;
+
+            var map = action.m_ActionMap;
+            var mapIndex = map.m_MapIndexInState;
+            if (mapIndex < 0 || mapIndex >= totalMapCount)
+                return;
+
+            var clampedPriority = (ushort)Math.Clamp(action.Priority, 0, ushort.MaxValue);
+            var manager = InputSystem.manager;
+            var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
+            var bindingCount = mapIndices[mapIndex].bindingCount;
+            var bindingStatesPtr = memory.bindingStates;
+
+            for (var i = 0; i < bindingCount; ++i)
+            {
+                var bindingIndex = bindingStartIndex + i;
+                var bindingState = &bindingStatesPtr[bindingIndex];
+                if (bindingState->actionIndex != actionIndex || bindingState->isPartOfComposite)
+                    continue;
+
+                var controlCount = bindingState->controlCount;
+                if (controlCount == 0)
+                    continue;
+
+                for (var n = 0; n < controlCount; ++n)
+                {
+                    var controlIndex = bindingState->controlStartIndex + n;
+                    controlGroupingAndPriority[controlIndex * 2 + 1] = clampedPriority;
+
+                    if (!IsControlEnabled(controlIndex))
+                        continue;
+
+                    var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+                    manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
+                    manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex, controlGroupingAndPriority[controlIndex * 2]);
+                }
+            }
+        }
+
         public void DisableAllActions(InputActionMap map)
         {
             Debug.Assert(map != null, "Map must not be null");
