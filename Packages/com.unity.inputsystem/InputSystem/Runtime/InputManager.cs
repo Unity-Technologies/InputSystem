@@ -492,7 +492,17 @@ namespace UnityEngine.InputSystem
             set => m_RunPlayerUpdatesInEditMode = value;
         }
 
+        /// <summary>
+        /// Number of active <see cref="InputEventTrace.ReplayController"/> instances currently replaying.
+        /// When greater than zero, focus-based gating is bypassed so that replayed events reach the game
+        /// regardless of Game View focus. This affects event routing (A), disabled-device discard (B),
+        /// and UI module processing (C). See ISXB-1319.
+        /// </summary>
+        internal int m_ActiveReplayCount;
+
+        internal bool isReplayActive => m_ActiveReplayCount > 0;
 #endif // UNITY_EDITOR
+
 
         private bool gameIsPlaying =>
 #if UNITY_EDITOR
@@ -504,7 +514,7 @@ namespace UnityEngine.InputSystem
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
-                     m_RunPlayerUpdatesInEditMode || applicationHasFocus || gameShouldGetInputRegardlessOfFocus;
+                     m_RunPlayerUpdatesInEditMode || applicationHasFocus || gameShouldGetInputRegardlessOfFocus || isReplayActive;
 #else
             applicationHasFocus || gameShouldGetInputRegardlessOfFocus;
 #endif
@@ -3372,7 +3382,9 @@ namespace UnityEngine.InputSystem
 
                     // If device is disabled, we let the event through only in certain cases.
                     // Removal and configuration change events should always be processed.
-                    if (device != null && !device.enabled &&
+                    // During replay, allow events through for devices disabled due to background
+                    // focus loss — the replay intentionally re-injects events for those devices.
+                    if (device != null && !device.enabled && !isReplayActive &&
                         currentEventType != DeviceRemoveEvent.Type &&
                         currentEventType != DeviceConfigurationEvent.Type &&
                         (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime |
@@ -3411,7 +3423,6 @@ namespace UnityEngine.InputSystem
 #endif
                         if (!shouldProcess)
                         {
-                            // Skip event if PreProcessEvent considers it to be irrelevant.
                             m_InputEventStream.Advance(false);
                             continue;
                         }
