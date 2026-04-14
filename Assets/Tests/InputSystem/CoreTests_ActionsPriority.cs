@@ -1,9 +1,11 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.TestTools;
 
 internal static class PriorityTestExtensions
 {
@@ -66,11 +68,6 @@ internal partial class CoreTests
             Action1 = map.SetupTestAction("ctrl", "shift", "v"),
             Action2 = map.SetupTestAction("shift", "v")
         };
-        // yield return new TwoInputActionDataWrapper<InputAction, InputAction>
-        // {
-        //     Action1 = map.SetupTestAction("ctrl", "enter", "w"),
-        //     Action2 = map.SetupTestAction("alt", "shift", "w")
-        // };
     }
 
     public class TwoInputActionDataWrapper<TInputAction1, TInputAction2>
@@ -408,14 +405,6 @@ internal partial class CoreTests
 
 
         Assert.That(threeInputActions.Action1.WasPerformedThisFrame(), Is.True);
-
-        //Assert.IsTrue(threeInputActions.Action1.WasPerformedThisFrame(), "Team chat should be activated by Alt+Shift+W.");
-        // Assert.IsFalse(moveAction.IsPressed(), "Move should not be activated when Team chat takes priority.");
-        // Assert.IsFalse(runFastAction.IsPressed(), "Run Fast should not be activated when Team chat takes priority.");
-
-        // Release(keyboard.wKey);
-        // Release(keyboard.leftShiftKey);
-        // Release(keyboard.altKey);
     }
 
     [Test]
@@ -538,5 +527,103 @@ internal partial class CoreTests
         var pHigh = InputActionState.ControlGroupingTable.PriorityElementIndex(highIndex);
         Assert.That(state.memory.controlGroupingAndPriority[pLow], Is.EqualTo(4));
         Assert.That(state.memory.controlGroupingAndPriority[pHigh], Is.EqualTo(11));
+    }
+
+    /// <summary>
+    /// Shift+B with <c>hold(duration=2)</c> reaches <see cref="InputActionPhase.Performed"/> after two seconds of
+    /// continuous hold (real time on the test runtime clock).
+    /// </summary>
+    [UnityTest]
+    [Category("Actions Priority")]
+    public IEnumerator Actions_Priority_BothActionsArePerformed_WhenAHoldAndBasicActionHaveDifferentTiming()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        using var map = new InputActionMap("HoldChord");
+
+        var plainB = map.AddAction("PlainB", InputActionType.Button, "<Keyboard>/b");
+        var shiftBHold = map.AddAction("ShiftBHold", InputActionType.Button, binding: null, interactions: "hold(duration=2)");
+        shiftBHold.AddCompositeBinding("OneModifier(modifiersOrder=2)")
+            .With("modifier", "<Keyboard>/shift")
+            .With("binding", "<Keyboard>/b");
+        plainB.Priority = 0;
+        shiftBHold.Priority = 1;
+
+        var plainBPerformed = false;
+        plainB.performed += _ => plainBPerformed = true;
+
+        map.Enable();
+
+        var t0 = currentTime;
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.bKey);
+        InputSystem.Update();
+        yield return null;
+
+        Assert.AreNotEqual(
+            InputActionPhase.Performed,
+            shiftBHold.phase,
+            "Hold should not be Performed until the hold duration elapses.");
+
+        currentTime = t0 + 2.1;
+        InputSystem.Update();
+        yield return null;
+
+        Assert.IsTrue(plainBPerformed);
+        Assert.IsTrue(
+            shiftBHold.phase == InputActionPhase.Performed,
+            "Hold should complete to Performed after the hold duration with keys still down.");
+
+        Release(keyboard.bKey);
+        Release(keyboard.leftShiftKey);
+        map.Disable();
+    }
+
+    /// <summary>
+    /// Shift+B with <c>hold(duration=2)</c> reaches <see cref="InputActionPhase.Performed"/> after two seconds of
+    /// continuous hold (real time on the test runtime clock).
+    /// </summary>
+    [UnityTest]
+    [Category("Actions Priority")]
+    public IEnumerator Actions_Priority_OnlyOneHoldActionIsPerformed_WhenOnePriorityIsHigher()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        using var map = new InputActionMap("HoldChord");
+
+        var plainB = map.AddAction("PlainB", InputActionType.Button, "<Keyboard>/b",  interactions: "hold(duration=2)");
+        var shiftBHold = map.AddAction("ShiftBHold", InputActionType.Button, binding: null, interactions: "hold(duration=2)");
+        shiftBHold.AddCompositeBinding("OneModifier(modifiersOrder=2)")
+            .With("modifier", "<Keyboard>/shift")
+            .With("binding", "<Keyboard>/b");
+        plainB.Priority = 0;
+        shiftBHold.Priority = 1;
+
+        var plainBPerformed = false;
+        plainB.performed += _ => plainBPerformed = true;
+
+        map.Enable();
+
+        var t0 = currentTime;
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.bKey);
+        InputSystem.Update();
+        yield return null;
+
+        Assert.AreNotEqual(
+            InputActionPhase.Performed,
+            shiftBHold.phase,
+            "Hold should not be Performed until the hold duration elapses.");
+
+        currentTime = t0 + 2.1;
+        InputSystem.Update();
+        yield return null;
+
+        Assert.IsTrue(plainBPerformed);
+        Assert.IsTrue(
+            shiftBHold.phase == InputActionPhase.Performed,
+            "Hold should complete to Performed after the hold duration with keys still down.");
+
+        Release(keyboard.bKey);
+        Release(keyboard.leftShiftKey);
+        map.Disable();
     }
 }
