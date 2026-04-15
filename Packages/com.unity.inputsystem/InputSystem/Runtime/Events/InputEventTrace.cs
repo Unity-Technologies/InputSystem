@@ -1148,6 +1148,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     --InputSystem.s_Manager.m_ActiveReplayCount;
                 }
             }
+
 #endif
             /// <summary>
             /// Replay events recorded from <paramref name="recordedDevice"/> on device <paramref name="playbackDevice"/>.
