@@ -999,9 +999,9 @@ namespace UnityEngine.InputSystem.UI
             // react.
             get => explictlyIgnoreFocus || InputRuntime.s_Instance.runInBackground
 #if UNITY_EDITOR
-                || InputSystem.s_Manager.isReplayActive
+            || InputSystem.s_Manager.isReplayActive
 #endif
-                ;
+            ;
         }
 
         /// <summary>
