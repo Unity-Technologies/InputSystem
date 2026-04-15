@@ -169,7 +169,7 @@ Note that layout registrations do not persist across domain reloads. Instead, th
 
 ##### Support for configurable enter Play mode
 
-The Input System supports configurable enter Play mode, which allows entering Play mode with domain reload disabled. For more information, refer to [Configuring how Unity enters Play mode](https://docs.unity3d.com/Manual/configurable-enter-play-mode.html) and [Enter Play mode with domain reload disabled](https://docs.unity3d.com/Manual/domain-reloading.html]. 
+The Input System supports configurable enter Play mode, which allows entering Play mode with domain reload disabled. For more information, refer to [Configuring how Unity enters Play mode](https://docs.unity3d.com/Manual/configurable-enter-play-mode.html) and [Enter Play mode with domain reload disabled](https://docs.unity3d.com/Manual/domain-reloading.html). 
 
 ## Native Devices
 
