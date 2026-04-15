@@ -1106,6 +1106,11 @@ namespace UnityEngine.InputSystem.LowLevel
             // editor updates where they reach the editor UI instead of the game.
             private void BeginReplayBypass()
             {
+                if (m_ClearReplayBypassCallback != null)
+                {
+                    InputSystem.onAfterUpdate -= m_ClearReplayBypassCallback;
+                }
+
                 if (!m_ReplayBypassActive)
                 {
                     m_ReplayBypassActive = true;
@@ -1121,8 +1126,12 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (!m_ReplayBypassActive)
                     return;
 
-                if (m_ClearReplayBypassCallback == null)
-                    m_ClearReplayBypassCallback = EndReplayBypass;
+                if (m_ClearReplayBypassCallback != null)
+                {
+                    return;
+                }
+
+                m_ClearReplayBypassCallback = EndReplayBypass;
                 InputSystem.onAfterUpdate += m_ClearReplayBypassCallback;
             }
 
