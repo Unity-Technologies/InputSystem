@@ -1072,8 +1072,10 @@ namespace UnityEngine.InputSystem.LowLevel
             private double m_StartTimeAsPerRuntime;
             private int m_AllEventsByTimeIndex = 0;
             private List<InputEventPtr> m_AllEventsByTime;
+#if UNITY_EDITOR
             private bool m_ReplayBypassActive;
             private Action m_ClearReplayBypassCallback;
+#endif
 
             internal ReplayController(InputEventTrace trace)
             {
@@ -1090,13 +1092,15 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 InputSystem.onBeforeUpdate -= OnBeginFrame;
                 finished = true;
+#if UNITY_EDITOR
                 EndReplayBypass();
-
+#endif
                 foreach (var device in m_CreatedDevices)
                     InputSystem.RemoveDevice(device);
                 m_CreatedDevices = default;
             }
 
+#if UNITY_EDITOR
             // Signals InputManager to treat events as if game view has focus, bypassing
             // editor focus routing that would otherwise defer pointer/keyboard events to
             // editor updates where they reach the editor UI instead of the game.
@@ -1135,7 +1139,7 @@ namespace UnityEngine.InputSystem.LowLevel
                     --InputSystem.s_Manager.m_ActiveReplayCount;
                 }
             }
-
+#endif
             /// <summary>
             /// Replay events recorded from <paramref name="recordedDevice"/> on device <paramref name="playbackDevice"/>.
             /// </summary>
@@ -1291,7 +1295,9 @@ namespace UnityEngine.InputSystem.LowLevel
             public ReplayController PlayAllFramesOneByOne()
             {
                 finished = false;
+#if UNITY_EDITOR
                 BeginReplayBypass();
+#endif
                 InputSystem.onBeforeUpdate += OnBeginFrame;
                 return this;
             }
@@ -1310,7 +1316,9 @@ namespace UnityEngine.InputSystem.LowLevel
             public ReplayController PlayAllEvents()
             {
                 finished = false;
+#if UNITY_EDITOR
                 BeginReplayBypass();
+#endif
                 try
                 {
                     while (MoveNext(true, out var eventPtr))
@@ -1355,7 +1363,9 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 // Start playback.
                 finished = false;
+#if UNITY_EDITOR
                 BeginReplayBypass();
+#endif
                 m_StartTimeAsPerFirstEvent = -1;
                 m_AllEventsByTimeIndex = -1;
                 InputSystem.onBeforeUpdate += OnBeginFrame;
@@ -1426,9 +1436,11 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 finished = true;
                 InputSystem.onBeforeUpdate -= OnBeginFrame;
+#if UNITY_EDITOR
                 // Schedule bypass removal for after the next OnUpdate, so any events already
                 // queued into the native buffer this frame are still processed with the bypass active.
                 ScheduleEndReplayBypass();
+#endif
                 m_OnFinished?.Invoke();
             }
 

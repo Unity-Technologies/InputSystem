@@ -3384,7 +3384,10 @@ namespace UnityEngine.InputSystem
                     // Removal and configuration change events should always be processed.
                     // During replay, allow events through for devices disabled due to background
                     // focus loss — the replay intentionally re-injects events for those devices.
-                    if (device != null && !device.enabled && !isReplayActive &&
+                    if (device != null && !device.enabled &&
+#if UNITY_EDITOR
+                        !isReplayActive &&
+#endif
                         currentEventType != DeviceRemoveEvent.Type &&
                         currentEventType != DeviceConfigurationEvent.Type &&
                         (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime |
