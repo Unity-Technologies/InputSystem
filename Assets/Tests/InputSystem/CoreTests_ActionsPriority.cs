@@ -45,35 +45,20 @@ internal static class PriorityTestExtensions
 
 internal partial class CoreTests
 {
-    private static IEnumerable<TwoInputActionDataWrapper<InputAction, InputAction>> TwoInputActionTestCases()
+    private static IEnumerable<(InputAction, InputAction)> TwoInputActionTestCases()
     {
         InputActionMap map = new InputActionMap("map");
-        yield return new TwoInputActionDataWrapper<InputAction, InputAction>
-        {
-            Action1 =  map.SetupTestAction("ctrl", "x"),
-            Action2 = map.SetupTestAction("x")
-        };
-        yield return new TwoInputActionDataWrapper<InputAction, InputAction>
-        {
-            Action1 = map.SetupTestAction("shift", "n"),
-            Action2 = map.SetupTestAction("n")
-        };
-        yield return new TwoInputActionDataWrapper<InputAction, InputAction>
-        {
-            Action1 = map.SetupTestAction("ctrl", "shift", "h"),
-            Action2 = map.SetupTestAction("shift", "h")
-        };
-        yield return new TwoInputActionDataWrapper<InputAction, InputAction>
-        {
-            Action1 = map.SetupTestAction("ctrl", "shift", "v"),
-            Action2 = map.SetupTestAction("shift", "v")
-        };
-    }
 
-    public class TwoInputActionDataWrapper<TInputAction1, TInputAction2>
-    {
-        public TInputAction1 Action1;
-        public TInputAction2 Action2;
+        var cases = new List<(InputAction, InputAction)>()
+        {
+            (map.SetupTestAction("ctrl", "x"), map.SetupTestAction("x")),
+            (map.SetupTestAction("shift", "n"), map.SetupTestAction("n")),
+            (map.SetupTestAction("ctrl", "shift", "h"), map.SetupTestAction("shift", "h")),
+            (map.SetupTestAction("ctrl", "shift", "v"), map.SetupTestAction("shift", "v"))
+        };
+
+        foreach (var c in cases)
+            yield return c;
     }
 
     public class ThreeInputActionDataWrapper<TInputAction1, TInputAction2, TInputAction3>
@@ -128,12 +113,11 @@ internal partial class CoreTests
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionTestCases))]
-    public void Actions_Priority_OnlyOneActionIsFired_WhenOnePriorityIsHigherThanOther(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
+    public void Actions_Priority_OnlyOneActionIsFired_WhenOnePriorityIsHigherThanOther((InputAction, InputAction) twoInputActions)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var action1 = twoInputActions.Action1;
-        var action2 = twoInputActions.Action2;
+        var (action1, action2) = twoInputActions;
 
         // action 1's priority higher so it takes precedence
         action1.Priority = 2;
@@ -160,12 +144,11 @@ internal partial class CoreTests
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionTestCases))]
-    public void Actions_Priority_OnlyOneActionIsFired_WhenOnePriorityIsHigherThanOtherInversePriorityOrder(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
+    public void Actions_Priority_OnlyOneActionIsFired_WhenOnePriorityIsHigherThanOtherInversePriorityOrder((InputAction, InputAction) actions)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var action1 = twoInputActions.Action1;
-        var action2 = twoInputActions.Action2;
+        var (action1, action2) = actions;
 
         // action 2's priority higher so it takes precedence
         action1.Priority = 1;
@@ -192,14 +175,13 @@ internal partial class CoreTests
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionTestCases))] // TODO: Darren, Should both actions be performed this frame here??
-    public void Actions_Priority_BothActionsArePerformed_DueToKeyPressOrderForShortcut(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
+    public void Actions_Priority_BothActionsArePerformed_DueToKeyPressOrderForShortcut((InputAction, InputAction) actions)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         // We swap the order here of Action1 & Action2 so key presses are done backwards, binding before modifiers.
         // This causes the opposite keys foreach test case inside TwoInputActionTestCases to be pressed first.
-        var smallerBindingAction = twoInputActions.Action2;
-        var largerBindingAction = twoInputActions.Action1;
+        var (smallerBindingAction, largerBindingAction) = actions;
 
         // Event though the priority is higher for action2 here, due to the order of the keys being pressed only Action1 will be fired.
         smallerBindingAction.Priority = 1;
@@ -229,12 +211,11 @@ internal partial class CoreTests
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionTestCases))]
-    public void Actions_Priority_BothActionFires_WhenPriorityIsEqual(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
+    public void Actions_Priority_BothActionFires_WhenPriorityIsEqual((InputAction, InputAction) actions)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var action1 = twoInputActions.Action1;
-        var action2 = twoInputActions.Action2;
+        var (action1, action2) = actions;
 
         action1.Priority = 5;
         action2.Priority = 5;
@@ -250,12 +231,11 @@ internal partial class CoreTests
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionTestCases))]
-    public void Actions_Priority_BothActionsFire_WhenPriorityIsZero(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
+    public void Actions_Priority_BothActionsFire_WhenPriorityIsZero((InputAction, InputAction) actions)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var action1 = twoInputActions.Action1;
-        var action2 = twoInputActions.Action2;
+        var (action1, action2) = actions;
 
         action1.Priority = 0;
         action2.Priority = 0;
@@ -273,40 +253,29 @@ internal partial class CoreTests
         Assert.That(action2WasPerformed, Is.True);
     }
 
-    private static IEnumerable<TwoInputActionDataWrapper<InputAction, InputAction>> TwoInputActionNoConflictingBindingTestCases()
+    private static IEnumerable<(InputAction, InputAction)> TwoInputActionNoConflictingBindingTestCases()
     {
         InputActionMap map = new InputActionMap("map");
-        yield return new TwoInputActionDataWrapper<InputAction, InputAction>
+        var cases = new List<(InputAction, InputAction)>()
         {
-            Action1 =  map.SetupTestAction("ctrl", "x"),
-            Action2 = map.SetupTestAction("k")
+            (map.SetupTestAction("ctrl", "x"), map.SetupTestAction("k")),
+            (map.SetupTestAction("shift", "n"), map.SetupTestAction("l")),
+            (map.SetupTestAction("shift", "h"), map.SetupTestAction("l")),
+            (map.SetupTestAction("shift", "h"), map.SetupTestAction("ctrl", "shift", "o")),
+            (map.SetupTestAction("ctrl", "shift", "v"), map.SetupTestAction("shift", "z"))
         };
-        yield return new TwoInputActionDataWrapper<InputAction, InputAction>
-        {
-            Action1 = map.SetupTestAction("shift", "n"),
-            Action2 = map.SetupTestAction("l")
-        };
-        yield return new TwoInputActionDataWrapper<InputAction, InputAction>
-        {
-            Action1 = map.SetupTestAction("shift", "h"),
-            Action2 = map.SetupTestAction("ctrl", "shift", "o")
-        };
-        yield return new TwoInputActionDataWrapper<InputAction, InputAction>
-        {
-            Action1 = map.SetupTestAction("ctrl", "shift", "v"),
-            Action2 = map.SetupTestAction("shift", "z")
-        };
+        foreach (var c in cases)
+            yield return c;
     }
 
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionNoConflictingBindingTestCases))]
-    public void Actions_Priority_BothActionsWithDifferentPriorityFire_WhenThereIsNoConflictingBinding(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
+    public void Actions_Priority_BothActionsWithDifferentPriorityFire_WhenThereIsNoConflictingBinding((InputAction, InputAction) actions)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var action1 = twoInputActions.Action1;
-        var action2 = twoInputActions.Action2;
+        var (action1, action2) = actions;
 
         action1.Priority = 0;
         action2.Priority = 1;
@@ -329,12 +298,11 @@ internal partial class CoreTests
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionNoConflictingBindingTestCases))]
-    public void Actions_Priority_BothActionsWithDifferentPriorityFire_WhenThereIsNoConflictingBindingInverseOrder(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
+    public void Actions_Priority_BothActionsWithDifferentPriorityFire_WhenThereIsNoConflictingBindingInverseOrder((InputAction, InputAction) actions)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var action1 = twoInputActions.Action1;
-        var action2 = twoInputActions.Action2;
+        var (action1, action2) = actions;
 
         action1.Priority = 15;
         action2.Priority = 5;
@@ -357,12 +325,11 @@ internal partial class CoreTests
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(TwoInputActionNoConflictingBindingTestCases))]
-    public void Actions_Priority_BothActionsWithEqualPriorityFire_WhenThereIsNoConflictingBinding(TwoInputActionDataWrapper<InputAction, InputAction> twoInputActions)
+    public void Actions_Priority_BothActionsWithEqualPriorityFire_WhenThereIsNoConflictingBinding((InputAction, InputAction) actions)
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
-        var action1 = twoInputActions.Action1;
-        var action2 = twoInputActions.Action2;
+        var (action1, action2) = actions;
 
         action1.Priority = 5;
         action2.Priority = 5;
