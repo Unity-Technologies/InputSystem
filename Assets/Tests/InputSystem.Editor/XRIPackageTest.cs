@@ -38,7 +38,7 @@ public class XRIPackageTests
 
     [UnityTest]
     [Category("Integration")]
-    public IEnumerator AdddingLatestXRIPackageThrowsNoErrors()
+    public IEnumerator AddingLatestXRIPackageThrowsNoErrors()
     {
         Application.logMessageReceived += HandleLog;
 

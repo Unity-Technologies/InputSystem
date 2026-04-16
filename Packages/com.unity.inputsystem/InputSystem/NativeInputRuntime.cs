@@ -213,6 +213,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
         public Action<bool> onPlayerFocusChanged
         {
             get => m_FocusChangedMethod;
@@ -225,8 +226,15 @@ namespace UnityEngine.InputSystem.LowLevel
                 m_FocusChangedMethod = value;
             }
         }
+#endif
 
-        public bool isPlayerFocused => Application.isFocused;
+        private FocusFlags m_FocusState = FocusFlags.None;
+        public FocusFlags focusState
+        {
+            get => m_FocusState;
+            set => m_FocusState = value;
+        }
+        public bool isPlayerFocused => (m_FocusState & FocusFlags.ApplicationFocus) != FocusFlags.None;
 
         public float pollingFrequency
         {
@@ -301,12 +309,15 @@ namespace UnityEngine.InputSystem.LowLevel
             return true;
         }
 
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
         private Action<bool> m_FocusChangedMethod;
 
         private void OnFocusChanged(bool focus)
         {
             m_FocusChangedMethod(focus);
         }
+
+#endif
 
         public Vector2 screenSize => new Vector2(Screen.width, Screen.height);
         public ScreenOrientation screenOrientation => Screen.orientation;

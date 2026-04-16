@@ -46,8 +46,8 @@ PlayerSettings:
   defaultScreenHeight: 768
   defaultScreenWidthWeb: 960
   defaultScreenHeightWeb: 600
-  m_StereoRenderingPath: 1
-  m_ActiveColorSpace: 0
+  m_StereoRenderingPath: 0
+  m_ActiveColorSpace: 1
   unsupportedMSAAFallback: 0
   m_SpriteBatchMaxVertexCount: 65535
   m_SpriteBatchVertexThreshold: 300
@@ -849,7 +849,10 @@ PlayerSettings:
   webWasm2023: 0
   webEnableSubmoduleStrippingCompatibility: 0
   scriptingDefineSymbols:
-    Standalone: UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+    Android: URP_COMPATIBILITY_MODE
+    Standalone: UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT;URP_COMPATIBILITY_MODE
+    iPhone: URP_COMPATIBILITY_MODE
+    tvOS: URP_COMPATIBILITY_MODE
   additionalCompilerArguments: {}
   platformArchitecture:
     iPhone: 1
