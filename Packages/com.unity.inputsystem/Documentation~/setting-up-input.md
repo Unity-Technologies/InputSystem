@@ -10,8 +10,8 @@ Before you can read input from users, you must configure how you want to receive
 
 Once you have set up input, you can then [respond to input](respond-to-input.md).
 
-| **Topic**                       | **Description**                  |
-| :------------------------------ | :------------------------------- |
+| **Topic** | **Description** |
+| :--- | :--- |
 | **[Actions](actions.md)** | Associate the purpose of an input and the source device in a flexible way. |
 | **[Input action assets](action-assets.md)** | Store your configuration of actions and their associated bindings, action maps, and control schemes in an Action Asset file. |
 | **[Create action maps](create-edit-delete-action-maps.md)** | Group collections of actions that represent different input scenarios in your project. |
