@@ -1145,7 +1145,8 @@ namespace UnityEngine.InputSystem.LowLevel
                 if (m_ReplayBypassActive)
                 {
                     m_ReplayBypassActive = false;
-                    --InputSystem.s_Manager.m_ActiveReplayCount;
+                    if (InputSystem.s_Manager != null)
+                        --InputSystem.s_Manager.m_ActiveReplayCount;
                 }
             }
 
