@@ -11,11 +11,12 @@ internal static class PriorityTestExtensions
 {
     internal static InputAction SetupTestAction(this InputActionMap map, string[] bindings)
     {
+        var actionTag = string.Join("+", bindings);
         switch (bindings.Length)
         {
             case 1:
             {
-                var action = map.AddAction("Action1:" + bindings[0]  + " " + Guid.NewGuid());
+                var action = map.AddAction($"Action {actionTag}");
                 action.AddBinding("<Keyboard>/" + bindings[0]);
                 return action;
             }
@@ -25,7 +26,7 @@ internal static class PriorityTestExtensions
                 var modifier = bindings[0];
                 var binding = bindings[1];
 
-                var action = map.AddAction("Action2:" + modifier + " " + binding + " " + Guid.NewGuid());
+                var action = map.AddAction($"Action {actionTag}");
 
                 action.AddCompositeBinding("OneModifier")
                     .With("Modifier", "<Keyboard>/" + modifier)
@@ -40,9 +41,8 @@ internal static class PriorityTestExtensions
                 var modifier2 = bindings[1];
                 var binding = bindings[2];
 
-                var action = map.AddAction("Action3:"  + modifier1 + " " + modifier2 + " " + binding +  " " + Guid.NewGuid());
+                var action = map.AddAction($"Action {actionTag}");
 
-                // A shortcut with two modifiers
                 action.AddCompositeBinding("TwoModifiers")
                     .With("Modifier1", "<Keyboard>/" + modifier1)
                     .With("Modifier2", "<Keyboard>/" + modifier2)
@@ -71,13 +71,11 @@ internal partial class CoreTests
     {
         for (int i = 0; i < action1.controls.Count; i++)
         {
-            Debug.Log("action 1 binding pressed: " + action1.controls[i].path);
             Press((ButtonControl)action1.controls[i], queueEventOnly: true);
         }
 
         for (int i = 0; i < action2.controls.Count; i++)
         {
-            Debug.Log("action 2 binding pressed: " + action2.controls[i].name);
             Press((ButtonControl)action2.controls[i], queueEventOnly: true);
         }
 
@@ -85,7 +83,6 @@ internal partial class CoreTests
         {
             for (int i = 0; i < action3.controls.Count; i++)
             {
-                Debug.Log("action 3 binding pressed: " + action3.controls[i].name);
                 Press((ButtonControl)action3.controls[i], queueEventOnly: true);
             }
         }
