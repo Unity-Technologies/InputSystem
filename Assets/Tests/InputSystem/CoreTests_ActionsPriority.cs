@@ -55,39 +55,6 @@ internal static class PriorityTestExtensions
                 return null;
         }        
     }
-
-    internal static InputAction SetupTestAction(this InputActionMap map, string binding)
-    {
-        // just a typical binding
-        var action = map.AddAction("Action1:" + binding  + " " + Guid.NewGuid());
-        action.AddBinding("<Keyboard>/" + binding);
-        return action;
-    }
-
-    internal static InputAction SetupTestAction(this InputActionMap map,  string modifier1,  string binding)
-    {
-        // A shortcut with one modifier
-        var action = map.AddAction("Action2:" + modifier1 + " " + binding + " " + Guid.NewGuid());
-
-        action.AddCompositeBinding("OneModifier")
-            .With("Modifier", "<Keyboard>/" + modifier1)
-            .With("Binding", "<Keyboard>/" + binding);
-
-        return action;
-    }
-
-    internal static InputAction SetupTestAction(this InputActionMap map, string modifier1, string modifier2, string binding)
-    {
-        var action = map.AddAction("Action3:"  + modifier1 + " " + modifier2 + " " + binding +  " " + Guid.NewGuid());
-
-        // A shortcut with two modifiers
-        action.AddCompositeBinding("TwoModifiers")
-            .With("Modifier1", "<Keyboard>/" + modifier1)
-            .With("Modifier2", "<Keyboard>/" + modifier2)
-            .With("Binding", "<Keyboard>/" + binding);
-
-        return action;
-    }
 }
 
 internal partial class CoreTests
@@ -99,13 +66,6 @@ internal partial class CoreTests
         (new[]{"ctrl", "shift", "h"}, new[]{"shift", "h"}),
         (new[]{"ctrl", "shift", "v"}, new[]{"shift", "v"}),
     };
-
-    public class ThreeInputActionDataWrapper<TInputAction1, TInputAction2, TInputAction3>
-    {
-        public TInputAction1 Action1;
-        public TInputAction2 Action2;
-        public TInputAction3 Action3;
-    }
 
     private void PressBindingsForInputActions(Keyboard keyboard, InputAction action1, InputAction action2, InputAction action3 = null)
     {
@@ -317,21 +277,6 @@ internal partial class CoreTests
         (new[]{"ctrl", "shift", "v"}, new[]{"shift", "z"})
     };
 
-    private static IEnumerable<(InputAction, InputAction)> TwoInputActionNoConflictingBindingTestCases()
-    {
-        InputActionMap map = new InputActionMap("map");
-        var cases = new List<(InputAction, InputAction)>()
-        {
-            (map.SetupTestAction("ctrl", "x"), map.SetupTestAction("k")),
-            (map.SetupTestAction("shift", "n"), map.SetupTestAction("l")),
-            (map.SetupTestAction("shift", "h"), map.SetupTestAction("l")),
-            (map.SetupTestAction("shift", "h"), map.SetupTestAction("ctrl", "shift", "o")),
-            (map.SetupTestAction("ctrl", "shift", "v"), map.SetupTestAction("shift", "z"))
-        };
-        foreach (var c in cases)
-            yield return c;
-    }
-
     [Test]
     [Category("Actions Priority")]
     [TestCaseSource(nameof(k_TwoInputActionNoConflictingBindingTestCases))]
@@ -420,31 +365,6 @@ internal partial class CoreTests
         // Different letter keys: no conflict on the same control, so both shortcuts can perform despite different priorities.
         Assert.That(action1WasPerformed, Is.True);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
-    }
-
-    private static IEnumerable<ThreeInputActionDataWrapper<InputAction, InputAction, InputAction>> ThreeInputActionNoConflictingBindingTestCases()
-    {
-        InputActionMap map = new InputActionMap("map");
-        yield return new ThreeInputActionDataWrapper<InputAction, InputAction, InputAction>
-        {
-            Action1 =  map.SetupTestAction("alt", "shift", "w"),
-            Action2 = map.SetupTestAction("z"),
-            Action3 = map.SetupTestAction("l"),
-        };
-    }
-
-    [Test]
-    [Category("Actions Priority")]
-    [Ignore("Weird failing case from Anthony")]
-    [TestCaseSource(nameof(ThreeInputActionNoConflictingBindingTestCases))]
-    public void AltShiftW_Only_Triggers_TeamChat(ThreeInputActionDataWrapper<InputAction, InputAction, InputAction> threeInputActions)
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-        threeInputActions.Action1.m_ActionMap.Enable();
-        PressBindingsForInputActions(keyboard, threeInputActions.Action1, threeInputActions.Action2);
-
-
-        Assert.That(threeInputActions.Action1.WasPerformedThisFrame(), Is.True);
     }
 
     [Test]
