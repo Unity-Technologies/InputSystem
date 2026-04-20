@@ -314,6 +314,7 @@ namespace UnityEngine.InputSystem
             // We can only allow setting the reference if it is not part of an persisted InputActionAsset.
             return (mainAsset is not InputActionAsset);
         }
+
         #endif // UNITY_EDITOR
     }
 }
