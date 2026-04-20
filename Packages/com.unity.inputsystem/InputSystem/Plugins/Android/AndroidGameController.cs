@@ -117,6 +117,7 @@ namespace UnityEngine.InputSystem.Android.LowLevel
         public bool isVirtual;
         public AndroidAxis[] motionAxes;
         public AndroidInputSource inputSources;
+        public int vibratorCount;
 
         public string ToJson()
         {
@@ -132,8 +133,18 @@ namespace UnityEngine.InputSystem.Android.LowLevel
 
         public override string ToString()
         {
-            return
-                $"deviceDescriptor = {deviceDescriptor}, productId = {productId}, vendorId = {vendorId}, isVirtual = {isVirtual}, motionAxes = {(motionAxes == null ? "<null>" : String.Join(",", motionAxes.Select(i => i.ToString()).ToArray()))}, inputSources = {inputSources}";
+            var entries = new[]
+            {
+                $"deviceDescriptor: {deviceDescriptor}",
+                $"productId: {productId}",
+                $"vendorId: {vendorId}",
+                $"isVirtual: {isVirtual}",
+                $"motionAxes: {(motionAxes == null ? "<null>" : String.Join(",", motionAxes.Select(i => i.ToString()).ToArray()))}",
+                $"inputSources: {inputSources}",
+                $"vibratorCount: {vibratorCount}"
+            };
+
+            return string.Join(", ", entries);
         }
     }
 }
