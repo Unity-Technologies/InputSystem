@@ -133,15 +133,16 @@ namespace UnityEngine.InputSystem.Android.LowLevel
 
         public override string ToString()
         {
+            var motionAxesString = motionAxes == null ? "<null>" : string.Join(",", motionAxes);
             var entries = new[]
             {
-                $"deviceDescriptor: {deviceDescriptor}",
-                $"productId: {productId}",
-                $"vendorId: {vendorId}",
-                $"isVirtual: {isVirtual}",
-                $"motionAxes: {(motionAxes == null ? "<null>" : String.Join(",", motionAxes.Select(i => i.ToString()).ToArray()))}",
-                $"inputSources: {inputSources}",
-                $"vibratorCount: {vibratorCount}"
+                $"deviceDescriptor = {deviceDescriptor}",
+                $"productId = {productId}",
+                $"vendorId = {vendorId}",
+                $"isVirtual = {isVirtual}",
+                $"motionAxes = {motionAxesString}",
+                $"inputSources = {inputSources}",
+                $"vibratorCount = {vibratorCount}"
             };
 
             return string.Join(", ", entries);
