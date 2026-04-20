@@ -106,4 +106,4 @@ namespace UnityEngine.InputSystem.Editor
         private string[] m_EnumDisplayNames;
     }
 }
-#endif
+#endif // UNITY_EDITOR
