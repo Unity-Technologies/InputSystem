@@ -3,9 +3,11 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 internal class MultiTouchRegressionTests : CoreTestsFixture
 {
