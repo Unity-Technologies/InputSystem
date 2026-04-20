@@ -1602,7 +1602,7 @@ namespace UnityEngine.InputSystem.UI
 
 #if UNITY_EDITOR
         /// <inheritdoc/>
-        protected override         void Reset()
+        protected override void Reset()
         {
             base.Reset();
 
