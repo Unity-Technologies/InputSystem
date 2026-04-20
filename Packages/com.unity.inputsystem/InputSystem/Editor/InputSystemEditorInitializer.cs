@@ -302,8 +302,8 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void RegisterAnalyticsHooks()
         {
-            InputAnalytics.s_IsNewSystemBackendsEnabled = ShouldEnableActionsNewBackend;
-            InputAnalytics.s_IsOldSystemBackendsEnabled = ShouldEnableActionsOldBackend;
+            InputAnalytics.IsNewSystemBackendsEnabled = ShouldEnableActionsNewBackend;
+            InputAnalytics.IsOldSystemBackendsEnabled = ShouldEnableActionsOldBackend;
             InputActionSetupExtensions.s_ApiUsageCallback = RegisterSetupApiUsage;
             InputActionSetupExtensions.s_SuppressAnalytics = SuppressSetupAnalytics;
         }

@@ -10,8 +10,8 @@ namespace UnityEngine.InputSystem
     {
         public const string kVendorKey = "unity.input";
 
-        public static Func<bool> s_IsNewSystemBackendsEnabled { get; set; }
-        public static Func<bool> s_IsOldSystemBackendsEnabled { get; set; }
+        public static Func<bool> IsNewSystemBackendsEnabled { get; set; }
+        public static Func<bool> IsOldSystemBackendsEnabled { get; set; }
 
         // Struct similar to AnalyticInfo for simplifying usage.
         public struct InputAnalyticInfo
@@ -155,8 +155,8 @@ namespace UnityEngine.InputSystem
                         devices = CollectRecognizedDevices(m_InputManager),
                         unrecognized_devices = CollectUnrecognizedDevices(m_InputManager),
 #if UNITY_EDITOR
-                        new_enabled = s_IsNewSystemBackendsEnabled?.Invoke() ?? false,
-                        old_enabled = s_IsOldSystemBackendsEnabled?.Invoke() ?? false,
+                        new_enabled = IsNewSystemBackendsEnabled?.Invoke() ?? false,
+                        old_enabled = IsOldSystemBackendsEnabled?.Invoke() ?? false,
 #endif // UNITY_EDITOR
                     };
                     error = null;
