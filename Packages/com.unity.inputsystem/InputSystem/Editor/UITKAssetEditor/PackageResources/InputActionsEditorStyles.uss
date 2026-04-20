@@ -160,7 +160,7 @@
 }
 
 .name-and-parameters-list-view .upDarkTheme {
-    background-image: resource('Packages/com.unity.inputsystemInputSystem/Editor/Icons/d_ChevronUp.png');
+    background-image: resource('Packages/com.unity.inputsystem/InputSystem/Editor/Icons/d_ChevronUp.png');
 }
 
 .name-and-parameters-list-view .down {
