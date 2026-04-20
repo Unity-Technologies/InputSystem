@@ -269,40 +269,10 @@ namespace UnityEngine.InputSystem
         private void CheckImmutableReference()
         {
             #if UNITY_EDITOR
-            // Note that we do a lot of checking here, but it is only for a rather slim (unintended) use case in
-            // editor and not in final builds. The alternative would be to set a non-serialized field on the reference
-            // when importing assets which would simplify this class, but it adds complexity to import stage and
-            // is more difficult to assess from a asset version portability perspective.
-            bool CanSetReference(InputActionReference reference)
-            {
-                // If callbacks aren't set, allow the operation
-                if (s_IsSubAsset == null || s_GetAssetPath == null || s_LoadMainAssetAtPath == null)
-                    return true;
-
-                // "Immutable" input action references are always sub-assets of InputActionAsset.
-                var isSubAsset = s_IsSubAsset(reference);
-                if (!isSubAsset)
-                    return true;
-
-                // If we cannot get the path of our reference, we cannot be a persisted asset within an InputActionAsset.
-                var path = s_GetAssetPath(reference);
-                if (path == null)
-                    return true;
-
-                // If we cannot get the main asset we cannot be a persisted asset within an InputActionAsset.
-                // Also we check that it is the expected type.
-                var mainAsset = s_LoadMainAssetAtPath(path);
-                if (!mainAsset)
-                    return true;
-
-                // We can only allow setting the reference if it is not part of an persisted InputActionAsset.
-                return (mainAsset is not InputActionAsset);
-            }
-
             // Prevent accidental mutation of the source asset if this InputActionReference is a persisted object
             // residing as a sub-asset within a .inputactions asset.
             // This is not needed for players since scriptable objects aren't serialized back from within a player.
-            if (!CanSetReference(this))
+            if (!CanSetReference())
             {
                 throw new InvalidOperationException("Attempting to modify an immutable InputActionReference instance " +
                     "that is part of an .inputactions asset. This is not allowed since it would modify the source " +
@@ -313,5 +283,37 @@ namespace UnityEngine.InputSystem
             }
             #endif // UNITY_EDITOR
         }
+
+        #if UNITY_EDITOR
+        // Note that we do a lot of checking here, but it is only for a rather slim (unintended) use case in
+        // editor and not in final builds. The alternative would be to set a non-serialized field on the reference
+        // when importing assets which would simplify this class, but it adds complexity to import stage and
+        // is more difficult to assess from a asset version portability perspective.
+        private bool CanSetReference()
+        {
+            // If callbacks aren't set, allow the operation
+            if (s_IsSubAsset == null || s_GetAssetPath == null || s_LoadMainAssetAtPath == null)
+                return true;
+
+            // "Immutable" input action references are always sub-assets of InputActionAsset.
+            var isSubAsset = s_IsSubAsset(this);
+            if (!isSubAsset)
+                return true;
+
+            // If we cannot get the path of our reference, we cannot be a persisted asset within an InputActionAsset.
+            var path = s_GetAssetPath(this);
+            if (path == null)
+                return true;
+
+            // If we cannot get the main asset we cannot be a persisted asset within an InputActionAsset.
+            // Also we check that it is the expected type.
+            var mainAsset = s_LoadMainAssetAtPath(path);
+            if (!mainAsset)
+                return true;
+
+            // We can only allow setting the reference if it is not part of an persisted InputActionAsset.
+            return (mainAsset is not InputActionAsset);
+        }
+        #endif // UNITY_EDITOR
     }
 }

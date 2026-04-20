@@ -348,7 +348,7 @@ namespace UnityEngine.InputSystem
             ControlSchemeOrWithOptionalDevice
         }
 
-        private static void RegisterApiUsage(int api)
+        private static void RegisterAnalyticsApi(int api)
         {
             s_ApiUsageCallback?.Invoke(api);
         }
@@ -397,7 +397,7 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax AddBinding(this InputAction action, InputBinding binding = default)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.AddBinding);
+            RegisterAnalyticsApi((int)Api.AddBinding);
             #endif
 
             if (action == null)
@@ -530,7 +530,7 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax AddBinding(this InputActionMap actionMap, InputBinding binding)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.AddBinding);
+            RegisterAnalyticsApi((int)Api.AddBinding);
             #endif
 
             if (actionMap == null)
@@ -557,7 +557,7 @@ namespace UnityEngine.InputSystem
             string interactions = null, string processors = null)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.AddCompositeBinding);
+            RegisterAnalyticsApi((int)Api.AddCompositeBinding);
             #endif
 
             if (action == null)
@@ -640,7 +640,7 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax ChangeBinding(this InputAction action, int index)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.ChangeBinding);
+            RegisterAnalyticsApi((int)Api.ChangeBinding);
             #endif
 
             if (action == null)
@@ -702,7 +702,7 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax ChangeBinding(this InputActionMap actionMap, int index)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.ChangeBinding);
+            RegisterAnalyticsApi((int)Api.ChangeBinding);
             #endif
 
             if (actionMap == null)
@@ -904,7 +904,7 @@ namespace UnityEngine.InputSystem
         public static BindingSyntax ChangeCompositeBinding(this InputAction action, string compositeName)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.ChangeCompositeBinding);
+            RegisterAnalyticsApi((int)Api.ChangeCompositeBinding);
             #endif
 
             if (action == null)
@@ -949,7 +949,7 @@ namespace UnityEngine.InputSystem
         public static void Rename(this InputAction action, string newName)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.Rename);
+            RegisterAnalyticsApi((int)Api.Rename);
             #endif
 
             if (action == null)
@@ -995,7 +995,7 @@ namespace UnityEngine.InputSystem
         public static void AddControlScheme(this InputActionAsset asset, InputControlScheme controlScheme)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.AddControlScheme);
+            RegisterAnalyticsApi((int)Api.AddControlScheme);
             #endif
 
             if (asset == null)
@@ -1067,7 +1067,7 @@ namespace UnityEngine.InputSystem
         public static void RemoveControlScheme(this InputActionAsset asset, string name)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.RemoveControlScheme);
+            RegisterAnalyticsApi((int)Api.RemoveControlScheme);
             #endif
 
             if (asset == null)
@@ -1091,7 +1091,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme WithBindingGroup(this InputControlScheme scheme, string bindingGroup)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.ControlSchemeWithBindingGroup);
+            RegisterAnalyticsApi((int)Api.ControlSchemeWithBindingGroup);
             #endif
 
             return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Done();
@@ -1100,7 +1100,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme WithDevice(this InputControlScheme scheme, string controlPath, bool required)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.ControlSchemeWithDevice);
+            RegisterAnalyticsApi((int)Api.ControlSchemeWithDevice);
             #endif
 
             if (required)
@@ -1111,7 +1111,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme WithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.ControlSchemeWithRequiredDevice);
+            RegisterAnalyticsApi((int)Api.ControlSchemeWithRequiredDevice);
             #endif
 
             return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
@@ -1120,7 +1120,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme WithOptionalDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.ControlSchemeWithOptionalDevice);
+            RegisterAnalyticsApi((int)Api.ControlSchemeWithOptionalDevice);
             #endif
 
             return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
@@ -1129,7 +1129,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme OrWithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.ControlSchemeOrWithRequiredDevice);
+            RegisterAnalyticsApi((int)Api.ControlSchemeOrWithRequiredDevice);
             #endif
 
             return new ControlSchemeSyntax(scheme).OrWithRequiredDevice(controlPath).Done();
@@ -1138,7 +1138,7 @@ namespace UnityEngine.InputSystem
         public static InputControlScheme OrWithOptionalDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR
-            RegisterApiUsage((int)Api.ControlSchemeOrWithOptionalDevice);
+            RegisterAnalyticsApi((int)Api.ControlSchemeOrWithOptionalDevice);
             #endif
 
             return new ControlSchemeSyntax(scheme).OrWithOptionalDevice(controlPath).Done();

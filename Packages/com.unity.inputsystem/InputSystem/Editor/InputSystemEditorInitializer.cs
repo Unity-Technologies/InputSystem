@@ -292,10 +292,11 @@ namespace UnityEngine.InputSystem.Editor
         private static void RegisterPlayModeHooks()
         {
             InputSystem.s_ShouldEnableActions = ShouldEnableActions;
-            InputSystem.s_OnPlayModeChangeCallback = change => OnPlayModeChange((PlayModeStateChange)change);
+            InputSystem.s_OnPlayModeChangeCallback = change => OnPlayModeChange((PlayModeStateChange)(int)change);
             InputSystem.s_OnProjectChangeCallback = OnProjectChange;
             InputSystem.s_IsDomainReloadDisabled = IsDomainReloadDisabledForPlayMode;
             InputSystem.s_EditorGlobalInitializeCallback = OnGlobalInitialize;
+            InputSystem.s_HasNativeObjectCallback = HasNativeObject;
 
             InputSystem.s_Manager.m_AddDevicesNotSupportedByProject = () => InputEditorUserSettings.addDevicesNotSupportedByProject;
         }
@@ -336,8 +337,7 @@ namespace UnityEngine.InputSystem.Editor
             nativeRuntime.m_IsEditorPaused = () => EditorApplication.isPaused;
             nativeRuntime.m_IsEditorActive = () => InternalEditorUtility.isApplicationActive;
 
-            nativeRuntime.m_RegisterWantsToQuit = RegisterWantsToQuit;
-            nativeRuntime.m_UnregisterWantsToQuit = UnregisterWantsToQuit;
+            nativeRuntime.SetWantsToQuitCallbacks(RegisterWantsToQuit, UnregisterWantsToQuit);
 
             nativeRuntime.m_SetUnityRemoteMessageHandler = SetUnityRemoteMessageHandler;
             nativeRuntime.m_SetUnityRemoteGyroEnabledCallback = SetUnityRemoteGyroEnabled;
@@ -464,7 +464,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             if (InputRuntime.s_Instance is NativeInputRuntime nativeRuntime)
             {
-                nativeRuntime.DispatchPlayModeChange((int)change);
+                nativeRuntime.DispatchPlayModeChange((InputPlayModeChange)(int)change);
             }
         }
 

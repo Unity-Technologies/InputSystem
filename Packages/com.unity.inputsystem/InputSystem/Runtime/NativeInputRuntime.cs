@@ -99,6 +99,7 @@ namespace UnityEngine.InputSystem.LowLevel
                         {
                             eventBufferPtr->eventCount = 0;
                             eventBufferPtr->sizeInBytes = 0;
+                            eventBufferPtr->capacityInBytes = 0;
                         }
                     };
                 else
@@ -185,8 +186,14 @@ namespace UnityEngine.InputSystem.LowLevel
 
         // Callbacks set by Editor to handle shutdown subscription
         // In Editor, we use EditorApplication.wantsToQuit which expects Func<bool>
-        internal Action<Func<bool>> m_RegisterWantsToQuit;
-        internal Action<Func<bool>> m_UnregisterWantsToQuit;
+        private Action<Func<bool>> m_RegisterWantsToQuit;
+        private Action<Func<bool>> m_UnregisterWantsToQuit;
+
+        internal void SetWantsToQuitCallbacks(Action<Func<bool>> register, Action<Func<bool>> unregister)
+        {
+            m_RegisterWantsToQuit = register;
+            m_UnregisterWantsToQuit = unregister;
+        }
 
         public Action onShutdown
         {
@@ -382,13 +389,12 @@ namespace UnityEngine.InputSystem.LowLevel
             m_SetUnityRemoteGyroUpdateIntervalCallback?.Invoke(interval);
         }
 
-        private Action<int> m_OnPlayModeChanged;
+        private Action<InputPlayModeChange> m_OnPlayModeChanged;
         private Action m_OnProjectChanged;
         /// <summary>
-        /// Callback for play mode state changes. The int parameter corresponds to PlayModeStateChange enum values:
-        /// 0 = EnteredEditMode, 1 = ExitingEditMode, 2 = EnteredPlayMode, 3 = ExitingPlayMode
+        /// Callback for play mode state changes.
         /// </summary>
-        public Action<int> onPlayModeChanged
+        public Action<InputPlayModeChange> onPlayModeChanged
         {
             get => m_OnPlayModeChanged;
             set => m_OnPlayModeChanged = value;
@@ -403,7 +409,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Called by InputSystemEditorInitializer to dispatch play mode changes
         /// </summary>
-        internal void DispatchPlayModeChange(int change)
+        internal void DispatchPlayModeChange(InputPlayModeChange change)
         {
             m_OnPlayModeChanged?.Invoke(change);
         }

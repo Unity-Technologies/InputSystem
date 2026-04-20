@@ -419,7 +419,7 @@ namespace UnityEngine.InputSystem
             unityRemoteGyroUpdateInterval = interval;
         }
 
-        public Action<int> onPlayModeChanged { get; set; }
+        public Action<InputPlayModeChange> onPlayModeChanged { get; set; }
         public Action onProjectChange { get; set; }
         #endif
 

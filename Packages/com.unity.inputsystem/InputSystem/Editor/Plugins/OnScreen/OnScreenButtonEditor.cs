@@ -12,7 +12,7 @@ namespace UnityEngine.InputSystem.OnScreen
 
         public void OnEnable()
         {
-            m_ControlPathInternal = serializedObject.FindProperty(nameof(OnScreenButton.m_ControlPath));
+            m_ControlPathInternal = serializedObject.FindProperty("m_ControlPath");
         }
 
         public void OnDisable()

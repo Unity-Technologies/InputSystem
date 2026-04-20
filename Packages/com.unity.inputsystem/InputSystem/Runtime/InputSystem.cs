@@ -3419,16 +3419,13 @@ namespace UnityEngine.InputSystem
         #if UNITY_EDITOR
         /// <summary>
         /// Callback for handling play mode changes. Set by InputSystemEditorInitializer.
-        /// The int parameter corresponds to PlayModeStateChange enum values:
-        /// 0 = EnteredEditMode, 1 = ExitingEditMode, 2 = EnteredPlayMode, 3 = ExitingPlayMode
         /// </summary>
-        internal static Action<int> s_OnPlayModeChangeCallback;
+        internal static Action<LowLevel.InputPlayModeChange> s_OnPlayModeChangeCallback;
 
         /// <summary>
         /// Forward to InputSystemEditorInitializer for tests.
-        /// Uses int to avoid direct UnityEditor dependency.
         /// </summary>
-        internal static void OnPlayModeChange(int change)
+        internal static void OnPlayModeChange(LowLevel.InputPlayModeChange change)
         {
             s_OnPlayModeChangeCallback?.Invoke(change);
         }
@@ -3445,6 +3442,25 @@ namespace UnityEngine.InputSystem
         /// The bool parameter is <c>calledFromCtor</c>.
         /// </summary>
         internal static Action<bool> s_EditorGlobalInitializeCallback;
+
+        /// <summary>
+        /// Checks whether a UnityEngine.Object still has a valid native representation.
+        /// </summary>
+        /// <param name="obj">The object to check.</param>
+        /// <returns><c>true</c> if the object has a valid native representation, <c>false</c> otherwise.</returns>
+        /// <remarks>
+        /// This method is now internal to the Input System. Use <c>UnityEditor.EditorUtility.InstanceIDToObject</c>
+        /// or the appropriate Unity editor utilities directly instead.
+        /// </remarks>
+        [Obsolete("HasNativeObject has been moved to editor-only code. " +
+            "Use UnityEditor.EditorUtility.InstanceIDToObject(obj.GetInstanceID()) != null instead.", false)]
+        public static bool HasNativeObject(Object obj)
+        {
+            // Delegate to the editor-side implementation via a callback to avoid a UnityEditor dependency.
+            return s_HasNativeObjectCallback?.Invoke(obj) ?? true;
+        }
+
+        internal static Func<Object, bool> s_HasNativeObjectCallback;
 
 
         #endif

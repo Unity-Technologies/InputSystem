@@ -186,16 +186,15 @@ namespace UnityEngine.InputSystem.LowLevel
 
         // If analytics are enabled, the runtime receives analytics events from the input manager.
         // See InputAnalytics.
-        #if UNITY_ANALYTICS || UNITY_EDITOR
+#if UNITY_ANALYTICS || UNITY_EDITOR
         void SendAnalytic(InputAnalytics.IInputAnalytic analytic);
-        #endif // UNITY_ANALYTICS || UNITY_EDITOR
+#endif // UNITY_ANALYTICS || UNITY_EDITOR
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         /// <summary>
-        /// Callback for play mode state changes. The int parameter corresponds to PlayModeStateChange enum values:
-        /// 0 = EnteredEditMode, 1 = ExitingEditMode, 2 = EnteredPlayMode, 3 = ExitingPlayMode
+        /// Callback for play mode state changes.
         /// </summary>
-        Action<int> onPlayModeChanged { get; set; }
+        Action<InputPlayModeChange> onPlayModeChanged { get; set; }
         Action onProjectChange { get; set; }
         bool isInPlayMode { get;  }
         bool isEditorActive { get; }
@@ -205,7 +204,7 @@ namespace UnityEngine.InputSystem.LowLevel
         Func<IntPtr, bool> onUnityRemoteMessage { set; }
         void SetUnityRemoteGyroEnabled(bool value);
         void SetUnityRemoteGyroUpdateInterval(float interval);
-        #endif
+#endif
     }
 
     internal static class InputRuntime
@@ -213,6 +212,20 @@ namespace UnityEngine.InputSystem.LowLevel
         public static IInputRuntime s_Instance;
         public static double s_CurrentTimeOffsetToRealtimeSinceStartup;
     }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// Mirrors <c>UnityEditor.PlayModeStateChange</c> for use in runtime code without a UnityEditor dependency.
+    /// The underlying int values are identical so the two enums can be cast between each other freely.
+    /// </summary>
+    internal enum InputPlayModeChange
+    {
+        EnteredEditMode = 0,
+        ExitingEditMode = 1,
+        EnteredPlayMode = 2,
+        ExitingPlayMode = 3,
+    }
+#endif
 
     internal static class InputRuntimeExtensions
     {
