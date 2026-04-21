@@ -87,11 +87,19 @@ namespace UnityEngine.InputSystem.Editor
             where T : ScriptableObject
         {
             var container = new VisualElement();
+            PopulateMakeActiveGui(container, current, target, entity, apply, allowAssignActive);
+            return container;
+        }
+
+        private static void PopulateMakeActiveGui<T>(VisualElement container, T current, T target, string entity, Action<T> apply, bool allowAssignActive)
+            where T : ScriptableObject
+        {
+            container.Clear();
 
             if (current == target)
             {
                 container.Add(new HelpBox($"These actions are assigned as the {entity}.", HelpBoxMessageType.Info));
-                return container;
+                return;
             }
 
             string currentlyActiveAssetsPath = null;
@@ -104,14 +112,16 @@ namespace UnityEngine.InputSystem.Editor
                 $"These actions are not assigned as the {entity} for the Input System. {currentlyActiveAssetsPath ?? ""}",
                 HelpBoxMessageType.Warning));
 
-            var assignButton = new Button(() => apply(target))
+            var assignButton = new Button(() =>
+            {
+                apply(target);
+                PopulateMakeActiveGui(container, target, target, entity, apply, allowAssignActive);
+            })
             {
                 text = $"Assign as the {entity}"
             };
             assignButton.SetEnabled(allowAssignActive);
             container.Add(assignButton);
-
-            return container;
         }
 
         public static bool IsValidFileExtension(string path)
