@@ -2556,7 +2556,7 @@ internal class PlayerInputTests : CoreTestsFixture
             {
                 ""name"" : ""GamepadPlayerUsageTags"",
                 ""extend"" : ""Gamepad"",
-                ""commonUsages"" : [
+                ""usages"" : [
                     ""Player1"", ""Player2""
                 ]
             }

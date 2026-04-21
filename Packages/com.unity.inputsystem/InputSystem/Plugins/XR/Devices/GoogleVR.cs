@@ -17,7 +17,7 @@ namespace Unity.XR.GoogleVr
     /// <summary>
     /// An XR controller powered by Google Daydream.
     /// </summary>
-    [InputControlLayout(displayName = "Daydream Controller", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
+    [InputControlLayout(displayName = "Daydream Controller", usages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class DaydreamController : XRController
     {
         [InputControl]

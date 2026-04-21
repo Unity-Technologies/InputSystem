@@ -60,12 +60,12 @@ namespace UnityEngine.InputSystem.Editor
     //       internal control names rather than display names.
     internal sealed class OptionalControlDropdownItem : InputControlDropdownItem
     {
-        public OptionalControlDropdownItem(EditorInputControlLayoutCache.OptionalControl optionalControl, string deviceControlId, string commonUsage)
+        public OptionalControlDropdownItem(EditorInputControlLayoutCache.OptionalControl optionalControl, string deviceControlId, string usage)
             : base(optionalControl.name)
         {
             m_ControlPath = optionalControl.name;
             m_Device = deviceControlId;
-            m_Usage = commonUsage;
+            m_Usage = usage;
             // Not searchable.
         }
     }

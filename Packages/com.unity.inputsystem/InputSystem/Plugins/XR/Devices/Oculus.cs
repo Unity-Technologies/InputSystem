@@ -66,7 +66,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// An Oculus Touch controller.
     /// </summary>
-    [InputControlLayout(displayName = "Oculus Touch Controller", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
+    [InputControlLayout(displayName = "Oculus Touch Controller", usages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class OculusTouchController : XRControllerWithRumble
     {
         [InputControl(aliases = new[] { "Primary2DAxis", "Joystick" })]
@@ -198,7 +198,7 @@ namespace Unity.XR.Oculus.Input
     /// <summary>
     /// A Gear VR controller.
     /// </summary>
-    [InputControlLayout(displayName = "GearVR Controller", commonUsages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
+    [InputControlLayout(displayName = "GearVR Controller", usages = new[] { "LeftHand", "RightHand" }, hideInUI = true)]
     public class GearVRTrackedController : XRController
     {
         [InputControl]

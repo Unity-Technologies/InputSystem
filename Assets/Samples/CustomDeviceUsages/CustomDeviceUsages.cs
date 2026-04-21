@@ -52,14 +52,14 @@ public static class InitCustomDeviceUsages
         // The layout override is just a fragment of layout information
         // in JSON format.
         //
-        // The key property here is "commonUsages" which tells the system
+        // The key property here is "usages" which tells the system
         // that "Player1" and "Player2" are possible usages applied to devices
         // using the given layout ("Gamepad" in our case).
         InputSystem.RegisterLayoutOverride(@"
             {
                 ""name"" : ""GamepadPlayerUsageTags"",
                 ""extend"" : ""Gamepad"",
-                ""commonUsages"" : [
+                ""usages"" : [
                     ""Player1"", ""Player2""
                 ]
             }

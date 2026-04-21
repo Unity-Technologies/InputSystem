@@ -58,7 +58,7 @@ namespace UnityEngine.InputSystem
         /// <value>Control representing the primary trigger button.</value>
         /// <remarks>
         /// This is the <see cref="ButtonControl"/> type control on the joystick
-        /// that has the <see cref="CommonUsages.PrimaryTrigger"/> usage.
+        /// that has the <see cref="Usages.PrimaryTrigger"/> usage.
         /// </remarks>
         public ButtonControl trigger { get; protected set; }
 
@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem
         /// <value>Control representing the main joystick axis.</value>
         /// <remarks>
         /// This is the <see cref="StickControl"/> type control on the joystick
-        /// that has the <see cref="CommonUsages.Primary2DMotion"/> usage.
+        /// that has the <see cref="Usages.Primary2DMotion"/> usage.
         /// </remarks>
         public StickControl stick { get; protected set; }
 
@@ -80,7 +80,7 @@ namespace UnityEngine.InputSystem
         /// <value>Control representing the twist motion of the joystick.</value>
         /// <remarks>
         /// This is the <see cref="AxisControl"/> type control on the joystick
-        /// that has the <see cref="CommonUsages.Twist"/> usage.
+        /// that has the <see cref="Usages.Twist"/> usage.
         /// </remarks>
         public AxisControl twist { get; protected set; }
 
@@ -93,7 +93,7 @@ namespace UnityEngine.InputSystem
         /// Hat switches are usually thumb-operated four-way switches that operate
         /// much like the "d-pad" on a gamepad (see <see cref="Gamepad.dpad"/>).
         /// If present, this is the <see cref="Vector2Control"/> type control on the
-        /// joystick that has the <see cref="CommonUsages.Hatswitch"/> usage.
+        /// joystick that has the <see cref="Usages.Hatswitch"/> usage.
         /// </remarks>
         public Vector2Control hatswitch { get; protected set; }
 

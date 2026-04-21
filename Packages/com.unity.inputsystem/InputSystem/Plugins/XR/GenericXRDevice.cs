@@ -82,7 +82,7 @@ namespace UnityEngine.InputSystem.XR
     /// <summary>
     /// The base type for all XR handed controllers.
     /// </summary>
-    [InputControlLayout(commonUsages = new[] { "LeftHand", "RightHand" }, isGenericTypeOfDevice = true, displayName = "XR Controller")]
+    [InputControlLayout(usages = new[] { "LeftHand", "RightHand" }, isGenericTypeOfDevice = true, displayName = "XR Controller")]
     public class XRController : TrackedDevice
     {
         /// <summary>
@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.XR
         /// var action = new InputAction(binding: "/&lt;XRController&gt;{leftHand}/position");
         /// To make the left-hand XR controller behave like the right-hand one
         /// var controller = XRController.leftHand;
-        /// InputSystem.SetUsage(controller, CommonUsages.RightHand);
+        /// InputSystem.SetUsage(controller, Usages.RightHand);
         /// </remarks>
         public static XRController leftHand => InputSystem.GetDevice<XRController>(CommonUsages.LeftHand);
 

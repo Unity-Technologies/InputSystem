@@ -15,7 +15,7 @@ using UnityEngine.InputSystem.XR;
 using UnityEngine.TestTools;
 using UnityEngine.XR;
 
-using Usages = UnityEngine.InputSystem.CommonUsages;
+using Usages = UnityEngine.InputSystem.Usages;
 
 using InputDeviceRole = UnityEngine.XR.InputDeviceRole;
 

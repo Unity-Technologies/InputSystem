@@ -185,7 +185,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        Assert.That(gamepad.leftStick.usages, Has.Exactly(1).EqualTo(CommonUsages.Primary2DMotion));
+        Assert.That(gamepad.leftStick.usages, Has.Exactly(1).EqualTo(Usages.Primary2DMotion));
     }
 
     [Test]
@@ -447,7 +447,7 @@ partial class CoreTests
         Assert.That(device.leftStick.x.normalize, Is.True);
     }
 
-    [InputControlLayout(commonUsages = new[] {"LeftHand", "RightHand"})]
+    [InputControlLayout(usages = new[] {"LeftHand", "RightHand"})]
     private class DeviceWithCommonUsages : InputDevice
     {
     }
@@ -460,7 +460,7 @@ partial class CoreTests
             {
                 ""name"" : ""DerivedDevice"",
                 ""extend"" : ""BaseDevice"",
-                ""commonUsages"" : [ ""LeftToe"" ]
+                ""usages"" : [ ""LeftToe"" ]
             }
         ";
 
@@ -469,10 +469,10 @@ partial class CoreTests
 
         var layout = InputSystem.LoadLayout("DerivedDevice");
 
-        Assert.That(layout.commonUsages, Has.Count.EqualTo(3));
-        Assert.That(layout.commonUsages[0], Is.EqualTo(CommonUsages.LeftHand));
-        Assert.That(layout.commonUsages[1], Is.EqualTo(CommonUsages.RightHand));
-        Assert.That(layout.commonUsages[2], Is.EqualTo(new InternedString("LeftToe")));
+        Assert.That(layout.usages, Has.Count.EqualTo(3));
+        Assert.That(layout.usages[0], Is.EqualTo(Usages.LeftHand));
+        Assert.That(layout.usages[1], Is.EqualTo(Usages.RightHand));
+        Assert.That(layout.usages[2], Is.EqualTo(new InternedString("LeftToe")));
     }
 
     [Test]
@@ -1118,12 +1118,12 @@ partial class CoreTests
     [Category("Layouts")]
     public void Layouts_CanOverrideCommonUsagesOnExistingLayout()
     {
-        // Change all Gamepads to have the common usages "A", "B", and "C".
+        // Change all Gamepads to have the usages "A", "B", and "C".
         const string json = @"
             {
                 ""name"" : ""Overrides"",
                 ""extend"" : ""Gamepad"",
-                ""commonUsages"" : [ ""A"", ""B"", ""C"" ]
+                ""usages"" : [ ""A"", ""B"", ""C"" ]
             }
         ";
 
@@ -1132,10 +1132,10 @@ partial class CoreTests
         var layout = InputSystem.LoadLayout("Gamepad");
 
         Assert.That(layout.appliedOverrides, Is.EquivalentTo(new[] {new InternedString("Overrides")}));
-        Assert.That(layout.commonUsages.Count, Is.EqualTo(3));
-        Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("A")));
-        Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("B")));
-        Assert.That(layout.commonUsages, Has.Exactly(1).EqualTo(new InternedString("C")));
+        Assert.That(layout.usages.Count, Is.EqualTo(3));
+        Assert.That(layout.usages, Has.Exactly(1).EqualTo(new InternedString("A")));
+        Assert.That(layout.usages, Has.Exactly(1).EqualTo(new InternedString("B")));
+        Assert.That(layout.usages, Has.Exactly(1).EqualTo(new InternedString("C")));
 
         // Applying the override should not have created a cycle.
         Assert.That(layout.baseLayouts, Does.Not.Contains(new InternedString("Gamepad")));
@@ -2777,37 +2777,37 @@ partial class CoreTests
         Assert.That(gamepad.usages, Is.Empty);
 
         // Set "Vertical" as usage
-        InputSystem.SetDeviceUsage(gamepad, CommonUsages.Vertical);
-        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Vertical));
+        InputSystem.SetDeviceUsage(gamepad, Usages.Vertical);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(Usages.Vertical));
 
         // Change usage with "Horizontal"
-        InputSystem.SetDeviceUsage(gamepad, CommonUsages.Horizontal);
-        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(CommonUsages.Vertical));
-        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+        InputSystem.SetDeviceUsage(gamepad, Usages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(Usages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(Usages.Horizontal));
 
 
         // Add "Vertical" to usages
-        InputSystem.AddDeviceUsage(gamepad, CommonUsages.Vertical);
-        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Vertical));
-        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+        InputSystem.AddDeviceUsage(gamepad, Usages.Vertical);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(Usages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(Usages.Horizontal));
 
         // Set "Horizontal" as the only one usage
-        InputSystem.SetDeviceUsage(gamepad, CommonUsages.Horizontal);
-        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(CommonUsages.Vertical));
-        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+        InputSystem.SetDeviceUsage(gamepad, Usages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(Usages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(Usages.Horizontal));
 
         // Try to add "Horizontal" again
-        InputSystem.AddDeviceUsage(gamepad, CommonUsages.Horizontal);
-        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Horizontal));
+        InputSystem.AddDeviceUsage(gamepad, Usages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(Usages.Horizontal));
 
 
         // Remove the existed "Horizontal" usage from usages
-        InputSystem.AddDeviceUsage(gamepad, CommonUsages.Vertical);
-        InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.Horizontal);
-        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.Vertical));
-        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(CommonUsages.Horizontal));
+        InputSystem.AddDeviceUsage(gamepad, Usages.Vertical);
+        InputSystem.RemoveDeviceUsage(gamepad, Usages.Horizontal);
+        Assert.That(gamepad.usages, Has.Exactly(1).EqualTo(Usages.Vertical));
+        Assert.That(gamepad.usages, Has.Exactly(0).EqualTo(Usages.Horizontal));
 
-        InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.Vertical);
+        InputSystem.RemoveDeviceUsage(gamepad, Usages.Vertical);
         Assert.That(gamepad.usages, Is.Empty);
     }
 

@@ -159,15 +159,15 @@ partial class CoreTests
     public void Remote_DevicesWithExistingUsage_WillUpdateSendToRemote()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        InputSystem.SetDeviceUsage(gamepad, CommonUsages.LeftHand);
-        InputSystem.AddDeviceUsage(gamepad, CommonUsages.RightHand);
+        InputSystem.SetDeviceUsage(gamepad, Usages.LeftHand);
+        InputSystem.AddDeviceUsage(gamepad, Usages.RightHand);
 
         using (var remote = new FakeRemote())
         {
             var remoteGamepad = (Gamepad)remote.remoteManager.devices[0];
             Assert.That(remoteGamepad.usages, Has.Count.EqualTo(2));
-            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
-            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(Usages.LeftHand));
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(Usages.RightHand));
         }
     }
 
@@ -182,26 +182,26 @@ partial class CoreTests
             Assert.That(remoteGamepad.usages, Has.Count.Zero);
 
             // Can Set
-            InputSystem.SetDeviceUsage(gamepad, CommonUsages.LeftHand);
+            InputSystem.SetDeviceUsage(gamepad, Usages.LeftHand);
             Assert.That(remoteGamepad.usages, Has.Count.EqualTo(1));
-            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(Usages.LeftHand));
 
             // Can Replace
-            InputSystem.SetDeviceUsage(gamepad, CommonUsages.RightHand);
+            InputSystem.SetDeviceUsage(gamepad, Usages.RightHand);
             Assert.That(remoteGamepad.usages, Has.Count.EqualTo(1));
-            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(Usages.RightHand));
 
             //Can Clear
-            InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.LeftHand);
-            InputSystem.RemoveDeviceUsage(gamepad, CommonUsages.RightHand);
+            InputSystem.RemoveDeviceUsage(gamepad, Usages.LeftHand);
+            InputSystem.RemoveDeviceUsage(gamepad, Usages.RightHand);
             Assert.That(remoteGamepad.usages, Has.Count.Zero);
 
             //Can Set Multiple
-            InputSystem.AddDeviceUsage(gamepad, CommonUsages.LeftHand);
-            InputSystem.AddDeviceUsage(gamepad, CommonUsages.RightHand);
+            InputSystem.AddDeviceUsage(gamepad, Usages.LeftHand);
+            InputSystem.AddDeviceUsage(gamepad, Usages.RightHand);
             Assert.That(remoteGamepad.usages, Has.Count.EqualTo(2));
-            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.LeftHand));
-            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(CommonUsages.RightHand));
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(Usages.LeftHand));
+            Assert.That(remoteGamepad.usages, Has.Exactly(1).EqualTo(Usages.RightHand));
         }
     }
 

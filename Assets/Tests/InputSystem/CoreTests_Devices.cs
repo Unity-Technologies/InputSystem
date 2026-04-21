@@ -211,7 +211,7 @@ partial class CoreTests
             receivedDeviceChange = c;
         };
 
-        InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
+        InputSystem.SetDeviceUsage(device, Usages.LeftHand);
 
         Assert.That(receivedDevice, Is.SameAs(device));
         Assert.That(receivedDeviceChange, Is.EqualTo(InputDeviceChange.UsageChanged));
@@ -224,7 +224,7 @@ partial class CoreTests
         InputSystem.AddDevice<Gamepad>();
         var device = InputSystem.AddDevice<Keyboard>();
 
-        InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
+        InputSystem.SetDeviceUsage(device, Usages.LeftHand);
 
         using (var controls = InputSystem.FindControls("/{LeftHand}"))
         {
@@ -293,8 +293,8 @@ partial class CoreTests
         InputSystem.AddDevice<Gamepad>();
         var device = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
-        InputSystem.AddDeviceUsage(device, CommonUsages.Vertical);
+        InputSystem.SetDeviceUsage(device, Usages.LeftHand);
+        InputSystem.AddDeviceUsage(device, Usages.Vertical);
 
         // Device should be found even if the one of the usages is specified
         using (var controls = InputSystem.FindControls("/{LeftHand}"))
@@ -329,10 +329,10 @@ partial class CoreTests
     public void Devices_CanFindDeviceByUsageAndLayout()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
-        InputSystem.SetDeviceUsage(gamepad, CommonUsages.LeftHand);
+        InputSystem.SetDeviceUsage(gamepad, Usages.LeftHand);
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
-        InputSystem.SetDeviceUsage(keyboard, CommonUsages.LeftHand);
+        InputSystem.SetDeviceUsage(keyboard, Usages.LeftHand);
 
         using (var controls = InputSystem.FindControls("/<Keyboard>{LeftHand}"))
         {
@@ -926,11 +926,11 @@ partial class CoreTests
         var rightHand = InputSystem.AddDevice<Gamepad>();
         InputSystem.AddDevice<Gamepad>(); // Noise.
 
-        InputSystem.SetDeviceUsage(leftHand, CommonUsages.LeftHand);
-        InputSystem.SetDeviceUsage(rightHand, CommonUsages.RightHand);
+        InputSystem.SetDeviceUsage(leftHand, Usages.LeftHand);
+        InputSystem.SetDeviceUsage(rightHand, Usages.RightHand);
 
-        Assert.That(InputSystem.GetDevice<Gamepad>(CommonUsages.LeftHand), Is.SameAs(leftHand));
-        Assert.That(InputSystem.GetDevice<Gamepad>(CommonUsages.RightHand), Is.SameAs(rightHand));
+        Assert.That(InputSystem.GetDevice<Gamepad>(Usages.LeftHand), Is.SameAs(leftHand));
+        Assert.That(InputSystem.GetDevice<Gamepad>(Usages.RightHand), Is.SameAs(rightHand));
     }
 
     [Test]

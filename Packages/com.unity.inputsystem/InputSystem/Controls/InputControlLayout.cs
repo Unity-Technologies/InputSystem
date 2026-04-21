@@ -369,7 +369,7 @@ namespace UnityEngine.InputSystem.Layouts
 
         public IEnumerable<InternedString> appliedOverrides => m_AppliedOverrides;
 
-        public ReadOnlyArray<InternedString> commonUsages => new ReadOnlyArray<InternedString>(m_CommonUsages);
+        public ReadOnlyArray<InternedString> usages => new ReadOnlyArray<InternedString>(m_Usages);
 
         /// <summary>
         /// List of child controls defined for the layout.
@@ -947,9 +947,9 @@ namespace UnityEngine.InputSystem.Layouts
                 isNoisy = layoutAttribute?.isNoisy ?? false
             };
 
-            if (layoutAttribute?.commonUsages != null)
-                layout.m_CommonUsages =
-                    ArrayHelpers.Select(layoutAttribute.commonUsages, x => new InternedString(x));
+            if (layoutAttribute?.usages != null)
+                layout.m_Usages =
+                    ArrayHelpers.Select(layoutAttribute.usages, x => new InternedString(x));
 
             return layout;
         }
@@ -978,7 +978,7 @@ namespace UnityEngine.InputSystem.Layouts
         internal bool? m_UpdateBeforeRender;
         internal InlinedArray<InternedString> m_BaseLayouts;
         private InlinedArray<InternedString> m_AppliedOverrides;
-        private InternedString[] m_CommonUsages;
+        private InternedString[] m_Usages;
         internal ControlItem[] m_Controls;
         internal string m_DisplayName;
         private string m_Description;
@@ -1319,7 +1319,7 @@ namespace UnityEngine.InputSystem.Layouts
                 m_StateFormat = other.m_StateFormat;
 
             // Combine common usages.
-            m_CommonUsages = ArrayHelpers.Merge(other.m_CommonUsages, m_CommonUsages);
+            m_Usages = ArrayHelpers.Merge(other.m_Usages, m_Usages);
 
             // Retain list of overrides.
             m_AppliedOverrides.Merge(other.m_AppliedOverrides);
@@ -1565,7 +1565,7 @@ namespace UnityEngine.InputSystem.Layouts
             public string format;
             public string beforeRender; // Can't be simple bool as otherwise we can't tell whether it was set or not.
             public string runInBackground;
-            public string[] commonUsages;
+            public string[] usages;
             public string displayName;
             public string description;
             public string type; // This is mostly for when we turn arbitrary InputControlLayouts into JSON; less for layouts *coming* from JSON.
@@ -1609,7 +1609,7 @@ namespace UnityEngine.InputSystem.Layouts
                     isGenericTypeOfDevice = isGenericTypeOfDevice,
                     hideInUI = hideInUI,
                     m_Variants = new InternedString(variant),
-                    m_CommonUsages = ArrayHelpers.Select(commonUsages, x => new InternedString(x)),
+                    m_Usages = ArrayHelpers.Select(usages, x => new InternedString(x)),
                 };
                 if (!string.IsNullOrEmpty(format))
                     layout.m_StateFormat = new FourCC(format);
@@ -1676,7 +1676,7 @@ namespace UnityEngine.InputSystem.Layouts
                     extend = layout.m_BaseLayouts.length == 1 ? layout.m_BaseLayouts[0].ToString() : null,
                     extendMultiple = layout.m_BaseLayouts.length > 1 ? layout.m_BaseLayouts.ToArray(x => x.ToString()) : null,
                     format = layout.stateFormat.ToString(),
-                    commonUsages = ArrayHelpers.Select(layout.m_CommonUsages, x => x.ToString()),
+                    usages = ArrayHelpers.Select(layout.m_Usages, x => x.ToString()),
                     controls = ControlItemJson.FromControlItems(layout.m_Controls),
                     beforeRender = layout.m_UpdateBeforeRender != null ? (layout.m_UpdateBeforeRender.Value ? "Update" : "Ignore") : null,
                 };
