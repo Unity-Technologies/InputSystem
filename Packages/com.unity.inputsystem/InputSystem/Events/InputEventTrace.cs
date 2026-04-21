@@ -270,6 +270,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 writer.Write(device.stateFormat);
                 writer.Write(device.stateSizeInBytes);
                 writer.Write(device.m_FullLayoutJson ?? string.Empty);
+                writer.Write(device.m_UsagesJson ?? string.Empty);
             }
 
             // Write offset of device list.
@@ -324,7 +325,8 @@ namespace UnityEngine.InputSystem.LowLevel
             // Read header.
             if (reader.ReadInt32() != kFileFormat)
                 throw new IOException($"Stream does not appear to be an InputEventTrace (no '{kFileFormat}' code)");
-            if (reader.ReadInt32() > kFileVersion)
+			int fileVersion = reader.ReadInt32();
+            if (fileVersion > kFileVersion)
                 throw new IOException($"Stream is an InputEventTrace but a newer version (expected version {kFileVersion} or below)");
             reader.ReadInt32(); // Flags; ignored for now.
             reader.ReadInt32(); // Platform; for now we're not doing anything with it.
@@ -392,7 +394,8 @@ namespace UnityEngine.InputSystem.LowLevel
                             layout = reader.ReadString(),
                             stateFormat = reader.ReadInt32(),
                             stateSizeInBytes = reader.ReadInt32(),
-                            m_FullLayoutJson = reader.ReadString()
+                            m_FullLayoutJson = reader.ReadString(),
+                            m_UsagesJson = fileVersion >= 2 ? reader.ReadString() : null // Usages were added in version 2
                         };
                     }
 
@@ -928,6 +931,12 @@ namespace UnityEngine.InputSystem.LowLevel
                         // when saving traces for this kind of input, we can recreate the device.
                         m_FullLayoutJson = InputControlLayout.s_Layouts.IsGeneratedLayout(device.m_Layout)
                             ? InputSystem.LoadLayout(device.layout).ToJson()
+                            : null,
+
+                        // if the device has usages, store them as JSON in the device info
+                        // This way, when replaying the trace, we can recreate the device with the correct usages. For example XR devices
+                        m_UsagesJson = device.usages.Count > 0
+                            ? JsonUtility.ToJson(new DeviceInfo.UsagesJsonWrapper(device.usages))
                             : null
                     });
             }
@@ -979,7 +988,7 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         private static FourCC kFileFormat => new FourCC('I', 'E', 'V', 'T');
-        private static int kFileVersion = 1;
+        private static int kFileVersion = 2;
 
         [Flags]
         private enum FileFlags
@@ -1498,8 +1507,32 @@ namespace UnityEngine.InputSystem.LowLevel
                                 InputSystem.RegisterLayout(deviceInfo.m_FullLayoutJson);
                             }
 
+                            // Retrieve original usages. For example, LeftHand, RightHand, etc.
+                            ReadOnlyArray<InternedString> originalUsages = default;
+                            if (!string.IsNullOrEmpty(deviceInfo.m_UsagesJson))
+                                originalUsages = DeviceInfo.UsagesJsonWrapper.GetUsagesFromJson(deviceInfo.m_UsagesJson);
+
                             // Create device.
                             var device = InputSystem.AddDevice(layoutName);
+
+                            // Ensure usages from original device are present on the new device.
+                            bool usagesUpdated = false;
+                            for (int i = originalUsages.Count - 1; i >= 0; i--)
+                            {
+                                InternedString usage = originalUsages[i];
+                                if (!device.usages.Contains(usage))
+                                {
+                                    // Adds missing usages from original device.
+                                    device.AddDeviceUsage(usage);
+                                    usagesUpdated = true;
+                                }
+                            }
+                            if (usagesUpdated)
+                            {
+                                // Notify about usage change. Needed for XR devices to work with input replay.
+                                InputActionState.OnDeviceChange(device, InputDeviceChange.UsageChanged);
+                            }
+                            
                             WithDeviceMappedFromTo(originalDeviceId, device.deviceId);
                             m_CreatedDevices.AppendWithCapacity(device);
                             return device.deviceId;
@@ -1567,6 +1600,39 @@ namespace UnityEngine.InputSystem.LowLevel
             [SerializeField] internal FourCC m_StateFormat;
             [SerializeField] internal int m_StateSizeInBytes;
             [SerializeField] internal string m_FullLayoutJson;
+            [SerializeField] internal string m_UsagesJson;
+
+            [Serializable]
+            public struct UsagesJsonWrapper
+            {
+                [SerializeField] internal string[] m_usages;
+
+                public static ReadOnlyArray<InternedString> GetUsagesFromJson(string json)
+                {
+                    return JsonUtility.FromJson<UsagesJsonWrapper>(json).GetUsagesInternedStringArray();
+                }
+
+                public UsagesJsonWrapper(ReadOnlyArray<InternedString> usages)
+                {
+                    m_usages = new string[usages.Count];
+                    for (int i = 0; i < usages.Count; i++)
+                    {
+                        m_usages[i] = usages[i].ToString();
+                    }
+                }
+
+                internal readonly ReadOnlyArray<InternedString> GetUsagesInternedStringArray()
+                {
+					if(m_usages == null)
+						return default;
+                    InternedString[] internedUsages = new InternedString[m_usages.Length];
+                    for (int i = 0; i < m_usages.Length; i++)
+                    {
+                        internedUsages[i] = new InternedString(m_usages[i]);
+                    }
+                    return new ReadOnlyArray<InternedString>(internedUsages);
+				}
+			}
         }
     }
 }
