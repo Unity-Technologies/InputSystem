@@ -52,15 +52,25 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public enum MessageType
         {
+            /// <summary>A new connection has been established with a remote sender.</summary>
             Connect,
+            /// <summary>An existing connection to a remote sender has been closed.</summary>
             Disconnect,
+            /// <summary>The remote is sending a new device layout definition.</summary>
             NewLayout,
+            /// <summary>The remote is informing of a newly added device.</summary>
             NewDevice,
+            /// <summary>The remote is sending a batch of input events.</summary>
             NewEvents,
+            /// <summary>The remote is informing that a device has been removed.</summary>
             RemoveDevice,
+            /// <summary>The remote is informing that a layout has been removed.</summary>
             RemoveLayout, // Not used ATM.
+            /// <summary>The remote is informing of a usage change on a device.</summary>
             ChangeUsages,
+            /// <summary>The remote is requesting that the local side start sending input data.</summary>
             StartSending,
+            /// <summary>The remote is requesting that the local side stop sending input data.</summary>
             StopSending,
         }
 
@@ -74,10 +84,13 @@ namespace UnityEngine.InputSystem
             /// going out, numeric ID of the targeted receiver of the message.
             /// </summary>
             public int participantId;
+            /// <summary>The type of message being sent.</summary>
             public MessageType type;
+            /// <summary>The raw byte payload of the message.</summary>
             public byte[] data;
         }
 
+        /// <summary>True if this remoting instance is currently sending input data to a remote recipient.</summary>
         public bool sending
         {
             get => (m_Flags & Flags.Sending) == Flags.Sending;
@@ -124,6 +137,7 @@ namespace UnityEngine.InputSystem
             SendInitialMessages();
         }
 
+        /// <summary>Stops sending input data to the remote recipient.</summary>
         public void StopSending()
         {
             if (!sending)
@@ -178,6 +192,7 @@ namespace UnityEngine.InputSystem
         {
         }
 
+        /// <summary>Subscribes the given observer to receive messages from the remote input sender.</summary>
         public IDisposable Subscribe(IObserver<Message> observer)
         {
             if (observer == null)
@@ -430,6 +445,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>Removes all remote devices that were added from the connection with the given sender ID.</summary>
         public void RemoveRemoteDevices(int participantId)
         {
             var senderIndex = FindOrCreateSenderRecord(participantId);

@@ -18,10 +18,13 @@ namespace UnityEngine.InputSystem.Controls
     public class DpadControl : Vector2Control
     {
         [InputControlLayout(hideInUI = true)]
+        /// <summary>Internal control representing one axis of a D-pad, derived from the button states.</summary>
         public class DpadAxisControl : AxisControl
         {
+            /// <summary>Which D-pad component (up/down/left/right) this axis control reads from.</summary>
             public int component { get; set; }
 
+            /// <summary>Resolves the parent D-pad control reference after the hierarchy is built.</summary>
             protected override void FinishSetup()
             {
                 base.FinishSetup();
@@ -33,6 +36,7 @@ namespace UnityEngine.InputSystem.Controls
                 m_StateBlock = m_Parent.m_StateBlock;
             }
 
+            /// <summary>Reads the axis value for this D-pad component from the given state buffer.</summary>
             public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
             {
                 var value = ((DpadControl)m_Parent).ReadUnprocessedValueFromState(statePtr);
@@ -72,12 +76,14 @@ namespace UnityEngine.InputSystem.Controls
 
         ////TODO: should have X and Y child controls as well
 
+        /// <summary>Initializes a new DpadControl.</summary>
         public DpadControl()
         {
             m_StateBlock.sizeInBits = 4;
             m_StateBlock.format = InputStateBlock.FormatBit;
         }
 
+        /// <summary>Resolves child button controls after the control hierarchy is built.</summary>
         protected override void FinishSetup()
         {
             up = GetChildControl<ButtonControl>("up");
@@ -87,6 +93,7 @@ namespace UnityEngine.InputSystem.Controls
             base.FinishSetup();
         }
 
+        /// <summary>Reads the raw D-pad direction from the given state buffer as a normalized Vector2.</summary>
         public override unsafe Vector2 ReadUnprocessedValueFromState(void* statePtr)
         {
             var upIsPressed = up.ReadValueFromStateWithCaching(statePtr) >= up.pressPointOrDefault;
@@ -97,6 +104,7 @@ namespace UnityEngine.InputSystem.Controls
             return MakeDpadVector(upIsPressed, downIsPressed, leftIsPressed, rightIsPressed);
         }
 
+        /// <summary>Writes the given Vector2 direction into the state buffer.</summary>
         public override unsafe void WriteValueIntoState(Vector2 value, void* statePtr)
         {
             var upIsPressed = up.IsValueConsideredPressed(value.y);

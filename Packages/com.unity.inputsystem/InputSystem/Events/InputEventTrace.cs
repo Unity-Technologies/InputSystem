@@ -156,6 +156,7 @@ namespace UnityEngine.InputSystem.LowLevel
             remove => m_EventListeners.RemoveCallback(value);
         }
 
+        /// <summary>Initializes a trace that records events for the specified device.</summary>
         public InputEventTrace(InputDevice device, long bufferSizeInBytes = kDefaultBufferSize, bool growBuffer = false,
                                long maxBufferSizeInBytes = -1, long growIncrementSizeInBytes = -1)
             : this(bufferSizeInBytes, growBuffer, maxBufferSizeInBytes, growIncrementSizeInBytes)
@@ -175,6 +176,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// size of <paramref name="maxBufferSizeInBytes"/>. This is off by default.</param>
         /// <param name="maxBufferSizeInBytes">If <paramref name="growBuffer"/> is true, this is the maximum size that the buffer should
         /// be grown to. If the maximum size is reached, old events are being overwritten.</param>
+        /// <param name="growIncrementSizeInBytes">How many bytes to add each time the buffer needs to grow.</param>
         public InputEventTrace(long bufferSizeInBytes = kDefaultBufferSize, bool growBuffer = false, long maxBufferSizeInBytes = -1, long growIncrementSizeInBytes = -1)
         {
             m_EventBufferSize = (uint)bufferSizeInBytes;
@@ -435,6 +437,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <exception cref="UnauthorizedAccessException"><paramref name="filePath"/> cannot be accessed.</exception>
         /// <seealso cref="WriteTo(string)"/>
         /// <seealso cref="ReadFrom(string)"/>
+        /// <returns>The loaded <see cref="InputEventTrace"/> instance.</returns>
         public static InputEventTrace LoadFrom(string filePath)
         {
             if (string.IsNullOrEmpty(filePath))
@@ -682,6 +685,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return true;
         }
 
+        /// <summary>Returns an enumerator over all recorded events.</summary>
         public IEnumerator<InputEventPtr> GetEnumerator()
         {
             return new Enumerator(this);

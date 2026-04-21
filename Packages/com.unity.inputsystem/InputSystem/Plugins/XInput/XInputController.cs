@@ -156,14 +156,10 @@ namespace UnityEngine.InputSystem.XInput
         /// </remarks>
         public enum DeviceSubType
         {
-            /// <summary>
-            /// The controller type is unknown.
-            /// </summary>
+            /// <summary>The controller subtype is unknown.</summary>
             Unknown = 0x00,
 
-            /// <summary>
-            /// Gamepad controller.
-            /// </summary>
+            /// <summary>Standard Xbox gamepad.</summary>
             /// <remarks>
             /// Includes left and right stick as <see cref="Gamepad.leftStick" /> and <see cref="Gamepad.rightStick"/>,
             /// left and right trigger as <see cref="Gamepad.leftTrigger"/> and <see cref="Gamepad.rightTrigger"/>,
@@ -176,9 +172,7 @@ namespace UnityEngine.InputSystem.XInput
             /// </remarks>
             Gamepad = 0x01,
 
-            /// <summary>
-            /// Racing wheel controller.
-            /// </summary>
+            /// <summary>Racing wheel controller.</summary>
             /// <remarks>
             /// <see cref="UnityEngine.InputSystem.Gamepad.leftStick" /> x-axis reports the wheel rotation,
             /// <see cref="Gamepad.rightTrigger"/> is the acceleration pedal, and
@@ -192,9 +186,7 @@ namespace UnityEngine.InputSystem.XInput
             /// </remarks>
             Wheel = 0x02,
 
-            /// <summary>
-            /// Arcade stick controller.
-            /// </summary>
+            /// <summary>Arcade stick controller.</summary>
             /// <remarks>
             /// Includes a Digital Stick that reports as a <see cref="Gamepad.dpad"/> (up, down, left, right),
             /// and most standard buttons (<see cref="Gamepad.buttonSouth"/>, <see cref="Gamepad.buttonEast"/>,
@@ -207,9 +199,7 @@ namespace UnityEngine.InputSystem.XInput
             /// </remarks>
             ArcadeStick = 0x03,
 
-            /// <summary>
-            /// Flight stick controller.
-            /// </summary>
+            /// <summary>Flight stick controller.</summary>
             /// <remarks>
             /// Includes a pitch and roll stick that reports as the <see cref="Gamepad.leftStick"/>, a POV Hat which
             /// reports as the <see cref="Gamepad.rightStick"/>, a rudder (handle twist or rocker) that reports as
@@ -223,9 +213,7 @@ namespace UnityEngine.InputSystem.XInput
             /// </remarks>
             FlightStick = 0x04,
 
-            /// <summary>
-            /// Dance pad controller.
-            /// </summary>
+            /// <summary>Dance pad controller.</summary>
             /// <remarks>
             /// Includes the <see cref="Gamepad.dpad"/> and standard buttons (<see cref="Gamepad.buttonSouth"/>,
             /// <see cref="Gamepad.buttonEast"/>, <see cref="Gamepad.buttonWest"/>,
@@ -234,9 +222,7 @@ namespace UnityEngine.InputSystem.XInput
             /// </remarks>
             DancePad = 0x05,
 
-            /// <summary>
-            /// Guitar controller.
-            /// </summary>
+            /// <summary>Guitar controller.</summary>
             /// <remarks>
             /// The strum bar maps to <see cref="Gamepad.dpad"/> (up and down), and the frets are assigned to
             /// <see cref="Gamepad.buttonSouth"/> (green), <see cref="Gamepad.buttonEast"/> (red),
@@ -252,18 +238,14 @@ namespace UnityEngine.InputSystem.XInput
             /// </remarks>
             Guitar = 0x06,
 
-            /// <summary>
-            /// Alternate guitar controller.
-            /// </summary>
+            /// <summary>Alternate guitar controller.</summary>
             /// <remarks>
             /// Similar to <see cref="Guitar"/> but supports a larger range of movement for the vertical orientation
             /// sensor.
             /// </remarks>
             GuitarAlternate = 0x07,
 
-            /// <summary>
-            /// Drum kit controller.
-            /// </summary>
+            /// <summary>Drum kit controller.</summary>
             /// <remarks>
             /// The drum pads are assigned to buttons: <see cref="Gamepad.buttonSouth"/> for green (Floor Tom),
             /// <see cref="Gamepad.buttonEast"/> for red (Snare Drum),
@@ -276,17 +258,13 @@ namespace UnityEngine.InputSystem.XInput
             /// </remarks>
             DrumKit = 0x08,
 
-            /// <summary>
-            /// Bass guitar controller.
-            /// </summary>
+            /// <summary>Bass guitar controller.</summary>
             /// <remarks>
             /// Identical to <see cref="Guitar" />, with the distinct subtype to simplify setup.
             /// </remarks>
             GuitarBass = 0x0B,
 
-            /// <summary>
-            /// Arcade pad controller.
-            /// </summary>
+            /// <summary>Arcade pad controller.</summary>
             /// <remarks>
             /// Includes Directional Pad and most standard buttons
             /// (<see cref="Gamepad.buttonSouth"/>, <see cref="Gamepad.buttonEast"/>,
@@ -310,10 +288,15 @@ namespace UnityEngine.InputSystem.XInput
         [Flags]
         public new enum DeviceFlags
         {
+            /// <summary>The controller supports force feedback (rumble).</summary>
             ForceFeedbackSupported = 0x01,
+            /// <summary>The controller is connected wirelessly.</summary>
             Wireless = 0x02,
+            /// <summary>The controller has a voice headset attached.</summary>
             VoiceSupported = 0x04,
+            /// <summary>The controller supports plugin modules (e.g. memory units).</summary>
             PluginModulesSupported = 0x08,
+            /// <summary>The controller does not provide navigation buttons.</summary>
             NoNavigation = 0x10,
         }
 

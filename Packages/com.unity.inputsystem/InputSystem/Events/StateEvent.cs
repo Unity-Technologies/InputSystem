@@ -15,10 +15,12 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 4 + kStateDataSizeToSubtract, Pack = 1)]
     public unsafe struct StateEvent : IInputEventTypeInfo
     {
+        /// <summary>The FourCC type identifier for state events.</summary>
         public const int Type = 0x53544154; // 'STAT'
 
         internal const int kStateDataSizeToSubtract = 1;
 
+        /// <summary>The base <see cref="InputEvent"/> header.</summary>
         [FieldOffset(0)]
         public InputEvent baseEvent;
 
@@ -31,8 +33,10 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputEvent.kBaseEventSize + sizeof(int))]
         internal fixed byte stateData[kStateDataSizeToSubtract]; // Variable-sized.
 
+        /// <summary>The size in bytes of the state payload in this event.</summary>
         public uint stateSizeInBytes => baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + sizeof(int));
 
+        /// <summary>Pointer to the first byte of the state data.</summary>
         public void* state
         {
             get
@@ -44,6 +48,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Returns an <see cref="InputEventPtr"/> pointing to this event.</summary>
         public InputEventPtr ToEventPtr()
         {
             fixed(StateEvent * ptr = &this)
@@ -52,6 +57,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Static FourCC type code used to identify this event type.</summary>
         public FourCC typeStatic => Type;
 
         /// <summary>
@@ -102,6 +108,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return From(ptr)->GetState<TState>();
         }
 
+        /// <summary>Returns the total size in bytes of this event including its state payload.</summary>
         public static int GetEventSizeWithPayload<TState>()
             where TState : struct
         {

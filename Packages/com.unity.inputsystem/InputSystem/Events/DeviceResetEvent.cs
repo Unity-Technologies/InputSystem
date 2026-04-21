@@ -10,6 +10,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize)]
     public struct DeviceResetEvent : IInputEventTypeInfo
     {
+        /// <summary>The FourCC type identifier for device reset events.</summary>
         public const int Type = 0x44525354; // DRST
 
         /// <summary>
@@ -24,8 +25,10 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public bool hardReset;
 
+        /// <summary>Static FourCC type code used to identify this event type.</summary>
         public FourCC typeStatic => Type;
 
+        /// <summary>Creates a device reset event for the given device ID, full-reset flag, and timestamp.</summary>
         public static DeviceResetEvent Create(int deviceId, bool hardReset = false, double time = -1)
         {
             var inputEvent =

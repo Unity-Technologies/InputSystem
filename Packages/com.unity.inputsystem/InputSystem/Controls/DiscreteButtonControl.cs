@@ -79,6 +79,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         public WriteMode writeMode;
 
+        /// <summary>Resolves required child or sibling controls after the control hierarchy is built.</summary>
         protected override void FinishSetup()
         {
             base.FinishSetup();
@@ -88,6 +89,7 @@ namespace UnityEngine.InputSystem.Controls
                     $"Non-integer format '{stateBlock.format}' is not supported for DiscreteButtonControl '{this}'");
         }
 
+        /// <summary>Reads the raw button value from the given state buffer and returns it as a float.</summary>
         public override unsafe float ReadUnprocessedValueFromState(void* statePtr)
         {
             var valuePtr = (byte*)statePtr + (int)m_StateBlock.byteOffset;
@@ -114,6 +116,7 @@ namespace UnityEngine.InputSystem.Controls
             return Preprocess(value);
         }
 
+        /// <summary>Writes the given float value into the state buffer at this control's bit position.</summary>
         public override unsafe void WriteValueIntoState(float value, void* statePtr)
         {
             if (writeMode == WriteMode.WriteNullAndMaxValue)

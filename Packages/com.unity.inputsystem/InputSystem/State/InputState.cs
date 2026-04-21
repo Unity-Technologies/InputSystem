@@ -32,6 +32,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </summary>
         public static uint updateCount => InputUpdate.s_UpdateStepCount;
 
+        /// <summary>The current input time, which advances with each input update.</summary>
         public static double currentTime => InputRuntime.s_Instance.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
         /// <summary>
@@ -48,6 +49,7 @@ namespace UnityEngine.InputSystem.LowLevel
             remove => InputSystem.manager.onDeviceStateChange -= value;
         }
 
+        /// <summary>Applies the state described by the given event to the given device.</summary>
         public static unsafe void Change(InputDevice device, InputEventPtr eventPtr, InputUpdateType updateType = default)
         {
             if (device == null)
@@ -82,6 +84,11 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Perform one update of input state.
         /// </summary>
+        /// <typeparam name="TState">The type of the state struct.</typeparam>
+        /// <param name="control">The control whose state to change.</param>
+        /// <param name="state">The new state value to apply.</param>
+        /// <param name="updateType">The type of update to apply the state change in.</param>
+        /// <param name="eventPtr">Optional event to associate with the state change.</param>
         /// <remarks>
         /// Incorporates the given state and triggers all state change monitors as needed.
         ///
@@ -100,6 +107,11 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Perform one update of input state.
         /// </summary>
+        /// <typeparam name="TState">The type of the state struct.</typeparam>
+        /// <param name="control">The control whose state to change.</param>
+        /// <param name="state">The new state value to apply, passed by reference.</param>
+        /// <param name="updateType">The type of update to apply the state change in.</param>
+        /// <param name="eventPtr">Optional event to associate with the state change.</param>
         /// <remarks>
         /// Incorporates the given state and triggers all state change monitors as needed.
         ///
@@ -131,6 +143,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 eventPtr: eventPtr);
         }
 
+        /// <summary>Returns true if the given FourCC format code represents an integer data type.</summary>
         public static bool IsIntegerFormat(this FourCC format)
         {
             return format == InputStateBlock.FormatBit ||
@@ -210,6 +223,7 @@ namespace UnityEngine.InputSystem.LowLevel
             InputSystem.manager.AddStateChangeMonitor(control, monitor, monitorIndex, groupIndex);
         }
 
+        /// <summary>Registers a monitor that is notified whenever the state of the given control changes.</summary>
         public static IInputStateChangeMonitor AddChangeMonitor(InputControl control,
             NotifyControlValueChangeAction valueChangeCallback, int monitorIndex = -1,
             NotifyTimerExpiredAction timerExpiredCallback = null)
@@ -225,6 +239,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return monitor;
         }
 
+        /// <summary>Removes a previously registered state change monitor.</summary>
         public static void RemoveChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex = -1)
         {
             if (control == null)
@@ -256,6 +271,7 @@ namespace UnityEngine.InputSystem.LowLevel
             InputSystem.manager.AddStateChangeMonitorTimeout(control, monitor, time, monitorIndex, timerIndex);
         }
 
+        /// <summary>Removes a timeout previously registered with a state change monitor.</summary>
         public static void RemoveChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex = -1, int timerIndex = -1)
         {
             if (monitor == null)

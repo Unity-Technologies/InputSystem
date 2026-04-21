@@ -27,11 +27,13 @@ namespace UnityEngine.InputSystem.Processors
         /// will be scaled to the range between min and max.
         /// </remarks>
         public float min;
+        /// <summary>The upper edge of the deadzone; inputs above this magnitude are clamped to 1.</summary>
         public float max;
 
         private float minOrDefault => min == default ? InputSystem.settings.defaultDeadzoneMin : min;
         private float maxOrDefault => max == default ? InputSystem.settings.defaultDeadzoneMax : max;
 
+        /// <summary>Applies the stick deadzone to the given Vector2 value and returns the result.</summary>
         public override Vector2 Process(Vector2 value, InputControl control = null)
         {
             var magnitude = value.magnitude;
@@ -57,6 +59,7 @@ namespace UnityEngine.InputSystem.Processors
             return Mathf.Sign(value) * ((absValue - min) / (max - min));
         }
 
+        /// <summary>Returns a string representation of this processor and its parameters.</summary>
         public override string ToString()
         {
             return $"StickDeadzone(min={minOrDefault},max={maxOrDefault})";

@@ -49,6 +49,7 @@ namespace UnityEngine.InputSystem.LowLevel
         private const int kSizeInBits = Keyboard.ExtendedKeyCount;
         internal const int kSizeInBytes = (kSizeInBits + 7) / 8;
 
+        /// <summary>Bit array storing the pressed state of all keyboard keys.</summary>
         [InputControl(name = "anyKey", displayName = "Any Key", layout = "AnyKey", bit = 1, sizeInBits = kSizeInBits, synthetic = true)]
         [InputControl(name = "escape", displayName = "Escape", layout = "Key", usages = new[] {"Back", "Cancel"}, bit = (int)Key.Escape)]
         [InputControl(name = "space", displayName = "Space", layout = "Key", bit = (int)Key.Space)]
@@ -219,6 +220,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Sets the pressed state of the given key.</summary>
         public void Set(Key key, bool state)
         {
             fixed(byte* keysPtr = keys)
@@ -233,16 +235,19 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Marks the given key as pressed.</summary>
         public void Press(Key key)
         {
             Set(key, true);
         }
 
+        /// <summary>Marks the given key as released.</summary>
         public void Release(Key key)
         {
             Set(key, false);
         }
 
+        /// <summary>The FourCC format code identifying this state struct.</summary>
         public FourCC format => Format;
     }
 }

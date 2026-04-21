@@ -16,9 +16,12 @@ namespace UnityEngine.InputSystem.Utilities
     /// </summary>
     public struct NameAndParameters
     {
+        /// <summary>The name portion of the name-and-parameters string.</summary>
         public string name { get; set; }
+        /// <summary>The parsed parameters associated with the name.</summary>
         public ReadOnlyArray<NamedValue> parameters { get; set; }
 
+        /// <summary>Returns the full name-and-parameters string.</summary>
         public override string ToString()
         {
             if (parameters.Count == 0)
@@ -44,6 +47,7 @@ namespace UnityEngine.InputSystem.Utilities
             };
         }
 
+        /// <summary>Parses a comma-separated list of name-and-parameters strings and returns them as a sequence.</summary>
         public static IEnumerable<NameAndParameters> ParseMultiple(string text)
         {
             List<NameAndParameters> list = null;
@@ -80,6 +84,7 @@ namespace UnityEngine.InputSystem.Utilities
             return ParseNameAndParameters(text, ref index, true).name;
         }
 
+        /// <summary>Parses a single name-and-parameters string.</summary>
         public static NameAndParameters Parse(string text)
         {
             if (text == null)

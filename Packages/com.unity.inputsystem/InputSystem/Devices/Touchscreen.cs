@@ -134,6 +134,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(32)]
         public byte phaseId;
 
+        /// <summary>Number of consecutive taps detected for this touch.</summary>
         [InputControl(name = "tapCount", displayName = "Tap Count", layout = "Integer")]
         [FieldOffset(33)]
         public byte tapCount;
@@ -145,6 +146,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(34)]
         public byte displayIndex;
 
+        /// <summary>Flags providing additional information about this touch.</summary>
         [InputControl(name = "indirectTouch", displayName = "Indirect Touch?", layout = "Button", bit = 0, synthetic = true)]
         [InputControl(name = "tap", displayName = "Tap", layout = "Button", bit = 4)]
         [FieldOffset(35)]
@@ -196,8 +198,10 @@ namespace UnityEngine.InputSystem.LowLevel
             set => phaseId = (byte)value;
         }
 
+        /// <summary>True if this touch has ended or been canceled.</summary>
         public bool isNoneEndedOrCanceled => phase == TouchPhase.None || phase == TouchPhase.Ended ||
         phase == TouchPhase.Canceled;
+        /// <summary>True if this touch is currently active (began or moved).</summary>
         public bool isInProgress => phase == TouchPhase.Began || phase == TouchPhase.Moved ||
         phase == TouchPhase.Stationary;
 
@@ -232,6 +236,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>True if this is an indirect touch (e.g. from a trackpad rather than a direct touchscreen).</summary>
         public bool isIndirectTouch
         {
             get => (flags & (byte)TouchFlags.IndirectTouch) != 0;
@@ -244,6 +249,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>True if this touch was recognized as a tap.</summary>
         public bool isTap
         {
             get => isTapPress;
@@ -507,6 +513,7 @@ namespace UnityEngine.InputSystem
         static readonly ProfilerMarker k_TouchscreenUpdateMarker = new ProfilerMarker("Touchscreen.OnNextUpdate");
         static readonly ProfilerMarker k_TouchAllocateMarker = new ProfilerMarker("TouchAllocate");
 
+        /// <summary>The array of touch controls, one per concurrent touch slot.</summary>
         protected TouchControl[] touchControlArray
         {
             get => touches.m_Array;
@@ -598,6 +605,7 @@ namespace UnityEngine.InputSystem
         //          not only handle this scenario but also give a generally more flexible and useful touch API
         //          than writing code directly against Touchscreen.
 
+        /// <summary>Called before the next input update to reset per-frame touch state.</summary>
         protected new unsafe void OnNextUpdate()
         {
             k_TouchscreenUpdateMarker.Begin();

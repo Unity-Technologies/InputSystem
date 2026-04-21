@@ -901,6 +901,7 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: are the IEnumerable variations worth having?
 
+        /// <summary>Applies all the binding overrides in the given collection to the action map.</summary>
         public static void ApplyBindingOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
         {
             if (actionMap == null)
@@ -912,6 +913,7 @@ namespace UnityEngine.InputSystem
                 ApplyBindingOverride(actionMap, binding);
         }
 
+        /// <summary>Removes all binding overrides from the action map that match the bindings in the given collection.</summary>
         public static void RemoveBindingOverrides(this InputActionMap actionMap, IEnumerable<InputBinding> overrides)
         {
             if (actionMap == null)
@@ -1363,6 +1365,7 @@ namespace UnityEngine.InputSystem
         /// <seealso cref="InputActionRebindingExtensions.PerformInteractiveRebinding"/>
         public sealed class RebindingOperation : IDisposable
         {
+            /// <summary>The default minimum magnitude that an input must have to be accepted as a candidate during rebinding.</summary>
             public const float kDefaultMagnitudeThreshold = 0.2f;
 
             /// <summary>
@@ -1480,8 +1483,10 @@ namespace UnityEngine.InputSystem
             /// <seealso cref="OnCancel"/>
             public bool canceled => (m_Flags & Flags.Canceled) != 0;
 
+            /// <summary>The time at which the rebinding operation was started, in seconds since startup.</summary>
             public double startTime => m_StartTime;
 
+            /// <summary>How long to wait without receiving any input before canceling the rebind, in seconds.</summary>
             public float timeout => m_Timeout;
 
             /// <summary>
@@ -1565,6 +1570,7 @@ namespace UnityEngine.InputSystem
             /// See <see cref="WithActionEventNotificationsBeingSuppressed"/> for how this configuration relates to suppressing
             /// actions during rebind.
             /// </remarks>
+            /// <param name="value">If true, input events that match the expected control type are consumed and not passed further.</param>
             public RebindingOperation WithMatchingEventsBeingSuppressed(bool value = true)
             {
                 ThrowIfRebindInProgress();
@@ -1605,6 +1611,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>Cancels the rebinding operation if the given control is actuated.</summary>
             public RebindingOperation WithCancelingThrough(InputControl control)
             {
                 ThrowIfRebindInProgress();
@@ -1613,6 +1620,7 @@ namespace UnityEngine.InputSystem
                 return WithCancelingThrough(control.path);
             }
 
+            /// <summary>Restricts the rebinding to only accept controls whose layout matches the given layout name.</summary>
             public RebindingOperation WithExpectedControlType(string layoutName)
             {
                 ThrowIfRebindInProgress();
@@ -1620,6 +1628,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>Restricts the rebinding to only accept controls of the given C# type.</summary>
             public RebindingOperation WithExpectedControlType(Type type)
             {
                 ThrowIfRebindInProgress();
@@ -1629,6 +1638,7 @@ namespace UnityEngine.InputSystem
                 return this;
             }
 
+            /// <summary>Restricts the rebinding to only accept controls of the type parameter's C# type.</summary>
             public RebindingOperation WithExpectedControlType<TControl>()
                 where TControl : InputControl
             {

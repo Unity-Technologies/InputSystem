@@ -24,6 +24,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </remarks>
     public unsafe struct InputEventBuffer : IEnumerable<InputEventPtr>, IDisposable, ICloneable
     {
+        /// <summary>Sentinel value indicating the buffer size is not known.</summary>
         public const long BufferSizeUnknown = -1;
 
         /// <summary>
@@ -266,6 +267,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return true;
         }
 
+        /// <summary>Clears the buffer and resets the event count to zero.</summary>
         public void Reset()
         {
             m_EventCount = 0;
@@ -322,6 +324,7 @@ namespace UnityEngine.InputSystem.LowLevel
             --numRemainingEvents;
         }
 
+        /// <summary>Returns an enumerator over all events in the buffer.</summary>
         public IEnumerator<InputEventPtr> GetEnumerator()
         {
             return new Enumerator(this);
@@ -332,6 +335,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return GetEnumerator();
         }
 
+        /// <summary>Releases the native memory used by this event buffer.</summary>
         public void Dispose()
         {
             // Nothing to do if we don't actually own the memory.
@@ -346,6 +350,7 @@ namespace UnityEngine.InputSystem.LowLevel
             m_EventCount = 0;
         }
 
+        /// <summary>Creates a copy of this buffer with its own independent memory.</summary>
         public InputEventBuffer Clone()
         {
             var clone = new InputEventBuffer();

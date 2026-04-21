@@ -10,13 +10,16 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize + kMaxNameLength)]
     public unsafe struct QueryKeyboardLayoutCommand : IInputDeviceCommandInfo
     {
+        /// <summary>The FourCC type identifier for this command.</summary>
         public static FourCC Type { get { return new FourCC('K', 'B', 'L', 'T'); } }
 
         internal const int kMaxNameLength = 256;
 
+        /// <summary>The base <see cref="InputDeviceCommand"/> header.</summary>
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
+        /// <summary>Output buffer filled in with the keyboard layout name after the command executes.</summary>
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public fixed byte nameBuffer[kMaxNameLength];
 
@@ -40,8 +43,10 @@ namespace UnityEngine.InputSystem.LowLevel
             StringHelpers.WriteStringToBuffer(name, new IntPtr(thisPtr->nameBuffer), kMaxNameLength);
         }
 
+        /// <summary>Static FourCC type code used to identify this command.</summary>
         public FourCC typeStatic => Type;
 
+        /// <summary>Creates a query keyboard layout command.</summary>
         public static QueryKeyboardLayoutCommand Create()
         {
             return new QueryKeyboardLayoutCommand

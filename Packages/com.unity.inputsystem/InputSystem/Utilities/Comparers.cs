@@ -22,6 +22,7 @@ namespace UnityEngine.InputSystem.Utilities
     /// </example>
     public struct Vector2MagnitudeComparer : IComparer<Vector2>
     {
+        /// <summary>Compares two vectors by magnitude; returns negative, zero, or positive.</summary>
         public int Compare(Vector2 x, Vector2 y)
         {
             var lenx = x.sqrMagnitude;
@@ -55,6 +56,7 @@ namespace UnityEngine.InputSystem.Utilities
     /// </example>
     public struct Vector3MagnitudeComparer : IComparer<Vector3>
     {
+        /// <summary>Compares two vectors by magnitude; returns negative, zero, or positive.</summary>
         public int Compare(Vector3 x, Vector3 y)
         {
             var lenx = x.sqrMagnitude;

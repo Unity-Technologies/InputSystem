@@ -10,6 +10,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </remarks>
     public interface IInputUpdateCallbackReceiver
     {
+        /// <summary>Called once per input update to allow the implementer to push state.</summary>
         void OnUpdate();
     }
 }

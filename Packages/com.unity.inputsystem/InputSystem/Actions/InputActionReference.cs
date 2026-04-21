@@ -241,9 +241,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         [NonSerialized] private InputAction m_Action;
 
-        /// <summary>
-        /// Equivalent to <see cref="InputActionReference.action"/>.
-        /// </summary>
+        /// <summary>Resolves and returns the referenced <see cref="InputAction"/>.</summary>
         /// <returns>The associated action reference if its a valid reference, else <c>null</c>.</returns>
         public InputAction ToInputAction()
         {

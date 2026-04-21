@@ -7,6 +7,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     public interface IInputStateTypeInfo
     {
+        /// <summary>The FourCC format code identifying this state struct type.</summary>
         FourCC format { get; }
     }
 }

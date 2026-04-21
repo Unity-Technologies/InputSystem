@@ -9,18 +9,23 @@ namespace UnityEngine.InputSystem.Controls
     /// </summary>
     public class Vector3Control : InputControl<Vector3>
     {
+        /// <summary>The X component of this Vector3 control.</summary>
         [InputControl(offset = 0, displayName = "X")]
         public AxisControl x { get; set; }
+        /// <summary>The Y component of this Vector3 control.</summary>
         [InputControl(offset = 4, displayName = "Y")]
         public AxisControl y { get; set; }
+        /// <summary>The Z component of this Vector3 control.</summary>
         [InputControl(offset = 8, displayName = "Z")]
         public AxisControl z { get; set; }
 
+        /// <summary>Initializes a new Vector3Control.</summary>
         public Vector3Control()
         {
             m_StateBlock.format = InputStateBlock.FormatVector3;
         }
 
+        /// <summary>Resolves child axis controls after the control hierarchy is built.</summary>
         protected override void FinishSetup()
         {
             x = GetChildControl<AxisControl>("x");
@@ -30,6 +35,7 @@ namespace UnityEngine.InputSystem.Controls
             base.FinishSetup();
         }
 
+        /// <summary>Reads the raw, unprocessed Vector3 value from the given state buffer.</summary>
         public override unsafe Vector3 ReadUnprocessedValueFromState(void* statePtr)
         {
             switch (m_OptimizedControlDataType)
@@ -44,6 +50,7 @@ namespace UnityEngine.InputSystem.Controls
             }
         }
 
+        /// <summary>Writes the given Vector3 value into the given state buffer.</summary>
         public override unsafe void WriteValueIntoState(Vector3 value, void* statePtr)
         {
             switch (m_OptimizedControlDataType)
@@ -59,12 +66,14 @@ namespace UnityEngine.InputSystem.Controls
             }
         }
 
+        /// <summary>Returns the magnitude of the Vector3 value in the given state buffer.</summary>
         public override unsafe float EvaluateMagnitude(void* statePtr)
         {
             ////REVIEW: this can go beyond 1; that okay?
             return ReadValueFromStateWithCaching(statePtr).magnitude;
         }
 
+        /// <summary>Returns the FourCC type code for the optimized state format of this control.</summary>
         protected override FourCC CalculateOptimizedControlDataType()
         {
             if (

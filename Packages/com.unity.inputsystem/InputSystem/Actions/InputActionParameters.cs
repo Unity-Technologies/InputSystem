@@ -155,6 +155,8 @@ namespace UnityEngine.InputSystem
         /// </example>
         /// </remarks>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <paramref name="expr"/> is <c>null</c></exception>
+        /// <typeparam name="TObject">The type of the interaction or processor that owns the parameter.</typeparam>
+        /// <typeparam name="TValue">The type of the parameter value.</typeparam>
         /// <seealso cref="ApplyParameterOverride{TObject,TValue}(InputAction,Expression{Func{TObject,TValue}},TValue,InputBinding)"/>
         public static unsafe TValue? GetParameterValue<TObject, TValue>(this InputAction action, Expression<Func<TObject, TValue>> expr, InputBinding bindingMask = default)
             where TValue : struct
@@ -201,6 +203,8 @@ namespace UnityEngine.InputSystem
         /// bindings that match (see <see cref="InputBinding.Matches"/>) the given mask will have the override applied to them.</param>
         /// <exception cref="ArgumentNullException"><paramref name="action"/> is <c>null</c> -or- <paramref name="expr"/> is <c>null</c>
         /// or empty.</exception>
+        /// <typeparam name="TObject">The type of the interaction or processor that owns the parameter.</typeparam>
+        /// <typeparam name="TValue">The type of the parameter value.</typeparam>
         /// <remarks>
         /// This method is a variation of <see cref="ApplyParameterOverride(InputAction,string,PrimitiveValue,InputBinding)"/>
         /// that encapsulates a reference to the name of the parameter and the type of object it is found on in a way that is
@@ -248,6 +252,8 @@ namespace UnityEngine.InputSystem
         /// bindings that match (see <see cref="InputBinding.Matches"/>) the given mask will have the override applied to them.</param>
         /// <exception cref="ArgumentNullException"><paramref name="actionMap"/> is <c>null</c> -or- <paramref name="expr"/> is <c>null</c>
         /// or empty.</exception>
+        /// <typeparam name="TObject">The type of the interaction or processor that owns the parameter.</typeparam>
+        /// <typeparam name="TValue">The type of the parameter value.</typeparam>
         /// <remarks>
         /// This method is a variation of <see cref="ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
         /// that encapsulates a reference to the name of the parameter and the type of object it is found on in a way that is
@@ -294,6 +300,8 @@ namespace UnityEngine.InputSystem
         /// bindings that match (see <see cref="InputBinding.Matches"/>) the given mask will have the override applied to them.</param>
         /// <exception cref="ArgumentNullException"><paramref name="asset"/> is <c>null</c> -or- <paramref name="expr"/> is <c>null</c>
         /// or empty.</exception>
+        /// <typeparam name="TObject">The type of the interaction or processor that owns the parameter.</typeparam>
+        /// <typeparam name="TValue">The type of the parameter value.</typeparam>
         /// <remarks>
         /// This method is a variation of <see cref="ApplyParameterOverride(InputActionAsset,string,PrimitiveValue,InputBinding)"/>
         /// that encapsulates a reference to the name of the parameter and the type of object it is found on in a way that is

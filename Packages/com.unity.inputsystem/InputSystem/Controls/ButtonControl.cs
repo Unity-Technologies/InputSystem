@@ -322,6 +322,7 @@ namespace UnityEngine.InputSystem.Controls
         /// }
         /// </code>
         /// </example>
+        /// <summary>True if the button was released during the current frame.</summary>
         public bool wasReleasedThisFrame
         {
             get

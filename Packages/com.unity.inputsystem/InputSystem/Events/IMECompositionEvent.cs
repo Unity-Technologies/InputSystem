@@ -15,16 +15,21 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         // These needs to match the native ImeCompositionStringInputEventData settings
         internal const int kIMECharBufferSize = 64;
+        /// <summary>The FourCC type identifier for IME composition events.</summary>
         public const int Type = 0x494D4553;
 
+        /// <summary>The base <see cref="InputEvent"/> header.</summary>
         [FieldOffset(0)]
         public InputEvent baseEvent;
 
+        /// <summary>The current IME composition string.</summary>
         [FieldOffset(InputEvent.kBaseEventSize)]
         public IMECompositionString compositionString;
 
+        /// <summary>Static FourCC type code used to identify this event type.</summary>
         public FourCC typeStatic => Type;
 
+        /// <summary>Creates an IME composition event for the given device ID, composition string, and timestamp.</summary>
         public static IMECompositionEvent Create(int deviceId, string compositionString, double time)
         {
             var inputEvent = new IMECompositionEvent();
@@ -89,8 +94,10 @@ namespace UnityEngine.InputSystem.LowLevel
             object IEnumerator.Current => Current;
         }
 
+        /// <summary>The number of characters in the composition string.</summary>
         public int Count => size;
 
+        /// <summary>Returns the character at the given index.</summary>
         public char this[int index]
         {
             get
@@ -111,6 +118,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(sizeof(int))]
         fixed char buffer[IMECompositionEvent.kIMECharBufferSize];
 
+        /// <summary>Initializes the composition string from the given plain string.</summary>
         public IMECompositionString(string characters)
         {
             if (string.IsNullOrEmpty(characters))
@@ -125,6 +133,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 buffer[i] = characters[i];
         }
 
+        /// <summary>Returns the composition string as a plain C# string.</summary>
         public override string ToString()
         {
             fixed(char* ptr = buffer)
@@ -133,6 +142,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Returns an enumerator over the characters in the composition string.</summary>
         public IEnumerator<char> GetEnumerator()
         {
             return new Enumerator(this);

@@ -790,6 +790,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// <c>enum</c> type, the PrimitiveValue will hold a value of the enum's underlying
         /// type (i.e. <c>Type.GetEnumUnderlyingType</c>).</param>
         /// <exception cref="ArgumentException">No conversion exists from the type of <paramref name="value"/>.</exception>
+        /// <returns>A <see cref="PrimitiveValue"/> wrapping the given object's value.</returns>
         public static PrimitiveValue FromObject(object value)
         {
             if (value == null)

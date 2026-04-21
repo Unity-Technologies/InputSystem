@@ -97,6 +97,7 @@ namespace UnityEngine.InputSystem.Controls
             }
         }
 
+        /// <summary>Returns the FourCC type code of the optimized data format for this quaternion control.</summary>
         protected override FourCC CalculateOptimizedControlDataType()
         {
             if (

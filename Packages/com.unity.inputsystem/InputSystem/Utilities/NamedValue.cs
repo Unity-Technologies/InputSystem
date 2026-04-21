@@ -9,6 +9,7 @@ namespace UnityEngine.InputSystem.Utilities
     /// </summary>
     public struct NamedValue : IEquatable<NamedValue>
     {
+        /// <summary>The separator character used between name and value in a named value string.</summary>
         public const string Separator = ",";
 
         /// <summary>
@@ -21,8 +22,10 @@ namespace UnityEngine.InputSystem.Utilities
         /// </summary>
         public PrimitiveValue value { get; set; }
 
+        /// <summary>The <see cref="TypeCode"/> of the value stored in this named value.</summary>
         public TypeCode type => value.type;
 
+        /// <summary>Returns a copy of this named value with the value converted to the given type.</summary>
         public NamedValue ConvertTo(TypeCode type)
         {
             return new NamedValue
@@ -32,6 +35,7 @@ namespace UnityEngine.InputSystem.Utilities
             };
         }
 
+        /// <summary>Creates a <see cref="NamedValue"/> from the given name and typed value.</summary>
         public static NamedValue From<TValue>(string name, TValue value)
             where TValue : struct
         {
@@ -42,17 +46,20 @@ namespace UnityEngine.InputSystem.Utilities
             };
         }
 
+        /// <summary>Returns a string representation of this named value.</summary>
         public override string ToString()
         {
             return $"{name}={value}";
         }
 
+        /// <summary>Returns true if this named value is equal to the given one.</summary>
         public bool Equals(NamedValue other)
         {
             return string.Equals(name, other.name, StringComparison.InvariantCultureIgnoreCase)
                 && value == other.value;
         }
 
+        /// <summary>Returns true if the given object is a <see cref="NamedValue"/> equal to this one.</summary>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
@@ -60,6 +67,7 @@ namespace UnityEngine.InputSystem.Utilities
             return obj is NamedValue parameterValue && Equals(parameterValue);
         }
 
+        /// <summary>Returns a hash code for this named value.</summary>
         public override int GetHashCode()
         {
             unchecked
@@ -70,16 +78,19 @@ namespace UnityEngine.InputSystem.Utilities
             }
         }
 
+        /// <summary>Returns true if both named values are equal.</summary>
         public static bool operator==(NamedValue left, NamedValue right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>Returns true if the two named values are not equal.</summary>
         public static bool operator!=(NamedValue left, NamedValue right)
         {
             return !left.Equals(right);
         }
 
+        /// <summary>Parses a comma-separated list of named value strings and returns them as an array.</summary>
         public static NamedValue[] ParseMultiple(string parameterString)
         {
             if (parameterString == null)
@@ -102,6 +113,7 @@ namespace UnityEngine.InputSystem.Utilities
             return parameters;
         }
 
+        /// <summary>Parses a single named value string.</summary>
         public static NamedValue Parse(string str)
         {
             var index = 0;
@@ -163,6 +175,7 @@ namespace UnityEngine.InputSystem.Utilities
             return parameter;
         }
 
+        /// <summary>Applies this named value to the property or field with the matching name on the given object.</summary>
         public void ApplyToObject(object instance)
         {
             if (instance == null)
@@ -182,6 +195,7 @@ namespace UnityEngine.InputSystem.Utilities
             field.SetValue(instance, value.ConvertTo(fieldTypeCode).ToObject());
         }
 
+        /// <summary>Applies all named values in the given list to the matching properties or fields on the given object.</summary>
         public static void ApplyAllToObject<TParameterList>(object instance, TParameterList parameters)
             where TParameterList : IEnumerable<NamedValue>
         {

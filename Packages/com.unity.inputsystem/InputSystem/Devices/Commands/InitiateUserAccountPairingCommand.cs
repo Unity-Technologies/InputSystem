@@ -15,13 +15,16 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public struct InitiateUserAccountPairingCommand : IInputDeviceCommandInfo
     {
+        /// <summary>The FourCC type identifier for this command.</summary>
         public static FourCC Type { get { return new FourCC('P', 'A', 'I', 'R'); } }
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 
+        /// <summary>The base <see cref="InputDeviceCommand"/> header.</summary>
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
+        /// <summary>Possible results of an account pairing initiation command.</summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1008:EnumsShouldHaveZeroValue", Justification = "Enum values mandated by native code")]
         public enum Result
         {
@@ -42,11 +45,13 @@ namespace UnityEngine.InputSystem.LowLevel
             ErrorAlreadyInProgress = -2,
         }
 
+        /// <summary>Static FourCC type code used to identify this command.</summary>
         public FourCC typeStatic
         {
             get { return Type; }
         }
 
+        /// <summary>Creates a command to initiate platform account pairing for the device.</summary>
         public static InitiateUserAccountPairingCommand Create()
         {
             return new InitiateUserAccountPairingCommand

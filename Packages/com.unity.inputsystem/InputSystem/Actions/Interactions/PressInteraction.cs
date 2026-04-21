@@ -64,6 +64,7 @@ namespace UnityEngine.InputSystem.Interactions
         private float releasePointOrDefault => pressPointOrDefault * ButtonControl.s_GlobalDefaultButtonReleaseThreshold;
         private bool m_WaitingForRelease;
 
+        /// <summary>Processes the current input context and transitions the interaction state as needed.</summary>
         public void Process(ref InputInteractionContext context)
         {
             var actuation = context.ComputeMagnitude();
@@ -151,6 +152,7 @@ namespace UnityEngine.InputSystem.Interactions
             }
         }
 
+        /// <summary>Resets the interaction to its initial state.</summary>
         public void Reset()
         {
             m_WaitingForRelease = false;

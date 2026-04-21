@@ -45,6 +45,7 @@ namespace UnityEngine.InputSystem.Interactions
 
         ////TODO: make sure 2d doesn't move too far
 
+        /// <summary>Processes the current input context and transitions the interaction state as needed.</summary>
         public void Process(ref InputInteractionContext context)
         {
             if (context.timerHasExpired)
@@ -88,6 +89,7 @@ namespace UnityEngine.InputSystem.Interactions
             }
         }
 
+        /// <summary>Resets the interaction to its initial state.</summary>
         public void Reset()
         {
             m_TapStartTime = 0;

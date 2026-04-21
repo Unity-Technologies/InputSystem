@@ -185,6 +185,7 @@ namespace UnityEngine.InputSystem.Composites
             return ReadValue(ref context);
         }
 
+        /// <summary>Resolves the modifier and button binding references after setup.</summary>
         protected override void FinishSetup(ref InputBindingCompositeContext context)
         {
             if (modifiersOrder == ModifiersOrder.Default)

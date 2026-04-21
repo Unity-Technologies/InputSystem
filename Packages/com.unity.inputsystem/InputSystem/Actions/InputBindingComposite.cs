@@ -133,6 +133,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <param name="context">The context used to resolve bindings during setup.</param>
         protected virtual void FinishSetup(ref InputBindingCompositeContext context)
         {
         }

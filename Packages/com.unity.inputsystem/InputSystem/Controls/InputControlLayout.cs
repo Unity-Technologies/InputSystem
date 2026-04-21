@@ -61,8 +61,10 @@ namespace UnityEngine.InputSystem.Layouts
     public class InputControlLayout
     {
         private static readonly InternedString s_DefaultVariant = new InternedString("Default");
+        /// <summary>Name of the default variant applied when no variant is explicitly specified.</summary>
         public static InternedString DefaultVariant => s_DefaultVariant;
 
+        /// <summary>Character used to separate variants in a variant string.</summary>
         public const string VariantSeparator = ";";
 
         /// <summary>
@@ -100,7 +102,9 @@ namespace UnityEngine.InputSystem.Layouts
             /// <seealso cref="InputSystem.RegisterLayout(Type,string,Nullable{InputDeviceMatcher}"/>
             public InternedString layout { get; internal set; }
 
+            /// <summary>The variant(s) this control item applies to.</summary>
             public InternedString variants { get; internal set; }
+            /// <summary>Name of another control whose state this control reads from.</summary>
             public string useStateFrom { get; internal set; }
 
             /// <summary>
@@ -115,15 +119,24 @@ namespace UnityEngine.InputSystem.Layouts
             /// <seealso cref="InputControl.shortDisplayName"/>
             public string shortDisplayName { get; internal set; }
 
+            /// <summary>Usages assigned to this control.</summary>
             public ReadOnlyArray<InternedString> usages { get; internal set; }
+            /// <summary>Alternative names by which this control can be looked up.</summary>
             public ReadOnlyArray<InternedString> aliases { get; internal set; }
+            /// <summary>Parameters passed to the control's constructor.</summary>
             public ReadOnlyArray<NamedValue> parameters { get; internal set; }
+            /// <summary>Processors to apply to the control's value.</summary>
             public ReadOnlyArray<NameAndParameters> processors { get; internal set; }
+            /// <summary>Byte offset of this control's state within the device state.</summary>
             public uint offset { get; internal set; }
+            /// <summary>Bit offset within the byte at <see cref="offset"/>.</summary>
             public uint bit { get; internal set; }
+            /// <summary>Size of this control's state data in bits.</summary>
             public uint sizeInBits { get; internal set; }
+            /// <summary>FourCC format code of the state data.</summary>
             public FourCC format { get; internal set; }
             private Flags flags { get; set; }
+            /// <summary>If greater than zero, this control is an array of controls with this many elements.</summary>
             public int arraySize { get; internal set; }
 
             /// <summary>
@@ -131,7 +144,9 @@ namespace UnityEngine.InputSystem.Layouts
             /// </summary>
             public PrimitiveValue defaultState { get; internal set; }
 
+            /// <summary>Minimum value this control can report.</summary>
             public PrimitiveValue minValue { get; internal set; }
+            /// <summary>Maximum value this control can report.</summary>
             public PrimitiveValue maxValue { get; internal set; }
 
             /// <summary>
@@ -244,12 +259,14 @@ namespace UnityEngine.InputSystem.Layouts
                 }
             }
 
+            /// <summary>True if this control item represents an array of controls.</summary>
             public bool isArray => (arraySize != 0);
 
             /// <summary>
             /// For any property not set on this control layout, take the setting from <paramref name="other"/>.
             /// </summary>
             /// <param name="other">Control layout providing settings.</param>
+            /// <returns>The merged control item.</returns>
             /// <remarks>
             /// <see cref="name"/> will not be touched.
             /// </remarks>
@@ -353,22 +370,31 @@ namespace UnityEngine.InputSystem.Layouts
 
         // Unique name of the layout.
         // NOTE: Case-insensitive.
+        /// <summary>The name of this layout.</summary>
         public InternedString name => m_Name;
 
+        /// <summary>A display-friendly name for this layout.</summary>
         public string displayName => m_DisplayName ?? m_Name;
 
+        /// <summary>The C# type that this layout maps to.</summary>
         public Type type => m_Type;
 
+        /// <summary>The variant(s) this layout applies to, or an empty string for the default variant.</summary>
         public InternedString variants => m_Variants;
 
+        /// <summary>The FourCC format code identifying the state struct this layout uses.</summary>
         public FourCC stateFormat => m_StateFormat;
 
+        /// <summary>The total size of the state struct in bytes.</summary>
         public int stateSizeInBytes => m_StateSizeInBytes;
 
+        /// <summary>Names of layouts this layout inherits controls and settings from.</summary>
         public IEnumerable<InternedString> baseLayouts => m_BaseLayouts;
 
+        /// <summary>Names of layout overrides that have been applied on top of this layout.</summary>
         public IEnumerable<InternedString> appliedOverrides => m_AppliedOverrides;
 
+        /// <summary>Usages that are commonly assigned to devices using this layout.</summary>
         public ReadOnlyArray<InternedString> commonUsages => new ReadOnlyArray<InternedString>(m_CommonUsages);
 
         /// <summary>
@@ -378,10 +404,13 @@ namespace UnityEngine.InputSystem.Layouts
         public ReadOnlyArray<ControlItem> controls => new ReadOnlyArray<ControlItem>(m_Controls);
 
         ////FIXME: this should be a `bool?`
+        /// <summary>If true, the device is updated once before rendering in addition to the normal update cycle.</summary>
         public bool updateBeforeRender => m_UpdateBeforeRender ?? false;
 
+        /// <summary>True if this layout describes an <see cref="InputDevice"/>.</summary>
         public bool isDeviceLayout => typeof(InputDevice).IsAssignableFrom(m_Type);
 
+        /// <summary>True if this layout describes an <see cref="InputControl"/> that is not a device.</summary>
         public bool isControlLayout => !isDeviceLayout;
 
         /// <summary>
@@ -402,6 +431,7 @@ namespace UnityEngine.InputSystem.Layouts
             }
         }
 
+        /// <summary>True if this layout is a generic type of device (e.g. Gamepad, Keyboard) rather than a specific product.</summary>
         public bool isGenericTypeOfDevice
         {
             get => (m_Flags & Flags.IsGenericTypeOfDevice) != 0;
@@ -414,6 +444,7 @@ namespace UnityEngine.InputSystem.Layouts
             }
         }
 
+        /// <summary>True if this layout should not appear in user-facing lists of device types.</summary>
         public bool hideInUI
         {
             get => (m_Flags & Flags.HideInUI) != 0;
@@ -471,6 +502,7 @@ namespace UnityEngine.InputSystem.Layouts
             }
         }
 
+        /// <summary>Returns the <see cref="ControlItem"/> for the control with the given name.</summary>
         public ControlItem this[string path]
         {
             get
@@ -492,6 +524,7 @@ namespace UnityEngine.InputSystem.Layouts
             }
         }
 
+        /// <summary>Returns the <see cref="ControlItem"/> for the control with the given interned name, or null if not found.</summary>
         public ControlItem? FindControl(InternedString path)
         {
             if (string.IsNullOrEmpty(path))
@@ -509,6 +542,7 @@ namespace UnityEngine.InputSystem.Layouts
             return null;
         }
 
+        /// <summary>Returns the <see cref="ControlItem"/> for the given name, expanding array controls, and outputs the element index.</summary>
         public ControlItem? FindControlIncludingArrayElements(string path, out int arrayIndex)
         {
             if (string.IsNullOrEmpty(path))
@@ -659,12 +693,14 @@ namespace UnityEngine.InputSystem.Layouts
                 internal Builder builder;
                 internal int index;
 
+                /// <summary>Sets the display name of the control and returns this builder.</summary>
                 public ControlBuilder WithDisplayName(string displayName)
                 {
                     builder.m_Controls[index].displayName = displayName;
                     return this;
                 }
 
+                /// <summary>Sets the layout used for the control and returns this builder.</summary>
                 public ControlBuilder WithLayout(string layout)
                 {
                     if (string.IsNullOrEmpty(layout))
@@ -674,53 +710,62 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                /// <summary>Sets the state format FourCC for the control and returns this builder.</summary>
                 public ControlBuilder WithFormat(FourCC format)
                 {
                     builder.m_Controls[index].format = format;
                     return this;
                 }
 
+                /// <summary>Sets the state format from a four-character string and returns this builder.</summary>
                 public ControlBuilder WithFormat(string format)
                 {
                     return WithFormat(new FourCC(format));
                 }
 
+                /// <summary>Sets the byte offset of the control within the device state and returns this builder.</summary>
                 public ControlBuilder WithByteOffset(uint offset)
                 {
                     builder.m_Controls[index].offset = offset;
                     return this;
                 }
 
+                /// <summary>Sets the bit offset of the control within its byte and returns this builder.</summary>
                 public ControlBuilder WithBitOffset(uint bit)
                 {
                     builder.m_Controls[index].bit = bit;
                     return this;
                 }
 
+                /// <summary>Marks the control as synthetic (not corresponding to a physical input) and returns this builder.</summary>
                 public ControlBuilder IsSynthetic(bool value)
                 {
                     builder.m_Controls[index].isSynthetic = value;
                     return this;
                 }
 
+                /// <summary>Marks the control as noisy (may produce values even when not touched) and returns this builder.</summary>
                 public ControlBuilder IsNoisy(bool value)
                 {
                     builder.m_Controls[index].isNoisy = value;
                     return this;
                 }
 
+                /// <summary>Controls whether the input system resets this control's value when the device loses focus and returns this builder.</summary>
                 public ControlBuilder DontReset(bool value)
                 {
                     builder.m_Controls[index].dontReset = value;
                     return this;
                 }
 
+                /// <summary>Sets the size of the control's state data in bits and returns this builder.</summary>
                 public ControlBuilder WithSizeInBits(uint sizeInBits)
                 {
                     builder.m_Controls[index].sizeInBits = sizeInBits;
                     return this;
                 }
 
+                /// <summary>Sets the minimum and maximum values this control can report and returns this builder.</summary>
                 public ControlBuilder WithRange(float minValue, float maxValue)
                 {
                     builder.m_Controls[index].minValue = minValue;
@@ -728,6 +773,7 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                /// <summary>Sets the usages for this control from interned strings and returns this builder.</summary>
                 public ControlBuilder WithUsages(params InternedString[] usages)
                 {
                     if (usages == null || usages.Length == 0)
@@ -743,17 +789,20 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                /// <summary>Sets the usages for this control from a sequence of strings and returns this builder.</summary>
                 public ControlBuilder WithUsages(IEnumerable<string> usages)
                 {
                     var usagesArray = usages.Select(x => new InternedString(x)).ToArray();
                     return WithUsages(usagesArray);
                 }
 
+                /// <summary>Sets the usages for this control from string params and returns this builder.</summary>
                 public ControlBuilder WithUsages(params string[] usages)
                 {
                     return WithUsages((IEnumerable<string>)usages);
                 }
 
+                /// <summary>Sets construction parameters for this control from a parameter string and returns this builder.</summary>
                 public ControlBuilder WithParameters(string parameters)
                 {
                     if (string.IsNullOrEmpty(parameters))
@@ -763,6 +812,7 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                /// <summary>Sets the processors to apply to this control's values from a processor string and returns this builder.</summary>
                 public ControlBuilder WithProcessors(string processors)
                 {
                     if (string.IsNullOrEmpty(processors))
@@ -772,12 +822,14 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                /// <summary>Sets the default state value for this control and returns this builder.</summary>
                 public ControlBuilder WithDefaultState(PrimitiveValue value)
                 {
                     builder.m_Controls[index].defaultState = value;
                     return this;
                 }
 
+                /// <summary>Makes this control share state with the named control and returns this builder.</summary>
                 public ControlBuilder UsingStateFrom(string path)
                 {
                     if (string.IsNullOrEmpty(path))
@@ -786,6 +838,7 @@ namespace UnityEngine.InputSystem.Layouts
                     return this;
                 }
 
+                /// <summary>Makes this control an array of controls with the given element count and returns this builder.</summary>
                 public ControlBuilder AsArrayOfControlsWithSize(int arraySize)
                 {
                     builder.m_Controls[index].arraySize = arraySize;
@@ -826,18 +879,21 @@ namespace UnityEngine.InputSystem.Layouts
                 };
             }
 
+            /// <summary>Sets the name of the layout being built and returns this builder.</summary>
             public Builder WithName(string name)
             {
                 this.name = name;
                 return this;
             }
 
+            /// <summary>Sets the display name of the layout being built and returns this builder.</summary>
             public Builder WithDisplayName(string displayName)
             {
                 this.displayName = displayName;
                 return this;
             }
 
+            /// <summary>Sets the C# type the layout maps to (generic type parameter) and returns this builder.</summary>
             public Builder WithType<T>()
                 where T : InputControl
             {
@@ -845,29 +901,34 @@ namespace UnityEngine.InputSystem.Layouts
                 return this;
             }
 
+            /// <summary>Sets the state format FourCC for the layout and returns this builder.</summary>
             public Builder WithFormat(FourCC format)
             {
                 stateFormat = format;
                 return this;
             }
 
+            /// <summary>Sets the state format from a four-character string and returns this builder.</summary>
             public Builder WithFormat(string format)
             {
                 return WithFormat(new FourCC(format));
             }
 
+            /// <summary>Sets the state size in bytes for the layout and returns this builder.</summary>
             public Builder WithSizeInBytes(int sizeInBytes)
             {
                 stateSizeInBytes = sizeInBytes;
                 return this;
             }
 
+            /// <summary>Makes the layout extend the given base layout and returns this builder.</summary>
             public Builder Extend(string baseLayoutName)
             {
                 extendsLayout = baseLayoutName;
                 return this;
             }
 
+            /// <summary>Builds and returns the <see cref="InputControlLayout"/> from the current builder state.</summary>
             public InputControlLayout Build()
             {
                 ControlItem[] controls = null;
@@ -897,6 +958,7 @@ namespace UnityEngine.InputSystem.Layouts
 
         // Uses reflection to construct a layout from the given type.
         // Can be used with both control classes and state structs.
+        /// <summary>Creates an <see cref="InputControlLayout"/> from the given C# type.</summary>
         public static InputControlLayout FromType(string name, Type type)
         {
             var controlLayouts = new List<ControlItem>();
@@ -954,6 +1016,7 @@ namespace UnityEngine.InputSystem.Layouts
             return layout;
         }
 
+        /// <summary>Serializes this layout to a JSON string.</summary>
         public string ToJson()
         {
             var layout = LayoutJson.FromLayout(this);
@@ -961,6 +1024,7 @@ namespace UnityEngine.InputSystem.Layouts
         }
 
         // Constructs a layout from the given JSON source.
+        /// <summary>Deserializes an <see cref="InputControlLayout"/> from a JSON string.</summary>
         public static InputControlLayout FromJson(string json)
         {
             var layoutJson = JsonUtility.FromJson<LayoutJson>(json);
@@ -2169,31 +2233,38 @@ namespace UnityEngine.InputSystem.Layouts
         // This collection is owned and managed by InputManager.
         internal static Collection s_Layouts;
 
+        /// <summary>Exception thrown when a layout referenced by name cannot be found in the layout registry.</summary>
         public class LayoutNotFoundException : Exception
         {
+            /// <summary>The name of the layout that could not be found.</summary>
             public string layout { get; }
 
+            /// <summary>Initializes a new instance with a default message.</summary>
             public LayoutNotFoundException()
             {
             }
 
+            /// <summary>Initializes a new instance for the given layout name and action that required it.</summary>
             public LayoutNotFoundException(string name, string message)
                 : base(message)
             {
                 layout = name;
             }
 
+            /// <summary>Initializes a new instance with the given message.</summary>
             public LayoutNotFoundException(string name)
                 : base($"Cannot find control layout '{name}'")
             {
                 layout = name;
             }
 
+            /// <summary>Initializes a new instance with the given message and inner exception.</summary>
             public LayoutNotFoundException(string message, Exception innerException) :
                 base(message, innerException)
             {
             }
 
+            /// <summary>Initializes a new instance from serialization data.</summary>
             protected LayoutNotFoundException(SerializationInfo info,
                                               StreamingContext context) : base(info, context)
             {

@@ -365,16 +365,19 @@ namespace UnityEngine.InputSystem
             ArrayHelpers.EraseAtWithCapacity(m_Indices, ref m_Count, index);
         }
 
+        /// <summary>Copies all controls in this list into the given array starting at the specified index.</summary>
         public void CopyTo(TControl[] array, int arrayIndex)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>Returns the index of the first occurrence of the given control, or -1 if not found.</summary>
         public int IndexOf(TControl item)
         {
             return IndexOf(item, 0);
         }
 
+        /// <summary>Returns the index of the first occurrence of the given control within the given range, or -1 if not found.</summary>
         public int IndexOf(TControl item, int startIndex, int count = -1)
         {
             if (startIndex < 0)
@@ -399,26 +402,31 @@ namespace UnityEngine.InputSystem
             return -1;
         }
 
+        /// <summary>Inserts the given control at the specified index.</summary>
         public void Insert(int index, TControl item)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>Removes all controls from this list.</summary>
         public void Clear()
         {
             m_Count = 0;
         }
 
+        /// <summary>Returns true if the given control is in this list.</summary>
         public bool Contains(TControl item)
         {
             return IndexOf(item) != -1;
         }
 
+        /// <summary>Returns true if the given control appears within the specified range of this list.</summary>
         public bool Contains(TControl item, int startIndex, int count = -1)
         {
             return IndexOf(item, startIndex, count) != -1;
         }
 
+        /// <summary>Swaps the controls at the two given indices.</summary>
         public void SwapElements(int index1, int index2)
         {
             if (index1 < 0 || index1 >= m_Count)
@@ -430,6 +438,7 @@ namespace UnityEngine.InputSystem
                 m_Indices.SwapElements(index1, index2);
         }
 
+        /// <summary>Sorts the controls in the given range using the given comparer.</summary>
         public void Sort<TCompare>(int startIndex, int count, TCompare comparer)
             where TCompare : IComparer<TControl>
         {
@@ -472,12 +481,14 @@ namespace UnityEngine.InputSystem
                 ArrayHelpers.AppendWithCapacity(ref array, ref count, this[i]);
         }
 
+        /// <summary>Releases the native memory used by this list.</summary>
         public void Dispose()
         {
             if (m_Indices.IsCreated)
                 m_Indices.Dispose();
         }
 
+        /// <summary>Returns an enumerator that iterates over all controls in this list.</summary>
         public IEnumerator<TControl> GetEnumerator()
         {
             return new Enumerator(this);
@@ -488,6 +499,7 @@ namespace UnityEngine.InputSystem
             return GetEnumerator();
         }
 
+        /// <summary>Returns a string listing all controls in this list.</summary>
         public override string ToString()
         {
             if (Count == 0)

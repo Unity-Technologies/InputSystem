@@ -9,10 +9,12 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize + sizeof(byte))]
     public unsafe struct EnableIMECompositionCommand : IInputDeviceCommandInfo
     {
+        /// <summary>The FourCC type identifier for this command.</summary>
         public static FourCC Type { get { return new FourCC('I', 'M', 'E', 'M'); } }
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + +sizeof(uint);
 
+        /// <summary>The base <see cref="InputDeviceCommand"/> header.</summary>
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
@@ -27,11 +29,13 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         byte m_ImeEnabled;
 
+        /// <summary>Static FourCC type code used to identify this command.</summary>
         public FourCC typeStatic
         {
             get { return Type; }
         }
 
+        /// <summary>Creates a command to enable or disable IME composition input.</summary>
         public static EnableIMECompositionCommand Create(bool enabled)
         {
             return new EnableIMECompositionCommand

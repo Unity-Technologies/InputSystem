@@ -13,15 +13,19 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputDeviceCommand.kBaseCommandSize)]
     public struct RequestResetCommand : IInputDeviceCommandInfo
     {
+        /// <summary>The FourCC type identifier for this command.</summary>
         public static FourCC Type => new FourCC('R', 'S', 'E', 'T');
 
         internal const int kSize = InputDeviceCommand.kBaseCommandSize;
 
+        /// <summary>The base <see cref="InputDeviceCommand"/> header.</summary>
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
+        /// <summary>Static FourCC type code used to identify this command.</summary>
         public FourCC typeStatic => Type;
 
+        /// <summary>Creates a request reset command.</summary>
         public static RequestResetCommand Create()
         {
             return new RequestResetCommand

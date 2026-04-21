@@ -17,8 +17,10 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize + 4)]
     public struct TextEvent : IInputEventTypeInfo
     {
+        /// <summary>The FourCC type identifier for text input events.</summary>
         public const int Type = 0x54455854;
 
+        /// <summary>The base <see cref="InputEvent"/> header.</summary>
         [FieldOffset(0)]
         public InputEvent baseEvent;
 
@@ -28,8 +30,10 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(InputEvent.kBaseEventSize)]
         public int character;
 
+        /// <summary>Static FourCC type code used to identify this event type.</summary>
         public FourCC typeStatic => Type;
 
+        /// <summary>Casts the given event pointer to a <see cref="TextEvent"/> pointer.</summary>
         public static unsafe TextEvent* From(InputEventPtr eventPtr)
         {
             if (!eventPtr.valid)
@@ -41,6 +45,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return (TextEvent*)eventPtr.data;
         }
 
+        /// <summary>Creates a text event for the given device ID, character, and timestamp.</summary>
         public static TextEvent Create(int deviceId, char character, double time = -1)
         {
             ////TODO: detect and throw when if character is surrogate
@@ -52,6 +57,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return inputEvent;
         }
 
+        /// <summary>Creates a text event for the given device ID, Unicode code point, and timestamp.</summary>
         public static TextEvent Create(int deviceId, int character, double time = -1)
         {
             var inputEvent = new TextEvent

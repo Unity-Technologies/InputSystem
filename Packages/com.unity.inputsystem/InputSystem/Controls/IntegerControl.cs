@@ -44,6 +44,7 @@ namespace UnityEngine.InputSystem.Controls
             }
         }
 
+        /// <summary>Returns the FourCC type code of the optimized data format for this integer control.</summary>
         protected override FourCC CalculateOptimizedControlDataType()
         {
             if (m_StateBlock.format == InputStateBlock.FormatInt &&

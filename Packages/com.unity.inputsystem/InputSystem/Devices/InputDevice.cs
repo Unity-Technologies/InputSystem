@@ -365,6 +365,7 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public double lastUpdateTime => m_LastUpdateTimeInternal - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
 
+        /// <summary>True if the device received an input update during the current frame.</summary>
         public bool wasUpdatedThisFrame => m_CurrentUpdateStepCount == InputUpdate.s_UpdateStepCount;
 
         /// <summary>
@@ -600,6 +601,7 @@ namespace UnityEngine.InputSystem
         /// DeviceIoControl</a> on Windows and <a href="https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man2/ioctl.2.html#//apple_ref/doc/man/2/ioctl">ioctl</a>
         /// on UNIX-like systems.
         /// </remarks>
+        /// <typeparam name="TCommand">The type of the command to execute.</typeparam>
         public unsafe long ExecuteCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
@@ -627,6 +629,7 @@ namespace UnityEngine.InputSystem
             return ExecuteCommand((InputDeviceCommand*)UnsafeUtility.AddressOf(ref command));
         }
 
+        /// <summary>Executes the given device command and returns the result code.</summary>
         protected virtual unsafe long ExecuteCommand(InputDeviceCommand* commandPtr)
         {
             return InputRuntime.s_Instance.DeviceCommand(deviceId, commandPtr);

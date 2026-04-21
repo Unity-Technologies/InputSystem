@@ -16,22 +16,28 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Pack = 1, Size = InputEvent.kBaseEventSize + 9)]
     public unsafe struct DeltaStateEvent : IInputEventTypeInfo
     {
+        /// <summary>The FourCC type identifier for delta state events.</summary>
         public const int Type = 0x444C5441; // 'DLTA'
 
+        /// <summary>The base <see cref="InputEvent"/> header.</summary>
         [FieldOffset(0)]
         public InputEvent baseEvent;
 
+        /// <summary>The FourCC format code of the state data in this event.</summary>
         [FieldOffset(InputEvent.kBaseEventSize)]
         public FourCC stateFormat;
 
+        /// <summary>The byte offset within the device state that this delta applies to.</summary>
         [FieldOffset(InputEvent.kBaseEventSize + 4)]
         public uint stateOffset;
 
         [FieldOffset(InputEvent.kBaseEventSize + 8)]
         internal fixed byte stateData[1]; // Variable-sized.
 
+        /// <summary>The size in bytes of the delta state payload.</summary>
         public uint deltaStateSizeInBytes => baseEvent.sizeInBytes - (InputEvent.kBaseEventSize + 8);
 
+        /// <summary>Pointer to the first byte of the delta state data.</summary>
         public void* deltaState
         {
             get
@@ -43,8 +49,10 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Static FourCC type code used to identify this event type.</summary>
         public FourCC typeStatic => Type;
 
+        /// <summary>Returns an <see cref="InputEventPtr"/> pointing to this event.</summary>
         public InputEventPtr ToEventPtr()
         {
             fixed(DeltaStateEvent * ptr = &this)
@@ -53,6 +61,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Casts the given event pointer to a <see cref="DeltaStateEvent"/> pointer.</summary>
         public static DeltaStateEvent* From(InputEventPtr ptr)
         {
             if (!ptr.valid)
@@ -68,6 +77,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return (DeltaStateEvent*)ptr.data;
         }
 
+        /// <summary>Allocates and initializes a delta state event for the given control.</summary>
         public static NativeArray<byte> From(InputControl control, out InputEventPtr eventPtr,  Allocator allocator = Allocator.Temp)
         {
             if (control == null)

@@ -398,6 +398,7 @@ namespace UnityEngine.InputSystem
             m_OverrideProcessors = default;
         }
 
+        /// <summary>Returns the name portion of the composite path, or null if this is not a composite binding.</summary>
         public string GetNameOfComposite()
         {
             if (!isComposite)
@@ -417,11 +418,13 @@ namespace UnityEngine.InputSystem
             m_OverrideProcessors = null;
         }
 
+        /// <summary>Returns a copy of this binding with groups set to only the given group.</summary>
         public static InputBinding MaskByGroup(string group)
         {
             return new InputBinding {groups = group};
         }
 
+        /// <summary>Returns a copy of this binding with groups set to only the given groups.</summary>
         public static InputBinding MaskByGroups(params string[] groups)
         {
             return new InputBinding {groups = string.Join(kSeparatorString, groups.Where(x => !string.IsNullOrEmpty(x)))};
@@ -697,6 +700,8 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         /// <seealso cref="InputControlPath.ToHumanReadableString(string,out string,out string,InputControlPath.HumanReadableStringOptions,InputControl)"/>
         /// <seealso cref="InputActionRebindingExtensions.GetBindingDisplayString(InputAction,int,out string,out string,InputBinding.DisplayStringOptions)"/>
+        /// <param name="deviceLayoutName">Output: the name of the device layout this binding targets.</param>
+        /// <param name="controlPath">Output: the path of the control within the device.</param>
         public string ToDisplayString(out string deviceLayoutName, out string controlPath, DisplayStringOptions options = default,
             InputControl control = default)
         {

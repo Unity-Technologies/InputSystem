@@ -85,6 +85,7 @@ namespace UnityEngine.InputSystem
         [InputControl(noisy = true, dontReset = true)]
         public QuaternionControl deviceRotation { get; protected set; }
 
+        /// <summary>Resolves child controls after the control hierarchy is built.</summary>
         protected override void FinishSetup()
         {
             base.FinishSetup();

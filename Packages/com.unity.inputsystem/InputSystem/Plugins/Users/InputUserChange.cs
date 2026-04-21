@@ -74,10 +74,15 @@ namespace UnityEngine.InputSystem.Users
         DeviceRegained,
 
         ////TODO: bring documentation for these back when user management is implemented on Xbox and PS
+        /// <summary>The platform user account associated with the user has changed.</summary>
         AccountChanged,
+        /// <summary>The display name of the user's platform account has changed.</summary>
         AccountNameChanged,
+        /// <summary>A platform account selection UI is currently shown to the user.</summary>
         AccountSelectionInProgress,
+        /// <summary>The user canceled the account selection UI without selecting an account.</summary>
         AccountSelectionCanceled,
+        /// <summary>The user successfully selected an account in the platform account selection UI.</summary>
         AccountSelectionComplete,
 
         ////REVIEW: send notifications about the matching status of the control scheme? maybe ControlSchemeActivated, ControlSchemeDeactivated,

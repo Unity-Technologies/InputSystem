@@ -221,8 +221,10 @@ namespace UnityEngine.InputSystem.Layouts
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Justification = "According to MSDN, this message can be ignored for attribute parameters, as there are no better alternatives.")]
         public string[] aliases { get; set; }
 
+        /// <summary>Name of another control whose state memory this control should read from.</summary>
         public string useStateFrom { get; set; }
 
+        /// <summary>The bit offset within the control's byte offset.</summary>
         public uint bit { get; set; } = InputStateBlock.InvalidOffset;
 
         /// <summary>
@@ -283,6 +285,7 @@ namespace UnityEngine.InputSystem.Layouts
         /// <seealso cref="InputStateBlock.sizeInBits"/>
         public uint sizeInBits { get; set; }
 
+        /// <summary>If greater than zero, this attribute creates an array of controls with this many elements.</summary>
         public int arraySize { get; set; }
 
         /// <summary>
@@ -347,6 +350,7 @@ namespace UnityEngine.InputSystem.Layouts
         /// This is null by default in which case no lower bound is applied to the TODO
         /// </remarks>
         public object minValue { get; set; }
+        /// <summary>The maximum value the control can report.</summary>
         public object maxValue { get; set; }
     }
 }

@@ -284,6 +284,7 @@ namespace UnityEngine.InputSystem
 
         #endif
 
+        /// <summary>Asserts that pressing the given button controls sends the expected state update to the given device.</summary>
         // ReSharper disable once MemberCanBeProtected.Global
         public static void AssertButtonPress<TState>(InputDevice device, TState state, params ButtonControl[] buttons)
             where TState : struct, IInputStateTypeInfo
@@ -308,6 +309,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>Asserts that the given stick control reports the expected values for up, down, left, and right directions.</summary>
         public static void AssertStickValues(StickControl stick, Vector2 stickValue, float up, float down, float left,
             float right)
         {
@@ -422,39 +424,46 @@ namespace UnityEngine.InputSystem
             });
         }
 
+        /// <summary>Returns a constraint that asserts the action started with the given control, time, and value.</summary>
         public ActionConstraint Started(InputAction action, InputControl control = null, double? time = null, object value = null)
         {
             return new ActionConstraint(InputActionPhase.Started, action, control, time: time, duration: 0, value: value);
         }
 
+        /// <summary>Returns a constraint that asserts the action started with the given typed control and value.</summary>
         public ActionConstraint Started<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null)
             where TValue : struct
         {
             return new ActionConstraint(InputActionPhase.Started, action, control, value, time: time, duration: 0);
         }
 
+        /// <summary>Returns a constraint that asserts the action was performed with the given control, times, and value.</summary>
         public ActionConstraint Performed(InputAction action, InputControl control = null, double? time = null, double? duration = null, object value = null)
         {
             return new ActionConstraint(InputActionPhase.Performed, action, control, time: time, duration: duration, value: value);
         }
 
+        /// <summary>Returns a constraint that asserts the action was performed with the given typed control and value.</summary>
         public ActionConstraint Performed<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null, double? duration = null)
             where TValue : struct
         {
             return new ActionConstraint(InputActionPhase.Performed, action, control, value, time: time, duration: duration);
         }
 
+        /// <summary>Returns a constraint that asserts the action was canceled with the given control, times, and value.</summary>
         public ActionConstraint Canceled(InputAction action, InputControl control = null, double? time = null, double? duration = null, object value = null)
         {
             return new ActionConstraint(InputActionPhase.Canceled, action, control, time: time, duration: duration, value: value);
         }
 
+        /// <summary>Returns a constraint that asserts the action was canceled with the given typed control and value.</summary>
         public ActionConstraint Canceled<TValue>(InputAction action, InputControl<TValue> control, TValue value, double? time = null, double? duration = null)
             where TValue : struct
         {
             return new ActionConstraint(InputActionPhase.Canceled, action, control, value, time: time, duration: duration);
         }
 
+        /// <summary>Returns a constraint that asserts the action started with the given control and value (alternate overload).</summary>
         public ActionConstraint Started<TInteraction>(InputAction action, InputControl control = null, object value = null, double? time = null)
             where TInteraction : IInputInteraction
         {
@@ -462,6 +471,7 @@ namespace UnityEngine.InputSystem
                 duration: 0, value: value);
         }
 
+        /// <summary>Returns a constraint that asserts the action was performed with the given control and value (alternate overload).</summary>
         public ActionConstraint Performed<TInteraction>(InputAction action, InputControl control = null, object value = null, double? time = null, double? duration = null)
             where TInteraction : IInputInteraction
         {
@@ -469,6 +479,7 @@ namespace UnityEngine.InputSystem
                 duration: duration, value: value);
         }
 
+        /// <summary>Returns a constraint that asserts the action was canceled with the given control and value (alternate overload).</summary>
         public ActionConstraint Canceled<TInteraction>(InputAction action, InputControl control = null, object value = null, double? time = null, double? duration = null)
             where TInteraction : IInputInteraction
         {
@@ -478,18 +489,21 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: Should we determine queueEventOnly automatically from whether we're in a UnityTest?
 
+        /// <summary>Simulates pressing the given button control with optional time and queue control.</summary>
         // ReSharper disable once MemberCanBeProtected.Global
         public void Press(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
             Set(button, 1, time, timeOffset, queueEventOnly: queueEventOnly);
         }
 
+        /// <summary>Simulates releasing the given button control with optional time and queue control.</summary>
         // ReSharper disable once MemberCanBeProtected.Global
         public void Release(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
             Set(button, 0, time, timeOffset, queueEventOnly: queueEventOnly);
         }
 
+        /// <summary>Simulates pressing and immediately releasing the given button control.</summary>
         // ReSharper disable once MemberCanBePrivate.Global
         public void PressAndRelease(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
@@ -497,6 +511,7 @@ namespace UnityEngine.InputSystem
             Release(button, time, timeOffset, queueEventOnly: queueEventOnly);
         }
 
+        /// <summary>Simulates a click (press and release) on the given button control.</summary>
         // ReSharper disable once MemberCanBeProtected.Global
         public void Click(ButtonControl button, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
@@ -613,6 +628,7 @@ namespace UnityEngine.InputSystem
                 InputSystem.Update();
         }
 
+        /// <summary>Simulates moving the given 2D control to the specified position.</summary>
         public void Move(InputControl<Vector2> positionControl, Vector2 position, Vector2? delta = null, double time = -1, double timeOffset = 0, bool queueEventOnly = false)
         {
             Set(positionControl, position, time: time, timeOffset: timeOffset, queueEventOnly: true);
@@ -625,6 +641,7 @@ namespace UnityEngine.InputSystem
                 InputSystem.Update();
         }
 
+        /// <summary>Begins a simulated touch with the given ID and position.</summary>
         ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void BeginTouch(int touchId, Vector2 position, bool queueEventOnly = false, Touchscreen screen = null,
             double time = -1, double timeOffset = 0, byte displayIndex = 0)
@@ -632,12 +649,14 @@ namespace UnityEngine.InputSystem
             SetTouch(touchId, TouchPhase.Began, position, 1, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset, displayIndex: displayIndex);
         }
 
+        /// <summary>Begins a simulated touch with the given ID, position, and pressure.</summary>
         public void BeginTouch(int touchId, Vector2 position, float pressure, bool queueEventOnly = false, Touchscreen screen = null,
             double time = -1, double timeOffset = 0)
         {
             SetTouch(touchId, TouchPhase.Began, position, pressure, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
+        /// <summary>Moves a simulated touch to the given position.</summary>
         ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void MoveTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
@@ -645,12 +664,14 @@ namespace UnityEngine.InputSystem
             SetTouch(touchId, TouchPhase.Moved, position, 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
+        /// <summary>Moves a simulated touch to the given position with the specified pressure.</summary>
         public void MoveTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
             SetTouch(touchId, TouchPhase.Moved, position, pressure, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
+        /// <summary>Ends a simulated touch at the given position.</summary>
         ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void EndTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0, byte displayIndex = 0)
@@ -658,12 +679,14 @@ namespace UnityEngine.InputSystem
             SetTouch(touchId, TouchPhase.Ended, position, 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset, displayIndex: displayIndex);
         }
 
+        /// <summary>Ends a simulated touch at the given position with the specified pressure.</summary>
         public void EndTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
             SetTouch(touchId, TouchPhase.Ended, position, pressure, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
+        /// <summary>Cancels a simulated touch.</summary>
         ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void CancelTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
@@ -671,12 +694,14 @@ namespace UnityEngine.InputSystem
             SetTouch(touchId, TouchPhase.Canceled, position, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
+        /// <summary>Cancels a simulated touch with the specified pressure.</summary>
         public void CancelTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
             SetTouch(touchId, TouchPhase.Canceled, position, pressure, delta, queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
+        /// <summary>Sets the state of a simulated touch to the given phase and position.</summary>
         ////TODO: obsolete this one in 2.0 and use pressure=1 default value
         public void SetTouch(int touchId, TouchPhase phase, Vector2 position, Vector2 delta = default,
             bool queueEventOnly = true, Touchscreen screen = null, double time = -1, double timeOffset = 0)
@@ -685,6 +710,7 @@ namespace UnityEngine.InputSystem
                 timeOffset: timeOffset);
         }
 
+        /// <summary>Sets the state of a simulated touch with full control over phase, position, pressure, and flags.</summary>
         public void SetTouch(int touchId, TouchPhase phase, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = true,
             Touchscreen screen = null, double time = -1, double timeOffset = 0, byte displayIndex = 0)
         {
@@ -709,6 +735,7 @@ namespace UnityEngine.InputSystem
                 InputSystem.Update();
         }
 
+        /// <summary>Triggers the given action as if the given control was activated with the specified value.</summary>
         public void Trigger<TValue>(InputAction action, InputControl<TValue> control, TValue value)
             where TValue : struct
         {
@@ -887,18 +914,27 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>An NUnit constraint that verifies an <see cref="InputAction"/> callback occurred with the expected parameters.</summary>
         public class ActionConstraint : Constraint
         {
+            /// <summary>The action phase this constraint checks for.</summary>
             public InputActionPhase phase { get; set; }
+            /// <summary>The expected action start time, or null to skip the check.</summary>
             public double? time { get; set; }
+            /// <summary>The expected action duration, or null to skip the check.</summary>
             public double? duration { get; set; }
+            /// <summary>The action being checked.</summary>
             public InputAction action { get; set; }
+            /// <summary>The expected control that triggered the action.</summary>
             public InputControl control { get; set; }
+            /// <summary>The expected value reported by the action.</summary>
             public object value { get; set; }
+            /// <summary>The expected interaction type, or null to skip the check.</summary>
             public Type interaction { get; set; }
 
             private readonly List<ActionConstraint> m_AndThen = new List<ActionConstraint>();
 
+            /// <summary>Initializes the constraint with the given expected action phase, control, value, and optional timing.</summary>
             public ActionConstraint(InputActionPhase phase, InputAction action, InputControl control, object value = null, Type interaction = null, double? time = null, double? duration = null)
             {
                 this.phase = phase;
@@ -930,6 +966,7 @@ namespace UnityEngine.InputSystem
                 Description = description;
             }
 
+            /// <summary>Evaluates the constraint against the given action trace or callback list.</summary>
             public override ConstraintResult ApplyTo(object actual)
             {
                 var trace = (InputActionTrace)actual;
@@ -1011,6 +1048,7 @@ namespace UnityEngine.InputSystem
                 return true;
             }
 
+            /// <summary>Chains this constraint with another, requiring both to match in sequence.</summary>
             public ActionConstraint AndThen(ActionConstraint constraint)
             {
                 m_AndThen.Add(constraint);

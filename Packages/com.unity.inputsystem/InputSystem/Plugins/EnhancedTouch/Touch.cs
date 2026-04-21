@@ -614,7 +614,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             m_TouchRecord = touchRecord;
         }
 
-        /// <inheritdoc/>
+        /// <summary>Returns a string representation of this touch.</summary>
         public override string ToString()
         {
             if (!valid)
@@ -634,13 +634,13 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             return Equals(m_Finger, other.m_Finger) && m_TouchRecord.Equals(other.m_TouchRecord);
         }
 
-        /// <inheritdoc/>
+        /// <summary>Returns true if the given object is a <see cref="Touch"/> equal to this one.</summary>
         public override bool Equals(object obj)
         {
             return obj is Touch other && Equals(other);
         }
 
-        /// <inheritdoc/>
+        /// <summary>Returns a hash code for this touch.</summary>
         public override int GetHashCode()
         {
             unchecked

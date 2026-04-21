@@ -137,6 +137,7 @@ namespace UnityEngine.InputSystem.Utilities
             return ReferenceEquals(m_StringLowerCase, other.m_StringLowerCase);
         }
 
+        /// <summary>Compares this interned string to another for ordering purposes.</summary>
         public int CompareTo(InternedString other)
         {
             return string.Compare(m_StringLowerCase, other.m_StringLowerCase,
@@ -154,47 +155,56 @@ namespace UnityEngine.InputSystem.Utilities
             return m_StringLowerCase.GetHashCode();
         }
 
+        /// <summary>Returns the plain string value of this interned string.</summary>
         public override string ToString()
         {
             return m_StringOriginalCase ?? string.Empty;
         }
 
+        /// <summary>Returns true if both interned strings have the same value.</summary>
         public static bool operator==(InternedString a, InternedString b)
         {
             return a.Equals(b);
         }
 
+        /// <summary>Returns true if the interned strings have different values.</summary>
         public static bool operator!=(InternedString a, InternedString b)
         {
             return !a.Equals(b);
         }
 
+        /// <summary>Returns true if the interned string equals the given plain string.</summary>
         public static bool operator==(InternedString a, string b)
         {
             return string.Compare(a.m_StringLowerCase, b, StringComparison.InvariantCultureIgnoreCase) == 0;
         }
 
+        /// <summary>Returns true if the interned string does not equal the given plain string.</summary>
         public static bool operator!=(InternedString a, string b)
         {
             return string.Compare(a.m_StringLowerCase, b, StringComparison.InvariantCultureIgnoreCase) != 0;
         }
 
+        /// <summary>Returns true if the given plain string equals the interned string.</summary>
         public static bool operator==(string a, InternedString b)
         {
             return string.Compare(a, b.m_StringLowerCase, StringComparison.InvariantCultureIgnoreCase) == 0;
         }
 
+        /// <summary>Returns true if the given plain string does not equal the interned string.</summary>
         public static bool operator!=(string a, InternedString b)
         {
             return string.Compare(a, b.m_StringLowerCase, StringComparison.InvariantCultureIgnoreCase) != 0;
         }
 
+        /// <summary>Returns true if this interned string is lexicographically less than the other.</summary>
         public static bool operator<(InternedString left, InternedString right)
         {
             return string.Compare(left.m_StringLowerCase, right.m_StringLowerCase,
                 StringComparison.InvariantCultureIgnoreCase) < 0;
         }
 
+        /// <summary>Returns true if this interned string is lexicographically greater than the other.</summary>
         public static bool operator>(InternedString left, InternedString right)
         {
             return string.Compare(left.m_StringLowerCase, right.m_StringLowerCase,

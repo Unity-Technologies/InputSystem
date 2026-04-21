@@ -1075,6 +1075,7 @@ namespace UnityEngine.InputSystem
             return new ControlSchemeSyntax(scheme).WithBindingGroup(bindingGroup).Done();
         }
 
+        /// <summary>Adds a device requirement with the given path to the control scheme and returns the updated scheme.</summary>
         public static InputControlScheme WithDevice(this InputControlScheme scheme, string controlPath, bool required)
         {
             #if UNITY_EDITOR
@@ -1086,6 +1087,7 @@ namespace UnityEngine.InputSystem
             return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
         }
 
+        /// <summary>Adds a required device requirement with the given path and returns the updated scheme.</summary>
         public static InputControlScheme WithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR
@@ -1095,6 +1097,7 @@ namespace UnityEngine.InputSystem
             return new ControlSchemeSyntax(scheme).WithRequiredDevice(controlPath).Done();
         }
 
+        /// <summary>Adds an optional device requirement with the given path and returns the updated scheme.</summary>
         public static InputControlScheme WithOptionalDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR
@@ -1104,6 +1107,7 @@ namespace UnityEngine.InputSystem
             return new ControlSchemeSyntax(scheme).WithOptionalDevice(controlPath).Done();
         }
 
+        /// <summary>Appends a required device requirement as an alternative (OR condition) and returns the updated scheme.</summary>
         public static InputControlScheme OrWithRequiredDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR
@@ -1113,6 +1117,7 @@ namespace UnityEngine.InputSystem
             return new ControlSchemeSyntax(scheme).OrWithRequiredDevice(controlPath).Done();
         }
 
+        /// <summary>Appends an optional device requirement as an alternative (OR condition) and returns the updated scheme.</summary>
         public static InputControlScheme OrWithOptionalDevice(this InputControlScheme scheme, string controlPath)
         {
             #if UNITY_EDITOR

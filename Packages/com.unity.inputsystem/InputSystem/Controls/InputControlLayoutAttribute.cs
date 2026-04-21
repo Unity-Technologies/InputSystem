@@ -50,9 +50,11 @@ namespace UnityEngine.InputSystem.Layouts
         public string stateFormat { get; set; }
 
         ////TODO: rename this to just "usages"; "commonUsages" is such a weird name
+        /// <summary>Usages that devices using this layout commonly have.</summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Justification = "According to MSDN, this message can be ignored for attribute parameters, as there are no better alternatives.")]
         public string[] commonUsages { get; set; }
 
+        /// <summary>The variant(s) this layout applies to.</summary>
         public string variants { get; set; }
 
         /// <summary>
@@ -70,6 +72,7 @@ namespace UnityEngine.InputSystem.Layouts
 
         internal bool? canRunInBackgroundInternal;
 
+        /// <summary>If true, input from devices using this layout is processed even when the application is in the background.</summary>
         public bool canRunInBackground
         {
             get => canRunInBackgroundInternal.Value;
@@ -104,6 +107,7 @@ namespace UnityEngine.InputSystem.Layouts
         /// </summary>
         public string displayName { get; set; }
 
+        /// <summary>A human-readable description of what this layout is for.</summary>
         public string description { get; set; }
 
         /// <summary>

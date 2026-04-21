@@ -37,10 +37,13 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     #endif
     public class TouchSimulation : MonoBehaviour, IInputStateChangeMonitor
     {
+        /// <summary>The virtual <see cref="Touchscreen"/> device that simulates touch input from pointer devices.</summary>
         public Touchscreen simulatedTouchscreen { get; private set; }
 
+        /// <summary>The currently active <see cref="TouchSimulation"/> instance, or null if none is active.</summary>
         public static TouchSimulation instance => s_Instance;
 
+        /// <summary>Enables touch simulation by activating the simulated touchscreen and monitoring pointer devices.</summary>
         public static void Enable()
         {
             if (instance == null)
@@ -55,12 +58,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             instance.enabled = true;
         }
 
+        /// <summary>Disables touch simulation and stops monitoring pointer devices.</summary>
         public static void Disable()
         {
             if (instance != null)
                 instance.enabled = false;
         }
 
+        /// <summary>Disables and destroys this touch simulation instance.</summary>
         public static void Destroy()
         {
             Disable();
@@ -72,6 +77,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
         }
 
+        /// <summary>Adds a pointer device to be simulated as touch input.</summary>
         protected void AddPointer(Pointer pointer)
         {
             if (pointer == null)
@@ -89,6 +95,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             InputSystem.DisableDevice(pointer, keepSendingEvents: true);
         }
 
+        /// <summary>Removes a pointer device from touch simulation.</summary>
         protected void RemovePointer(Pointer pointer)
         {
             if (pointer == null)
@@ -240,6 +247,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             }
         }
 
+        /// <summary>Called by Unity when this component is enabled; starts touch simulation.</summary>
         protected void OnEnable()
         {
             if (simulatedTouchscreen != null)
@@ -272,6 +280,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
             InputSystem.onEvent += m_OnEvent;
         }
 
+        /// <summary>Called by Unity when this component is disabled; stops touch simulation.</summary>
         protected void OnDisable()
         {
             if (simulatedTouchscreen != null && simulatedTouchscreen.added)
@@ -393,17 +402,20 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         #pragma warning disable CA1801
 
         ////TODO: [Obsolete]
+        /// <summary>Installs state change monitors on the pointer device at the given index.</summary>
         protected void InstallStateChangeMonitors(int startIndex = 0)
         {
         }
 
         ////TODO: [Obsolete]
+        /// <summary>Called when a monitored pointer control's value changes; converts it to a simulated touch event.</summary>
         protected void OnSourceControlChangedValue(InputControl control, double time, InputEventPtr eventPtr,
             long sourceDeviceAndButtonIndex)
         {
         }
 
         ////TODO: [Obsolete]
+        /// <summary>Removes state change monitors from the pointer device at the given index.</summary>
         protected void UninstallStateChangeMonitors(int startIndex = 0)
         {
         }

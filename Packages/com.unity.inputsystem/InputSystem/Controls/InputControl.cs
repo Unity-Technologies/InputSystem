@@ -278,7 +278,7 @@ namespace UnityEngine.InputSystem
             new ReadOnlyArray<InternedString>(m_Device.m_UsagesForEachControl, m_UsageStartIndex, m_UsageCount);
 
         /// <summary>
-        /// List of alternate names for the control.
+        /// Alternative names by which this control can be looked up via <see cref="InputControlPath"/>.
         /// </summary>
         /// <value>
         /// List of aliased alternate names for the control.
@@ -288,7 +288,7 @@ namespace UnityEngine.InputSystem
             new ReadOnlyArray<InternedString>(m_Device.m_AliasesForEachControl, m_AliasStartIndex, m_AliasCount);
 
         /// <summary>
-        /// Information about where the control stores its state, such as format, offset and size.
+        /// Describes the memory layout of this control's state within the device state buffer.
         /// </summary>
         public InputStateBlock stateBlock => m_StateBlock;
 
@@ -370,7 +370,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Fetch a control from the control's hierarchy by name.
         /// </summary>
-        /// <param name="path">A control path. See <see cref="InputControlPath"/>.</param>
+        /// <param name="path">Path of the child control to retrieve.</param>
         /// <remarks>
         /// Note that <see cref="path"/> matching is case-insensitive.
         /// (see <see cref="InputControlPath"/>).
@@ -498,7 +498,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Read the control's final, processed value from the given buffer and return the value as an object.
+        /// Reads this control's value from the given raw state buffer and returns it as a boxed object.
         /// </summary>
         /// <param name="buffer">Buffer to read the value from.</param>
         /// <param name="bufferSize">Size of <paramref name="buffer"/> in bytes, which must be large enough to store the value.</param>
@@ -636,7 +636,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Try to find a child control matching the given path.
+        /// Attempts to find and return a child control of the given type at the given path, or null if not found.
         /// </summary>
         /// <param name="path">A control path. See <see cref="InputControlPath"/>.</param>
         /// <typeparam name="TControl">The type of control to locate.</typeparam>
@@ -667,7 +667,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Find a child control matching the given path.
+        /// Returns the child control at the given path, throwing if not found.
         /// </summary>
         /// <param name="path">A control path. See <see cref="InputControlPath"/>.</param>
         /// <returns>The first direct or indirect child control that matches the given <paramref name="path"/>
@@ -692,7 +692,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Find a child control matching the given path.
+        /// Returns the child control of the given type at the given path, throwing if not found.
         /// </summary>
         /// <param name="path">A control path. See <see cref="InputControlPath"/>.</param>
         /// <typeparam name="TControl">The type of control to locate.</typeparam>
@@ -718,7 +718,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Constructor for the InputControl
+        /// Initializes a new control. Called by the input system when building the device hierarchy.
         /// </summary>
         /// <remarks>
         /// Constructor for the InputControl
@@ -838,7 +838,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Refresh the configuration of the control. This is used to update the control's state (e.g. Keyboard Layout or display Name of Keys).
+        /// Called to refresh any configuration that the control may have cached from the underlying device.
         /// </summary>
         /// <remarks>
         /// The system will call this method automatically whenever a change is made to one of the control's configuration properties.
@@ -902,13 +902,13 @@ namespace UnityEngine.InputSystem
 
         ////TODO: drop protected access
         /// <summary>
-        /// Information about a memory region storing input state.
+        /// The underlying state block describing this control's memory layout.
         /// </summary>
         protected internal InputStateBlock m_StateBlock;
 
         ////REVIEW: shouldn't these sit on the device?
         /// <summary>
-        /// The state data buffer for the device.
+        /// Pointer to the current state buffer for this control's device.
         /// </summary>
         /// <value>
         /// The state data buffer for the device.
@@ -916,7 +916,7 @@ namespace UnityEngine.InputSystem
         protected internal unsafe void* currentStatePtr => InputStateBuffers.GetFrontBufferForDevice(GetDeviceIndex());
 
         /// <summary>
-        /// The state data buffer for the device from the previous frame.
+        /// Pointer to the previous frame's state buffer for this control's device.
         /// </summary>
         /// <value>
         /// The state data buffer for the device from the previous frame.
@@ -924,7 +924,7 @@ namespace UnityEngine.InputSystem
         protected internal unsafe void* previousFrameStatePtr => InputStateBuffers.GetBackBufferForDevice(GetDeviceIndex());
 
         /// <summary>
-        /// The default state data buffer
+        /// Pointer to the default state buffer for this control's device.
         /// </summary>
         /// <value>
         /// Buffer that has state for each device initialized with default values.
@@ -1027,7 +1027,7 @@ namespace UnityEngine.InputSystem
         /// This method is for internal use only, you should not call this from your own code.
         /// </remarks>
         /// <returns>
-        /// An optimized data type that can represent a control's value in memory directly. <see cref="InputStateBlock"/>
+        /// The FourCC type code of the optimized data format, or default if no optimization applies.
         /// </returns>
         protected virtual FourCC CalculateOptimizedControlDataType()
         {
@@ -1288,10 +1288,10 @@ namespace UnityEngine.InputSystem
     public abstract class InputControl<TValue> : InputControl
         where TValue : struct
     {
-        /// <inheritdoc/>
+        /// <summary>The C# type of the value this control returns.</summary>
         public override Type valueType => typeof(TValue);
 
-        /// <inheritdoc/>
+        /// <summary>The size in bytes of the value this control returns.</summary>
         public override int valueSizeInBytes => UnsafeUtility.SizeOf<TValue>();
 
         /// <summary>
@@ -1475,7 +1475,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Get the control's default value.
+        /// Reads and returns the processed value of this control from the given raw state buffer.
         /// </summary>
         /// <param name="statePtr">State containing the control's <see cref="InputControl.stateBlock"/>.</param>
         /// <returns>The control's default value.</returns>
@@ -1520,7 +1520,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Read value from control
+        /// Reads and returns the raw, unprocessed value of this control from the current state.
         /// </summary>
         /// <returns>The controls current value.</returns>
         /// <remarks>
@@ -1533,7 +1533,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Read value from provided <paramref name="statePtr"/>.
+        /// Reads and returns the raw, unprocessed value of this control from the given state buffer.
         /// </summary>
         /// <param name="statePtr">State pointer to read from.</param>
         /// <returns>The controls current value.</returns>
@@ -1568,7 +1568,7 @@ namespace UnityEngine.InputSystem
             UnsafeUtility.MemCpy(bufferPtr, valuePtr, numBytes);
         }
 
-        /// <inheritdoc />
+        /// <summary>Copies a value from a raw byte buffer into the device state buffer.</summary>
         public override unsafe void WriteValueFromBufferIntoState(void* bufferPtr, int bufferSize, void* statePtr)
         {
             if (bufferPtr == null)
@@ -1607,7 +1607,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Write a value into state at the given memory.
+        /// Writes the given value into the given state buffer.
         /// </summary>
         /// <param name="value">Value for the control to store in the state.</param>
         /// <param name="statePtr">State containing the control's <see cref="InputControl.stateBlock"/>. Will receive
@@ -1659,7 +1659,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Compared values in state buffers.
+        /// Returns true if the value at the two given state pointers differs by more than the noisy threshold.
         /// </summary>
         /// <param name="firstStatePtr">The first state buffer to read value from.</param>
         /// <param name="secondStatePtr">The second state buffer to read value from.</param>
@@ -1675,7 +1675,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Applies all control processors to the passed value.
+        /// Applies all processors registered on this control to the given value and returns the result.
         /// </summary>
         /// <param name="value">value to run processors on.</param>
         /// <returns>The processed value.</returns>
@@ -1774,7 +1774,7 @@ namespace UnityEngine.InputSystem
 
         internal bool evaluateProcessorsEveryRead = false;
 
-        /// <inheritdoc />
+        /// <summary>Called after the control hierarchy has been built to allow the control to perform any final setup steps.</summary>
         protected override void FinishSetup()
         {
             foreach (var processor in m_ProcessorStack)

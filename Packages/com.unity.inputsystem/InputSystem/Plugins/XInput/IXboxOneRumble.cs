@@ -7,6 +7,7 @@ namespace UnityEngine.InputSystem.XInput
     /// </summary>
     public interface IXboxOneRumble : IDualMotorRumble
     {
+        /// <summary>Sets the speeds of all four Xbox One rumble motors.</summary>
         void SetMotorSpeeds(float lowFrequency, float highFrequency, float leftTrigger, float rightTrigger);
     }
 }

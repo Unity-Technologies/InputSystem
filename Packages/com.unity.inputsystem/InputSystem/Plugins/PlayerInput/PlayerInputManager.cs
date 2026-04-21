@@ -44,6 +44,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public const string PlayerJoinedMessage = "OnPlayerJoined";
 
+        /// <summary>Message name sent when a player leaves.</summary>
         public const string PlayerLeftMessage = "OnPlayerLeft";
 
         /// <summary>
@@ -216,12 +217,14 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>How the manager notifies listeners when players join or leave.</summary>
         public PlayerNotifications notificationBehavior
         {
             get => m_NotificationBehavior;
             set => m_NotificationBehavior = value;
         }
 
+        /// <summary>Unity event invoked when a player joins.</summary>
         public PlayerJoinedEvent playerJoinedEvent
         {
             get
@@ -232,6 +235,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>Unity event invoked when a player leaves.</summary>
         public PlayerLeftEvent playerLeftEvent
         {
             get
@@ -242,6 +246,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>C# callback invoked when a player joins.</summary>
         public event Action<PlayerInput> onPlayerJoined
         {
             add
@@ -258,6 +263,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>C# callback invoked when a player leaves.</summary>
         public event Action<PlayerInput> onPlayerLeft
         {
             add
@@ -409,6 +415,7 @@ namespace UnityEngine.InputSystem
             JoinPlayer(pairWithDevice: device);
         }
 
+        /// <summary>Joins a new player using the device that triggered the given action, if not already joined.</summary>
         public void JoinPlayerFromActionIfNotAlreadyJoined(InputAction.CallbackContext context)
         {
             if (!CheckIfPlayerCanJoin())
@@ -800,11 +807,13 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>A serializable Unity event raised when a player joins.</summary>
         [Serializable]
         public class PlayerJoinedEvent : UnityEvent<PlayerInput>
         {
         }
 
+        /// <summary>A serializable Unity event raised when a player leaves.</summary>
         [Serializable]
         public class PlayerLeftEvent : UnityEvent<PlayerInput>
         {

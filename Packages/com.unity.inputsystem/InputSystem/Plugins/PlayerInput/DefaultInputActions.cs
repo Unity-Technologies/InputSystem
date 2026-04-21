@@ -38,7 +38,9 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     public class DefaultInputActions : IInputActionCollection2, IDisposable
     {
+        /// <summary>The underlying <see cref="InputActionAsset"/> containing all actions defined in this class.</summary>
         public InputActionAsset asset { get; }
+        /// <summary>Creates a new instance and loads the default input action asset.</summary>
         public @DefaultInputActions()
         {
             asset = InputActionAsset.FromJson(@"{
@@ -899,30 +901,36 @@ namespace UnityEngine.InputSystem
             m_UI_TrackedDeviceOrientation = m_UI.FindAction("TrackedDeviceOrientation", throwIfNotFound: true);
         }
 
+        /// <summary>Releases the underlying <see cref="InputActionAsset"/>.</summary>
         public void Dispose()
         {
             UnityEngine.Object.Destroy(asset);
         }
 
+        /// <summary>Optional mask that restricts which bindings are active.</summary>
         public InputBinding? bindingMask
         {
             get => asset.bindingMask;
             set => asset.bindingMask = value;
         }
 
+        /// <summary>Optional list of devices that actions in this asset are restricted to.</summary>
         public ReadOnlyArray<InputDevice>? devices
         {
             get => asset.devices;
             set => asset.devices = value;
         }
 
+        /// <summary>The control schemes defined in the underlying asset.</summary>
         public ReadOnlyArray<InputControlScheme> controlSchemes => asset.controlSchemes;
 
+        /// <summary>Returns true if the given action is part of this asset.</summary>
         public bool Contains(InputAction action)
         {
             return asset.Contains(action);
         }
 
+        /// <summary>Returns an enumerator that iterates over all actions in this asset.</summary>
         public IEnumerator<InputAction> GetEnumerator()
         {
             return asset.GetEnumerator();
@@ -933,23 +941,28 @@ namespace UnityEngine.InputSystem
             return GetEnumerator();
         }
 
+        /// <summary>Enables all action maps in this asset.</summary>
         public void Enable()
         {
             asset.Enable();
         }
 
+        /// <summary>Disables all action maps in this asset.</summary>
         public void Disable()
         {
             asset.Disable();
         }
 
+        /// <summary>All bindings across all actions in this asset.</summary>
         public IEnumerable<InputBinding> bindings => asset.bindings;
 
+        /// <summary>Finds and returns the action with the given name or null if not found.</summary>
         public InputAction FindAction(string actionNameOrId, bool throwIfNotFound = false)
         {
             return asset.FindAction(actionNameOrId, throwIfNotFound);
         }
 
+        /// <summary>Finds the index of the given binding and outputs the action it belongs to.</summary>
         public int FindBinding(InputBinding bindingMask, out InputAction action)
         {
             return asset.FindBinding(bindingMask, out action);
@@ -961,18 +974,29 @@ namespace UnityEngine.InputSystem
         private readonly InputAction m_Player_Move;
         private readonly InputAction m_Player_Look;
         private readonly InputAction m_Player_Fire;
+        /// <summary>Provides typed access to all actions in the Player action map.</summary>
         public struct PlayerActions
         {
             private @DefaultInputActions m_Wrapper;
+            /// <summary>Initializes the accessor for the given <see cref="DefaultInputActions"/> instance.</summary>
             public PlayerActions(@DefaultInputActions wrapper) { m_Wrapper = wrapper; }
+            /// <summary>The Move action (2D movement input).</summary>
             public InputAction @Move => m_Wrapper.m_Player_Move;
+            /// <summary>The Look action (2D look/camera input).</summary>
             public InputAction @Look => m_Wrapper.m_Player_Look;
+            /// <summary>The Fire action (attack/primary action input).</summary>
             public InputAction @Fire => m_Wrapper.m_Player_Fire;
+            /// <summary>Returns the underlying <see cref="InputActionMap"/>.</summary>
             public InputActionMap Get() { return m_Wrapper.m_Player; }
+            /// <summary>Enables the Player action map.</summary>
             public void Enable() { Get().Enable(); }
+            /// <summary>Disables the Player action map.</summary>
             public void Disable() { Get().Disable(); }
+            /// <summary>True if the Player action map is currently enabled.</summary>
             public bool enabled => Get().enabled;
+            /// <summary>Implicit conversion to <see cref="InputActionMap"/>.</summary>
             public static implicit operator InputActionMap(PlayerActions set) { return set.Get(); }
+            /// <summary>Registers a callback object to receive events for all Player actions.</summary>
             public void SetCallbacks(IPlayerActions instance)
             {
                 if (m_Wrapper.m_PlayerActionsCallbackInterface != null)
@@ -1002,6 +1026,7 @@ namespace UnityEngine.InputSystem
                 }
             }
         }
+        /// <summary>The Player action map accessor.</summary>
         public PlayerActions @Player => new PlayerActions(this);
 
         // UI
@@ -1017,25 +1042,43 @@ namespace UnityEngine.InputSystem
         private readonly InputAction m_UI_RightClick;
         private readonly InputAction m_UI_TrackedDevicePosition;
         private readonly InputAction m_UI_TrackedDeviceOrientation;
+        /// <summary>Provides typed access to all actions in the UI action map.</summary>
         public struct UIActions
         {
             private @DefaultInputActions m_Wrapper;
+            /// <summary>Initializes the accessor for the given <see cref="DefaultInputActions"/> instance.</summary>
             public UIActions(@DefaultInputActions wrapper) { m_Wrapper = wrapper; }
+            /// <summary>The Navigate action (UI navigation input).</summary>
             public InputAction @Navigate => m_Wrapper.m_UI_Navigate;
+            /// <summary>The Submit action (UI confirm input).</summary>
             public InputAction @Submit => m_Wrapper.m_UI_Submit;
+            /// <summary>The Cancel action (UI cancel input).</summary>
             public InputAction @Cancel => m_Wrapper.m_UI_Cancel;
+            /// <summary>The Point action (pointer/cursor position).</summary>
             public InputAction @Point => m_Wrapper.m_UI_Point;
+            /// <summary>The Click action (pointer primary click).</summary>
             public InputAction @Click => m_Wrapper.m_UI_Click;
+            /// <summary>The ScrollWheel action (scroll wheel delta).</summary>
             public InputAction @ScrollWheel => m_Wrapper.m_UI_ScrollWheel;
+            /// <summary>The MiddleClick action (pointer middle button click).</summary>
             public InputAction @MiddleClick => m_Wrapper.m_UI_MiddleClick;
+            /// <summary>The RightClick action (pointer right button click).</summary>
             public InputAction @RightClick => m_Wrapper.m_UI_RightClick;
+            /// <summary>The TrackedDevicePosition action (XR tracked device world position).</summary>
             public InputAction @TrackedDevicePosition => m_Wrapper.m_UI_TrackedDevicePosition;
+            /// <summary>The TrackedDeviceOrientation action (XR tracked device world orientation).</summary>
             public InputAction @TrackedDeviceOrientation => m_Wrapper.m_UI_TrackedDeviceOrientation;
+            /// <summary>Returns the underlying <see cref="InputActionMap"/>.</summary>
             public InputActionMap Get() { return m_Wrapper.m_UI; }
+            /// <summary>Enables the UI action map.</summary>
             public void Enable() { Get().Enable(); }
+            /// <summary>Disables the UI action map.</summary>
             public void Disable() { Get().Disable(); }
+            /// <summary>True if the UI action map is currently enabled.</summary>
             public bool enabled => Get().enabled;
+            /// <summary>Implicit conversion to <see cref="InputActionMap"/>.</summary>
             public static implicit operator InputActionMap(UIActions set) { return set.Get(); }
+            /// <summary>Registers a callback object to receive events for all UI actions.</summary>
             public void SetCallbacks(IUIActions instance)
             {
                 if (m_Wrapper.m_UIActionsCallbackInterface != null)
@@ -1107,8 +1150,10 @@ namespace UnityEngine.InputSystem
                 }
             }
         }
+        /// <summary>The UI action map accessor.</summary>
         public UIActions @UI => new UIActions(this);
         private int m_KeyboardMouseSchemeIndex = -1;
+        /// <summary>The Keyboard&amp;Mouse control scheme.</summary>
         public InputControlScheme KeyboardMouseScheme
         {
             get
@@ -1118,6 +1163,7 @@ namespace UnityEngine.InputSystem
             }
         }
         private int m_GamepadSchemeIndex = -1;
+        /// <summary>The Gamepad control scheme.</summary>
         public InputControlScheme GamepadScheme
         {
             get
@@ -1127,6 +1173,7 @@ namespace UnityEngine.InputSystem
             }
         }
         private int m_TouchSchemeIndex = -1;
+        /// <summary>The Touch control scheme.</summary>
         public InputControlScheme TouchScheme
         {
             get
@@ -1136,6 +1183,7 @@ namespace UnityEngine.InputSystem
             }
         }
         private int m_JoystickSchemeIndex = -1;
+        /// <summary>The Joystick control scheme.</summary>
         public InputControlScheme JoystickScheme
         {
             get
@@ -1145,6 +1193,7 @@ namespace UnityEngine.InputSystem
             }
         }
         private int m_XRSchemeIndex = -1;
+        /// <summary>The XR control scheme.</summary>
         public InputControlScheme XRScheme
         {
             get
@@ -1153,23 +1202,38 @@ namespace UnityEngine.InputSystem
                 return asset.controlSchemes[m_XRSchemeIndex];
             }
         }
+        /// <summary>Callback interface for receiving Player action events.</summary>
         public interface IPlayerActions
         {
+            /// <summary>Called when the Move action fires.</summary>
             void OnMove(InputAction.CallbackContext context);
+            /// <summary>Called when the Look action fires.</summary>
             void OnLook(InputAction.CallbackContext context);
+            /// <summary>Called when the Fire action fires.</summary>
             void OnFire(InputAction.CallbackContext context);
         }
+        /// <summary>Callback interface for receiving UI action events.</summary>
         public interface IUIActions
         {
+            /// <summary>Called when the Navigate action fires.</summary>
             void OnNavigate(InputAction.CallbackContext context);
+            /// <summary>Called when the Submit action fires.</summary>
             void OnSubmit(InputAction.CallbackContext context);
+            /// <summary>Called when the Cancel action fires.</summary>
             void OnCancel(InputAction.CallbackContext context);
+            /// <summary>Called when the Point action fires.</summary>
             void OnPoint(InputAction.CallbackContext context);
+            /// <summary>Called when the Click action fires.</summary>
             void OnClick(InputAction.CallbackContext context);
+            /// <summary>Called when the ScrollWheel action fires.</summary>
             void OnScrollWheel(InputAction.CallbackContext context);
+            /// <summary>Called when the MiddleClick action fires.</summary>
             void OnMiddleClick(InputAction.CallbackContext context);
+            /// <summary>Called when the RightClick action fires.</summary>
             void OnRightClick(InputAction.CallbackContext context);
+            /// <summary>Called when the TrackedDevicePosition action fires.</summary>
             void OnTrackedDevicePosition(InputAction.CallbackContext context);
+            /// <summary>Called when the TrackedDeviceOrientation action fires.</summary>
             void OnTrackedDeviceOrientation(InputAction.CallbackContext context);
         }
     }

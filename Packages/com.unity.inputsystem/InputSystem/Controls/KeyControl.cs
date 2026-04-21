@@ -59,6 +59,7 @@ namespace UnityEngine.InputSystem.Controls
             }
         }
         /// <inheritdoc/>
+        /// <summary>Refreshes the key name from the current keyboard layout.</summary>
         protected override void RefreshConfiguration()
         {
             // Wipe our last cached set of data (if any).

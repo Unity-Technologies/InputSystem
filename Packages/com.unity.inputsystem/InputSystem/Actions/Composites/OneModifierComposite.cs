@@ -168,6 +168,7 @@ namespace UnityEngine.InputSystem.Composites
         private Type m_ValueType;
         private bool m_BindingIsButton;
 
+        /// <summary>Returns 0 if the modifier is not held, otherwise returns the button's magnitude.</summary>
         public override float EvaluateMagnitude(ref InputBindingCompositeContext context)
         {
             if (ModifierIsPressed(ref context))
@@ -218,6 +219,7 @@ namespace UnityEngine.InputSystem.Composites
             }
         }
 
+        /// <summary>Returns the composite's value as a boxed object, or 0 if the modifier is not held.</summary>
         public override object ReadValueAsObject(ref InputBindingCompositeContext context)
         {
             if (context.ReadValueAsButton(modifier))

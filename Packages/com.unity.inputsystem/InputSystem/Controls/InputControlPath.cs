@@ -47,9 +47,12 @@ namespace UnityEngine.InputSystem
     /// <seealso cref="InputSystem.FindControls"/>
     public static class InputControlPath
     {
+        /// <summary>Wildcard string used in paths to match any single path component.</summary>
         public const string Wildcard = "*";
+        /// <summary>Double wildcard string used in paths to match any number of path components recursively.</summary>
         public const string DoubleWildcard = "**";
 
+        /// <summary>The path separator character used to separate path components.</summary>
         public const char Separator = '/';
 
         // We consider / a reserved character in control names. So, when this character does creep
@@ -65,6 +68,7 @@ namespace UnityEngine.InputSystem
             return pathComponent.Replace(Separator, SeparatorReplacement);
         }
 
+        /// <summary>Combines the path of the given control with the given suffix to form a complete control path.</summary>
         public static string Combine(InputControl parent, string path)
         {
             if (parent == null)
@@ -278,6 +282,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>Parses usage tags from the given path string and returns them as an array, or null if none are present.</summary>
         public static string[] TryGetDeviceUsages(string path)
         {
             if (path == null)
@@ -336,6 +341,7 @@ namespace UnityEngine.InputSystem
 
         // From the given control path, try to determine the control layout being used.
         // NOTE: Allocates!
+        /// <summary>Returns the layout name specified in the given path string, or null if none is specified.</summary>
         public static string TryGetControlLayout(string path)
         {
             if (path == null)
@@ -533,11 +539,13 @@ namespace UnityEngine.InputSystem
             return posInMatchTo == matchToLength && posInStr == strLength; // Check if we have consumed all input. Prevent prefix-only match.
         }
 
+        /// <summary>Attempts to find a control matching the given path starting from the given root; returns null if not found.</summary>
         public static InputControl TryFindControl(InputControl control, string path, int indexInPath = 0)
         {
             return TryFindControl<InputControl>(control, path, indexInPath);
         }
 
+        /// <summary>Finds all controls matching the given path starting from the given root and returns them as an array.</summary>
         public static InputControl[] TryFindControls(InputControl control, string path, int indexInPath = 0)
         {
             var matches = new InputControlList<InputControl>(Allocator.Temp);
@@ -552,6 +560,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>Finds all controls matching the given path and adds them to the given list; returns the number added.</summary>
         public static int TryFindControls(InputControl control, string path, ref InputControlList<InputControl> matches, int indexInPath = 0)
         {
             return TryFindControls(control, path, indexInPath, ref matches);
@@ -567,6 +576,7 @@ namespace UnityEngine.InputSystem
         /// 0, i.e. parsing starts at the first character in the path.</param>
         /// <returns>The first (direct or indirect) child control of <paramref name="control"/> that matches
         /// <paramref name="path"/>.</returns>
+        /// <typeparam name="TControl">The type of control to find.</typeparam>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
         /// <remarks>
         /// Does not allocate.
@@ -636,11 +646,13 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: what's the difference between TryFindChild and TryFindControl??
 
+        /// <summary>Attempts to find a direct or indirect child control matching the given name; returns null if not found.</summary>
         public static InputControl TryFindChild(InputControl control, string path, int indexInPath = 0)
         {
             return TryFindChild<InputControl>(control, path, indexInPath);
         }
 
+        /// <summary>Attempts to find a typed child control matching the given name; returns null if not found.</summary>
         public static TControl TryFindChild<TControl>(InputControl control, string path, int indexInPath = 0)
             where TControl : InputControl
         {
@@ -664,6 +676,7 @@ namespace UnityEngine.InputSystem
 
         ////REVIEW: probably would be good to have a Matches(string,string) version
 
+        /// <summary>Returns true if the given path pattern matches the given control.</summary>
         public static bool Matches(string expected, InputControl control)
         {
             if (string.IsNullOrEmpty(expected))

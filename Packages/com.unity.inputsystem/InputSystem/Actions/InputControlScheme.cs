@@ -238,6 +238,7 @@ namespace UnityEngine.InputSystem
             return controlScheme;
         }
 
+        /// <summary>Searches the given collection of schemes for one that matches all the given devices and returns it via the out parameter.</summary>
         public static bool FindControlSchemeForDevices<TDevices, TSchemes>(TDevices devices, TSchemes schemes,
             out InputControlScheme controlScheme, out MatchResult matchResult, InputDevice mustIncludeDevice = null, bool allowUnsuccessfulMatch = false)
             where TDevices : IReadOnlyList<InputDevice>
@@ -351,6 +352,7 @@ namespace UnityEngine.InputSystem
         /// Note that the device must be present in the list also.</param>
         /// <returns>A <see cref="MatchResult"/> structure containing the result of the pick. Note that this structure
         /// must be manually <see cref="MatchResult.Dispose">disposed</see> or unmanaged memory will be leaked.</returns>
+        /// <typeparam name="TDevices">Type of the device collection to pick from.</typeparam>
         /// <remarks>
         /// Does not allocate managed memory.
         /// </remarks>
@@ -551,6 +553,7 @@ namespace UnityEngine.InputSystem
             };
         }
 
+        /// <summary>Returns true if this scheme is equal to the given scheme.</summary>
         public bool Equals(InputControlScheme other)
         {
             if (!(string.Equals(m_Name, other.m_Name, StringComparison.InvariantCultureIgnoreCase) &&
@@ -584,6 +587,7 @@ namespace UnityEngine.InputSystem
             return true;
         }
 
+        /// <summary>Returns true if the given object is an <see cref="InputControlScheme"/> equal to this one.</summary>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
@@ -592,6 +596,7 @@ namespace UnityEngine.InputSystem
             return obj is InputControlScheme && Equals((InputControlScheme)obj);
         }
 
+        /// <summary>Returns a hash code for this scheme.</summary>
         public override int GetHashCode()
         {
             unchecked
@@ -603,6 +608,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>Returns a string representation of this scheme.</summary>
         public override string ToString()
         {
             if (string.IsNullOrEmpty(m_Name))
@@ -629,11 +635,13 @@ namespace UnityEngine.InputSystem
             return builder.ToString();
         }
 
+        /// <summary>Returns true if both schemes are equal.</summary>
         public static bool operator==(InputControlScheme left, InputControlScheme right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>Returns true if the two schemes are not equal.</summary>
         public static bool operator!=(InputControlScheme left, InputControlScheme right)
         {
             return !left.Equals(right);
@@ -741,6 +749,7 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            /// <summary>Returns the <see cref="Match"/> at the given index.</summary>
             public Match this[int index]
             {
                 get
@@ -853,6 +862,7 @@ namespace UnityEngine.InputSystem
                 /// </summary>
                 public DeviceRequirement requirement => m_Requirements[m_RequirementIndex];
 
+                /// <summary>True if this requirement was optional and not fulfilled by any device.</summary>
                 public bool isOptional => requirement.isOptional;
 
                 internal int m_RequirementIndex;
@@ -1016,6 +1026,7 @@ namespace UnityEngine.InputSystem
                 Or = 1 << 1,
             }
 
+            /// <summary>Returns a string representation of this requirement.</summary>
             public override string ToString()
             {
                 if (!string.IsNullOrEmpty(controlPath))
@@ -1028,12 +1039,14 @@ namespace UnityEngine.InputSystem
                 return base.ToString();
             }
 
+            /// <summary>Returns true if this requirement is equal to the given one.</summary>
             public bool Equals(DeviceRequirement other)
             {
                 return string.Equals(m_ControlPath, other.m_ControlPath) && m_Flags == other.m_Flags &&
                     string.Equals(controlPath, other.controlPath) && isOptional == other.isOptional;
             }
 
+            /// <summary>Returns true if the given object is a <see cref="DeviceRequirement"/> equal to this one.</summary>
             public override bool Equals(object obj)
             {
                 if (ReferenceEquals(null, obj))
@@ -1042,6 +1055,7 @@ namespace UnityEngine.InputSystem
                 return obj is DeviceRequirement && Equals((DeviceRequirement)obj);
             }
 
+            /// <summary>Returns a hash code for this requirement.</summary>
             public override int GetHashCode()
             {
                 unchecked
@@ -1054,11 +1068,13 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            /// <summary>Returns true if both requirements are equal.</summary>
             public static bool operator==(DeviceRequirement left, DeviceRequirement right)
             {
                 return left.Equals(right);
             }
 
+            /// <summary>Returns true if the two requirements are not equal.</summary>
             public static bool operator!=(DeviceRequirement left, DeviceRequirement right)
             {
                 return !left.Equals(right);

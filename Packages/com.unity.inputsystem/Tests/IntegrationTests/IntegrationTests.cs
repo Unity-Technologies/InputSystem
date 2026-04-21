@@ -28,8 +28,10 @@ using UnityEngine.InputSystem.Editor;
 //
 // NOTE: The tests here are necessary to pass the requirement imposed by upm-ci that a package MUST have tests in it.
 
+/// <summary>Integration tests that verify end-to-end input system behavior including remote input.</summary>
 public class IntegrationTests
 {
+    /// <summary>Prevents methods referenced only by reflection from being stripped by the linker.</summary>
     [Preserve]
     public static void PreserveMethods()
     {
@@ -68,6 +70,7 @@ public class IntegrationTests
         var dummy = new System.ComponentModel.StringConverter();
     }
 
+    /// <summary>Sets up the test fixture before each test.</summary>
     [SetUp]
     public virtual void Setup()
     {
@@ -78,12 +81,14 @@ public class IntegrationTests
         InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
     }
 
+    /// <summary>Tears down the test fixture after each test.</summary>
     [TearDown]
     public virtual void TearDown()
     {
         InputSystem.settings.backgroundBehavior = default;
     }
 
+    /// <summary>Verifies that input events can be sent and received correctly end-to-end.</summary>
     [Test]
     [Category("Integration")]
     public void Integration_CanSendAndReceiveEvents()

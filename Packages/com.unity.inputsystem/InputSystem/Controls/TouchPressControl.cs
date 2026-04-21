@@ -44,6 +44,7 @@ namespace UnityEngine.InputSystem.Controls
             return Preprocess(value);
         }
 
+        /// <summary>Writes the given float pressure value into the state buffer.</summary>
         public override unsafe void WriteValueIntoState(float value, void* statePtr)
         {
             throw new NotSupportedException();

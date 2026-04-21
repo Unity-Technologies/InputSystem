@@ -28,6 +28,7 @@ namespace UnityEngine.InputSystem
         /// <paramref name="control"/> itself or one of its parents. If no such control was found,
         /// returns <c>null</c>.</remarks>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
+        /// <returns>The first ancestor control of type <typeparamref name="TControl"/>, or null if none is found.</returns>
         public static TControl FindInParentChain<TControl>(this InputControl control)
             where TControl : InputControl
         {
@@ -119,7 +120,8 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Read the current value of the control and return it as an object.
         /// </summary>
-        /// <returns></returns>
+        /// <param name="control">The control to read the value from.</param>
+        /// <returns>The current value of the control as a boxed object.</returns>
         /// <remarks>
         /// This method allocates GC memory and thus may cause garbage collection when used during gameplay.
         ///
@@ -139,6 +141,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Read the current, processed value of the control and store it into the given memory buffer.
         /// </summary>
+        /// <param name="control">The control to read the value from.</param>
         /// <param name="buffer">Buffer to store value in. Note that the value is not stored with the offset
         /// found in <see cref="InputStateBlock.byteOffset"/> of the control's <see cref="InputControl.stateBlock"/>. It will
         /// be stored directly at the given address.</param>
@@ -249,6 +252,11 @@ namespace UnityEngine.InputSystem
             return control.ReadValueFromStateAsObject(statePtr);
         }
 
+        /// <summary>Reads the unprocessed value of the given control from the given event and returns it.</summary>
+        /// <param name="control">The control to read the value from.</param>
+        /// <param name="eventPtr">The event to read the value from.</param>
+        /// <returns>The unprocessed value of the control as found in the event.</returns>
+        /// <typeparam name="TValue">The type of value to read.</typeparam>
         public static TValue ReadUnprocessedValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr eventPtr)
             where TValue : struct
         {
@@ -260,6 +268,12 @@ namespace UnityEngine.InputSystem
             return result;
         }
 
+        /// <summary>Attempts to read the unprocessed value of the given control from the given event.</summary>
+        /// <param name="control">The control to read the value from.</param>
+        /// <param name="inputEvent">The event to read the value from.</param>
+        /// <param name="value">Receives the unprocessed value, or the default value if the event does not contain state for the control.</param>
+        /// <returns>True if the event contains state for the given control; false otherwise.</returns>
+        /// <typeparam name="TValue">The type of value to read.</typeparam>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#")]
         public static unsafe bool ReadUnprocessedValueFromEvent<TValue>(this InputControl<TValue> control, InputEventPtr inputEvent, out TValue value)
             where TValue : struct
@@ -279,6 +293,10 @@ namespace UnityEngine.InputSystem
         }
 
         ////REVIEW: this has the opposite argument order of WriteValueFromObjectIntoState; fix!
+        /// <summary>Writes the given boxed value into the state for the given control within the given event.</summary>
+        /// <param name="control">The control whose state layout determines where to write the value.</param>
+        /// <param name="eventPtr">The event to write the value into.</param>
+        /// <param name="value">The boxed value to write.</param>
         public static unsafe void WriteValueFromObjectIntoEvent(this InputControl control, InputEventPtr eventPtr, object value)
         {
             if (control == null)
@@ -324,6 +342,11 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>Writes the given value into the state buffer at the position described by the given control.</summary>
+        /// <param name="control">The control that determines the state layout to write into.</param>
+        /// <param name="value">The value to write.</param>
+        /// <param name="statePtr">Pointer to the state buffer to write into.</param>
+        /// <typeparam name="TValue">The type of the value to write.</typeparam>
         public static unsafe void WriteValueIntoState<TValue>(this InputControl control, TValue value, void* statePtr)
             where TValue : struct
         {
@@ -337,6 +360,11 @@ namespace UnityEngine.InputSystem
             controlOfType.WriteValueIntoState(value, statePtr);
         }
 
+        /// <summary>Writes the given typed value into the state buffer at the position described by the given typed control.</summary>
+        /// <param name="control">The control that determines the state layout to write into.</param>
+        /// <param name="value">The value to write.</param>
+        /// <param name="statePtr">Pointer to the state buffer to write into.</param>
+        /// <typeparam name="TValue">The type of the value to write.</typeparam>
         public static unsafe void WriteValueIntoState<TValue>(this InputControl<TValue> control, TValue value, void* statePtr)
             where TValue : struct
         {
@@ -351,6 +379,10 @@ namespace UnityEngine.InputSystem
             control.WriteValueFromBufferIntoState(valuePtr, valueSize, statePtr);
         }
 
+        /// <summary>Reads the current value from the given typed control and writes it into the given state buffer.</summary>
+        /// <param name="control">The control to read the current value from and write into the state buffer.</param>
+        /// <param name="statePtr">Pointer to the state buffer to write into.</param>
+        /// <typeparam name="TValue">The type of the value to write.</typeparam>
         public static unsafe void WriteValueIntoState<TValue>(this InputControl<TValue> control, void* statePtr)
             where TValue : struct
         {
@@ -361,11 +393,13 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        ///
+        /// Write the value of the given control into the given state.
         /// </summary>
-        /// <param name="state"></param>
+        /// <param name="control">The control to write the value for.</param>
+        /// <param name="state">The state struct to write the value into.</param>
         /// <param name="value">Value for <paramref name="control"/> to write into <paramref name="state"/>.</param>
-        /// <typeparam name="TState"></typeparam>
+        /// <typeparam name="TValue">The type of value to write.</typeparam>
+        /// <typeparam name="TState">The type of state struct to write into.</typeparam>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is null.</exception>
         /// <exception cref="ArgumentException">Control's value does not fit within the memory of <paramref name="state"/>.</exception>
         /// <exception cref="NotSupportedException"><paramref name="control"/> does not support writing.</exception>
@@ -388,6 +422,11 @@ namespace UnityEngine.InputSystem
             control.WriteValueIntoState(value, statePtr);
         }
 
+        /// <summary>Writes the given value into the state for the given control within the given event.</summary>
+        /// <param name="control">The control whose state layout determines where to write the value.</param>
+        /// <param name="value">The value to write.</param>
+        /// <param name="eventPtr">The event to write the value into.</param>
+        /// <typeparam name="TValue">The type of the value to write.</typeparam>
         public static void WriteValueIntoEvent<TValue>(this InputControl control, TValue value, InputEventPtr eventPtr)
             where TValue : struct
         {
@@ -403,6 +442,11 @@ namespace UnityEngine.InputSystem
             controlOfType.WriteValueIntoEvent(value, eventPtr);
         }
 
+        /// <summary>Writes the given typed value into the state for the given typed control within the given event.</summary>
+        /// <param name="control">The control whose state layout determines where to write the value.</param>
+        /// <param name="value">The value to write.</param>
+        /// <param name="eventPtr">The event to write the value into.</param>
+        /// <typeparam name="TValue">The type of the value to write.</typeparam>
         public static unsafe void WriteValueIntoEvent<TValue>(this InputControl<TValue> control, TValue value, InputEventPtr eventPtr)
             where TValue : struct
         {
@@ -523,6 +567,9 @@ namespace UnityEngine.InputSystem
             return control.CompareState(statePtr, control.defaultStatePtr, maskPtr);
         }
 
+        /// <summary>Returns true if all state bits for the given control are at their default values, ignoring any noisy controls.</summary>
+        /// <param name="control">The control to check.</param>
+        /// <returns>True if the control is at its default state, ignoring noise.</returns>
         public static unsafe bool CheckStateIsAtDefaultIgnoringNoise(this InputControl control)
         {
             if (control == null)
@@ -559,6 +606,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Compare the control's current state to the state stored in <paramref name="statePtr"/>.
         /// </summary>
+        /// <param name="control">The control whose state layout defines what to compare.</param>
         /// <param name="statePtr">State memory containing the control's <see cref="InputControl.stateBlock"/>.</param>
         /// <returns>True if </returns>
         /// <seealso cref="InputControl.currentStatePtr"/>
@@ -582,6 +630,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Compare the control's stored state in <paramref name="firstStatePtr"/> to <paramref name="secondStatePtr"/>.
         /// </summary>
+        /// <param name="control">The control whose state layout defines what to compare.</param>
         /// <param name="firstStatePtr">Memory containing the control's <see cref="InputControl.stateBlock"/>.</param>
         /// <param name="secondStatePtr">Memory containing the control's <see cref="InputControl.stateBlock"/></param>
         /// <param name="maskPtr">Optional mask. If supplied, it will be used to mask the comparison between
@@ -619,6 +668,11 @@ namespace UnityEngine.InputSystem
                 control.m_StateBlock.bitOffset, control.m_StateBlock.sizeInBits, mask);
         }
 
+        /// <summary>Returns true if the state of the given control differs between the current state and the given state buffer.</summary>
+        /// <param name="control">The control whose state layout defines what to compare.</param>
+        /// <param name="statePtr">State memory to compare the control's current state against.</param>
+        /// <param name="maskPtr">Optional noise mask to ignore certain state bits.</param>
+        /// <returns>True if the state is equivalent in both memory buffers.</returns>
         public static unsafe bool CompareState(this InputControl control, void* statePtr, void* maskPtr = null)
         {
             if (control == null)
@@ -885,6 +939,11 @@ namespace UnityEngine.InputSystem
             control.WriteValueIntoEvent(oldDelta + newValue, newState);
         }
 
+        /// <summary>Recursively searches the given control's hierarchy and adds all controls of type <typeparamref name="TControl"/> matching the predicate to the list.</summary>
+        /// <param name="parent">The root control to start the search from.</param>
+        /// <param name="controls">The list to add matching controls to.</param>
+        /// <param name="predicate">A predicate to filter controls. Controls are only added if this returns true.</param>
+        /// <typeparam name="TControl">The type of control to search for.</typeparam>
         public static void FindControlsRecursive<TControl>(this InputControl parent, IList<TControl> controls, Func<TControl, bool> predicate)
             where TControl : InputControl
         {
@@ -1304,6 +1363,8 @@ namespace UnityEngine.InputSystem
                 return MemoryHelpers.MemCmpBitRegion(m_EventState, m_CurrentState, m_CurrentBitOffset, numBits, m_NoiseMask);
             }
 
+            /// <summary>Advances the enumerator to the next control that has changed state in the event.</summary>
+            /// <returns>True if a control with changed state was found; false if the end of the event was reached.</returns>
             public bool MoveNext()
             {
                 if (!m_EventPtr.valid)
@@ -1465,6 +1526,7 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            /// <summary>Resets the enumerator to its initial state before the first control.</summary>
             public void Reset()
             {
                 if (!m_EventPtr.valid)
@@ -1543,11 +1605,13 @@ namespace UnityEngine.InputSystem
                 //         call but that we'd add work to every DeltaStateEvent if we were to have the upfront comparison here.
             }
 
+            /// <summary>Releases any resources held by the enumerator.</summary>
             public void Dispose()
             {
                 m_EventPtr = default;
             }
 
+            /// <summary>Returns the current control in the enumeration.</summary>
             public InputControl Current => m_CurrentControl;
 
             object IEnumerator.Current => Current;

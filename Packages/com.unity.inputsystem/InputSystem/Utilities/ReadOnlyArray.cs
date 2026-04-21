@@ -96,11 +96,8 @@ namespace UnityEngine.InputSystem.Utilities
 
         /// <summary>
         /// Returns an enumerator that iterates through the read-only array.
-        /// <returns>
-        /// <see cref="ReadOnlyArray{TValue}.Enumerator"/>
-        /// An enumerator for the read-only array.
-        /// </returns>
         /// </summary>
+        /// <returns>An enumerator over the elements of this array.</returns>
         public Enumerator GetEnumerator()
         {
             return new Enumerator(m_Array, m_StartIndex, m_Length);
@@ -122,6 +119,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// Constructs a read-only array containing elements <paramref name="array"/>.
         /// </summary>
         /// <param name="array">An existing array containing elements to be wrapped as a read-only array.</param>
+        /// <returns>A <see cref="ReadOnlyArray{TValue}"/> wrapping the given array.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2225:OperatorOverloadsHaveNamedAlternates", Justification = "`ToXXX` message only really makes sense as static, which is not recommended for generic types.")]
         public static implicit operator ReadOnlyArray<TValue>(TValue[] array)
         {

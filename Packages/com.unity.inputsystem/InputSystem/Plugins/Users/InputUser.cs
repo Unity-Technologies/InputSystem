@@ -35,6 +35,7 @@ namespace UnityEngine.InputSystem.Users
     /// <seealso cref="InputUserChange"/>
     public struct InputUser : IEquatable<InputUser>
     {
+        /// <summary>Sentinel ID value indicating no valid user.</summary>
         public const uint InvalidId = 0;
 
         static readonly ProfilerMarker k_InputUserOnChangeMarker = new ProfilerMarker("InputUser.onChange");
@@ -103,8 +104,11 @@ namespace UnityEngine.InputSystem.Users
 
         ////TODO: bring documentation for these back when user management is implemented on Xbox and PS
         ////For now the docs are filtered out (see Documentation~/filter.yml)
+        /// <summary>The platform-specific account handle associated with this user, if any.</summary>
         public InputUserAccountHandle? platformUserAccountHandle => s_GlobalState.allUserData[index].platformUserAccountHandle;
+        /// <summary>The display name of the platform user account associated with this user, if any.</summary>
         public string platformUserAccountName => s_GlobalState.allUserData[index].platformUserAccountName;
+        /// <summary>The platform-specific unique ID of the user account, if any.</summary>
         public string platformUserAccountId => s_GlobalState.allUserData[index].platformUserAccountId;
 
         ////REVIEW: Does it make sense to track used devices separately from paired devices?
@@ -416,6 +420,7 @@ namespace UnityEngine.InputSystem.Users
             }
         }
 
+        /// <summary>Returns a string representation of this user.</summary>
         public override string ToString()
         {
             if (!valid)
@@ -484,6 +489,7 @@ namespace UnityEngine.InputSystem.Users
             }
         }
 
+        /// <summary>Activates the control scheme with the given name for this user and returns a fluent syntax object.</summary>
         public ControlSchemeChangeSyntax ActivateControlScheme(string schemeName)
         {
             // Look up control scheme by name in actions.
@@ -532,6 +538,7 @@ namespace UnityEngine.InputSystem.Users
                 $"Cannot find control scheme '{schemeName}' in actions '{s_GlobalState.allUserData[index].actions}'");
         }
 
+        /// <summary>Activates the given control scheme for this user and returns a fluent syntax object.</summary>
         public ControlSchemeChangeSyntax ActivateControlScheme(InputControlScheme scheme)
         {
             var userIndex = index; // Throws if user is invalid.
@@ -769,6 +776,7 @@ namespace UnityEngine.InputSystem.Users
         }
 
         ////Doc is filtered out (see Documentation~/filter.yml)
+        /// <summary>Finds and returns the user associated with the given platform account handle, or null if not found.</summary>
         public static InputUser? FindUserByAccount(InputUserAccountHandle platformUserAccountHandle)
         {
             if (platformUserAccountHandle == default(InputUserAccountHandle))
@@ -781,6 +789,7 @@ namespace UnityEngine.InputSystem.Users
             return s_GlobalState.allUsers[userIndex];
         }
 
+        /// <summary>Creates a new user without any paired devices.</summary>
         public static InputUser CreateUserWithoutPairedDevices()
         {
             var userIndex = AddUser();
@@ -827,6 +836,7 @@ namespace UnityEngine.InputSystem.Users
         /// <seealso cref="UnpairDevices"/>
         /// <seealso cref="UnpairDevicesAndRemoveUser"/>
         /// <seealso cref="InputUserChange.DevicePaired"/>
+        /// <returns>The user that was paired with the device, which may be the given user or a newly created one.</returns>
         public static InputUser PerformPairingWithDevice(InputDevice device,
             InputUser user = default,
             InputUserPairingOptions options = InputUserPairingOptions.None)
@@ -913,11 +923,13 @@ namespace UnityEngine.InputSystem.Users
             return false;
         }
 
+        /// <summary>Returns true if this user is the same user as the given one.</summary>
         public bool Equals(InputUser other)
         {
             return m_Id == other.m_Id;
         }
 
+        /// <summary>Returns true if the given object is an <see cref="InputUser"/> representing the same user.</summary>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
@@ -925,16 +937,19 @@ namespace UnityEngine.InputSystem.Users
             return obj is InputUser && Equals((InputUser)obj);
         }
 
+        /// <summary>Returns a hash code for this user.</summary>
         public override int GetHashCode()
         {
             return (int)m_Id;
         }
 
+        /// <summary>Returns true if both values refer to the same user.</summary>
         public static bool operator==(InputUser left, InputUser right)
         {
             return left.m_Id == right.m_Id;
         }
 
+        /// <summary>Returns true if the two values refer to different users.</summary>
         public static bool operator!=(InputUser left, InputUser right)
         {
             return left.m_Id != right.m_Id;

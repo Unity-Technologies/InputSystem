@@ -16,6 +16,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
     public unsafe struct QueryPairedUserAccountCommand : IInputDeviceCommandInfo
     {
+        /// <summary>The FourCC type identifier for this command.</summary>
         public static FourCC Type => new FourCC('P', 'A', 'C', 'C');
 
         internal const int kMaxNameLength = 256;
@@ -24,6 +25,7 @@ namespace UnityEngine.InputSystem.LowLevel
         ////REVIEW: is this too heavy to allocate on the stack?
         internal const int kSize = InputDeviceCommand.kBaseCommandSize + 8 + kMaxNameLength * 2 + kMaxIdLength * 2;
 
+        /// <summary>Possible results of a paired user account query.</summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1714:FlagsEnumsShouldHavePluralNames", Justification = "`Result` matches other command result names")]
         [Flags]
         public enum Result : long
@@ -52,6 +54,7 @@ namespace UnityEngine.InputSystem.LowLevel
             UserAccountSelectionCanceled = 1 << 4,
         }
 
+        /// <summary>The base <see cref="InputDeviceCommand"/> header.</summary>
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
@@ -130,8 +133,10 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Static FourCC type code used to identify this command.</summary>
         public FourCC typeStatic => Type;
 
+        /// <summary>Creates a query paired user account command.</summary>
         public static QueryPairedUserAccountCommand Create()
         {
             return new QueryPairedUserAccountCommand

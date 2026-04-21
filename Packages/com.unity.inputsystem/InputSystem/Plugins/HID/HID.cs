@@ -56,6 +56,9 @@ namespace UnityEngine.InputSystem.HID
         /// <seealso cref="InputDevice.ExecuteCommand{TCommand}"/>
         public static FourCC QueryHIDReportDescriptorSizeDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'S'); } }
 
+        /// <summary>
+        /// The FourCC code identifying <see cref="QueryHIDParsedReportDescriptorDeviceCommand"/>.
+        /// </summary>
         public static FourCC QueryHIDParsedReportDescriptorDeviceCommandType { get { return new FourCC('H', 'I', 'D', 'P'); } }
 
         /// <summary>
@@ -299,11 +302,17 @@ namespace UnityEngine.InputSystem.HID
             return hidDeviceDescriptor;
         }
 
+        /// <summary>
+        /// Returns a human-readable name for the given HID usage page.
+        /// </summary>
         public static string UsagePageToString(UsagePage usagePage)
         {
             return (int)usagePage >= 0xFF00 ? "Vendor-Defined" : usagePage.ToString();
         }
 
+        /// <summary>
+        /// Returns a human-readable name for the given HID usage within the specified usage page.
+        /// </summary>
         public static string UsageToString(UsagePage usagePage, int usage)
         {
             switch (usagePage)
@@ -460,37 +469,106 @@ namespace UnityEngine.InputSystem.HID
             }
         }
 
+        /// <summary>
+        /// Type of a HID report as defined in the HID specification.
+        /// </summary>
         public enum HIDReportType
         {
+            /// <summary>
+            /// The report type is not known or not parsed.
+            /// </summary>
             Unknown,
+            /// <summary>
+            /// An input report sent from the device to the host.
+            /// </summary>
             Input,
+            /// <summary>
+            /// An output report sent from the host to the device.
+            /// </summary>
             Output,
+            /// <summary>
+            /// A feature report for bidirectional configuration data.
+            /// </summary>
             Feature
         }
 
+        /// <summary>
+        /// Type of a HID collection as defined in the HID specification.
+        /// </summary>
         public enum HIDCollectionType
         {
+            /// <summary>
+            /// A group of axes that represents data from one geometric point.
+            /// </summary>
             Physical = 0x00,
+            /// <summary>
+            /// A collection that encompasses all the controls that are part of a single application.
+            /// </summary>
             Application = 0x01,
+            /// <summary>
+            /// A logical grouping of controls.
+            /// </summary>
             Logical = 0x02,
+            /// <summary>
+            /// A collection of items that represent a single report.
+            /// </summary>
             Report = 0x03,
+            /// <summary>
+            /// A named array collection.
+            /// </summary>
             NamedArray = 0x04,
+            /// <summary>
+            /// A usage switch collection.
+            /// </summary>
             UsageSwitch = 0x05,
+            /// <summary>
+            /// A usage modifier collection.
+            /// </summary>
             UsageModifier = 0x06
         }
 
+        /// <summary>
+        /// Flags describing a HID element as defined in the HID specification Main item tags.
+        /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "Flags", Justification = "No better term for underlying data.")]
         [Flags]
         public enum HIDElementFlags
         {
+            /// <summary>
+            /// The element reports a constant value (data bit 0 is set).
+            /// </summary>
             Constant = 1 << 0,
+            /// <summary>
+            /// The element reports individual controls per usage (as opposed to array).
+            /// </summary>
             Variable = 1 << 1,
+            /// <summary>
+            /// The element reports relative values (delta from last report).
+            /// </summary>
             Relative = 1 << 2,
+            /// <summary>
+            /// The element wraps around when it reaches its logical bounds.
+            /// </summary>
             Wrap = 1 << 3,
+            /// <summary>
+            /// The element represents a non-linear control.
+            /// </summary>
             NonLinear = 1 << 4,
+            /// <summary>
+            /// The element has no preferred state (does not return to a neutral state).
+            /// </summary>
             NoPreferred = 1 << 5,
+            /// <summary>
+            /// The element has a null (out-of-range) state.
+            /// </summary>
             NullState = 1 << 6,
+            /// <summary>
+            /// The element value may change without a host interaction (output/feature only).
+            /// </summary>
             Volatile = 1 << 7,
+            /// <summary>
+            /// The element contains a stream of bytes (buffered bytes).
+            /// </summary>
             BufferedBytes = 1 << 8
         }
 
@@ -500,38 +578,107 @@ namespace UnityEngine.InputSystem.HID
         [Serializable]
         public struct HIDElementDescriptor
         {
+            /// <summary>
+            /// The usage ID of the element within its usage page.
+            /// </summary>
             public int usage;
+            /// <summary>
+            /// The HID usage page this element belongs to.
+            /// </summary>
             public UsagePage usagePage;
+            /// <summary>
+            /// The unit of measurement for the element's value.
+            /// </summary>
             public int unit;
+            /// <summary>
+            /// The exponent applied to the unit value (as a power of 10).
+            /// </summary>
             public int unitExponent;
+            /// <summary>
+            /// The minimum logical value reported by this element.
+            /// </summary>
             public int logicalMin;
+            /// <summary>
+            /// The maximum logical value reported by this element.
+            /// </summary>
             public int logicalMax;
+            /// <summary>
+            /// The minimum physical value this element can represent.
+            /// </summary>
             public int physicalMin;
+            /// <summary>
+            /// The maximum physical value this element can represent.
+            /// </summary>
             public int physicalMax;
+            /// <summary>
+            /// The type of report this element belongs to.
+            /// </summary>
             public HIDReportType reportType;
+            /// <summary>
+            /// Index of the collection this element belongs to.
+            /// </summary>
             public int collectionIndex;
+            /// <summary>
+            /// The ID of the HID report this element is part of.
+            /// </summary>
             public int reportId;
+            /// <summary>
+            /// The size of this element's data in the report, in bits.
+            /// </summary>
             public int reportSizeInBits;
+            /// <summary>
+            /// The bit offset of this element within its report.
+            /// </summary>
             public int reportOffsetInBits;
             [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1726:UsePreferredTerms", MessageId = "flags", Justification = "No better term for underlying data.")]
+            /// <summary>
+            /// Flags describing the element's data attributes.
+            /// </summary>
             public HIDElementFlags flags;
 
             // Fields only relevant to arrays.
+            /// <summary>
+            /// The minimum usage ID when this element represents a usage range.
+            /// </summary>
             public int? usageMin;
+            /// <summary>
+            /// The maximum usage ID when this element represents a usage range.
+            /// </summary>
             public int? usageMax;
 
+            /// <summary>
+            /// True if the element has a null state (reports out-of-range values).
+            /// </summary>
             public bool hasNullState => (flags & HIDElementFlags.NullState) == HIDElementFlags.NullState;
 
+            /// <summary>
+            /// True if the element returns to a preferred/neutral state.
+            /// </summary>
             public bool hasPreferredState => (flags & HIDElementFlags.NoPreferred) != HIDElementFlags.NoPreferred;
 
+            /// <summary>
+            /// True if the element is an array (reports index values rather than individual bits).
+            /// </summary>
             public bool isArray => (flags & HIDElementFlags.Variable) != HIDElementFlags.Variable;
 
+            /// <summary>
+            /// True if the element represents a non-linear control.
+            /// </summary>
             public bool isNonLinear => (flags & HIDElementFlags.NonLinear) == HIDElementFlags.NonLinear;
 
+            /// <summary>
+            /// True if the element reports relative values.
+            /// </summary>
             public bool isRelative => (flags & HIDElementFlags.Relative) == HIDElementFlags.Relative;
 
+            /// <summary>
+            /// True if the element always reports a constant value.
+            /// </summary>
             public bool isConstant => (flags & HIDElementFlags.Constant) == HIDElementFlags.Constant;
 
+            /// <summary>
+            /// True if the element value wraps around at its limits.
+            /// </summary>
             public bool isWrapping => (flags & HIDElementFlags.Wrap) == HIDElementFlags.Wrap;
 
             internal bool isSigned => logicalMin < 0;
@@ -574,6 +721,9 @@ namespace UnityEngine.InputSystem.HID
                 }
             }
 
+            /// <summary>
+            /// Returns true if this element matches the given usage page and usage ID.
+            /// </summary>
             public bool Is(UsagePage usagePage, int usage)
             {
                 return usagePage == this.usagePage && usage == this.usage;
@@ -913,11 +1063,29 @@ namespace UnityEngine.InputSystem.HID
         [Serializable]
         public struct HIDCollectionDescriptor
         {
+            /// <summary>
+            /// The type of this HID collection.
+            /// </summary>
             public HIDCollectionType type;
+            /// <summary>
+            /// The usage ID of this collection.
+            /// </summary>
             public int usage;
+            /// <summary>
+            /// The usage page of this collection.
+            /// </summary>
             public UsagePage usagePage;
+            /// <summary>
+            /// Index of the parent collection, or -1 if this is a root collection.
+            /// </summary>
             public int parent; // -1 if no parent.
+            /// <summary>
+            /// Number of child collections contained within this collection.
+            /// </summary>
             public int childCount;
+            /// <summary>
+            /// Index of the first child collection.
+            /// </summary>
             public int firstChild;
         }
 
@@ -945,7 +1113,13 @@ namespace UnityEngine.InputSystem.HID
             /// USB product ID.
             /// </summary>
             public int productId;
+            /// <summary>
+            /// The HID usage ID of the device.
+            /// </summary>
             public int usage;
+            /// <summary>
+            /// The HID usage page of the device.
+            /// </summary>
             public UsagePage usagePage;
 
             /// <summary>
@@ -963,14 +1137,26 @@ namespace UnityEngine.InputSystem.HID
             /// </summary>
             public int featureReportSize;
 
+            /// <summary>
+            /// All elements (controls) described in the HID report descriptor.
+            /// </summary>
             public HIDElementDescriptor[] elements;
+            /// <summary>
+            /// All collections described in the HID report descriptor.
+            /// </summary>
             public HIDCollectionDescriptor[] collections;
 
+            /// <summary>
+            /// Serializes this descriptor to a JSON string.
+            /// </summary>
             public string ToJson()
             {
                 return JsonUtility.ToJson(this, true);
             }
 
+            /// <summary>
+            /// Deserializes a <see cref="HIDDeviceDescriptor"/> from a JSON string.
+            /// </summary>
             public static HIDDeviceDescriptor FromJson(string json)
             {
                 try
@@ -1138,9 +1324,18 @@ namespace UnityEngine.InputSystem.HID
         /// </summary>
         public struct HIDDeviceDescriptorBuilder
         {
+            /// <summary>
+            /// The HID usage page for the device being described.
+            /// </summary>
             public UsagePage usagePage;
+            /// <summary>
+            /// The HID usage ID for the device being described.
+            /// </summary>
             public int usage;
 
+            /// <summary>
+            /// Initializes the builder for a device with the given usage page and usage ID.
+            /// </summary>
             public HIDDeviceDescriptorBuilder(UsagePage usagePage, int usage)
                 : this()
             {
@@ -1148,11 +1343,17 @@ namespace UnityEngine.InputSystem.HID
                 this.usage = usage;
             }
 
+            /// <summary>
+            /// Initializes the builder for a Generic Desktop device with the given usage.
+            /// </summary>
             public HIDDeviceDescriptorBuilder(GenericDesktop usage)
                 : this(UsagePage.GenericDesktop, (int)usage)
             {
             }
 
+            /// <summary>
+            /// Starts a new HID report of the given type with the specified report ID.
+            /// </summary>
             public HIDDeviceDescriptorBuilder StartReport(HIDReportType reportType, int reportId = 1)
             {
                 m_CurrentReportId = reportId;
@@ -1161,6 +1362,9 @@ namespace UnityEngine.InputSystem.HID
                 return this;
             }
 
+            /// <summary>
+            /// Adds a new element to the current report with the specified usage page, usage, and bit size.
+            /// </summary>
             public HIDDeviceDescriptorBuilder AddElement(UsagePage usagePage, int usage, int sizeInBits)
             {
                 if (m_Elements == null)
@@ -1196,11 +1400,17 @@ namespace UnityEngine.InputSystem.HID
                 return this;
             }
 
+            /// <summary>
+            /// Adds a new Generic Desktop element to the current report with the specified usage and bit size.
+            /// </summary>
             public HIDDeviceDescriptorBuilder AddElement(GenericDesktop usage, int sizeInBits)
             {
                 return AddElement(UsagePage.GenericDesktop, (int)usage, sizeInBits);
             }
 
+            /// <summary>
+            /// Sets the physical minimum and maximum for the last added element.
+            /// </summary>
             public HIDDeviceDescriptorBuilder WithPhysicalMinMax(int min, int max)
             {
                 var index = m_Elements.Count - 1;
@@ -1215,6 +1425,9 @@ namespace UnityEngine.InputSystem.HID
                 return this;
             }
 
+            /// <summary>
+            /// Sets the logical minimum and maximum for the last added element.
+            /// </summary>
             public HIDDeviceDescriptorBuilder WithLogicalMinMax(int min, int max)
             {
                 var index = m_Elements.Count - 1;
@@ -1229,6 +1442,9 @@ namespace UnityEngine.InputSystem.HID
                 return this;
             }
 
+            /// <summary>
+            /// Completes the builder and returns the resulting <see cref="HIDDeviceDescriptor"/>.
+            /// </summary>
             public HIDDeviceDescriptor Finish()
             {
                 var descriptor = new HIDDeviceDescriptor
@@ -1263,30 +1479,105 @@ namespace UnityEngine.InputSystem.HID
         /// <seealso href="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
         public enum UsagePage
         {
+            /// <summary>
+            /// Undefined or unknown usage page.
+            /// </summary>
             Undefined = 0x00,
+            /// <summary>
+            /// Generic Desktop Controls usage page (page 0x01).
+            /// </summary>
             GenericDesktop = 0x01,
+            /// <summary>
+            /// Simulation Controls usage page (page 0x02).
+            /// </summary>
             Simulation = 0x02,
+            /// <summary>
+            /// VR Controls usage page (page 0x03).
+            /// </summary>
             VRControls = 0x03,
+            /// <summary>
+            /// Sport Controls usage page (page 0x04).
+            /// </summary>
             SportControls = 0x04,
+            /// <summary>
+            /// Game Controls usage page (page 0x05).
+            /// </summary>
             GameControls = 0x05,
+            /// <summary>
+            /// Generic Device Controls usage page (page 0x06).
+            /// </summary>
             GenericDeviceControls = 0x06,
+            /// <summary>
+            /// Keyboard/Keypad usage page (page 0x07).
+            /// </summary>
             Keyboard = 0x07,
+            /// <summary>
+            /// LED usage page (page 0x08).
+            /// </summary>
             LEDs = 0x08,
+            /// <summary>
+            /// Button usage page (page 0x09).
+            /// </summary>
             Button = 0x09,
+            /// <summary>
+            /// Ordinal usage page (page 0x0A).
+            /// </summary>
             Ordinal = 0x0A,
+            /// <summary>
+            /// Telephony Device usage page (page 0x0B).
+            /// </summary>
             Telephony = 0x0B,
+            /// <summary>
+            /// Consumer usage page (page 0x0C).
+            /// </summary>
             Consumer = 0x0C,
+            /// <summary>
+            /// Digitizer usage page (page 0x0D).
+            /// </summary>
             Digitizer = 0x0D,
+            /// <summary>
+            /// Physical Interface Device (PID) usage page (page 0x0F).
+            /// </summary>
             PID = 0x0F,
+            /// <summary>
+            /// Unicode usage page (page 0x10).
+            /// </summary>
             Unicode = 0x10,
+            /// <summary>
+            /// Alphanumeric Display usage page (page 0x14).
+            /// </summary>
             AlphanumericDisplay = 0x14,
+            /// <summary>
+            /// Medical Instrument usage page (page 0x40).
+            /// </summary>
             MedicalInstruments = 0x40,
+            /// <summary>
+            /// Monitor usage page (page 0x80).
+            /// </summary>
             Monitor = 0x80, // Starts here and goes up to 0x83.
+            /// <summary>
+            /// Power Device usage page (page 0x84).
+            /// </summary>
             Power = 0x84, // Starts here and goes up to 0x87.
+            /// <summary>
+            /// Bar Code Scanner usage page (page 0x8C).
+            /// </summary>
             BarCodeScanner = 0x8C,
+            /// <summary>
+            /// Magnetic Stripe Reader usage page (page 0x8E).
+            /// </summary>
             MagneticStripeReader = 0x8E,
+            /// <summary>
+            /// Camera Control usage page (page 0x90).
+            /// </summary>
             Camera = 0x90,
+            /// <summary>
+            /// Arcade usage page (page 0x91).
+            /// </summary>
             Arcade = 0x91,
+            /// <summary>
+            /// Vendor-defined usage page (page 0xFF00 and above).
+            /// </summary>
             VendorDefined = 0xFF00, // Starts here and goes up to 0xFFFF.
         }
 
@@ -1296,140 +1587,527 @@ namespace UnityEngine.InputSystem.HID
         /// <seealso href="http://www.usb.org/developers/hidpage/Hut1_12v2.pdf"/>
         public enum GenericDesktop
         {
+            /// <summary>
+            /// Undefined Generic Desktop usage.
+            /// </summary>
             Undefined = 0x00,
+            /// <summary>
+            /// Pointer device usage (0x01).
+            /// </summary>
             Pointer = 0x01,
+            /// <summary>
+            /// Mouse device usage (0x02).
+            /// </summary>
             Mouse = 0x02,
+            /// <summary>
+            /// Joystick device usage (0x04).
+            /// </summary>
             Joystick = 0x04,
+            /// <summary>
+            /// Gamepad device usage (0x05).
+            /// </summary>
             Gamepad = 0x05,
+            /// <summary>
+            /// Keyboard device usage (0x06).
+            /// </summary>
             Keyboard = 0x06,
+            /// <summary>
+            /// Keypad device usage (0x07).
+            /// </summary>
             Keypad = 0x07,
+            /// <summary>
+            /// Multi-axis controller device usage (0x08).
+            /// </summary>
             MultiAxisController = 0x08,
+            /// <summary>
+            /// Tablet PC System Controls device usage (0x09).
+            /// </summary>
             TabletPCControls = 0x09,
+            /// <summary>
+            /// Assistive Control device usage (0x0A).
+            /// </summary>
             AssistiveControl = 0x0A,
+            /// <summary>
+            /// X axis control (0x30).
+            /// </summary>
             X = 0x30,
+            /// <summary>
+            /// Y axis control (0x31).
+            /// </summary>
             Y = 0x31,
+            /// <summary>
+            /// Z axis control (0x32).
+            /// </summary>
             Z = 0x32,
+            /// <summary>
+            /// Rotation around the X axis (0x33).
+            /// </summary>
             Rx = 0x33,
+            /// <summary>
+            /// Rotation around the Y axis (0x34).
+            /// </summary>
             Ry = 0x34,
+            /// <summary>
+            /// Rotation around the Z axis (0x35).
+            /// </summary>
             Rz = 0x35,
+            /// <summary>
+            /// Slider control (0x36).
+            /// </summary>
             Slider = 0x36,
+            /// <summary>
+            /// Dial control (0x37).
+            /// </summary>
             Dial = 0x37,
+            /// <summary>
+            /// Wheel control (0x38).
+            /// </summary>
             Wheel = 0x38,
+            /// <summary>
+            /// Hat switch control (0x39).
+            /// </summary>
             HatSwitch = 0x39,
+            /// <summary>
+            /// Counted buffer (0x3A).
+            /// </summary>
             CountedBuffer = 0x3A,
+            /// <summary>
+            /// Byte count (0x3B).
+            /// </summary>
             ByteCount = 0x3B,
+            /// <summary>
+            /// Motion wakeup control (0x3C).
+            /// </summary>
             MotionWakeup = 0x3C,
+            /// <summary>
+            /// Start button (0x3D).
+            /// </summary>
             Start = 0x3D,
+            /// <summary>
+            /// Select button (0x3E).
+            /// </summary>
             Select = 0x3E,
+            /// <summary>
+            /// Vector in the X direction (0x40).
+            /// </summary>
             Vx = 0x40,
+            /// <summary>
+            /// Vector in the Y direction (0x41).
+            /// </summary>
             Vy = 0x41,
+            /// <summary>
+            /// Vector in the Z direction (0x42).
+            /// </summary>
             Vz = 0x42,
+            /// <summary>
+            /// Vector of the body rotation around X (0x43).
+            /// </summary>
             Vbrx = 0x43,
+            /// <summary>
+            /// Vector of the body rotation around Y (0x44).
+            /// </summary>
             Vbry = 0x44,
+            /// <summary>
+            /// Vector of the body rotation around Z (0x45).
+            /// </summary>
             Vbrz = 0x45,
+            /// <summary>
+            /// No vector (0x46).
+            /// </summary>
             Vno = 0x46,
+            /// <summary>
+            /// Feature notification (0x47).
+            /// </summary>
             FeatureNotification = 0x47,
+            /// <summary>
+            /// Resolution multiplier (0x48).
+            /// </summary>
             ResolutionMultiplier = 0x48,
+            /// <summary>
+            /// System control collection (0x80).
+            /// </summary>
             SystemControl = 0x80,
+            /// <summary>
+            /// System power down (0x81).
+            /// </summary>
             SystemPowerDown = 0x81,
+            /// <summary>
+            /// System sleep (0x82).
+            /// </summary>
             SystemSleep = 0x82,
+            /// <summary>
+            /// System wake up (0x83).
+            /// </summary>
             SystemWakeUp = 0x83,
+            /// <summary>
+            /// System context menu (0x84).
+            /// </summary>
             SystemContextMenu = 0x84,
+            /// <summary>
+            /// System main menu (0x85).
+            /// </summary>
             SystemMainMenu = 0x85,
+            /// <summary>
+            /// System application menu (0x86).
+            /// </summary>
             SystemAppMenu = 0x86,
+            /// <summary>
+            /// System menu help (0x87).
+            /// </summary>
             SystemMenuHelp = 0x87,
+            /// <summary>
+            /// System menu exit (0x88).
+            /// </summary>
             SystemMenuExit = 0x88,
+            /// <summary>
+            /// System menu select (0x89).
+            /// </summary>
             SystemMenuSelect = 0x89,
+            /// <summary>
+            /// System menu right (0x8A).
+            /// </summary>
             SystemMenuRight = 0x8A,
+            /// <summary>
+            /// System menu left (0x8B).
+            /// </summary>
             SystemMenuLeft = 0x8B,
+            /// <summary>
+            /// System menu up (0x8C).
+            /// </summary>
             SystemMenuUp = 0x8C,
+            /// <summary>
+            /// System menu down (0x8D).
+            /// </summary>
             SystemMenuDown = 0x8D,
+            /// <summary>
+            /// System cold restart (0x8E).
+            /// </summary>
             SystemColdRestart = 0x8E,
+            /// <summary>
+            /// System warm restart (0x8F).
+            /// </summary>
             SystemWarmRestart = 0x8F,
+            /// <summary>
+            /// D-pad up direction (0x90).
+            /// </summary>
             DpadUp = 0x90,
+            /// <summary>
+            /// D-pad down direction (0x91).
+            /// </summary>
             DpadDown = 0x91,
+            /// <summary>
+            /// D-pad right direction (0x92).
+            /// </summary>
             DpadRight = 0x92,
+            /// <summary>
+            /// D-pad left direction (0x93).
+            /// </summary>
             DpadLeft = 0x93,
+            /// <summary>
+            /// System dock (0xA0).
+            /// </summary>
             SystemDock = 0xA0,
+            /// <summary>
+            /// System undock (0xA1).
+            /// </summary>
             SystemUndock = 0xA1,
+            /// <summary>
+            /// System setup (0xA2).
+            /// </summary>
             SystemSetup = 0xA2,
+            /// <summary>
+            /// System break (0xA3).
+            /// </summary>
             SystemBreak = 0xA3,
+            /// <summary>
+            /// System debugger break (0xA4).
+            /// </summary>
             SystemDebuggerBreak = 0xA4,
+            /// <summary>
+            /// Application break (0xA5).
+            /// </summary>
             ApplicationBreak = 0xA5,
+            /// <summary>
+            /// Application debugger break (0xA6).
+            /// </summary>
             ApplicationDebuggerBreak = 0xA6,
+            /// <summary>
+            /// System speaker mute (0xA7).
+            /// </summary>
             SystemSpeakerMute = 0xA7,
+            /// <summary>
+            /// System hibernate (0xA8).
+            /// </summary>
             SystemHibernate = 0xA8,
+            /// <summary>
+            /// System display invert (0xB0).
+            /// </summary>
             SystemDisplayInvert = 0xB0,
+            /// <summary>
+            /// System display internal only (0xB1).
+            /// </summary>
             SystemDisplayInternal = 0xB1,
+            /// <summary>
+            /// System display external only (0xB2).
+            /// </summary>
             SystemDisplayExternal = 0xB2,
+            /// <summary>
+            /// System display both internal and external (0xB3).
+            /// </summary>
             SystemDisplayBoth = 0xB3,
+            /// <summary>
+            /// System display dual (0xB4).
+            /// </summary>
             SystemDisplayDual = 0xB4,
+            /// <summary>
+            /// System display toggle internal/external (0xB5).
+            /// </summary>
             SystemDisplayToggleIntExt = 0xB5,
+            /// <summary>
+            /// System display swap primary and secondary (0xB6).
+            /// </summary>
             SystemDisplaySwapPrimarySecondary = 0xB6,
+            /// <summary>
+            /// System LCD display auto-scale (0xB7).
+            /// </summary>
             SystemDisplayLCDAutoScale = 0xB7
         }
 
+        /// <summary>
+        /// HID Simulation Controls usage page (0x02) usages.
+        /// </summary>
         public enum Simulation
         {
+            /// <summary>
+            /// Undefined simulation usage.
+            /// </summary>
             Undefined = 0x00,
+            /// <summary>
+            /// Flight simulation device (0x01).
+            /// </summary>
             FlightSimulationDevice = 0x01,
+            /// <summary>
+            /// Automobile simulation device (0x02).
+            /// </summary>
             AutomobileSimulationDevice = 0x02,
+            /// <summary>
+            /// Tank simulation device (0x03).
+            /// </summary>
             TankSimulationDevice = 0x03,
+            /// <summary>
+            /// Spaceship simulation device (0x04).
+            /// </summary>
             SpaceshipSimulationDevice = 0x04,
+            /// <summary>
+            /// Submarine simulation device (0x05).
+            /// </summary>
             SubmarineSimulationDevice = 0x05,
+            /// <summary>
+            /// Sailing simulation device (0x06).
+            /// </summary>
             SailingSimulationDevice = 0x06,
+            /// <summary>
+            /// Motorcycle simulation device (0x07).
+            /// </summary>
             MotorcycleSimulationDevice = 0x07,
+            /// <summary>
+            /// Sports simulation device (0x08).
+            /// </summary>
             SportsSimulationDevice = 0x08,
+            /// <summary>
+            /// Airplane simulation device (0x09).
+            /// </summary>
             AirplaneSimulationDevice = 0x09,
+            /// <summary>
+            /// Helicopter simulation device (0x0A).
+            /// </summary>
             HelicopterSimulationDevice = 0x0A,
+            /// <summary>
+            /// Magic carpet simulation device (0x0B).
+            /// </summary>
             MagicCarpetSimulationDevice = 0x0B,
+            /// <summary>
+            /// Bicycle simulation device (0x0C).
+            /// </summary>
             BicylcleSimulationDevice = 0x0C,
+            /// <summary>
+            /// Flight control stick control (0x20).
+            /// </summary>
             FlightControlStick = 0x20,
+            /// <summary>
+            /// Flight stick control (0x21).
+            /// </summary>
             FlightStick = 0x21,
+            /// <summary>
+            /// Cyclic control (0x22).
+            /// </summary>
             CyclicControl = 0x22,
+            /// <summary>
+            /// Cyclic trim control (0x23).
+            /// </summary>
             CyclicTrim = 0x23,
+            /// <summary>
+            /// Flight yoke control (0x24).
+            /// </summary>
             FlightYoke = 0x24,
+            /// <summary>
+            /// Track control (0x25).
+            /// </summary>
             TrackControl = 0x25,
+            /// <summary>
+            /// Aileron control (0xB0).
+            /// </summary>
             Aileron = 0xB0,
+            /// <summary>
+            /// Aileron trim control (0xB1).
+            /// </summary>
             AileronTrim = 0xB1,
+            /// <summary>
+            /// Anti-torque control (0xB2).
+            /// </summary>
             AntiTorqueControl = 0xB2,
+            /// <summary>
+            /// Autopilot enable control (0xB3).
+            /// </summary>
             AutopilotEnable = 0xB3,
+            /// <summary>
+            /// Chaff release control (0xB4).
+            /// </summary>
             ChaffRelease = 0xB4,
+            /// <summary>
+            /// Collective control (0xB5).
+            /// </summary>
             CollectiveControl = 0xB5,
+            /// <summary>
+            /// Dive brake control (0xB6).
+            /// </summary>
             DiveBreak = 0xB6,
+            /// <summary>
+            /// Electronic countermeasures control (0xB7).
+            /// </summary>
             ElectronicCountermeasures = 0xB7,
+            /// <summary>
+            /// Elevator control (0xB8).
+            /// </summary>
             Elevator = 0xB8,
+            /// <summary>
+            /// Elevator trim control (0xB9).
+            /// </summary>
             ElevatorTrim = 0xB9,
+            /// <summary>
+            /// Rudder control (0xBA).
+            /// </summary>
             Rudder = 0xBA,
+            /// <summary>
+            /// Throttle control (0xBB).
+            /// </summary>
             Throttle = 0xBB,
+            /// <summary>
+            /// Flight communications control (0xBC).
+            /// </summary>
             FlightCommunications = 0xBC,
+            /// <summary>
+            /// Flare release control (0xBD).
+            /// </summary>
             FlareRelease = 0xBD,
+            /// <summary>
+            /// Landing gear control (0xBE).
+            /// </summary>
             LandingGear = 0xBE,
+            /// <summary>
+            /// Toe brake control (0xBF).
+            /// </summary>
             ToeBreak = 0xBF,
+            /// <summary>
+            /// Trigger control (0xC0).
+            /// </summary>
             Trigger = 0xC0,
+            /// <summary>
+            /// Weapons arm control (0xC1).
+            /// </summary>
             WeaponsArm = 0xC1,
+            /// <summary>
+            /// Weapons select control (0xC2).
+            /// </summary>
             WeaponsSelect = 0xC2,
+            /// <summary>
+            /// Wing flaps control (0xC3).
+            /// </summary>
             WingFlaps = 0xC3,
+            /// <summary>
+            /// Accelerator control (0xC4).
+            /// </summary>
             Accelerator = 0xC4,
+            /// <summary>
+            /// Brake control (0xC5).
+            /// </summary>
             Brake = 0xC5,
+            /// <summary>
+            /// Clutch control (0xC6).
+            /// </summary>
             Clutch = 0xC6,
+            /// <summary>
+            /// Shifter control (0xC7).
+            /// </summary>
             Shifter = 0xC7,
+            /// <summary>
+            /// Steering control (0xC8).
+            /// </summary>
             Steering = 0xC8,
+            /// <summary>
+            /// Turret direction control (0xC9).
+            /// </summary>
             TurretDirection = 0xC9,
+            /// <summary>
+            /// Barrel elevation control (0xCA).
+            /// </summary>
             BarrelElevation = 0xCA,
+            /// <summary>
+            /// Dive plane control (0xCB).
+            /// </summary>
             DivePlane = 0xCB,
+            /// <summary>
+            /// Ballast control (0xCC).
+            /// </summary>
             Ballast = 0xCC,
+            /// <summary>
+            /// Bicycle crank control (0xCD).
+            /// </summary>
             BicycleCrank = 0xCD,
+            /// <summary>
+            /// Handle bars control (0xCE).
+            /// </summary>
             HandleBars = 0xCE,
+            /// <summary>
+            /// Front brake control (0xCF).
+            /// </summary>
             FrontBrake = 0xCF,
+            /// <summary>
+            /// Rear brake control (0xD0).
+            /// </summary>
             RearBrake = 0xD0
         }
 
+        /// <summary>
+        /// HID Button usage page (0x09) usages.
+        /// </summary>
         public enum Button
         {
+            /// <summary>
+            /// Undefined button usage.
+            /// </summary>
             Undefined = 0,
+            /// <summary>
+            /// Primary button (button 1).
+            /// </summary>
             Primary,
+            /// <summary>
+            /// Secondary button (button 2).
+            /// </summary>
             Secondary,
+            /// <summary>
+            /// Tertiary button (button 3).
+            /// </summary>
             Tertiary
         }
     }

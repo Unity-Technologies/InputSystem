@@ -169,6 +169,7 @@ namespace UnityEngine.InputSystem
         /// <returns>Processed input value.</returns>
         public abstract TValue Process(TValue value, InputControl control);
 
+        /// <summary>Processes the given boxed value and returns the processed result as a boxed object.</summary>
         public override object ProcessAsObject(object value, InputControl control)
         {
             if (value == null)
@@ -184,6 +185,7 @@ namespace UnityEngine.InputSystem
             return Process(valueOfType, control);
         }
 
+        /// <summary>Processes the value in the given buffer in-place.</summary>
         public override unsafe void Process(void* buffer, int bufferSize, InputControl control)
         {
             if (buffer == null)

@@ -14,6 +14,7 @@ namespace UnityEngine.InputSystem.Utilities
         /// </summary>
         public string formatString { get; set; }
 
+        /// <summary>Initializes the attribute with the given display string format.</summary>
         public DisplayStringFormatAttribute(string formatString)
         {
             this.formatString = formatString;

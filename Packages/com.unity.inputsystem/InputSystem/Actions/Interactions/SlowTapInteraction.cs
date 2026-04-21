@@ -43,6 +43,7 @@ namespace UnityEngine.InputSystem.Interactions
 
         private double m_SlowTapStartTime;
 
+        /// <summary>Processes the current input context and transitions the interaction state as needed.</summary>
         public void Process(ref InputInteractionContext context)
         {
             if (context.isWaiting && context.ControlIsActuated(pressPointOrDefault))
@@ -62,6 +63,7 @@ namespace UnityEngine.InputSystem.Interactions
             }
         }
 
+        /// <summary>Resets the interaction to its initial state.</summary>
         public void Reset()
         {
             m_SlowTapStartTime = 0.0;

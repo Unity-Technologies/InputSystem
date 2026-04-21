@@ -106,6 +106,7 @@ namespace UnityEngine.InputSystem.Controls
         [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Right")]
         public ButtonControl right { get; set; }
 
+        /// <summary>Resolves child axis controls after the control hierarchy is built.</summary>
         protected override void FinishSetup()
         {
             base.FinishSetup();

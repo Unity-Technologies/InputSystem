@@ -190,6 +190,7 @@ namespace UnityEngine.InputSystem.LowLevel
         }
 
         ////FIXME: this API isn't consistent; time seems to be internalTime whereas time property is external time
+        /// <summary>Initializes a new event with the given type, size, device ID, and timestamp.</summary>
         public InputEvent(FourCC type, int sizeInBytes, int deviceId, double time = -1)
         {
             if (time < 0)
@@ -207,6 +208,7 @@ namespace UnityEngine.InputSystem.LowLevel
         // NOTE: The native system assigns IDs when events are queued so if our handled flag
         //       will implicitly get overwritten. Having events go back to unhandled state
         //       when they go on the queue makes sense in itself, though, so this is fine.
+        /// <summary>True if this event has been marked as handled and should be skipped by subsequent processors.</summary>
         public bool handled
         {
             get => (m_Event.eventId & kHandledMask) == kHandledMask;
@@ -219,6 +221,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Returns a string representation of this event.</summary>
         public override string ToString()
         {
             return $"id={eventId} type={type} device={deviceId} size={sizeInBytes} time={time}";
@@ -264,6 +267,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return nextPtr;
         }
 
+        /// <summary>Returns true if both event pointers point to the same event data.</summary>
         public static unsafe bool Equals(InputEvent* first, InputEvent* second)
         {
             if (first == second)

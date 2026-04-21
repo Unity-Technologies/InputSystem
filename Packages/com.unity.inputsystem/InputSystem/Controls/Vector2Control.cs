@@ -89,6 +89,7 @@ namespace UnityEngine.InputSystem.Controls
             return ReadValueFromStateWithCaching(statePtr).magnitude;
         }
 
+        /// <summary>Returns the FourCC type code of the optimized data format for this Vector2 control.</summary>
         protected override FourCC CalculateOptimizedControlDataType()
         {
             if (

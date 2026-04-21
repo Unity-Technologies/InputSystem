@@ -190,6 +190,7 @@ namespace UnityEngine.InputSystem.OnScreen
                 s_OnScreenDevices[deviceInfoIndex].AddControl(this);
         }
 
+        /// <summary>Sends the given value to the on-screen control's target control.</summary>
         protected void SendValueToControl<TValue>(TValue value)
             where TValue : struct
         {
@@ -206,6 +207,7 @@ namespace UnityEngine.InputSystem.OnScreen
             InputSystem.QueueEvent(m_InputEventPtr);
         }
 
+        /// <summary>Resets the target control to its default value.</summary>
         protected void SentDefaultValueToControl()
         {
             if (m_Control == null)
@@ -221,6 +223,7 @@ namespace UnityEngine.InputSystem.OnScreen
         internal static bool HasAnyActive => s_nbActiveInstances != 0;
         private static int s_nbActiveInstances = 0;
 
+        /// <summary>Called by Unity when this component is enabled; registers the on-screen control.</summary>
         protected virtual void OnEnable()
         {
             ++s_nbActiveInstances;
@@ -253,6 +256,7 @@ namespace UnityEngine.InputSystem.OnScreen
             }
         }
 
+        /// <summary>Called by Unity when this component is disabled; unregisters the on-screen control.</summary>
         protected virtual void OnDisable()
         {
             --s_nbActiveInstances;

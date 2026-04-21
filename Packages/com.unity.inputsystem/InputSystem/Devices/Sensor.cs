@@ -158,6 +158,7 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(AccelerometerState))]
     public class Accelerometer : Sensor
     {
+        /// <summary>Control reading the current acceleration vector in m/s².</summary>
         public Vector3Control acceleration { get; protected set; }
 
         /// <summary>
@@ -198,6 +199,7 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(GyroscopeState))]
     public class Gyroscope : Sensor
     {
+        /// <summary>Control reading the current angular velocity in rad/s.</summary>
         public Vector3Control angularVelocity { get; protected set; }
 
         /// <summary>
@@ -239,6 +241,7 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(GravityState), displayName = "Gravity")]
     public class GravitySensor : Sensor
     {
+        /// <summary>Control reading the current gravity vector in m/s².</summary>
         public Vector3Control gravity { get; protected set; }
 
         /// <summary>
@@ -281,6 +284,7 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(AttitudeState), displayName = "Attitude")]
     public class AttitudeSensor : Sensor
     {
+        /// <summary>Control reading the current device attitude as a quaternion.</summary>
         public QuaternionControl attitude { get; protected set; }
 
         /// <summary>
@@ -323,6 +327,7 @@ namespace UnityEngine.InputSystem
     [InputControlLayout(stateType = typeof(LinearAccelerationState), displayName = "Linear Acceleration")]
     public class LinearAccelerationSensor : Sensor
     {
+        /// <summary>Control reading the linear acceleration (without gravity) in m/s².</summary>
         public Vector3Control acceleration { get; protected set; }
 
         /// <summary>

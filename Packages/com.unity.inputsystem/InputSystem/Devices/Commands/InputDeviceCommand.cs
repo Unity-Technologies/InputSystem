@@ -9,12 +9,16 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <summary>
     /// Delegate used by <see cref="InputSystem.onDeviceCommand"/>.
     /// </summary>
+    /// <param name="device">The device to execute the command on.</param>
+    /// <param name="command">Pointer to the command to execute.</param>
+    /// <returns>A non-negative value on success, or a negative value on failure.</returns>
     public unsafe delegate long? InputDeviceCommandDelegate(InputDevice device, InputDeviceCommand* command);
 
     /// <summary>
     /// Delegate for executing <see cref="InputDeviceCommand"/>s inside <see cref="InputSystem.onFindLayoutForDevice"/>.
     /// </summary>
     /// <param name="command">Command to execute.</param>
+    /// <returns>A non-negative value on success, or a negative value on failure.</returns>
     /// <seealso cref="InputSystem.onFindLayoutForDevice"/>
     /// <seealso cref="Layouts.InputDeviceFindControlLayoutDelegate"/>
     public delegate long InputDeviceExecuteCommandDelegate(ref InputDeviceCommand command);
@@ -37,6 +41,7 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         ////TODO: Remove kBaseCommandSize
         internal const int kBaseCommandSize = 8;
+        /// <summary>The size in bytes of the base <see cref="InputDeviceCommand"/> header.</summary>
         public const int BaseCommandSize = 8;
 
         /// <summary>
@@ -47,13 +52,18 @@ namespace UnityEngine.InputSystem.LowLevel
         /// </remarks>
         public const long GenericFailure = -1;
 
+        /// <summary>Return value indicating a generic success result.</summary>
         public const long GenericSuccess = 1;
 
+        /// <summary>The FourCC type identifier of this command.</summary>
         [FieldOffset(0)] public FourCC type;
+        /// <summary>The total size of this command in bytes.</summary>
         [FieldOffset(4)] public int sizeInBytes;
 
+        /// <summary>The size in bytes of the command payload beyond the base header.</summary>
         public int payloadSizeInBytes => sizeInBytes - kBaseCommandSize;
 
+        /// <summary>Pointer to the first byte of the command payload.</summary>
         public unsafe void* payloadPtr
         {
             get
@@ -65,12 +75,14 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Initializes a command with the given type code and total size.</summary>
         public InputDeviceCommand(FourCC type, int sizeInBytes = kBaseCommandSize)
         {
             this.type = type;
             this.sizeInBytes = sizeInBytes;
         }
 
+        /// <summary>Allocates a native buffer for a command of the given type and payload size.</summary>
         public static unsafe NativeArray<byte> AllocateNative(FourCC type, int payloadSize)
         {
             var sizeInBytes = payloadSize + kBaseCommandSize;
@@ -83,6 +95,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return buffer;
         }
 
+        /// <summary>Static FourCC type code used to identify this command type.</summary>
         public FourCC typeStatic
         {
             get { return new FourCC(); }

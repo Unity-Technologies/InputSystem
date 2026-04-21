@@ -69,6 +69,7 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        /// <summary>Returns the magnitude of the value for the binding part at the given index.</summary>
         public float EvaluateMagnitude(int partNumber)
         {
             return m_State.EvaluateCompositePartMagnitude(m_BindingIndex, partNumber);
@@ -312,11 +313,13 @@ namespace UnityEngine.InputSystem
             return buttonValue;
         }
 
+        /// <summary>Reads the value of the binding part at the given index into the given buffer.</summary>
         public unsafe void ReadValue(int partNumber, void* buffer, int bufferSize)
         {
             m_State?.ReadCompositePartValue(m_BindingIndex, partNumber, buffer, bufferSize);
         }
 
+        /// <summary>Returns the value of the binding part at the given index as a boxed object.</summary>
         public object ReadValueAsObject(int partNumber)
         {
             return m_State.ReadCompositePartValueAsObject(m_BindingIndex, partNumber);

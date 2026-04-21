@@ -228,6 +228,7 @@ namespace UnityEngine.InputSystem.Controls
             m_StateBlock.format = InputStateBlock.FormatFloat;
         }
 
+        /// <summary>Resolves child controls and cached references after the control hierarchy is built.</summary>
         protected override void FinishSetup()
         {
             base.FinishSetup();
@@ -310,6 +311,7 @@ namespace UnityEngine.InputSystem.Controls
             return NormalizeProcessor.Normalize(clampedValue, min, max, 0);
         }
 
+        /// <summary>Returns the FourCC type code of the optimized data format for this axis control.</summary>
         protected override FourCC CalculateOptimizedControlDataType()
         {
             var noProcessingNeeded =

@@ -10,6 +10,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     public interface IInputEventTypeInfo
     {
+        /// <summary>The static FourCC type code for events of this type.</summary>
         FourCC typeStatic { get; }
     }
 }

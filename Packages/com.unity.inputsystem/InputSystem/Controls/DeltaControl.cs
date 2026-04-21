@@ -57,6 +57,7 @@ namespace UnityEngine.InputSystem.Controls
         [Preserve]
         public AxisControl right { get; set; }
 
+        /// <summary>Resolves child controls after the control hierarchy is built.</summary>
         protected override void FinishSetup()
         {
             base.FinishSetup();

@@ -164,12 +164,14 @@ namespace UnityEngine.InputSystem.Utilities
         }
 
         // Make annoying Microsoft code analyzer happy.
+        /// <summary>Creates a <see cref="FourCC"/> from the given 32-bit integer.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FourCC FromInt32(int i)
         {
             return i;
         }
 
+        /// <summary>Converts the given <see cref="FourCC"/> to a 32-bit integer.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ToInt32(FourCC fourCC)
         {

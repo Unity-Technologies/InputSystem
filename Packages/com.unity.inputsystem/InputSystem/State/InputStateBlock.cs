@@ -27,7 +27,9 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <seealso cref="InputControl.stateBlock"/>
     public unsafe struct InputStateBlock
     {
+        /// <summary>Sentinel value indicating that an offset has not been assigned yet.</summary>
         public const uint InvalidOffset = 0xffffffff;
+        /// <summary>Sentinel value indicating the input system should assign the offset automatically.</summary>
         public const uint AutomaticOffset = 0xfffffffe;
 
         /// <summary>
@@ -125,19 +127,28 @@ namespace UnityEngine.InputSystem.LowLevel
         internal const int kFormatDouble = 'D' << 24 | 'B' << 16 | 'L' << 8 | ' ';
 
         ////REVIEW: are these really useful?
+        /// <summary>FourCC format code for a two-component float vector state.</summary>
         public static readonly FourCC FormatVector2 = new FourCC('V', 'E', 'C', '2');
         internal const int kFormatVector2 = 'V' << 24 | 'E' << 16 | 'C' << 8 | '2';
+        /// <summary>FourCC format code for a three-component float vector state.</summary>
         public static readonly FourCC FormatVector3 = new FourCC('V', 'E', 'C', '3');
         internal const int kFormatVector3 = 'V' << 24 | 'E' << 16 | 'C' << 8 | '3';
+        /// <summary>FourCC format code for a quaternion state.</summary>
         public static readonly FourCC FormatQuaternion = new FourCC('Q', 'U', 'A', 'T');
         internal const int kFormatQuaternion = 'Q' << 24 | 'U' << 16 | 'A' << 8 | 'T';
+        /// <summary>FourCC format code for a two-component short integer vector state.</summary>
         public static readonly FourCC FormatVector2Short = new FourCC('V', 'C', '2', 'S');
+        /// <summary>FourCC format code for a three-component short integer vector state.</summary>
         public static readonly FourCC FormatVector3Short = new FourCC('V', 'C', '3', 'S');
+        /// <summary>FourCC format code for a two-component byte vector state.</summary>
         public static readonly FourCC FormatVector2Byte = new FourCC('V', 'C', '2', 'B');
+        /// <summary>FourCC format code for a three-component byte vector state.</summary>
         public static readonly FourCC FormatVector3Byte = new FourCC('V', 'C', '3', 'B');
+        /// <summary>FourCC format code for a pose (position + rotation) state.</summary>
         public static readonly FourCC FormatPose = new FourCC('P', 'o', 's', 'e');
         internal const int kFormatPose = 'P' << 24 | 'o' << 16 | 's' << 8 | 'e';
 
+        /// <summary>Returns the size in bits of the primitive data type identified by the given FourCC format code.</summary>
         public static int GetSizeOfPrimitiveFormatInBits(FourCC type)
         {
             if (type == FormatBit || type == FormatSBit)
@@ -171,6 +182,7 @@ namespace UnityEngine.InputSystem.LowLevel
             return -1;
         }
 
+        /// <summary>Returns the FourCC format code corresponding to the given C# primitive type.</summary>
         public static FourCC GetPrimitiveFormatFromType(Type type)
         {
             if (ReferenceEquals(type, typeof(int)))
@@ -218,6 +230,7 @@ namespace UnityEngine.InputSystem.LowLevel
         // During setup, this can be InvalidOffset to indicate a control that should be placed
         // at an offset automatically; otherwise it denotes a fixed offset relative to the
         // parent control.
+        /// <summary>The byte offset of this block within the device's state buffer.</summary>
         public uint byteOffset
         {
             get => m_ByteOffset;
@@ -232,6 +245,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         // Bit offset from the given byte offset. Also zero-based (i.e. first bit is at bit
         // offset #0).
+        /// <summary>The bit offset of this block within its byte.</summary>
         public uint bitOffset { get; set; }
 
         // Size of the state in bits. If this % 8 is not 0, the control is considered a
@@ -239,12 +253,14 @@ namespace UnityEngine.InputSystem.LowLevel
         // During setup, if this field is 0 it means the size of the control should be automatically
         // computed from either its children (if it has any) or its set format. If it has neither,
         // setup will throw.
+        /// <summary>The size of this state block in bits.</summary>
         public uint sizeInBits { get; set; }
 
         internal uint alignedSizeInBytes => (sizeInBits + 7) >> 3;
         internal uint effectiveByteOffset => byteOffset + (bitOffset >> 3);
         internal uint effectiveBitOffset => byteOffset * 8 + bitOffset;
 
+        /// <summary>Reads an integer value from this block in the given state buffer.</summary>
         public int ReadInt(void* statePtr)
         {
             Debug.Assert(sizeInBits != 0);
@@ -295,6 +311,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Writes an integer value into this block in the given state buffer.</summary>
         public void WriteInt(void* statePtr, int value)
         {
             Debug.Assert(sizeInBits != 0);
@@ -352,6 +369,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Reads a float value from this block in the given state buffer.</summary>
         public float ReadFloat(void* statePtr)
         {
             Debug.Assert(sizeInBits != 0);
@@ -412,6 +430,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Writes a float value into this block in the given state buffer.</summary>
         public void WriteFloat(void* statePtr, float value)
         {
             var valuePtr = (byte*)statePtr + (int)byteOffset;
@@ -540,6 +559,7 @@ namespace UnityEngine.InputSystem.LowLevel
         ////REVIEW: This is some bad code duplication here between Read/WriteFloat&Double but given that there's no
         ////        way to use a type argument here, not sure how to get rid of it.
 
+        /// <summary>Reads a double value from this block in the given state buffer.</summary>
         public double ReadDouble(void* statePtr)
         {
             Debug.Assert(sizeInBits != 0);
@@ -602,6 +622,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Writes a double value into this block in the given state buffer.</summary>
         public void WriteDouble(void* statePtr, double value)
         {
             var valuePtr = (byte*)statePtr + (int)byteOffset;
@@ -671,6 +692,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Writes a <see cref="PrimitiveValue"/> into this block in the given state buffer.</summary>
         public void Write(void* statePtr, PrimitiveValue value)
         {
             var valuePtr = (byte*)statePtr + (int)byteOffset;
@@ -736,6 +758,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Copies the state data for this block from one buffer into another.</summary>
         public void CopyToFrom(void* toStatePtr, void* fromStatePtr)
         {
             if (bitOffset != 0 || sizeInBits % 8 != 0)

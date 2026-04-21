@@ -50,6 +50,8 @@ namespace UnityEngine.InputSystem.HID
             /// <summary>
             /// Create a HIDPageUsage struct by specifying a page and usage.
             /// </summary>
+            /// <param name="page">The HID usage page.</param>
+            /// <param name="usage">The usage ID within the page.</param>
             public HIDPageUsage(HID.UsagePage page, int usage)
             {
                 this.page = page;
@@ -59,6 +61,7 @@ namespace UnityEngine.InputSystem.HID
             /// <summary>
             /// Create a HIDPageUsage struct from the GenericDesktop usage page by specifying the usage.
             /// </summary>
+            /// <param name="usage">The Generic Desktop usage ID.</param>
             public HIDPageUsage(HID.GenericDesktop usage)
             {
                 page = HID.UsagePage.GenericDesktop;

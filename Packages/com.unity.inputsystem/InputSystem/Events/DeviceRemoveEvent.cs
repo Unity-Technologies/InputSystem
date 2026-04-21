@@ -13,6 +13,7 @@ namespace UnityEngine.InputSystem.LowLevel
     [StructLayout(LayoutKind.Explicit, Size = InputEvent.kBaseEventSize)]
     public struct DeviceRemoveEvent : IInputEventTypeInfo
     {
+        /// <summary>The FourCC type identifier for device remove events.</summary>
         public const int Type = 0x4452454D;
 
         /// <summary>
@@ -21,8 +22,10 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(0)]
         public InputEvent baseEvent;
 
+        /// <summary>Static FourCC type code used to identify this event type.</summary>
         public FourCC typeStatic => Type;
 
+        /// <summary>Returns an <see cref="InputEventPtr"/> pointing to this event.</summary>
         public unsafe InputEventPtr ToEventPtr()
         {
             fixed(DeviceRemoveEvent * ptr = &this)
@@ -31,6 +34,7 @@ namespace UnityEngine.InputSystem.LowLevel
             }
         }
 
+        /// <summary>Creates a device remove event for the given device ID and timestamp.</summary>
         public static DeviceRemoveEvent Create(int deviceId, double time = -1)
         {
             var inputEvent =

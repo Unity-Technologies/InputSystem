@@ -23,11 +23,13 @@ namespace UnityEngine.InputSystem.Users
             get { return m_ApiName; }
         }
 
+        /// <summary>The raw platform-specific handle value.</summary>
         public ulong handle
         {
             get { return m_Handle; }
         }
 
+        /// <summary>Initializes a handle with the given platform name and raw value.</summary>
         public InputUserAccountHandle(string apiName, ulong handle)
         {
             if (string.IsNullOrEmpty(apiName))
@@ -37,6 +39,7 @@ namespace UnityEngine.InputSystem.Users
             m_Handle = handle;
         }
 
+        /// <summary>Returns a string representation of this handle.</summary>
         public override string ToString()
         {
             if (m_ApiName == null)
@@ -45,11 +48,13 @@ namespace UnityEngine.InputSystem.Users
             return string.Format("{0}({1})", m_ApiName, m_Handle);
         }
 
+        /// <summary>Returns true if both handles refer to the same platform account.</summary>
         public bool Equals(InputUserAccountHandle other)
         {
             return string.Equals(apiName, other.apiName) && Equals(handle, other.handle);
         }
 
+        /// <summary>Returns true if the given object is an <see cref="InputUserAccountHandle"/> referring to the same account.</summary>
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
@@ -57,16 +62,19 @@ namespace UnityEngine.InputSystem.Users
             return obj is InputUserAccountHandle && Equals((InputUserAccountHandle)obj);
         }
 
+        /// <summary>Returns true if both handles refer to the same platform account.</summary>
         public static bool operator==(InputUserAccountHandle left, InputUserAccountHandle right)
         {
             return left.Equals(right);
         }
 
+        /// <summary>Returns true if the two handles refer to different platform accounts.</summary>
         public static bool operator!=(InputUserAccountHandle left, InputUserAccountHandle right)
         {
             return !left.Equals(right);
         }
 
+        /// <summary>Returns a hash code for this handle.</summary>
         public override int GetHashCode()
         {
             unchecked
