@@ -496,7 +496,7 @@ namespace UnityEngine.InputSystem.Editor
             var openButton = new Button(() => InputSettingsProvider.Open())
             {
                 text = "Open Input Settings Window",
-                style = { height = 30 }
+                style = { minHeight = 30, whiteSpace = WhiteSpace.Normal }
             };
             root.Add(openButton);
 
