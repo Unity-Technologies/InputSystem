@@ -9,7 +9,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <remarks>
     ///
     /// If successful, the platform should then send an <see cref="DeviceConfigurationEvent"/>
-    /// to signal that the device configuration has been changed. In response, a <see cref="QueryUserIdCommand"/>
+    /// to signal that the device configuration has been changed. In response, a <see cref="QueryPairedUserAccountCommand"/>
     /// may be sent to fetch the paired user ID from the device.
     /// </remarks>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
