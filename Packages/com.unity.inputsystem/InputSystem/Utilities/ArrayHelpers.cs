@@ -114,13 +114,12 @@ namespace UnityEngine.InputSystem.Utilities
             return IndexOfReference(array, value, startIndex, count) != -1;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "index", Justification = "Keep this for future implementation")]
-        public static bool HaveDuplicateReferences<TFirst>(this TFirst[] first, int index, int count)
+        public static bool HaveDuplicateReferences<TFirst>(this TFirst[] first, int index, int count) where TFirst : class
         {
-            for (var i = 0; i < count; ++i)
+            for (var i = index; i < index + count; ++i)
             {
                 var element = first[i];
-                for (var n = i + 1; n < count - i; ++n)
+                for (var n = i + 1; n < index + count; ++n)
                 {
                     if (ReferenceEquals(element, first[n]))
                         return true;
@@ -552,7 +551,16 @@ namespace UnityEngine.InputSystem.Utilities
             for (var i = 0; i < second.Length; ++i)
             {
                 var secondValue = second[i];
-                if (!merged.Exists(x => comparer.Equals(secondValue)))
+                bool found = false;
+                foreach (var x in merged)
+                {
+                    if (comparer.Equals(x, secondValue))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
                 {
                     merged.Add(secondValue);
                 }

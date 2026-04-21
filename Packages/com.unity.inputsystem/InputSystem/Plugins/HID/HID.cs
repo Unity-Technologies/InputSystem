@@ -11,11 +11,6 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.Scripting;
 using UnityEngine.Pool;
 
-// HID support is currently broken in 32-bit Windows standalone players. Consider 32bit Windows players unsupported for now.
-#if UNITY_STANDALONE_WIN && !UNITY_64
-#warning The 32-bit Windows player is not currently supported by the Input System. HID input will not work in the player. Please use x86_64, if possible.
-#endif
-
 ////REVIEW: there will probably be lots of cases where the HID device creation process just needs a little tweaking; we should
 ////        have better mechanism to do that without requiring to replace the entire process wholesale
 
