@@ -10,8 +10,8 @@ namespace UnityEngine.InputSystem
     {
         public const string kVendorKey = "unity.input";
 
-        public static Func<bool> IsNewSystemBackendsEnabled { get; set; }
-        public static Func<bool> IsOldSystemBackendsEnabled { get; set; }
+        internal static Func<bool> IsNewSystemBackendsEnabled { get; set; }
+        internal static Func<bool> IsOldSystemBackendsEnabled { get; set; }
 
         // Struct similar to AnalyticInfo for simplifying usage.
         public struct InputAnalyticInfo
