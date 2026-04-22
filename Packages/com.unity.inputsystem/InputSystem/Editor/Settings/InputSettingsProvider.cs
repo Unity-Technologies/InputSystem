@@ -500,8 +500,23 @@ namespace UnityEngine.InputSystem.Editor
             };
             root.Add(openButton);
 
-            root.Add(InputAssetEditorUtils.CreateMakeActiveGui(() => InputSystem.settings, target as InputSettings,
-                target.name, "settings", (value) => InputSystem.settings = value));
+            // UndoRedoCallback is void(), not Action, so an adapter is required.
+            // The variable is shared between the two lambdas so the same instance is removed on unsubscribe.
+            Undo.UndoRedoCallback undoRedoAdapter = null;
+            root.Add(InputAssetEditorUtils.CreateMakeActiveGui(
+                () => InputSystem.settings, target as InputSettings,
+                target.name, "settings", (value) => InputSystem.settings = value,
+                handler =>
+                {
+                    InputSystem.onSettingsChange += handler;
+                    undoRedoAdapter = () => handler();
+                    Undo.undoRedoPerformed += undoRedoAdapter;
+                },
+                handler =>
+                {
+                    InputSystem.onSettingsChange -= handler;
+                    Undo.undoRedoPerformed -= undoRedoAdapter;
+                }));
 
             return root;
         }

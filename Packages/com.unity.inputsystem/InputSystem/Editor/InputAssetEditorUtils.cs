@@ -83,23 +83,20 @@ namespace UnityEngine.InputSystem.Editor
             return asset;
         }
 
-        public static VisualElement CreateMakeActiveGui<T>(Func<T> getCurrent, T target, string targetName, string entity, Action<T> apply, bool allowAssignActive = true)
+        public static VisualElement CreateMakeActiveGui<T>(Func<T> getCurrent, T target, string targetName, string entity,
+            Action<T> apply, Action<Action> subscribeToChanges, Action<Action> unsubscribeFromChanges,
+            bool allowAssignActive = true)
             where T : ScriptableObject
         {
             var container = new VisualElement();
-            var lastKnownCurrent = getCurrent();
-            PopulateMakeActiveGui(container, lastKnownCurrent, target, entity, apply, allowAssignActive);
 
-            // Poll for external changes to the active asset (e.g. from Project Settings or Undo).
-            // The scheduled item is automatically stopped when the element leaves the panel.
-            container.schedule.Execute(() =>
-            {
-                var current = getCurrent();
-                if (current == lastKnownCurrent)
-                    return;
-                lastKnownCurrent = current;
-                PopulateMakeActiveGui(container, current, target, entity, apply, allowAssignActive);
-            }).Every(500);
+            void Refresh() => PopulateMakeActiveGui(container, getCurrent(), target, entity, apply, allowAssignActive);
+
+            Refresh();
+
+            // Subscribe for as long as the element is part of a panel, matching the pattern used in InputParameterEditor.
+            container.RegisterCallback<AttachToPanelEvent>(_ => subscribeToChanges(Refresh));
+            container.RegisterCallback<DetachFromPanelEvent>(_ => unsubscribeFromChanges(Refresh));
 
             return container;
         }
