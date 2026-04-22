@@ -500,7 +500,7 @@ namespace UnityEngine.InputSystem.Editor
             };
             root.Add(openButton);
 
-            root.Add(InputAssetEditorUtils.CreateMakeActiveGui(InputSystem.settings, target as InputSettings,
+            root.Add(InputAssetEditorUtils.CreateMakeActiveGui(() => InputSystem.settings, target as InputSettings,
                 target.name, "settings", (value) => InputSystem.settings = value));
 
             return root;

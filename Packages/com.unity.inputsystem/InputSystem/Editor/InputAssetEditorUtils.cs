@@ -83,11 +83,24 @@ namespace UnityEngine.InputSystem.Editor
             return asset;
         }
 
-        public static VisualElement CreateMakeActiveGui<T>(T current, T target, string targetName, string entity, Action<T> apply, bool allowAssignActive = true)
+        public static VisualElement CreateMakeActiveGui<T>(Func<T> getCurrent, T target, string targetName, string entity, Action<T> apply, bool allowAssignActive = true)
             where T : ScriptableObject
         {
             var container = new VisualElement();
-            PopulateMakeActiveGui(container, current, target, entity, apply, allowAssignActive);
+            var lastKnownCurrent = getCurrent();
+            PopulateMakeActiveGui(container, lastKnownCurrent, target, entity, apply, allowAssignActive);
+
+            // Poll for external changes to the active asset (e.g. from Project Settings or Undo).
+            // The scheduled item is automatically stopped when the element leaves the panel.
+            container.schedule.Execute(() =>
+            {
+                var current = getCurrent();
+                if (current == lastKnownCurrent)
+                    return;
+                lastKnownCurrent = current;
+                PopulateMakeActiveGui(container, current, target, entity, apply, allowAssignActive);
+            }).Every(500);
+
             return container;
         }
 
