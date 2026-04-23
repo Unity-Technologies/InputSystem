@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
-- Fixed DualSense controller sending garbage HID output data when connected over Bluetooth, which caused significant FPS drops. Haptic output is now skipped when connected via Bluetooth. [ISXB-1477](https://jira.unity3d.com/browse/ISXB-1477)
+- Fixed DualSense controller sending garbage HID output data when connected over Bluetooth, which caused significant FPS drops and prevented haptics from working. The Bluetooth output report (ID `0x31`, 78 bytes, with CRC32 trailer) is now used when the controller is connected via Bluetooth, so rumble and light bar updates work on both USB and Bluetooth. [ISXB-1477](https://jira.unity3d.com/browse/ISXB-1477)
 - Fixed a `NullReferenceException` thrown when removing all action maps [UUM-137116](https://jira.unity3d.com/browse/UUM-137116)
 - Simplified default setting messaging by consolidating repetitive messages into a single HelpBox.
 - Fixed a `NullPointerReferenceException` thrown in `InputManagerStateMonitors.FireStateChangeNotifications` logging by adding validation [UUM-136095].
