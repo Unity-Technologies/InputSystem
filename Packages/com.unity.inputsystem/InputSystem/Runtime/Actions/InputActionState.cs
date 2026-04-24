@@ -4339,7 +4339,7 @@ namespace UnityEngine.InputSystem
             // Appears we shouldn't really reset globals in case the domain reload is enabled.
             // This is because in that case, we've just had the whole system init'ed via static ctors
             // Moreover, later in GlobalInialize we skip initialization specifically in this case.
-            if (!InputSystem.s_IsDomainReloadDisabled())
+            if (!(InputSystem.s_IsDomainReloadDisabled?.Invoke() ?? false))
                 return;
             #endif
 
