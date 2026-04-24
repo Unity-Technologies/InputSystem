@@ -187,6 +187,9 @@ namespace UnityEngine.InputSystem.Editor
                 // Settings object should get set by an actual InputSettings asset.
                 InputSystem.s_Manager = InputManager.CreateAndInitialize(runtime ?? NativeInputRuntime.instance, null);
                 EditorApplication.playModeStateChanged += OnEditorPlayModeStateChanged;
+                EditorApplication.playModeStateChanged -= OnEditorPlayModeStateChanged;
+                EditorApplication.playModeStateChanged += OnEditorPlayModeStateChanged;
+                EditorApplication.projectChanged -= OnEditorProjectChanged;
                 EditorApplication.projectChanged += OnEditorProjectChanged;
 
                 InputSystem.s_Manager.runtime.onPlayModeChanged = InputSystem.OnPlayModeChange;
