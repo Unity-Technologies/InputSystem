@@ -37,7 +37,7 @@ namespace UnityEngine.InputSystem.OnScreen
 
         [InputControl(layout = "Button")]
         [SerializeField]
-        private string m_ControlPath;
+        internal string m_ControlPath;
 
         protected override string controlPathInternal
         {

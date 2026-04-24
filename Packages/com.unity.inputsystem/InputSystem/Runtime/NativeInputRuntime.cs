@@ -186,14 +186,8 @@ namespace UnityEngine.InputSystem.LowLevel
 
         // Callbacks set by Editor to handle shutdown subscription
         // In Editor, we use EditorApplication.wantsToQuit which expects Func<bool>
-        private Action<Func<bool>> m_RegisterWantsToQuit;
-        private Action<Func<bool>> m_UnregisterWantsToQuit;
-
-        internal void SetWantsToQuitCallbacks(Action<Func<bool>> register, Action<Func<bool>> unregister)
-        {
-            m_RegisterWantsToQuit = register;
-            m_UnregisterWantsToQuit = unregister;
-        }
+        internal Action<Func<bool>> m_RegisterWantsToQuit;
+        internal Action<Func<bool>> m_UnregisterWantsToQuit;
 
         public Action onShutdown
         {

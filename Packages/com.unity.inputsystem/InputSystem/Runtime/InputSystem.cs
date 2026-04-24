@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.Haptics;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
@@ -11,12 +10,8 @@ using UnityEngine.InputSystem.DualShock;
 using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.InputSystem.HID;
 using UnityEngine.InputSystem.UI;
-using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.XInput;
 using UnityEngine.InputSystem.Utilities;
-using Unity.Profiling;
-using UnityEngine.Networking.PlayerConnection;
-
 using System.Linq;
 
 #if UNITY_EDITOR
@@ -3420,12 +3415,12 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Callback for handling play mode changes. Set by InputSystemEditorInitializer.
         /// </summary>
-        internal static Action<LowLevel.InputPlayModeChange> s_OnPlayModeChangeCallback;
+        internal static Action<InputPlayModeChange> s_OnPlayModeChangeCallback;
 
         /// <summary>
         /// Forward to InputSystemEditorInitializer for tests.
         /// </summary>
-        internal static void OnPlayModeChange(LowLevel.InputPlayModeChange change)
+        internal static void OnPlayModeChange(InputPlayModeChange change)
         {
             s_OnPlayModeChangeCallback?.Invoke(change);
         }
@@ -3444,16 +3439,8 @@ namespace UnityEngine.InputSystem
         internal static Action<bool> s_EditorGlobalInitializeCallback;
 
         /// <summary>
-        /// Checks whether a UnityEngine.Object still has a valid native representation.
+        ///  We have this function to hide away instanceId -> entityId migration that happened in Unity 6.3
         /// </summary>
-        /// <param name="obj">The object to check.</param>
-        /// <returns><c>true</c> if the object has a valid native representation, <c>false</c> otherwise.</returns>
-        /// <remarks>
-        /// This method is now internal to the Input System. Use <c>UnityEditor.EditorUtility.InstanceIDToObject</c>
-        /// or the appropriate Unity editor utilities directly instead.
-        /// </remarks>
-        [Obsolete("HasNativeObject has been moved to editor-only code. " +
-            "Use UnityEditor.EditorUtility.InstanceIDToObject(obj.GetInstanceID()) != null instead.", false)]
         public static bool HasNativeObject(Object obj)
         {
             // Delegate to the editor-side implementation via a callback to avoid a UnityEditor dependency.
