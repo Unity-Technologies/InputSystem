@@ -6,12 +6,34 @@ using UnityEngine.InputSystem.Layouts;
 
 namespace UnityEngine.InputSystem
 {
-    internal static class InputAnalytics
+    internal static partial class InputAnalytics
     {
         public const string kVendorKey = "unity.input";
 
         internal static Func<bool> IsNewSystemBackendsEnabled { get; set; }
         internal static Func<bool> IsOldSystemBackendsEnabled { get; set; }
+        /// <summary>
+        /// Code authoring APIs on used for analytics.
+        /// </summary>
+        /// <remarks>
+        /// This enumeration may be added to, but NEVER changed, since it would break older data.
+        /// </remarks>
+        internal enum AuthoringApi
+        {
+            AddBinding,
+            AddCompositeBinding,
+            ChangeBinding,
+            ChangeCompositeBinding,
+            Rename,
+            AddControlScheme,
+            RemoveControlScheme,
+            ControlSchemeWithBindingGroup,
+            ControlSchemeWithDevice,
+            ControlSchemeWithRequiredDevice,
+            ControlSchemeWithOptionalDevice,
+            ControlSchemeOrWithRequiredDevice,
+            ControlSchemeOrWithOptionalDevice
+        }
 
         // Struct similar to AnalyticInfo for simplifying usage.
         public struct InputAnalyticInfo

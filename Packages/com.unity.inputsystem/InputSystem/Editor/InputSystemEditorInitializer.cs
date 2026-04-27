@@ -119,9 +119,9 @@ namespace UnityEngine.InputSystem.Editor
 
         #endregion
 
-        private static void RegisterSetupApiUsage(int api)
+        private static void RegisterSetupApiUsage(InputAnalytics.AuthoringApi authoringApi)
         {
-            InputExitPlayModeAnalytic.Register((InputExitPlayModeAnalytic.Api)api);
+            InputExitPlayModeAnalytic.Register(authoringApi);
         }
 
         private static void SuppressSetupAnalytics(bool suppress)
