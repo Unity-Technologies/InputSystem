@@ -62,48 +62,6 @@ namespace UnityEngine.InputSystem.Editor
             EditorApplication.wantsToQuit -= handler;
         }
 
-        // Unity Remote support
-        private static Func<IntPtr, bool> s_CurrentUnityRemoteMessageHandler;
-
-        private static void SetUnityRemoteMessageHandler(Func<IntPtr, bool> handler)
-        {
-            if (s_CurrentUnityRemoteMessageHandler != null)
-            {
-                var removeMethod = GetUnityRemoteAPIMethod("RemoveMessageHandler");
-                removeMethod?.Invoke(null, new object[] { s_CurrentUnityRemoteMessageHandler });
-            }
-
-            s_CurrentUnityRemoteMessageHandler = handler;
-
-            if (handler != null)
-            {
-                var addMethod = GetUnityRemoteAPIMethod("AddMessageHandler");
-                addMethod?.Invoke(null, new object[] { handler });
-            }
-        }
-
-        private static void SetUnityRemoteGyroEnabled(bool value)
-        {
-            var setMethod = GetUnityRemoteAPIMethod("SetGyroEnabled");
-            setMethod?.Invoke(null, new object[] { value });
-        }
-
-        private static void SetUnityRemoteGyroUpdateInterval(float interval)
-        {
-            var setMethod = GetUnityRemoteAPIMethod("SetGyroUpdateInterval");
-            setMethod?.Invoke(null, new object[] { interval });
-        }
-
-        private static System.Reflection.MethodInfo GetUnityRemoteAPIMethod(string methodName)
-        {
-            var editorAssembly = typeof(EditorApplication).Assembly;
-            var genericRemoteClass = editorAssembly.GetType("UnityEditor.Remote.GenericRemote");
-            if (genericRemoteClass == null)
-                return null;
-
-            return genericRemoteClass.GetMethod(methodName);
-        }
-
         private static void SendEditorAnalytic(InputAnalytics.IInputAnalytic analytic)
         {
             #if ENABLE_CLOUD_SERVICES_ANALYTICS
@@ -342,10 +300,6 @@ namespace UnityEngine.InputSystem.Editor
 
             nativeRuntime.m_RegisterWantsToQuit = RegisterWantsToQuit;
             nativeRuntime.m_UnregisterWantsToQuit = UnregisterWantsToQuit;
-
-            nativeRuntime.m_SetUnityRemoteMessageHandler = SetUnityRemoteMessageHandler;
-            nativeRuntime.m_SetUnityRemoteGyroEnabledCallback = SetUnityRemoteGyroEnabled;
-            nativeRuntime.m_SetUnityRemoteGyroUpdateIntervalCallback = SetUnityRemoteGyroUpdateInterval;
 
             nativeRuntime.m_SendEditorAnalytic = SendEditorAnalytic;
         }

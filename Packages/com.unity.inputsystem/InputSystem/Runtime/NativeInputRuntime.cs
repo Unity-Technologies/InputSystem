@@ -354,35 +354,6 @@ namespace UnityEngine.InputSystem.LowLevel
         public bool isEditorActive => m_IsEditorActive?.Invoke() ?? true;
         public bool isEditorPaused => m_IsEditorPaused?.Invoke() ?? false;
 
-        // Unity Remote callbacks - set by Editor
-        internal Action<Func<IntPtr, bool>> m_SetUnityRemoteMessageHandler;
-        internal Action<bool> m_SetUnityRemoteGyroEnabledCallback;
-        internal Action<float> m_SetUnityRemoteGyroUpdateIntervalCallback;
-
-        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
-
-        public Func<IntPtr, bool> onUnityRemoteMessage
-        {
-            set
-            {
-                if (m_UnityRemoteMessageHandler == value)
-                    return;
-
-                m_UnityRemoteMessageHandler = value;
-                m_SetUnityRemoteMessageHandler?.Invoke(value);
-            }
-        }
-
-        public void SetUnityRemoteGyroEnabled(bool value)
-        {
-            m_SetUnityRemoteGyroEnabledCallback?.Invoke(value);
-        }
-
-        public void SetUnityRemoteGyroUpdateInterval(float interval)
-        {
-            m_SetUnityRemoteGyroUpdateIntervalCallback?.Invoke(interval);
-        }
-
         private Action<InputPlayModeChange> m_OnPlayModeChanged;
         private Action m_OnProjectChanged;
         /// <summary>

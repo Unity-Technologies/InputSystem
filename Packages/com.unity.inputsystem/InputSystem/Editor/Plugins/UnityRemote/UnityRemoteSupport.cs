@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEditor;
 using UnityEngine.InputSystem.LowLevel;
@@ -18,27 +19,87 @@ namespace UnityEngine.InputSystem
     {
         public static bool isConnected => s_State.connected;
 
+        private static Func<IntPtr, bool> s_RegisteredNativeHandler;
+
         /// <summary>
-        /// Used by tests that run with a test runtime; the editor sets the handler on the native runtime
-        /// at init, but the test runtime needs it installed explicitly.
+        /// When set (by tests), this delegate receives messages instead of the native path.
+        /// Cleared in <see cref="ResetGlobalState"/>.
+        /// </summary>
+        internal static Func<IntPtr, bool> s_TestMessageDispatch;
+
+        /// <summary>
+        /// Set whenever gyro commands are forwarded to the editor native API (for test observability).
+        /// </summary>
+        internal static bool? unityRemoteGyroEnabled;
+        /// <summary>
+        /// Set whenever the gyro update interval is forwarded to the editor native API (for test observability).
+        /// </summary>
+        internal static float? unityRemoteGyroUpdateInterval;
+
+        /// <summary>
+        /// Used by tests that run with a test runtime; the test fixture installs
+        /// <see cref="s_TestMessageDispatch"/> to deliver messages into <see cref="ProcessMessageFromUnityRemote"/>.
         /// </summary>
         internal static Func<IntPtr, bool> GetMessageHandlerForTesting() => ProcessMessageFromUnityRemote;
 
         public static void Initialize()
         {
-            InputRuntime.s_Instance.onUnityRemoteMessage = ProcessMessageFromUnityRemote;
+            SetNativeMessageHandler(ProcessMessageFromUnityRemote);
 
-            InputSystem.onSettingsChange += () =>
+            InputSystem.onSettingsChange += OnSettingsChanged;
+        }
+
+        private static void OnSettingsChanged()
+        {
+            if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport))
             {
-                if (InputSystem.settings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport))
-                {
-                    InputRuntime.s_Instance.onUnityRemoteMessage = null;
-                    if (s_State.connected)
-                        Disconnect();
-                }
-                else
-                    InputRuntime.s_Instance.onUnityRemoteMessage = ProcessMessageFromUnityRemote;
-            };
+                SetNativeMessageHandler(null);
+                if (s_State.connected)
+                    Disconnect();
+            }
+            else
+                SetNativeMessageHandler(ProcessMessageFromUnityRemote);
+        }
+
+        private static MethodInfo GetUnityRemoteAPIMethod(string methodName)
+        {
+            var editorAssembly = typeof(EditorApplication).Assembly;
+            var genericRemoteClass = editorAssembly.GetType("UnityEditor.Remote.GenericRemote");
+            if (genericRemoteClass == null)
+                return null;
+
+            return genericRemoteClass.GetMethod(methodName);
+        }
+
+        private static void SetNativeMessageHandler(Func<IntPtr, bool> handler)
+        {
+            if (s_RegisteredNativeHandler != null)
+            {
+                var removeMethod = GetUnityRemoteAPIMethod("RemoveMessageHandler");
+                removeMethod?.Invoke(null, new object[] { s_RegisteredNativeHandler });
+            }
+
+            s_RegisteredNativeHandler = handler;
+
+            if (handler != null)
+            {
+                var addMethod = GetUnityRemoteAPIMethod("AddMessageHandler");
+                addMethod?.Invoke(null, new object[] { handler });
+            }
+        }
+
+        private static void SetNativeGyroEnabled(bool value)
+        {
+            unityRemoteGyroEnabled = value;
+            var setMethod = GetUnityRemoteAPIMethod("SetGyroEnabled");
+            setMethod?.Invoke(null, new object[] { value });
+        }
+
+        private static void SetNativeGyroUpdateInterval(float interval)
+        {
+            unityRemoteGyroUpdateInterval = interval;
+            var setMethod = GetUnityRemoteAPIMethod("SetGyroUpdateInterval");
+            setMethod?.Invoke(null, new object[] { interval });
         }
 
         private static unsafe bool ProcessMessageFromUnityRemote(IntPtr messageData)
@@ -250,7 +311,7 @@ namespace UnityEngine.InputSystem
             if (command->type == SetSamplingFrequencyCommand.Type)
             {
                 s_State.gyroUpdateInterval = ((SetSamplingFrequencyCommand*)command)->frequency;
-                InputRuntime.s_Instance.SetUnityRemoteGyroUpdateInterval(s_State.gyroUpdateInterval);
+                SetNativeGyroUpdateInterval(s_State.gyroUpdateInterval);
                 return InputDeviceCommand.GenericSuccess;
             }
 
@@ -270,7 +331,7 @@ namespace UnityEngine.InputSystem
             if (enabled != s_State.gyroEnabled)
             {
                 s_State.gyroEnabled = enabled;
-                InputRuntime.s_Instance.SetUnityRemoteGyroEnabled(enabled);
+                SetNativeGyroEnabled(enabled);
             }
         }
 
@@ -503,6 +564,9 @@ namespace UnityEngine.InputSystem
             if (s_State.deviceCommandHandler != null)
                 InputSystem.onDeviceCommand -= s_State.deviceCommandHandler;
             s_State = default;
+            s_TestMessageDispatch = null;
+            unityRemoteGyroEnabled = null;
+            unityRemoteGyroUpdateInterval = null;
         }
     }
 }

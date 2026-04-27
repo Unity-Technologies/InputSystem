@@ -199,11 +199,6 @@ namespace UnityEngine.InputSystem.LowLevel
         bool isInPlayMode { get;  }
         bool isEditorActive { get; }
         bool isEditorPaused { get; }
-
-        // Functionality related to the Unity Remote.
-        Func<IntPtr, bool> onUnityRemoteMessage { set; }
-        void SetUnityRemoteGyroEnabled(bool value);
-        void SetUnityRemoteGyroUpdateInterval(float interval);
 #endif
     }
 
