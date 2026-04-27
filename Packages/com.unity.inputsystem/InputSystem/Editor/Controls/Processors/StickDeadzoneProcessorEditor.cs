@@ -1,10 +1,10 @@
+#if UNITY_EDITOR
 using System;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Processors
 {
-    #if UNITY_EDITOR
     internal class StickDeadzoneProcessorEditor : InputParameterEditor<StickDeadzoneProcessor>
     {
         protected override void OnEnable()
@@ -41,5 +41,5 @@ namespace UnityEngine.InputSystem.Processors
         private CustomOrDefaultSetting m_MinSetting;
         private CustomOrDefaultSetting m_MaxSetting;
     }
-    #endif
 }
+#endif
