@@ -276,9 +276,33 @@ namespace UnityEngine.InputSystem.Editor
             InputActionAsset.s_OnMarkAsDirty = DirtyAssetTracker.TrackDirtyInputActionAsset;
             InputManager.s_GetProjectWideActions = () => ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
 
-            InputActionReference.s_IsSubAsset = AssetDatabase.IsSubAsset;
-            InputActionReference.s_GetAssetPath = AssetDatabase.GetAssetPath;
-            InputActionReference.s_LoadMainAssetAtPath = AssetDatabase.LoadMainAssetAtPath;
+            InputActionReference.s_CheckImmutableReference = CheckImmutableInputActionReference;
+        }
+
+        /// <summary>
+        /// Prevents accidental mutation of the source asset if this <see cref="InputActionReference"/> is a
+        /// persisted sub-asset within a .inputactions <see cref="InputActionAsset"/>.
+        /// </summary>
+        private static void CheckImmutableInputActionReference(InputActionReference reference)
+        {
+            if (!AssetDatabase.IsSubAsset(reference))
+                return;
+
+            var path = AssetDatabase.GetAssetPath(reference);
+            if (path == null)
+                return;
+
+            var mainAsset = AssetDatabase.LoadMainAssetAtPath(path);
+            if (!mainAsset || mainAsset is not InputActionAsset)
+                return;
+
+            throw new InvalidOperationException(
+                "Attempting to modify an immutable InputActionReference instance " +
+                "that is part of an .inputactions asset. This is not allowed since it would modify the source " +
+                "asset in which the reference is serialized and potentially corrupt it. " +
+                "Instead use InputActionReference.Create(action) to create a new mutable " +
+                "in-memory instance or serialize it as a separate asset if the intent is for changes to " +
+                "survive domain reloads.");
         }
 
 #if UNITY_INPUT_SYSTEM_ENABLE_UI || PACKAGE_DOCS_GENERATION
