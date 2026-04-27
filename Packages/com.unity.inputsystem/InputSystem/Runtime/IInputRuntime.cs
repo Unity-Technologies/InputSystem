@@ -220,10 +220,10 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     internal enum InputPlayModeChange
     {
-        EnteredEditMode = 0,
-        ExitingEditMode = 1,
-        EnteredPlayMode = 2,
-        ExitingPlayMode = 3,
+        EnteredEditMode ,
+        ExitingEditMode,
+        EnteredPlayMode,
+        ExitingPlayMode,
     }
 #endif
 
