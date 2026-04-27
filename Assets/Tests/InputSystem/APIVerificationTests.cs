@@ -212,12 +212,12 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
-    [TestCase("Keyboard", "InputSystem/Runtime/Devices/Precompiled/FastKeyboard.cs")]
-    [TestCase("Mouse", "InputSystem/Runtime/Devices/Precompiled/FastMouse.cs")]
-    [TestCase("Touchscreen", "InputSystem/Runtime/Devices/Precompiled/FastTouchscreen.cs")]
+    [TestCase("Keyboard", "FastKeyboard.cs")]
+    [TestCase("Mouse", "FastMouse.cs")]
+    [TestCase("Touchscreen", "FastTouchscreen.cs")]
     public void API_PrecompiledLayoutsAreUpToDate(string layoutName, string filePath)
     {
-        var fullPath = "Packages/com.unity.inputsystem/" + filePath;
+        var fullPath = "Packages/com.unity.inputsystem/InputSystem/Runtime/Devices/Precompiled/" + filePath;
         var existingCode = File.ReadAllText(fullPath);
 
         // May be a git checkout with CRLF auto-conversion on. Strip all '\r' characters.
