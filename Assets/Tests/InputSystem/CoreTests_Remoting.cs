@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Networking.PlayerConnection;
@@ -268,8 +269,9 @@ partial class CoreTests
     public void Remote_CanConnectInputSystemsOverEditorPlayerConnection()
     {
 #if UNITY_EDITOR
-        // Ensure the singleton is initialized deterministically in editor.
-        _ = RemoteInputPlayerConnection.instance;
+        var instance = RemoteInputPlayerConnection.instance;
+        Assert.That(instance, Is.Not.Null);
+        Assert.That(ReferenceEquals(instance, RemoteInputPlayerConnectionEditor.GetInstance()), Is.True);
 #endif
         var connectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
         var connectionToPlayer = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
