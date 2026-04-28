@@ -604,6 +604,7 @@ namespace UnityEngine.InputSystem
                     if (controlIndex != InputActionState.kInvalidIndex)
                         return state.controls[controlIndex];
                 }
+
                 return null;
             }
         }
@@ -686,6 +687,7 @@ namespace UnityEngine.InputSystem
         /// ProfilerMarker for measuring the enabling/disabling of InputActions.
         /// </summary>
         static readonly ProfilerMarker k_InputActionEnableProfilerMarker = new ProfilerMarker("InputAction.Enable");
+
         static readonly ProfilerMarker k_InputActionDisableProfilerMarker = new ProfilerMarker("InputAction.Disable");
 
         /// <summary>
@@ -759,7 +761,7 @@ namespace UnityEngine.InputSystem
         /// </example>
         /// </remarks>
         public InputAction(string name = null, InputActionType type = default, string binding = null,
-                           string interactions = null, string processors = null, string expectedControlType = null)
+            string interactions = null, string processors = null, string expectedControlType = null)
         {
             m_Name = name;
             m_Type = type;
@@ -834,6 +836,7 @@ namespace UnityEngine.InputSystem
                     str += control.path;
                     isFirst = false;
                 }
+
                 str += "]";
             }
 
@@ -1133,13 +1136,13 @@ namespace UnityEngine.InputSystem
         public void Reset()
         {
             var state = GetOrCreateActionMap().m_State;
-            state?.ResetActionState(m_ActionIndexInState, toPhase: enabled ? InputActionPhase.Waiting : InputActionPhase.Disabled, hardReset: true);
+            state?.ResetActionState(m_ActionIndexInState,
+                toPhase: enabled ? InputActionPhase.Waiting : InputActionPhase.Disabled, hardReset: true);
         }
 
         /// <summary>
-        /// Check whether the current actuation of the action has crossed the button press threshold (see
-        /// <see cref="InputSettings.defaultButtonPressPoint"/>) and has not yet fallen back below the
-        /// release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>).
+        /// Check whether the current actuation of the action has crossed the press threshold (see remarks) and
+        /// has not yet fallen back below the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>).
         /// </summary>
         /// <returns>True if the action is considered to be in "pressed" state, false otherwise.</returns>
         /// <remarks>
@@ -1155,8 +1158,13 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
-        /// Finally, note that custom button press points of controls (see <see cref="ButtonControl.pressPoint"/>)
-        /// are respected and will take precedence over <see cref="InputSettings.defaultButtonPressPoint"/>.
+        /// Press threshold: <see cref="ButtonControl.pressPoint"/> (through <see cref="ButtonControl.pressPointOrDefault"/>)
+        /// is used only when the bound control is a <see cref="ButtonControl"/>. For non-button controls (such as
+        /// <see cref="StickControl"/> or <see cref="Vector2Control"/>), the threshold is always
+        /// <see cref="InputSettings.defaultButtonPressPoint"/> (for example 0.5 by default), regardless of
+        /// per-control press-point settings on those controls. A <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>'s
+        /// <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> affects that interaction's
+        /// behavior (phases and callbacks) but does not change the threshold used by this method.
         ///
         /// <example>
         /// <code>
@@ -1183,6 +1191,7 @@ namespace UnityEngine.InputSystem
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 return actionStatePtr->isPressed;
             }
+
             return false;
         }
 
@@ -1199,6 +1208,7 @@ namespace UnityEngine.InputSystem
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 return actionStatePtr->phase.IsInProgress();
             }
+
             return false;
         }
 
@@ -1213,17 +1223,15 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Returns true if the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
-        /// at any point in the frame.
+        /// Returns true if the action's value crossed the press threshold (see remarks) at any point in the frame.
         /// </summary>
         /// <returns>True if the action was pressed this frame.</returns>
         /// <remarks>
         /// This method is different from <see cref="WasPerformedThisFrame"/> in that it is not bound
         /// to <see cref="phase"/>. Instead, if the action's level of actuation (that is, the level of
         /// magnitude -- see <see cref="InputControl.EvaluateMagnitude()"/> -- of the control(s) bound
-        /// to the action) crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
-        /// at any point in the frame, this method will return true. It will do so even if there is an
-        /// interaction on the action that has not yet performed the action in response to the press.
+        /// to the action) crossed the press threshold at any point in the frame, this method will return true.
+        /// It will do so even if there is an interaction on the action that has not yet performed the action in response to the press.
         ///
         /// This method works with any <see cref="type"/> of action, not just buttons.
         ///
@@ -1232,8 +1240,13 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
-        /// Finally, note that custom button press points of controls (see <see cref="ButtonControl.pressPoint"/>)
-        /// are respected and will take precedence over <see cref="InputSettings.defaultButtonPressPoint"/>.
+        /// Press threshold: <see cref="ButtonControl.pressPoint"/> (through <see cref="ButtonControl.pressPointOrDefault"/>)
+        /// is used only when the bound control is a <see cref="ButtonControl"/>. For non-button controls (such as
+        /// <see cref="StickControl"/> or <see cref="Vector2Control"/>), the threshold is always
+        /// <see cref="InputSettings.defaultButtonPressPoint"/> (for example 0.5 by default), regardless of
+        /// per-control press-point settings on those controls. A <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>'s
+        /// <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> affects that interaction's
+        /// behavior (phases and callbacks) but does not change the threshold used by this method.
         ///
         /// <example>
         /// <code>
@@ -1271,7 +1284,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Returns true if the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
+        /// Returns true if the action's value crossed the press threshold (see <see cref="WasPressedThisFrame"/> remarks)
         /// in the MonoBehaviour Update cycle (rendering frame).
         /// </summary>
         /// <returns>True if the action was pressed in the MonoBehaviour Update cycle (rendering frame).</returns>
@@ -1282,6 +1295,8 @@ namespace UnityEngine.InputSystem
         ///
         /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasPressedThisDynamicUpdate,
         /// you may want to use WasPressedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
+        ///
+        /// Press threshold behavior matches <see cref="WasPressedThisFrame"/>; see its remarks.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1311,7 +1326,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Returns true if the action's value crossed the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>)
-        /// at any point in the frame after being in pressed state.
+        /// at any point in the frame after being in pressed state (see remarks for press threshold).
         /// </summary>
         /// <returns>True if the action was released this frame.</returns>
         /// <remarks>
@@ -1322,8 +1337,13 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
-        /// Finally, note that custom button press points of controls (see <see cref="ButtonControl.pressPoint"/>)
-        /// are respected and will take precedence over <see cref="InputSettings.defaultButtonPressPoint"/>.
+        /// Press threshold: <see cref="ButtonControl.pressPoint"/> (through <see cref="ButtonControl.pressPointOrDefault"/>)
+        /// is used only when the bound control is a <see cref="ButtonControl"/>. For non-button controls (such as
+        /// <see cref="StickControl"/> or <see cref="Vector2Control"/>), the threshold is always
+        /// <see cref="InputSettings.defaultButtonPressPoint"/> (for example 0.5 by default), regardless of
+        /// per-control press-point settings on those controls. A <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>'s
+        /// <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> affects that interaction's
+        /// behavior (phases and callbacks) but does not change the threshold used by this method.
         ///
         /// <example>
         /// <code>
@@ -1362,7 +1382,8 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Returns true if the action's value crossed the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>)
-        /// at any point in the MonoBehaviour Update cycle (rendering frame).
+        /// at any point in the MonoBehaviour Update cycle (rendering frame), after having been in the pressed state described by
+        /// <see cref="WasReleasedThisFrame"/>.
         /// </summary>
         /// <returns>True if the action was released in the MonoBehaviour Update cycle (rendering frame).</returns>
         /// <remarks>
@@ -1372,6 +1393,8 @@ namespace UnityEngine.InputSystem
         ///
         /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasReleasedThisDynamicUpdate,
         /// you may want to use WasReleasedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
+        ///
+        /// Press and release threshold behavior matches <see cref="WasReleasedThisFrame"/>; see its remarks.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1744,8 +1767,10 @@ namespace UnityEngine.InputSystem
 
                     if (interactionState.totalTimeoutCompletionTimeRemaining > 0)
                     {
-                        return (interactionState.totalTimeoutCompletionDone + timerCompletion * interactionState.timerDuration)  /
-                            (interactionState.totalTimeoutCompletionDone + interactionState.totalTimeoutCompletionTimeRemaining);
+                        return (interactionState.totalTimeoutCompletionDone +
+                                timerCompletion * interactionState.timerDuration) /
+                               (interactionState.totalTimeoutCompletionDone +
+                                interactionState.totalTimeoutCompletionTimeRemaining);
                     }
                     else
                     {
@@ -1760,29 +1785,40 @@ namespace UnityEngine.InputSystem
         }
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
-        [Tooltip("Human readable name of the action. Must be unique within its action map (case is ignored). Can be changed "
+        [Tooltip(
+            "Human readable name of the action. Must be unique within its action map (case is ignored). Can be changed "
             + "without breaking references to the action.")]
-        [SerializeField] internal string m_Name;
+        [SerializeField]
+        internal string m_Name;
+
         [Tooltip("Determines how the action triggers.\n"
-            + "\n"
-            + "A Value action will start and perform when a control moves from its default value and then "
-            + "perform on every value change. It will cancel when controls go back to default value. Also, when enabled, a Value "
-            + "action will respond right away to a control's current value.\n"
-            + "\n"
-            + "A Button action will start when a button is pressed and perform when the press threshold (see 'Default Button Press Point' in settings) "
-            + "is reached. It will cancel when the button is going below the release threshold (see 'Button Release Threshold' in settings). Also, "
-            + "if a button is already pressed when the action is enabled, the button has to be released first.\n"
-            + "\n"
-            + "A Pass-Through action will not explicitly start and will never cancel. Instead, for every value change on any bound control, "
-            + "the action will perform.")]
-        [SerializeField] internal InputActionType m_Type;
+                 + "\n"
+                 + "A Value action will start and perform when a control moves from its default value and then "
+                 + "perform on every value change. It will cancel when controls go back to default value. Also, when enabled, a Value "
+                 + "action will respond right away to a control's current value.\n"
+                 + "\n"
+                 + "A Button action will start when a button is pressed and perform when the press threshold (see 'Default Button Press Point' in settings) "
+                 + "is reached. It will cancel when the button is going below the release threshold (see 'Button Release Threshold' in settings). Also, "
+                 + "if a button is already pressed when the action is enabled, the button has to be released first.\n"
+                 + "\n"
+                 + "A Pass-Through action will not explicitly start and will never cancel. Instead, for every value change on any bound control, "
+                 + "the action will perform.")]
+        [SerializeField]
+        internal InputActionType m_Type;
+
         [FormerlySerializedAs("m_ExpectedControlLayout")]
-        [Tooltip("The type of control expected by the action (e.g. \"Digital\" for buttons, \"Vector2\" for sticks). This will limit the controls shown "
+        [Tooltip(
+            "The type of control expected by the action (e.g. \"Digital\" for buttons, \"Vector2\" for sticks). This will limit the controls shown "
             + "when setting up bindings in the UI and will also limit which controls can be bound interactively to the action.")]
-        [SerializeField] internal string m_ExpectedControlType;
-        [Tooltip("Unique ID of the action (GUID). Used to reference the action from bindings such that actions can be renamed "
+        [SerializeField]
+        internal string m_ExpectedControlType;
+
+        [Tooltip(
+            "Unique ID of the action (GUID). Used to reference the action from bindings such that actions can be renamed "
             + "without breaking references.")]
-        [SerializeField] internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
+        [SerializeField]
+        internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
+
         [SerializeField] internal string m_Processors;
         [SerializeField] internal string m_Interactions;
 
@@ -2358,7 +2394,8 @@ namespace UnityEngine.InputSystem
                     var valueSize = valueSizeInBytes;
                     if (bufferSize < valueSize)
                         throw new ArgumentException(
-                            $"Expected buffer of at least {valueSize} bytes but got buffer of only {bufferSize} bytes", nameof(bufferSize));
+                            $"Expected buffer of at least {valueSize} bytes but got buffer of only {bufferSize} bytes",
+                            nameof(bufferSize));
                     UnsafeUtility.MemClear(buffer, valueSizeInBytes);
                 }
             }
@@ -2417,9 +2454,9 @@ namespace UnityEngine.InputSystem
                 var value = default(TValue);
                 if (m_State != null)
                 {
-                    value = phase.IsInProgress() ?
-                        m_State.ReadValue<TValue>(bindingIndex, controlIndex) :
-                        m_State.ApplyProcessors(bindingIndex, value);
+                    value = phase.IsInProgress()
+                        ? m_State.ReadValue<TValue>(bindingIndex, controlIndex)
+                        : m_State.ApplyProcessors(bindingIndex, value);
                 }
 
                 return value;
@@ -2571,7 +2608,8 @@ namespace UnityEngine.InputSystem
             /// </example>
             public override string ToString()
             {
-                return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
+                return
+                    $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
             }
         }
     }
