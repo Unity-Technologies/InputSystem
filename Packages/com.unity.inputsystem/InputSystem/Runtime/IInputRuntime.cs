@@ -215,7 +215,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// </summary>
     internal enum InputPlayModeChange
     {
-        EnteredEditMode ,
+        EnteredEditMode,
         ExitingEditMode,
         EnteredPlayMode,
         ExitingPlayMode,

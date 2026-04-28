@@ -2968,8 +2968,8 @@ namespace UnityEngine.InputSystem
         #region Actions
 
 
-        // This is called to make sure
-        // project-wide actions are all active in they are active in all of these MonoBehavior methods:
+        // This is called to make sure project-wide actions are all active in they are active in all of these
+        // MonoBehavior methods:
         // Awake() /  Start() / OnEnable() / OnDisable() / OnDestroy()
         internal static void EnableActions()
         {
