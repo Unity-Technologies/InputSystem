@@ -314,6 +314,13 @@ namespace UnityEngine.InputSystem
             });
         }
 
+        // Internal hook to suppress analytics
+        internal static Action<bool> s_SuppressAnalytics;
+
+        #if UNITY_EDITOR
+        // Internal hook for Editor to register analytics tracking
+        internal static Action<InputAnalytics.AuthoringApi> s_ApiUsageCallback;
+
         /// <summary>
         /// Conditionally compiled helper for logging API usage of code-authored actions.
         /// </summary>
@@ -323,17 +330,12 @@ namespace UnityEngine.InputSystem
         /// Be extremely careful in enabling/disabling tracking before internal calls since those may otherwise
         /// be incorrectly registered.
         /// </remarks>
-
-        // Internal hook for Editor to register analytics tracking
-        internal static Action<InputAnalytics.AuthoringApi> s_ApiUsageCallback;
-
-        // Internal hook for Editor to suppress analytics
-        internal static Action<bool> s_SuppressAnalytics;
-
         private static void RegisterAnalyticsApi(InputAnalytics.AuthoringApi authoringApi)
         {
             s_ApiUsageCallback?.Invoke(authoringApi);
         }
+
+        #endif // #if UNITY_EDITOR
 
         /// <summary>
         /// Add a binding that references the given <paramref name="control"/> and triggers
