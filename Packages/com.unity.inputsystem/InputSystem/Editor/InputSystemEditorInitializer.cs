@@ -341,11 +341,11 @@ namespace UnityEngine.InputSystem.Editor
 
         private static void RegisterTestHooks()
         {
-            InputSystem.s_TestHookInitializeForPlayModeTests = TestHook_InitializeForPlayModeTests;
+            InputSystemTestHooks.s_TestHookInitializeForPlayModeTests = TestHook_InitializeForPlayModeTests;
 #if !ENABLE_CORECLR
-            InputSystem.s_TestHookSimulateDomainReload = TestHook_SimulateDomainReload;
+            InputSystemTestHooks.s_TestHookSimulateDomainReload = TestHook_SimulateDomainReload;
 #endif
-            InputSystem.s_TestHookEditorCleanup = TestHook_EditorCleanup;
+            InputSystemTestHooks.s_TestHookEditorCleanup = TestHook_EditorCleanup;
         }
 
         private static void SetUpEditorRemoting()

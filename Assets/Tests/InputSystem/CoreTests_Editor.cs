@@ -220,7 +220,7 @@ partial class CoreTests
         var device = InputSystem.AddDevice<Gamepad>();
         InputSystem.SetDeviceUsage(device, CommonUsages.LeftHand);
 
-        InputSystem.TestHook_SimulateDomainReload(runtime);
+        InputSystemTestHooks.TestHook_SimulateDomainReload(runtime);
 
         var newDevice = InputSystem.devices[0];
 
@@ -240,7 +240,7 @@ partial class CoreTests
 
         Assert.That(device.enabled, Is.False);
 
-        InputSystem.TestHook_SimulateDomainReload(runtime);
+        InputSystemTestHooks.TestHook_SimulateDomainReload(runtime);
 
         var newDevice = InputSystem.devices[0];
 
@@ -253,7 +253,7 @@ partial class CoreTests
     {
         InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.TestHook_SimulateDomainReload(runtime);
+        InputSystemTestHooks.TestHook_SimulateDomainReload(runtime);
 
         Assert.That(InputSystem.devices, Has.Count.EqualTo(1));
         Assert.That(InputSystem.devices[0], Is.TypeOf<Gamepad>());
@@ -290,7 +290,7 @@ partial class CoreTests
         InputSystem.RegisterLayout(kLayout);
         InputSystem.AddDevice("CustomDevice");
 
-        InputSystem.TestHook_SimulateDomainReload(runtime);
+        InputSystemTestHooks.TestHook_SimulateDomainReload(runtime);
 
         Assert.That(InputSystem.devices, Is.Empty);
 
@@ -311,7 +311,7 @@ partial class CoreTests
         });
         InputSystem.Update();
 
-        InputSystem.TestHook_SimulateDomainReload(runtime);
+        InputSystemTestHooks.TestHook_SimulateDomainReload(runtime);
 
         Assert.That(InputSystem.GetUnsupportedDevices(), Has.Count.EqualTo(1));
         Assert.That(InputSystem.GetUnsupportedDevices()[0].interfaceName, Is.EqualTo("SomethingUnknown"));

@@ -498,12 +498,12 @@ partial class CoreTests
 
         public void SwitchToRemoteState()
         {
-            InputSystem.TestHook_SwitchToDifferentInputManager(remoteManager);
+            InputSystemTestHooks.TestHook_SwitchToDifferentInputManager(remoteManager);
         }
 
         public void SwitchToLocalState()
         {
-            InputSystem.TestHook_SwitchToDifferentInputManager(localManager);
+            InputSystemTestHooks.TestHook_SwitchToDifferentInputManager(localManager);
         }
 
         public void Dispose()

@@ -84,7 +84,7 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_EDITOR
             // Perform special initialization for running Editor tests
-            InputSystem.TestHook_InitializeForPlayModeTests(enableRemoting, runtime);
+            InputSystemTestHooks.TestHook_InitializeForPlayModeTests(enableRemoting, runtime);
 #else
             // For Player tests we can use the normal initialization
             InputSystem.InitializeInPlayer(runtime, false);
@@ -116,13 +116,13 @@ namespace UnityEngine.InputSystem
             state.touchState.StaticDisposeCurrentState();
             state.inputActionState.StaticDisposeCurrentState();
 
-            InputSystem.TestHook_DestroyAndReset();
+            InputSystemTestHooks.TestHook_DestroyAndReset();
 
             state.inputUserState.RestoreSavedState();
             state.touchState.RestoreSavedState();
             state.inputActionState.RestoreSavedState();
 
-            InputSystem.TestHook_RestoreFromSavedState(state.manager, state.remote, state.remoteConnection);
+            InputSystemTestHooks.TestHook_RestoreFromSavedState(state.manager, state.remote, state.remoteConnection);
             InputUpdate.Restore(state.managerState.updateState);
 
             InputSystem.manager.InstallRuntime(InputSystem.manager.runtime);
