@@ -128,14 +128,11 @@
         "PVP-92-3": {
           "errors": [
             "Documentation~/Gamepad.md: .Switch.",
-            "InputSystem/Runtime/Plugins/Switch/SwitchProController.cs: .Switch\n",
-            "InputSystem/Runtime/Plugins/Switch/SwitchProControllerHID.cs: .Switch",
-            "InputSystem/Runtime/Plugins/Switch/SwitchProControllerHID.cs: .Switch\n",
-            "InputSystem/Runtime/Plugins/Switch/SwitchSupportHID.cs: .Switch\n",
-            "InputSystem/Runtime/Plugins/iOS/IOSGameController.cs: .Switch",
             "InputSystem/Runtime/Plugins/iOS/IOSGameController.cs: .Switch;",
-            "InputSystem/Runtime/Plugins/iOS/IOSGameController.cs: .Switch\n",
-            "InputSystem/Runtime/Plugins/Switch/SwitchProControllerHID.cs: .Switch."
+            "InputSystem/Runtime/Plugins/Switch/SwitchProController.cs: .Switch\n",
+            "InputSystem/Runtime/Plugins/Switch/SwitchProControllerHID.cs: .Switch.",
+            "InputSystem/Runtime/Plugins/Switch/SwitchProControllerHID.cs: .Switch\n",
+            "InputSystem/Runtime/Plugins/Switch/SwitchSupportHID.cs: .Switch\n"
           ]
         },
         "PVP-124-2": {
