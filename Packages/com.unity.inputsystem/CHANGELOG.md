@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - Fixed `InputEventPtr.handled` not preventing actions from triggering when switching devices. The default event handled policy has been changed from `SuppressStateUpdates` (now deprecated) to `SuppressActionEventNotifications`, which keeps device state synchronized while suppressing action callbacks for handled events. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
+- Fixed `InputAction.WasReleasedThisFrame()`, `WasReleasedThisDynamicUpdate()`, `WasCompletedThisFrame()`, and `WasCompletedThisDynamicUpdate()` not respecting event suppression, making them inconsistent with `WasPressedThisFrame()` and `WasPerformedThisFrame()`. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
 - Fixed a `NullReferenceException` thrown when removing all action maps [UUM-137116](https://jira.unity3d.com/browse/UUM-137116)
 - Simplified default setting messaging by consolidating repetitive messages into a single HelpBox.
 - Fixed a `NullPointerReferenceException` thrown in `InputManagerStateMonitors.FireStateChangeNotifications` logging by adding validation [UUM-136095].
