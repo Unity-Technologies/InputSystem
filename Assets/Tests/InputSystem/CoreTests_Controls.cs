@@ -214,8 +214,8 @@ partial class CoreTests
         InputSystem.RegisterLayout(json);
         var device = (Gamepad)InputSystem.AddDevice("MyDevice");
 
-        var firstState = new GamepadState {leftStick = new Vector2(0.05f, 0.05f)};
-        var secondState = new GamepadState {leftStick = new Vector2(0.5f, 0.5f)};
+        var firstState = new GamepadState { leftStick = new Vector2(0.05f, 0.05f) };
+        var secondState = new GamepadState { leftStick = new Vector2(0.5f, 0.5f) };
 
         InputSystem.QueueStateEvent(device, firstState);
         InputSystem.Update();
@@ -257,12 +257,12 @@ partial class CoreTests
         ////NOTE: Unfortunately, this relies on an internal method ATM.
         var processor = device.leftTrigger.TryGetProcessor<AxisDeadzoneProcessor>();
 
-        InputSystem.QueueStateEvent(device, new GamepadState {leftTrigger = 0.05f});
+        InputSystem.QueueStateEvent(device, new GamepadState { leftTrigger = 0.05f });
         InputSystem.Update();
 
         Assert.That(device.leftTrigger.ReadValue(), Is.Zero.Within(0.0001));
 
-        InputSystem.QueueStateEvent(device, new GamepadState {leftTrigger = 0.5f});
+        InputSystem.QueueStateEvent(device, new GamepadState { leftTrigger = 0.5f });
         InputSystem.Update();
 
         Assert.That(device.leftTrigger.ReadValue(),
@@ -284,13 +284,13 @@ partial class CoreTests
         Set(gamepad.leftStick, new Vector2(0.5f, 0.5f));
 
         Assert.That(gamepad.leftStick.ReadValue(),
-            Is.EqualTo(new StickDeadzoneProcessor {min = 0.1f, max = 0.9f}.Process(new Vector2(0.5f, 0.5f))));
+            Is.EqualTo(new StickDeadzoneProcessor { min = 0.1f, max = 0.9f }.Process(new Vector2(0.5f, 0.5f))));
 
         InputSystem.settings.defaultDeadzoneMin = 0.2f;
         InputSystem.settings.defaultDeadzoneMax = 0.8f;
 
         Assert.That(gamepad.leftStick.ReadValue(),
-            Is.EqualTo(new StickDeadzoneProcessor {min = 0.2f, max = 0.8f}.Process(new Vector2(0.5f, 0.5f))));
+            Is.EqualTo(new StickDeadzoneProcessor { min = 0.2f, max = 0.8f }.Process(new Vector2(0.5f, 0.5f))));
     }
 
     [Test]
@@ -299,7 +299,7 @@ partial class CoreTests
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(0.5f, 0.5f)});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.5f, 0.5f) });
         InputSystem.Update();
 
         Assert.That(gamepad.leftStick.up.ReadValue(),
@@ -311,7 +311,7 @@ partial class CoreTests
         Assert.That(gamepad.leftStick.left.ReadValue(),
             Is.EqualTo(new AxisDeadzoneProcessor().Process(0.0f)));
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftStick = new Vector2(-0.5f, -0.5f)});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(-0.5f, -0.5f) });
         InputSystem.Update();
 
         Assert.That(gamepad.leftStick.up.ReadValue(),
@@ -468,7 +468,7 @@ partial class CoreTests
         gamepad.ApplyParameterChanges();
         Assert.That(gamepad.leftTrigger.value, Is.EqualTo(0.5f));
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.75f});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.75f });
         InputSystem.Update();
 
         // but this time, we updated state through the system which *does* set the stale flag on controls that
@@ -603,15 +603,16 @@ partial class CoreTests
         var receivedCalls = 0;
         InputSystem.onEvent +=
             (eventPtr, device) =>
-        {
-            ++receivedCalls;
-            float value;
-            Assert.That(gamepad.leftTrigger.ReadValueFromEvent(eventPtr, out value), Is.True);
-            Assert.That(value, Is.EqualTo(0.234f).Within(0.00001));
-            Assert.That(gamepad.leftTrigger.ReadValueFromEventAsObject(eventPtr), Is.EqualTo(0.234f).Within(0.00001));
-        };
+            {
+                ++receivedCalls;
+                float value;
+                Assert.That(gamepad.leftTrigger.ReadValueFromEvent(eventPtr, out value), Is.True);
+                Assert.That(value, Is.EqualTo(0.234f).Within(0.00001));
+                Assert.That(gamepad.leftTrigger.ReadValueFromEventAsObject(eventPtr),
+                    Is.EqualTo(0.234f).Within(0.00001));
+            };
 
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {leftTrigger = 0.234f});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.234f });
         InputSystem.Update();
 
         Assert.That(receivedCalls, Is.EqualTo(1));
@@ -644,11 +645,11 @@ partial class CoreTests
         float? value = null;
         InputSystem.onEvent +=
             (eventPtr, _) =>
-        {
-            Assert.That(value, Is.Null);
-            ((AxisControl)device["extraControl"]).ReadValueFromEvent(eventPtr, out var eventValue);
-            value = eventValue;
-        };
+            {
+                Assert.That(value, Is.Null);
+                ((AxisControl)device["extraControl"]).ReadValueFromEvent(eventPtr, out var eventValue);
+                value = eventValue;
+            };
 
         InputSystem.QueueStateEvent(device, new GamepadState());
         InputSystem.Update();
@@ -666,10 +667,10 @@ partial class CoreTests
         var receivedCalls = 0;
         InputSystem.onEvent +=
             (eventPtr, device) =>
-        {
-            ++receivedCalls;
-            gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
-        };
+            {
+                ++receivedCalls;
+                gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
+            };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
         InputSystem.Update();
@@ -687,10 +688,10 @@ partial class CoreTests
         var receivedCalls = 0;
         InputSystem.onEvent +=
             (eventPtr, device) =>
-        {
-            ++receivedCalls;
-            gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
-        };
+            {
+                ++receivedCalls;
+                gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
+            };
 
         InputSystem.QueueDeltaStateEvent(gamepad.leftTrigger, 0.8765f);
         InputSystem.Update();
@@ -758,7 +759,7 @@ partial class CoreTests
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
         // Up.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadUp});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadButton.DpadUp });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.up));
@@ -775,7 +776,7 @@ partial class CoreTests
         Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.up + Vector2.left).normalized.y).Within(0.00001));
 
         // Left.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadLeft});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadButton.DpadLeft });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.left));
@@ -792,7 +793,7 @@ partial class CoreTests
         Assert.That(gamepad.dpad.ReadValue().y, Is.EqualTo((Vector2.down + Vector2.left).normalized.y).Within(0.00001));
 
         // Down.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadDown});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadButton.DpadDown });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.down));
@@ -811,7 +812,7 @@ partial class CoreTests
             Is.EqualTo((Vector2.down + Vector2.right).normalized.y).Within(0.00001));
 
         // Right.
-        InputSystem.QueueStateEvent(gamepad, new GamepadState {buttons = 1 << (int)GamepadButton.DpadRight});
+        InputSystem.QueueStateEvent(gamepad, new GamepadState { buttons = 1 << (int)GamepadButton.DpadRight });
         InputSystem.Update();
 
         Assert.That(gamepad.dpad.ReadValue(), Is.EqualTo(Vector2.right));
@@ -947,6 +948,7 @@ partial class CoreTests
             Assert.That(matches, Has.Count.EqualTo(1));
             Assert.That(matches, Has.Exactly(1).SameAs(gamepad.leftStick));
         }
+
         Thread.CurrentThread.CurrentCulture = culture;
     }
 
@@ -973,6 +975,7 @@ partial class CoreTests
                     case "displayName": return a.displayName == nameAndValue[1];
                     case "wildcard": return a.isWildcard;
                 }
+
                 return false;
             });
         }), Has.All.True);
@@ -1155,100 +1158,6 @@ partial class CoreTests
 
     [Test]
     [Category("Controls")]
-    public void Controls_CanDetermineIfControlIsPressed()
-    {
-        InputSystem.settings.defaultButtonPressPoint = 0.5f;
-
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        Set(gamepad.leftStick, Vector2.one);
-        Set(gamepad.leftTrigger, 0.6f);
-        Press(gamepad.buttonSouth);
-
-        //// https://jira.unity3d.com/browse/ISX-926
-        ////REVIEW: IsPressed() should probably be renamed. As is apparent from the calls here, it's not always
-        ////        readily apparent that the way it is defined ("actuation level at least at button press threshold")
-        ////        does not always connect to what it intuitively means for the specific control.
-
-        Assert.That(gamepad.leftTrigger.IsPressed(), Is.True);
-        Assert.That(gamepad.rightTrigger.IsPressed(), Is.False);
-        Assert.That(gamepad.buttonSouth.IsPressed(), Is.True);
-        Assert.That(gamepad.buttonNorth.IsPressed(), Is.False);
-        Assert.That(gamepad.leftStick.IsPressed(), Is.True); // Note how this diverges from the actual meaning of "is the left stick pressed?"
-        Assert.That(gamepad.rightStick.IsPressed(), Is.False);
-
-        // https://fogbugz.unity3d.com/f/cases/1374024/
-        // Calling it on the entire device should be false.
-        Assert.That(gamepad.IsPressed(), Is.False);
-    }
-
-    [Test]
-    [Category("Controls")]
-    public void Controls_CanCustomizeDefaultButtonPressPoint()
-    {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        InputSystem.settings.defaultButtonPressPoint = 0.4f;
-
-        Set(gamepad.leftTrigger, 0.39f);
-
-        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
-
-        Set(gamepad.leftTrigger, 0.4f);
-
-        Assert.That(gamepad.leftTrigger.isPressed, Is.True);
-
-        InputSystem.settings.defaultButtonPressPoint = 0.5f;
-
-        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
-
-        InputSystem.settings.defaultButtonPressPoint = 0;
-
-        Assert.That(gamepad.leftTrigger.isPressed, Is.True);
-
-        // Setting the trigger to 0 requires the system to be "smart" enough to
-        // figure out that 0 as a default button press point doesn't make sense
-        // and that instead the press point should clamp off at some low, non-zero value.
-        // https://fogbugz.unity3d.com/f/cases/1349002/
-        Set(gamepad.leftTrigger, 0f);
-
-        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
-
-        Set(gamepad.leftTrigger, 0.001f);
-
-        Assert.That(gamepad.leftTrigger.isPressed, Is.True);
-
-        InputSystem.settings.defaultButtonPressPoint = -1;
-        Set(gamepad.leftTrigger, 0f);
-
-        Assert.That(gamepad.leftTrigger.isPressed, Is.False);
-    }
-
-    [Test]
-    [Category("Controls")]
-    public void Controls_CanCustomizePressPointOfGamepadTriggers()
-    {
-        var json = @"
-            {
-                ""name"" : ""CustomGamepad"",
-                ""extend"" : ""Gamepad"",
-                ""controls"" : [
-                    {
-                        ""name"" : ""rightTrigger"",
-                        ""parameters"" : ""pressPoint=0.2""
-                    }
-                ]
-            }
-        ";
-
-        InputSystem.RegisterLayout(json);
-        var gamepad = InputDevice.Build<Gamepad>("CustomGamepad");
-
-        Assert.That(gamepad.rightTrigger.pressPoint, Is.EqualTo(0.2f).Within(0.0001f));
-    }
-
-    [Test]
-    [Category("Controls")]
     public void Controls_DisplayNameDefaultsToControlName()
     {
         const string json = @"
@@ -1287,12 +1196,16 @@ partial class CoreTests
     {
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick"), Is.EqualTo("Left Stick [Gamepad]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("Left Stick/X [Gamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"),
+            Is.EqualTo("Left Stick/X [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("leftStick [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("PrimaryMotion/x [Any]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"), Is.EqualTo("Button South [Gamepad]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<XInputController>/buttonSouth"), Is.EqualTo("A [Xbox Controller]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Touchscreen>/touch4/tap"), Is.EqualTo("Touch #4/Tap [Touchscreen]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"),
+            Is.EqualTo("Button South [Gamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<XInputController>/buttonSouth"),
+            Is.EqualTo("A [Xbox Controller]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Touchscreen>/touch4/tap"),
+            Is.EqualTo("Touch #4/Tap [Touchscreen]"));
         Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"),
 #if ENABLE_VR || UNITY_GAMECORE
             // The layout settings for the display name to change from XRController to XR Controller
@@ -1312,10 +1225,12 @@ partial class CoreTests
 
         // UseShortName.
         Assert.That(
-            InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth", InputControlPath.HumanReadableStringOptions.UseShortNames),
+            InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth",
+                InputControlPath.HumanReadableStringOptions.UseShortNames),
             Is.EqualTo(GamepadState.ButtonSouthShortDisplayName + " [Gamepad]"));
         Assert.That(
-            InputControlPath.ToHumanReadableString("<Mouse>/leftButton", InputControlPath.HumanReadableStringOptions.UseShortNames),
+            InputControlPath.ToHumanReadableString("<Mouse>/leftButton",
+                InputControlPath.HumanReadableStringOptions.UseShortNames),
             Is.EqualTo("LMB [Mouse]"));
     }
 
@@ -1328,7 +1243,8 @@ partial class CoreTests
         // Pretend 'a' key is mapped to 'q' in current keyboard layout.
         SetKeyInfo(Key.A, "q");
 
-        Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current), Is.EqualTo("Q [Keyboard]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current),
+            Is.EqualTo("Q [Keyboard]"));
     }
 
     private class DeviceWithoutAnyControls : InputDevice
@@ -1342,8 +1258,10 @@ partial class CoreTests
         // This one will throw as the layout will result in a zero-size memory block.
         InputSystem.RegisterLayout<DeviceWithoutAnyControls>();
 
-        Assert.That(InputControlPath.ToHumanReadableString("<UnknownGamepad>/leftStick"), Is.EqualTo("leftStick [UnknownGamepad]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<DeviceWithoutAnyControls>/control"), Is.EqualTo("control [DeviceWithoutAnyControls]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<UnknownGamepad>/leftStick"),
+            Is.EqualTo("leftStick [UnknownGamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<DeviceWithoutAnyControls>/control"),
+            Is.EqualTo("control [DeviceWithoutAnyControls]"));
     }
 
     [Test]
@@ -1419,7 +1337,7 @@ partial class CoreTests
             Assert.That(list[3], Is.SameAs(keyboard));
             Assert.That(() => list[4], Throws.TypeOf<ArgumentOutOfRangeException>());
             Assert.That(list.ToArray(),
-                Is.EquivalentTo(new InputControl[] {gamepad.leftStick, null, keyboard.spaceKey, keyboard}));
+                Is.EquivalentTo(new InputControl[] { gamepad.leftStick, null, keyboard.spaceKey, keyboard }));
             Assert.That(list.Contains(gamepad.leftStick));
             Assert.That(list.Contains(null));
             Assert.That(list.Contains(keyboard.spaceKey));
@@ -1436,42 +1354,49 @@ partial class CoreTests
             Assert.That(list[0], Is.SameAs(gamepad.leftStick));
             Assert.That(list[1], Is.SameAs(keyboard.spaceKey));
             Assert.That(() => list[2], Throws.TypeOf<ArgumentOutOfRangeException>());
-            Assert.That(list.ToArray(), Is.EquivalentTo(new InputControl[] {gamepad.leftStick, keyboard.spaceKey}));
+            Assert.That(list.ToArray(), Is.EquivalentTo(new InputControl[] { gamepad.leftStick, keyboard.spaceKey }));
             Assert.That(list.Contains(gamepad.leftStick));
             Assert.That(!list.Contains(null));
             Assert.That(list.Contains(keyboard.spaceKey));
             Assert.That(!list.Contains(keyboard));
 
-            list.AddRange(new InputControl[] {keyboard.aKey, keyboard.bKey}, count: 1, destinationIndex: 0);
+            list.AddRange(new InputControl[] { keyboard.aKey, keyboard.bKey }, count: 1, destinationIndex: 0);
 
             Assert.That(list.Count, Is.EqualTo(3));
             Assert.That(list.Capacity, Is.EqualTo(4));
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
-                    {keyboard.aKey, gamepad.leftStick, keyboard.spaceKey}));
+                    { keyboard.aKey, gamepad.leftStick, keyboard.spaceKey }));
 
-            list.AddRange(new InputControl[] {keyboard.bKey, keyboard.cKey});
+            list.AddRange(new InputControl[] { keyboard.bKey, keyboard.cKey });
 
             Assert.That(list.Count, Is.EqualTo(5));
             Assert.That(list.Capacity, Is.EqualTo(10));
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
-                    {keyboard.aKey, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));
+                    { keyboard.aKey, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey }));
 
-            using (var toAdd = new InputControlList<InputControl>(gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest))
+            using (var toAdd =
+                   new InputControlList<InputControl>(gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest))
                 list.AddSlice(toAdd, count: 1, destinationIndex: 1, sourceIndex: 2);
 
             Assert.That(list.Count, Is.EqualTo(6));
             Assert.That(list.Capacity, Is.EqualTo(10));
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
-                    {keyboard.aKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));
+                {
+                    keyboard.aKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey,
+                    keyboard.cKey
+                }));
 
             list[0] = keyboard.zKey;
 
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
-                    {keyboard.zKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey}));
+                {
+                    keyboard.zKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey,
+                    keyboard.cKey
+                }));
 
             list.Clear();
 
@@ -1580,7 +1505,8 @@ partial class CoreTests
         if (!checkedTypes.Add(type))
             return;
 
-        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance |
+                                                    BindingFlags.DeclaredOnly))
         {
             if (!typeof(InputControl).IsAssignableFrom(property.PropertyType))
                 continue;
@@ -1595,14 +1521,16 @@ partial class CoreTests
             if (typeof(InputDevice).IsAssignableFrom(type))
             {
                 // Properties on an InputDevice can be protected, since the precompiled layout will be an inherited class
-                var inputDeviceMessage = $"A public or protected setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
+                var inputDeviceMessage =
+                    $"A public or protected setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
                 Assert.That(setMethod, Is.Not.Null, inputDeviceMessage);
                 Assert.That(setMethod.IsPrivate, Is.Not.True, inputDeviceMessage);
                 Assert.That(setMethod.IsAssembly, Is.Not.True, inputDeviceMessage);
                 continue;
             }
 
-            var inputControlMessage = $"A public setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
+            var inputControlMessage =
+                $"A public setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
             Assert.That(setMethod, Is.Not.Null, inputControlMessage);
             Assert.That(setMethod.IsPublic, Is.True, inputControlMessage);
         }
