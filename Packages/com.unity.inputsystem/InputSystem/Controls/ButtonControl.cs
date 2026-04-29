@@ -17,18 +17,18 @@ namespace UnityEngine.InputSystem.Controls
     /// <see cref="pressPoint"/> for how button presses on such buttons are handled.
     /// </remarks>
     [Serializable]
-    public class ButtonControl : AxisControl
+    public class ButtonControl : AxisControl, IActuationPressPoint
     {
         private bool m_NeedsToCheckFramePress = false;
         private uint m_UpdateCountLastPressed = uint.MaxValue;
         private uint m_UpdateCountLastReleased = uint.MaxValue;
         private bool m_LastUpdateWasPress;
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         // Editor input updates have a separate block of state memory, so must be checked separately
         private uint m_UpdateCountLastPressedEditor = uint.MaxValue;
         private uint m_UpdateCountLastReleasedEditor = uint.MaxValue;
         private bool m_LastUpdateWasPressEditor;
-        #endif
+#endif
 
         internal bool needsToCheckFramePress { get; private set; }
 
@@ -67,6 +67,10 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         public float pressPointOrDefault => pressPoint > 0 ? pressPoint : s_GlobalDefaultButtonPressPoint;
 
+        float IActuationPressPoint.pressPoint => pressPoint;
+
+        float IActuationPressPoint.pressPointOrDefault => pressPointOrDefault;
+
         /// <summary>
         /// Default-initialize the button control.
         /// </summary>
@@ -91,6 +95,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </code>
         /// </example>
         /// <seealso cref="AxisControl"/>
+        /// <seealso cref="IActuationPressPoint"/>
         public ButtonControl()
         {
             m_StateBlock.format = InputStateBlock.FormatBit;
@@ -201,10 +206,10 @@ namespace UnityEngine.InputSystem.Controls
                 if (!needsToCheckFramePress)
                     return IsValueConsideredPressed(value);
 
-                #if UNITY_EDITOR
+#if UNITY_EDITOR
                 if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
                     return m_LastUpdateWasPressEditor;
-                #endif
+#endif
 
                 return m_LastUpdateWasPress;
             }
@@ -218,7 +223,7 @@ namespace UnityEngine.InputSystem.Controls
             needsToCheckFramePress = true;
             device.m_ButtonControlsCheckingPressState.Add(this);
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
             {
                 m_LastUpdateWasPressEditor = currentlyPressed;
@@ -228,7 +233,7 @@ namespace UnityEngine.InputSystem.Controls
                     m_UpdateCountLastReleasedEditor = device.m_CurrentUpdateStepCount;
             }
             else
-            #endif
+#endif
             {
                 m_LastUpdateWasPress = currentlyPressed;
                 if (currentlyPressed && !pressedLastFrame)
@@ -291,10 +296,10 @@ namespace UnityEngine.InputSystem.Controls
                     return device.wasUpdatedThisFrame && currentlyPressed && !pressedLastFrame;
                 }
 
-                #if UNITY_EDITOR
+#if UNITY_EDITOR
                 if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
                     return InputUpdate.s_UpdateStepCount == m_UpdateCountLastPressedEditor;
-                #endif
+#endif
                 return InputUpdate.s_UpdateStepCount == m_UpdateCountLastPressed;
             }
         }
@@ -336,10 +341,10 @@ namespace UnityEngine.InputSystem.Controls
                     return device.wasUpdatedThisFrame && !currentlyPressed && pressedLastFrame;
                 }
 
-                #if UNITY_EDITOR
+#if UNITY_EDITOR
                 if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
                     return InputUpdate.s_UpdateStepCount == m_UpdateCountLastReleasedEditor;
-                #endif
+#endif
                 return InputUpdate.s_UpdateStepCount == m_UpdateCountLastReleased;
             }
         }
@@ -359,7 +364,7 @@ namespace UnityEngine.InputSystem.Controls
             }
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         internal void UpdateWasPressedEditor()
         {
             var isNowPressed = IsValueConsideredPressed(value);
@@ -375,7 +380,7 @@ namespace UnityEngine.InputSystem.Controls
             }
         }
 
-        #endif // UNITY_EDITOR
+#endif // UNITY_EDITOR
 
         // We make the current global default button press point available as a static so that we don't have to
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.

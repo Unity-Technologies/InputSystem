@@ -1158,13 +1158,13 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
-        /// Press threshold: <see cref="ButtonControl.pressPoint"/> (through <see cref="ButtonControl.pressPointOrDefault"/>)
-        /// is used only when the bound control is a <see cref="ButtonControl"/>. For non-button controls (such as
-        /// <see cref="StickControl"/> or <see cref="Vector2Control"/>), the threshold is always
-        /// <see cref="InputSettings.defaultButtonPressPoint"/> (for example 0.5 by default), regardless of
-        /// per-control press-point settings on those controls. A <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>'s
-        /// <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> affects that interaction's
-        /// behavior (phases and callbacks) but does not change the threshold used by this method.
+        /// Press threshold (based on <see cref="InputControl.EvaluateMagnitude()"/> for the driving control): controls implementing
+        /// <see cref="IActuationPressPoint"/> (including <see cref="ButtonControl"/>, <see cref="Vector2Control"/>, and <see cref="StickControl"/>)
+        /// use <see cref="IActuationPressPoint.pressPoint"/> / <see cref="IActuationPressPoint.pressPointOrDefault"/> when a positive
+        /// control <c>pressPoint</c> is set. If not set on the control but the binding has a <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
+        /// with <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero, that value is used so this
+        /// API stays aligned with the interaction. For composite bindings, interaction parameters are read from the composite binding.
+        /// Otherwise <see cref="InputSettings.defaultButtonPressPoint"/> is used.
         ///
         /// <example>
         /// <code>
@@ -1179,7 +1179,9 @@ namespace UnityEngine.InputSystem
         /// was disabled even if the control is still actuated.
         /// </remarks>
         /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
+        /// <seealso cref="IActuationPressPoint"/>
         /// <seealso cref="ButtonControl.pressPoint"/>
+        /// <seealso cref="Vector2Control.pressPoint"/>
         /// <seealso cref="CallbackContext.ReadValueAsButton"/>
         /// <seealso cref="WasPressedThisFrame"/>
         /// <seealso cref="WasReleasedThisFrame"/>
@@ -1240,13 +1242,13 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
-        /// Press threshold: <see cref="ButtonControl.pressPoint"/> (through <see cref="ButtonControl.pressPointOrDefault"/>)
-        /// is used only when the bound control is a <see cref="ButtonControl"/>. For non-button controls (such as
-        /// <see cref="StickControl"/> or <see cref="Vector2Control"/>), the threshold is always
-        /// <see cref="InputSettings.defaultButtonPressPoint"/> (for example 0.5 by default), regardless of
-        /// per-control press-point settings on those controls. A <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>'s
-        /// <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> affects that interaction's
-        /// behavior (phases and callbacks) but does not change the threshold used by this method.
+        /// Press threshold (based on <see cref="InputControl.EvaluateMagnitude()"/> for the driving control): controls implementing
+        /// <see cref="IActuationPressPoint"/> (including <see cref="ButtonControl"/>, <see cref="Vector2Control"/>, and <see cref="StickControl"/>)
+        /// use <see cref="IActuationPressPoint.pressPoint"/> / <see cref="IActuationPressPoint.pressPointOrDefault"/> when a positive
+        /// control <c>pressPoint</c> is set. If not set on the control but the binding has a <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
+        /// with <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero, that value is used so this
+        /// API stays aligned with the interaction. For composite bindings, interaction parameters are read from the composite binding.
+        /// Otherwise <see cref="InputSettings.defaultButtonPressPoint"/> is used.
         ///
         /// <example>
         /// <code>
@@ -1337,13 +1339,13 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
-        /// Press threshold: <see cref="ButtonControl.pressPoint"/> (through <see cref="ButtonControl.pressPointOrDefault"/>)
-        /// is used only when the bound control is a <see cref="ButtonControl"/>. For non-button controls (such as
-        /// <see cref="StickControl"/> or <see cref="Vector2Control"/>), the threshold is always
-        /// <see cref="InputSettings.defaultButtonPressPoint"/> (for example 0.5 by default), regardless of
-        /// per-control press-point settings on those controls. A <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>'s
-        /// <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> affects that interaction's
-        /// behavior (phases and callbacks) but does not change the threshold used by this method.
+        /// Press threshold (based on <see cref="InputControl.EvaluateMagnitude()"/> for the driving control): controls implementing
+        /// <see cref="IActuationPressPoint"/> (including <see cref="ButtonControl"/>, <see cref="Vector2Control"/>, and <see cref="StickControl"/>)
+        /// use <see cref="IActuationPressPoint.pressPoint"/> / <see cref="IActuationPressPoint.pressPointOrDefault"/> when a positive
+        /// control <c>pressPoint</c> is set. If not set on the control but the binding has a <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
+        /// with <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero, that value is used so this
+        /// API stays aligned with the interaction. For composite bindings, interaction parameters are read from the composite binding.
+        /// Otherwise <see cref="InputSettings.defaultButtonPressPoint"/> is used.
         ///
         /// <example>
         /// <code>
@@ -2468,9 +2470,9 @@ namespace UnityEngine.InputSystem
             /// </summary>
             /// <returns>True if the action is considered in "pressed" state, false otherwise.</returns>
             /// <remarks>
-            /// If the currently active control is a <see cref="ButtonControl"/>, the <see cref="ButtonControl.pressPoint"/>
-            /// of the button will be taken into account (if set). If there is no custom button press point, the
-            /// global <see cref="InputSettings.defaultButtonPressPoint"/> will be used.
+            /// The same press rules as <see cref="IsPressed"/> apply: <see cref="IActuationPressPoint"/> on the active control,
+            /// an explicit <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> on the binding when the control
+            /// does not set <c>pressPoint</c>, or <see cref="InputSettings.defaultButtonPressPoint"/>.
             /// </remarks>
             /// <example>
             /// <code>
@@ -2506,7 +2508,9 @@ namespace UnityEngine.InputSystem
             /// </code>
             /// </example>
             /// <seealso cref="InputSettings.defaultButtonPressPoint"/>
+            /// <seealso cref="IActuationPressPoint"/>
             /// <seealso cref="ButtonControl.pressPoint"/>
+            /// <seealso cref="Vector2Control.pressPoint"/>
             public bool ReadValueAsButton()
             {
                 var value = false;

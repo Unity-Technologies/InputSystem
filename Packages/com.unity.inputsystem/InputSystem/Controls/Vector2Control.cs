@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.Controls
     ///
     /// Normalization is not implied. The X and Y coordinates can be in any range or units.
     /// </remarks>
-    public class Vector2Control : InputControl<Vector2>
+    public class Vector2Control : InputControl<Vector2>, IActuationPressPoint
     {
         /// <summary>
         /// Horizontal position of the control.
@@ -35,6 +35,30 @@ namespace UnityEngine.InputSystem.Controls
         /// <value>Control representing vertical motion input.</value>
         [InputControl(offset = 4, displayName = "Y")]
         public AxisControl y { get; set; }
+
+        /// <summary>
+        /// Minimum vector magnitude before the control is considered pressed for purposes such as
+        /// <see cref="UnityEngine.InputSystem.InputAction.IsPressed"/> when this control drives the action.
+        /// </summary>
+        /// <remarks>
+        /// By default, this property is set to -1. If the value of the property is negative,
+        /// <see cref="UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint"/> is used unless a
+        /// <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/> on the binding sets an explicit
+        /// <c>pressPoint</c> (see <see cref="UnityEngine.InputSystem.InputAction.IsPressed"/> remarks).
+        /// </remarks>
+        /// <seealso cref="pressPointOrDefault"/>
+        /// <seealso cref="IActuationPressPoint"/>
+        /// <seealso cref="UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint"/>
+        public float pressPoint = -1;
+
+        /// <summary>
+        /// Return <see cref="pressPoint"/> if set, otherwise return <see cref="UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint"/>.
+        /// </summary>
+        public float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
+
+        float IActuationPressPoint.pressPoint => pressPoint;
+
+        float IActuationPressPoint.pressPointOrDefault => pressPointOrDefault;
 
         /// <summary>
         /// Default-initialize the control.
