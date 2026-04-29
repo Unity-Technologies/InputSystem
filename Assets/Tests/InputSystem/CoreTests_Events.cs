@@ -1318,11 +1318,18 @@ partial class CoreTests
         Assert.That(wasHandled, Is.False);
     }
 
-    [Ignore("ISXB-1097: SuppressStateUpdates desynchronizes Input System state from source state")]
+    // ISXB-1097: This test verifies the deprecated SuppressStateUpdates behavior where handled
+    // events are discarded entirely, preventing device state from updating. This policy is
+    // deprecated because it desynchronizes the Input System's state from the source, but the
+    // behavior is preserved for backward compatibility when explicitly opted in.
     [Test]
     [Category("Events")]
     public void Events_CanPreventEventsFromBeingProcessed()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
+        InputSystem.manager.inputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
+#pragma warning restore CS0618 // Type or member is obsolete
+
         InputSystem.onEvent +=
             (inputEvent, _) =>
         {
@@ -1548,7 +1555,7 @@ partial class CoreTests
         action.Enable();
 
         var performedCount = 0;
-        action.performed += _ => ++performedCount;
+        action.performed += _ => ++ performedCount;
 
         // Suppress all events via onEvent listener (user scenario from the bug report).
         InputSystem.onEvent += (eventPtr, _) => { eventPtr.handled = true; };
@@ -1593,7 +1600,7 @@ partial class CoreTests
         action.Enable();
 
         var performedCount = 0;
-        action.performed += _ => ++performedCount;
+        action.performed += _ => ++ performedCount;
 
         // Mark only the first event in each update as handled (simulating selective suppression
         // of the press-edge event while allowing subsequent state updates through).
