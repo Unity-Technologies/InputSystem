@@ -1648,6 +1648,47 @@ partial class CoreTests
             "Action should trigger normally for non-handled press events");
     }
 
+    [Test]
+    [Category("Events")]
+    [Description("ISXB-1097 All WasXxxThisFrame polling APIs should return false when events are" +
+        " suppressed via SuppressActionEventNotifications")]
+    public void Events_AllWasXxxThisFrameAPIsRespectEventSuppression()
+    {
+        // ISXB-1097: Verifies that all WasXxxThisFrame (and DynamicUpdate variants) consistently
+        // return false when the underlying event is handled under SuppressActionEventNotifications.
+        // Previously WasReleasedThisFrame and WasCompletedThisFrame were not gated by IsSuppressed.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var buttonAction = new InputAction(name: "button", type: InputActionType.Button,
+            binding: "<Gamepad>/buttonSouth");
+        buttonAction.Enable();
+
+        // Suppress all events.
+        InputSystem.onEvent += (eventPtr, _) => { eventPtr.handled = true; };
+
+        // Press: should suppress WasPressedThisFrame and WasPerformedThisFrame.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
+        InputSystem.Update();
+
+        Assert.That(buttonAction.WasPressedThisFrame(), Is.False, "WasPressedThisFrame should be suppressed");
+        Assert.That(buttonAction.WasPressedThisDynamicUpdate(), Is.False, "WasPressedThisDynamicUpdate should be suppressed");
+        Assert.That(buttonAction.WasPerformedThisFrame(), Is.False, "WasPerformedThisFrame should be suppressed");
+        Assert.That(buttonAction.WasPerformedThisDynamicUpdate(), Is.False, "WasPerformedThisDynamicUpdate should be suppressed");
+        // Device state should still reflect the press.
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+
+        // Release: should suppress WasReleasedThisFrame and WasCompletedThisFrame.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(buttonAction.WasReleasedThisFrame(), Is.False, "WasReleasedThisFrame should be suppressed");
+        Assert.That(buttonAction.WasReleasedThisDynamicUpdate(), Is.False, "WasReleasedThisDynamicUpdate should be suppressed");
+        Assert.That(buttonAction.WasCompletedThisFrame(), Is.False, "WasCompletedThisFrame should be suppressed");
+        Assert.That(buttonAction.WasCompletedThisDynamicUpdate(), Is.False, "WasCompletedThisDynamicUpdate should be suppressed");
+        // Device state should reflect the release.
+        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+    }
+
     [StructLayout(LayoutKind.Explicit, Size = 2)]
     struct StateWith2Bytes : IInputStateTypeInfo
     {
