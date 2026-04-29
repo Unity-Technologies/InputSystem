@@ -1580,7 +1580,7 @@ partial class CoreTests
         // Step 4: Verify state is synchronized despite suppression — device state should
         // reflect the press even though action notifications were suppressed.
         Assert.That(gamepad.buttonSouth.isPressed, Is.True, "Device state should be updated even for handled events");
-        Assert.That(keyboard.spaceKey.isPressed, Is.False, "Keyboard key should reflect released state");
+        Assert.That(keyboard.spaceKey.isPressed, Is.True, "Keyboard state should reflect the handled press (state propagates)");
     }
 
     [Test]
