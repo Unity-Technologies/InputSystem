@@ -11,8 +11,6 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Input events will be discarded directly and not propagate for state changes.
         /// </summary>
-        [Obsolete("Use InputEventHandledPolicy.SuppressActionEventNotifications instead. " +
-            "SuppressStateUpdates desynchronizes Input System state from source state leading to undefined " +
         [Obsolete("Use SuppressActionEventNotifications instead. SuppressStateUpdates desynchronizes Input System state from source state, leading to undefined behavior.", error: false)]
         SuppressStateUpdates,
 
