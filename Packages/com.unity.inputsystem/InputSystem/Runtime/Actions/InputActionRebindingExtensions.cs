@@ -2119,7 +2119,9 @@ namespace UnityEngine.InputSystem
                 ThrowIfRebindInProgress();
                 m_TargetInputEventHandledPolicy = value
                     ? InputEventHandledPolicy.SuppressActionEventNotifications
+#pragma warning disable CS0618 // Type or member is obsolete
                     : InputEventHandledPolicy.SuppressStateUpdates;
+#pragma warning restore CS0618 // Type or member is obsolete
                 return this;
             }
 
@@ -2147,8 +2149,12 @@ namespace UnityEngine.InputSystem
 
                 m_StartTime = InputState.currentTime;
 
+                // ISXB-1097: Only override the global policy if the user made an explicit
+                // choice via WithActionEventNotificationsBeingSuppressed(). Otherwise,
+                // preserve whatever policy is currently configured via InputSettings.
                 m_SavedInputEventHandledPolicy = InputSystem.manager.inputEventHandledPolicy;
-                InputSystem.manager.inputEventHandledPolicy = m_TargetInputEventHandledPolicy;
+                if (m_TargetInputEventHandledPolicy.HasValue)
+                    InputSystem.manager.inputEventHandledPolicy = m_TargetInputEventHandledPolicy.Value;
 
                 if (m_WaitSecondsAfterMatch > 0 || m_Timeout > 0)
                 {
@@ -2705,7 +2711,10 @@ namespace UnityEngine.InputSystem
             private float m_Timeout;
             private float m_WaitSecondsAfterMatch;
             private InputEventHandledPolicy m_SavedInputEventHandledPolicy;
-            private InputEventHandledPolicy m_TargetInputEventHandledPolicy;
+            // ISXB-1097: Nullable so that Start() only overrides the global policy when the
+            // user made an explicit choice via WithActionEventNotificationsBeingSuppressed().
+            // When null, the current InputSystem.manager.inputEventHandledPolicy is preserved.
+            private InputEventHandledPolicy? m_TargetInputEventHandledPolicy;
             private InputControlList<InputControl> m_Candidates;
             private Action<RebindingOperation> m_OnComplete;
             private Action<RebindingOperation> m_OnCancel;
