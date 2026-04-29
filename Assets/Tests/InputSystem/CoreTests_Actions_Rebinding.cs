@@ -1192,8 +1192,8 @@ internal partial class CoreTests
             // - SuppressStateUpdates: the event is discarded before state updates, so the
             //   action never observes the press at all.
             // - SuppressActionEventNotifications: state propagates (device sees the press)
-            //   but InputAction.WasPressedThisFrame() is gated by IsSuppressed and returns
-            //   false (see InputAction.cs WasPressedThisFrame).
+            //   but InputAction.WasPressedThisFrame() is gated by the per-action suppressed
+            //   flag (TriggerState.isSuppressed) and returns false.
             Assert.That(observerAction.WasPressedThisFrame(), Is.False);
         }
     }

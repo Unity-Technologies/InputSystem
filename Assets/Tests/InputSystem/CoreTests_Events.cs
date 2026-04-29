@@ -1689,6 +1689,67 @@ partial class CoreTests
         Assert.That(gamepad.buttonSouth.isPressed, Is.False);
     }
 
+    [Test]
+    [Category("Events")]
+    [Description("ISXB-1097 Per-action suppression: mixed handled/unhandled events in the same" +
+        " frame should only suppress the actions affected by the handled event")]
+    public void Events_PerActionSuppressionWithMixedHandledEvents()
+    {
+        // ISXB-1097: When multiple events arrive in the same frame and only some are handled,
+        // the polling APIs should return correct results per-action. An action triggered by an
+        // unhandled event should not be affected by a different handled event in the same frame.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var southAction = new InputAction(name: "south", type: InputActionType.Button,
+            binding: "<Gamepad>/buttonSouth");
+        var northAction = new InputAction(name: "north", type: InputActionType.Button,
+            binding: "<Gamepad>/buttonNorth");
+        southAction.Enable();
+        northAction.Enable();
+
+        // Handle events that press buttonSouth, but let buttonNorth events through.
+        InputSystem.onEvent += (eventPtr, device) =>
+        {
+            // We can't selectively handle per-control within a single event, so we use
+            // two separate events: one for south (handled) and one for north (not handled).
+        };
+
+        // Event 1: Press south only — mark as handled.
+        var handleNext = true;
+        InputSystem.onEvent += (eventPtr, _) =>
+        {
+            if (handleNext)
+            {
+                eventPtr.handled = true;
+                handleNext = false;
+            }
+        };
+
+        // Queue two events: first presses south (will be handled), second presses north
+        // (will not be handled). Both arrive in the same frame.
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState().WithButton(GamepadButton.South));
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState().WithButton(GamepadButton.South).WithButton(GamepadButton.North));
+        InputSystem.Update();
+
+        // South was pressed by the handled event — its polling APIs should be suppressed.
+        Assert.That(southAction.WasPressedThisFrame(), Is.False,
+            "South action triggered by handled event should be suppressed");
+        Assert.That(southAction.WasPerformedThisFrame(), Is.False,
+            "South action triggered by handled event should be suppressed");
+
+        // North was pressed by the unhandled event — its polling APIs should report normally.
+        Assert.That(northAction.WasPressedThisFrame(), Is.True,
+            "North action triggered by unhandled event should NOT be suppressed");
+        Assert.That(northAction.WasPerformedThisFrame(), Is.True,
+            "North action triggered by unhandled event should NOT be suppressed");
+
+        // Both buttons should reflect actual device state regardless of suppression.
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+        Assert.That(gamepad.buttonNorth.isPressed, Is.True);
+    }
+
     [StructLayout(LayoutKind.Explicit, Size = 2)]
     struct StateWith2Bytes : IInputStateTypeInfo
     {
