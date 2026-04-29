@@ -891,7 +891,7 @@ namespace UnityEngine.InputSystem
             return GetEnumerator();
         }
 
-        internal void MarkAsDirty()
+        internal void MarkAsDirtyInEditor()
         {
 #if UNITY_EDITOR
             s_OnMarkAsDirty?.Invoke(this);
@@ -915,7 +915,7 @@ namespace UnityEngine.InputSystem
 
         internal void OnSetupChanged()
         {
-            MarkAsDirty();
+            MarkAsDirtyInEditor();
 
             if (m_ActionMaps.LengthSafe() > 0)
                 m_ActionMaps[0].OnSetupChanged();

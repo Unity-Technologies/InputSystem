@@ -584,7 +584,7 @@ namespace UnityEngine.InputSystem
             // Make sure this asset is reloaded from disk when exiting play mode so it isn't inadvertently
             // changed between play sessions. Only applies when running in the editor.
             if (map.asset != null)
-                map.asset.MarkAsDirty();
+                map.asset.MarkAsDirtyInEditor();
 
             // If we're looking at a singleton action, make sure m_Bindings is up to date just
             // in case the action gets serialized.
@@ -955,7 +955,7 @@ namespace UnityEngine.InputSystem
             actionMap?.ClearActionLookupTable();
 
             if (actionMap?.asset != null)
-                actionMap?.asset.MarkAsDirty();
+                actionMap?.asset.MarkAsDirtyInEditor();
 
             // Update bindings.
             var bindings = action.GetOrCreateActionMap().m_Bindings;
@@ -992,7 +992,7 @@ namespace UnityEngine.InputSystem
 
             ArrayHelpers.Append(ref asset.m_ControlSchemes, controlScheme);
 
-            asset.MarkAsDirty();
+            asset.MarkAsDirtyInEditor();
         }
 
         /// <summary>
@@ -1063,7 +1063,7 @@ namespace UnityEngine.InputSystem
             if (index != -1)
                 ArrayHelpers.EraseAt(ref asset.m_ControlSchemes, index);
 
-            asset.MarkAsDirty();
+            asset.MarkAsDirtyInEditor();
         }
 
         /// <summary>

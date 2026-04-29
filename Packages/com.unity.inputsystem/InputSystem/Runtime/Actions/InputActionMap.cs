@@ -1151,7 +1151,7 @@ namespace UnityEngine.InputSystem
         {
             if (m_Asset != null)
             {
-                m_Asset.MarkAsDirty();
+                m_Asset.MarkAsDirtyInEditor();
                 foreach (var map in m_Asset.actionMaps)
                     map.m_State = default;
             }
