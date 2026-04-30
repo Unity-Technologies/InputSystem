@@ -15,7 +15,7 @@
         [
             {
                 "Targets": "+Switch",
-                "Files": [ "InputSystem/Plugins/Switch/SwitchSupportHID.cs" ],
+                "Files": [ "InputSystem/Runtime/Plugins/Switch/SwitchSupportHID.cs" ],
                 "Patterns": [ "UnityEngine\\.InputSystem\\.Switch" ]
             }
         ]

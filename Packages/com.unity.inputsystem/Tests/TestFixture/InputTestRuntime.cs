@@ -399,26 +399,8 @@ namespace UnityEngine.InputSystem
         #if UNITY_EDITOR
         public bool isInPlayMode { get; set; } = true;
         public bool isEditorActive { get; set; } = true;
-        public Func<IntPtr, bool> onUnityRemoteMessage
-        {
-            get => m_UnityRemoteMessageHandler;
-            set => m_UnityRemoteMessageHandler = value;
-        }
-
-        public bool? unityRemoteGyroEnabled;
-        public float? unityRemoteGyroUpdateInterval;
-
-        public void SetUnityRemoteGyroEnabled(bool value)
-        {
-            unityRemoteGyroEnabled = value;
-        }
-
-        public void SetUnityRemoteGyroUpdateInterval(float interval)
-        {
-            unityRemoteGyroUpdateInterval = interval;
-        }
-
-        public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
+        public bool isEditorPaused { get; set; }
+        public Action<InputPlayModeChange> onPlayModeChanged { get; set; }
         public Action onProjectChange { get; set; }
         #endif
 
@@ -437,7 +419,6 @@ namespace UnityEngine.InputSystem
         private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
         private double m_CurrentTimeOffsetToRealtimeSinceStartup;
-        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 

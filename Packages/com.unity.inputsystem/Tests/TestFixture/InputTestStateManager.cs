@@ -22,10 +22,13 @@ namespace UnityEngine.InputSystem
     {
         static readonly ProfilerMarker k_InputResetMarker = new ProfilerMarker("InputSystem.Reset");
 
+        #if UNITY_EDITOR
         public InputSystemState GetSavedState()
         {
             return m_SavedStateStack.Peek();
         }
+
+        #endif
 
         /// <summary>
         /// Push the current state of the input system onto a stack and
@@ -50,7 +53,7 @@ namespace UnityEngine.InputSystem
                 remotingState = InputSystem.remoting?.SaveState() ?? new InputRemoting.SerializedState(),
 #if UNITY_EDITOR
                 userSettings = InputEditorUserSettings.s_Settings,
-                systemObject = JsonUtility.ToJson(InputSystem.domainStateManager),
+                systemObject = JsonUtility.ToJson(InputSystemEditorInitializer.domainStateManager),
 #endif
                 inputActionState = InputActionState.SaveAndResetState(),
                 touchState = EnhancedTouch.Touch.SaveAndResetState(),
@@ -81,7 +84,7 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_EDITOR
             // Perform special initialization for running Editor tests
-            InputSystem.TestHook_InitializeForPlayModeTests(enableRemoting, runtime);
+            InputSystemTestHooks.TestHook_InitializeForPlayModeTests(enableRemoting, runtime);
 #else
             // For Player tests we can use the normal initialization
             InputSystem.InitializeInPlayer(runtime, false);
@@ -113,13 +116,13 @@ namespace UnityEngine.InputSystem
             state.touchState.StaticDisposeCurrentState();
             state.inputActionState.StaticDisposeCurrentState();
 
-            InputSystem.TestHook_DestroyAndReset();
+            InputSystemTestHooks.TestHook_DestroyAndReset();
 
             state.inputUserState.RestoreSavedState();
             state.touchState.RestoreSavedState();
             state.inputActionState.RestoreSavedState();
 
-            InputSystem.TestHook_RestoreFromSavedState(state);
+            InputSystemTestHooks.TestHook_RestoreFromSavedState(state.manager, state.remote, state.remoteConnection);
             InputUpdate.Restore(state.managerState.updateState);
 
             InputSystem.manager.InstallRuntime(InputSystem.manager.runtime);
@@ -139,7 +142,7 @@ namespace UnityEngine.InputSystem
 
 #if UNITY_EDITOR
             InputEditorUserSettings.s_Settings = state.userSettings;
-            JsonUtility.FromJsonOverwrite(state.systemObject, InputSystem.domainStateManager);
+            JsonUtility.FromJsonOverwrite(state.systemObject, InputSystemEditorInitializer.domainStateManager);
 #endif
 
             // Get devices that keep global lists (like Gamepad) to re-initialize them

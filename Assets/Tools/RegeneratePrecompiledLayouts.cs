@@ -48,7 +48,7 @@ namespace Editor
         [MenuItem("QA Tools/Regenerate Precompiled Layouts", priority = 20)]
         private static void GeneratePrecompiledLayouts()
         {
-            GeneratePrecompiledLayouts("Packages/com.unity.inputsystem/InputSystem/Devices/Precompiled");
+            GeneratePrecompiledLayouts("Packages/com.unity.inputsystem/InputSystem/Runtime/Devices/Precompiled");
         }
     }
 }
