@@ -242,10 +242,77 @@ partial class CoreTests
         InputSystem.Update();
 
         SetTouch(0, TouchPhase.Began, new Vector2(12, 12));
+        InputSystem.Update();
+        Assert.That(callCount, Is.EqualTo(1));
+
+        // TouchPhase.Moved must not register as a new button press.
+        SetTouch(0, TouchPhase.Moved, new Vector2(13, 12), new Vector2(1, 0));
+        InputSystem.Update();
+        Assert.That(callCount, Is.EqualTo(1));
+
+        // TouchPhase.Canceled must not register as a new button press.
+        SetTouch(0, TouchPhase.Canceled, new Vector2(13, 12));
+        InputSystem.Update();
+        Assert.That(callCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Events")]
+    public void Events_OnAnyButtonPressed_WorksWithMultitouchTouchControls()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var touch = InputSystem.AddDevice<Touchscreen>();
+
+        var callCount = 0;
+        var firstPress = (ButtonControl)null;
+        var secondPress = (ButtonControl)null;
+
+        InputSystem.onAnyButtonPress
+            .Call(ctrl =>
+            {
+                Assert.That(ctrl.device, Is.SameAs(touch));
+                if (callCount == 0)
+                    firstPress = (ButtonControl)ctrl;
+                else if (callCount == 1)
+                    secondPress = (ButtonControl)ctrl;
+                else
+                    Assert.Fail($"Unexpected extra onAnyButtonPress ({ctrl})");
+                ++callCount;
+            });
+
+        Assert.That(callCount, Is.Zero);
 
         InputSystem.Update();
 
+        const int touchId0 = 1;
+        const int touchId1 = 2;
+
+        SetTouch(touchId0, TouchPhase.Began, new Vector2(10, 10), screen: touch);
+        InputSystem.Update();
         Assert.That(callCount, Is.EqualTo(1));
+        Assert.That(firstPress, Is.SameAs(touch.touches[0].press));
+
+        SetTouch(touchId0, TouchPhase.Moved, new Vector2(11, 10), new Vector2(1, 0), screen: touch);
+        InputSystem.Update();
+        Assert.That(callCount, Is.EqualTo(1));
+
+        SetTouch(touchId1, TouchPhase.Began, new Vector2(100, 100), screen: touch);
+        InputSystem.Update();
+        Assert.That(callCount, Is.EqualTo(2));
+        Assert.That(secondPress, Is.SameAs(touch.touches[1].press));
+
+        SetTouch(touchId1, TouchPhase.Moved, new Vector2(101, 100), new Vector2(1, 0), screen: touch);
+        InputSystem.Update();
+        Assert.That(callCount, Is.EqualTo(2));
+
+        SetTouch(touchId0, TouchPhase.Canceled, new Vector2(11, 10), screen: touch);
+        InputSystem.Update();
+        Assert.That(callCount, Is.EqualTo(2));
+
+        SetTouch(touchId1, TouchPhase.Canceled, new Vector2(101, 100), screen: touch);
+        InputSystem.Update();
+        Assert.That(callCount, Is.EqualTo(2));
     }
 
     [Test]
