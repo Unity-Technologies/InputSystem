@@ -10,6 +10,12 @@ using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 
 internal class UnityRemoteTests : CoreTestsFixture
 {
+    public override void Setup()
+    {
+        base.Setup();
+        UnityRemoteSupport.s_TestMessageDispatch = UnityRemoteSupport.GetMessageHandlerForTesting();
+    }
+
     public override void TearDown()
     {
         UnityRemoteSupport.ResetGlobalState();
@@ -119,7 +125,7 @@ internal class UnityRemoteTests : CoreTestsFixture
         // Now the app enables the gyro.
         InputSystem.EnableDevice(Gyroscope.current);
 
-        Assert.That(runtime.unityRemoteGyroEnabled, Is.True);
+        Assert.That(UnityRemoteSupport.unityRemoteGyroEnabled, Is.True);
         Assert.That(Gyroscope.current.enabled, Is.True);
         Assert.That(AttitudeSensor.current.enabled, Is.False);
         Assert.That(GravitySensor.current.enabled, Is.False);
@@ -154,7 +160,7 @@ internal class UnityRemoteTests : CoreTestsFixture
         InputSystem.EnableDevice(GravitySensor.current);
         InputSystem.EnableDevice(LinearAccelerationSensor.current);
 
-        Assert.That(runtime.unityRemoteGyroEnabled, Is.True);
+        Assert.That(UnityRemoteSupport.unityRemoteGyroEnabled, Is.True);
         Assert.That(AttitudeSensor.current.enabled, Is.True);
         Assert.That(GravitySensor.current.enabled, Is.True);
         Assert.That(LinearAccelerationSensor.current.enabled, Is.True);
@@ -194,7 +200,7 @@ internal class UnityRemoteTests : CoreTestsFixture
         // Set update interval.
         Gyroscope.current.samplingFrequency = 123.456f;
 
-        Assert.That(runtime.unityRemoteGyroUpdateInterval, Is.EqualTo(123.456f));
+        Assert.That(UnityRemoteSupport.unityRemoteGyroUpdateInterval, Is.EqualTo(123.456f));
         Assert.That(Gyroscope.current.samplingFrequency, Is.EqualTo(123.456f));
 
         SendUnityRemoteMessage(new UnityRemoteSupport.GoodbyeMessage());
@@ -275,14 +281,14 @@ internal class UnityRemoteTests : CoreTestsFixture
     private unsafe void SendUnityRemoteMessage<TMessage>(TMessage message)
         where TMessage : unmanaged, UnityRemoteSupport.IUnityRemoteMessage
     {
-        if (runtime.onUnityRemoteMessage == null)
+        if (UnityRemoteSupport.s_TestMessageDispatch == null)
             return;
 
         var ptr = UnsafeUtility.AddressOf(ref message);
         *(byte*)ptr = message.staticType;
         *(int*)((byte*)ptr + 1) = UnsafeUtility.SizeOf<TMessage>();
 
-        runtime.onUnityRemoteMessage(new IntPtr(ptr));
+        UnityRemoteSupport.s_TestMessageDispatch(new IntPtr(ptr));
     }
 }
 #endif // UNITY_EDITOR

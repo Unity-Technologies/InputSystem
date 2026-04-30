@@ -8,15 +8,13 @@ namespace InputSystem.Cookbook.Recipes;
 
 internal static class Utilities
 {
-    
     public static bool IsEditorPlatform(Platform platform)
     {
         return InputSystemSettings.Instance.InputSystemPackage.UnityEditors
             .Any(ue => ue.EditorPlatforms.Items.Any(ep => ep.Value.System == platform.System));
-        
     }
-    
-    public static string GetEditorDownloadCommand(string unityBranch, Platform platform, string? backend=null)
+
+    public static string GetEditorDownloadCommand(string unityBranch, Platform platform, string? backend = null)
     {
         if (IsEditorPlatform(platform))
         {
@@ -32,20 +30,21 @@ internal static class Utilities
     public static string GetPlatformName(Platform platform)
     {
 #pragma warning disable CS8603 // Possible null reference return.
-        return platform.System switch
-        {
-            SystemType.Ps4 => "ps4",
-            SystemType.Ps5 => "ps5",
-            SystemType.Xbox => "xbox",
-            SystemType.XboxOne => "GameCoreXboxOne",
-            SystemType.XboxSeriesS => "GameCoreScarlett",
-            SystemType.XboxSeriesX => "GameCoreScarlett",
-            SystemType.Switch => "switch",
-            SystemType.IOS => "iOS",
-            SystemType.TvOS => "AppleTV",
-            SystemType.Android => "Android",
-            _ => Enum.GetName(typeof(SystemType), platform.System)
-        };
+        return switch (platform.System)
+            {
+                SystemType.Ps4 => "ps4",
+                SystemType.Ps5 => "ps5",
+                SystemType.Xbox => "xbox",
+                SystemType.XboxOne => "GameCoreXboxOne",
+                SystemType.XboxSeriesS => "GameCoreScarlett",
+                SystemType.XboxSeriesX => "GameCoreScarlett",
+                SystemType.Switch => "switch",
+                SystemType.IOS => "iOS",
+                SystemType.TvOS => "AppleTV",
+                SystemType.Android => "Android",
+                _ => Enum.GetName(typeof(SystemType), platform.System)
+            }
+        ;
 #pragma warning restore CS8603 // Possible null reference return.
     }
 
