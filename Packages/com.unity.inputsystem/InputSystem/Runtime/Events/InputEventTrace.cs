@@ -1294,7 +1294,6 @@ namespace UnityEngine.InputSystem.LowLevel
 #if UNITY_EDITOR
                 StartEditorEventPassthrough();
 #endif
-                m_OnReplayStart?.Invoke();
                 InputSystem.onBeforeUpdate += OnBeginFrame;
                 return this;
             }
@@ -1316,7 +1315,6 @@ namespace UnityEngine.InputSystem.LowLevel
 #if UNITY_EDITOR
                 StartEditorEventPassthrough();
 #endif
-                m_OnReplayStart?.Invoke();
                 try
                 {
                     while (MoveNext(true, out var eventPtr))

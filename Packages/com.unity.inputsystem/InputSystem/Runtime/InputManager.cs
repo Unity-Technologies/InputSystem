@@ -515,7 +515,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal static void StartEditorEventPassthrough()
         {
-            ++s_Manager.m_EditorEventPassthroughCount;
+            ++InputSystem.s_Manager.m_EditorEventPassthroughCount;
         }
 
         /// <summary>
@@ -524,8 +524,8 @@ namespace UnityEngine.InputSystem
         /// </summary>
         internal static void StopEditorEventPassthrough()
         {
-            if (s_Manager != null && s_Manager.m_EditorEventPassthroughCount > 0)
-                --s_Manager.m_EditorEventPassthroughCount;
+            if (InputSystem.s_Manager != null && InputSystem.s_Manager.m_EditorEventPassthroughCount > 0)
+                --InputSystem.s_Manager.m_EditorEventPassthroughCount;
         }
 #endif // UNITY_EDITOR
 
