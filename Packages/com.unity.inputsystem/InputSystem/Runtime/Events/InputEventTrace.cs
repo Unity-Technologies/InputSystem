@@ -1073,8 +1073,7 @@ namespace UnityEngine.InputSystem.LowLevel
             private int m_AllEventsByTimeIndex = 0;
             private List<InputEventPtr> m_AllEventsByTime;
 #if UNITY_EDITOR
-            private bool m_ReplayBypassActive;
-            private Action m_ClearReplayBypassCallback;
+            private bool m_EditorEventPassthroughActive;
 #endif
 
             internal ReplayController(InputEventTrace trace)
@@ -1093,7 +1092,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 InputSystem.onBeforeUpdate -= OnBeginFrame;
                 finished = true;
 #if UNITY_EDITOR
-                EndReplayBypass();
+                StopEditorEventPassthrough();
 #endif
                 foreach (var device in m_CreatedDevices)
                     InputSystem.RemoveDevice(device);
@@ -1101,55 +1100,41 @@ namespace UnityEngine.InputSystem.LowLevel
             }
 
 #if UNITY_EDITOR
-            // Signals InputManager to treat events as if game view has focus, bypassing
-            // editor focus routing that would otherwise defer pointer/keyboard events to
-            // editor updates where they reach the editor UI instead of the game.
-            private void BeginReplayBypass()
+            private void StartEditorEventPassthrough()
             {
-                if (m_ClearReplayBypassCallback != null)
+                if (!m_EditorEventPassthroughActive)
                 {
-                    InputSystem.onAfterUpdate -= m_ClearReplayBypassCallback;
-                }
-
-                if (!m_ReplayBypassActive)
-                {
-                    m_ReplayBypassActive = true;
-                    ++InputSystem.s_Manager.m_ActiveReplayCount;
+                    m_EditorEventPassthroughActive = true;
+                    InputManager.StartEditorEventPassthrough();
                 }
             }
 
-            // Schedules the bypass to be cleared after the current OnUpdate finishes processing
-            // events (via onAfterUpdate). This ensures events already queued in the native buffer
-            // are still processed with the bypass active before it is removed.
-            private void ScheduleEndReplayBypass()
+            private void StopEditorEventPassthrough()
             {
-                if (!m_ReplayBypassActive)
+                // Clean up any pending deferred stop.
+                InputSystem.onAfterUpdate -= DeferredStopEditorEventPassthrough;
+
+                if (m_EditorEventPassthroughActive)
+                {
+                    m_EditorEventPassthroughActive = false;
+                    InputManager.StopEditorEventPassthrough();
+                }
+            }
+
+            // Defers passthrough stop to after the current update so events already queued
+            // in the native buffer are still processed with passthrough active.
+            private void ScheduleStopEditorEventPassthrough()
+            {
+                if (!m_EditorEventPassthroughActive)
                     return;
-
-                if (m_ClearReplayBypassCallback != null)
-                {
-                    return;
-                }
-
-                m_ClearReplayBypassCallback = EndReplayBypass;
-                InputSystem.onAfterUpdate += m_ClearReplayBypassCallback;
+                InputSystem.onAfterUpdate += DeferredStopEditorEventPassthrough;
             }
 
-            private void EndReplayBypass()
+            private void DeferredStopEditorEventPassthrough()
             {
-                if (m_ClearReplayBypassCallback != null)
-                {
-                    InputSystem.onAfterUpdate -= m_ClearReplayBypassCallback;
-                    m_ClearReplayBypassCallback = null;
-                }
-                if (m_ReplayBypassActive)
-                {
-                    m_ReplayBypassActive = false;
-                    if (InputSystem.s_Manager != null)
-                        --InputSystem.s_Manager.m_ActiveReplayCount;
-                }
+                InputSystem.onAfterUpdate -= DeferredStopEditorEventPassthrough;
+                StopEditorEventPassthrough();
             }
-
 #endif
             /// <summary>
             /// Replay events recorded from <paramref name="recordedDevice"/> on device <paramref name="playbackDevice"/>.
@@ -1307,8 +1292,9 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 finished = false;
 #if UNITY_EDITOR
-                BeginReplayBypass();
+                StartEditorEventPassthrough();
 #endif
+                m_OnReplayStart?.Invoke();
                 InputSystem.onBeforeUpdate += OnBeginFrame;
                 return this;
             }
@@ -1328,8 +1314,9 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 finished = false;
 #if UNITY_EDITOR
-                BeginReplayBypass();
+                StartEditorEventPassthrough();
 #endif
+                m_OnReplayStart?.Invoke();
                 try
                 {
                     while (MoveNext(true, out var eventPtr))
@@ -1375,7 +1362,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 // Start playback.
                 finished = false;
 #if UNITY_EDITOR
-                BeginReplayBypass();
+                StartEditorEventPassthrough();
 #endif
                 m_StartTimeAsPerFirstEvent = -1;
                 m_AllEventsByTimeIndex = -1;
@@ -1448,9 +1435,9 @@ namespace UnityEngine.InputSystem.LowLevel
                 finished = true;
                 InputSystem.onBeforeUpdate -= OnBeginFrame;
 #if UNITY_EDITOR
-                // Schedule bypass removal for after the next OnUpdate, so any events already
-                // queued into the native buffer this frame are still processed with the bypass active.
-                ScheduleEndReplayBypass();
+                // Defer passthrough stop so events already queued in the native buffer
+                // this frame are still processed with passthrough active.
+                ScheduleStopEditorEventPassthrough();
 #endif
                 m_OnFinished?.Invoke();
             }

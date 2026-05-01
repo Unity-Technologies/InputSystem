@@ -493,14 +493,40 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Number of active <see cref="InputEventTrace.ReplayController"/> instances currently replaying.
-        /// When greater than zero, focus-based gating is bypassed so that replayed events reach the game
-        /// regardless of Game View focus. This affects event routing (A), disabled-device discard (B),
-        /// and UI module processing (C). See ISXB-1319.
+        /// Ref-counted flag that bypasses Game View focus gating for event processing.
+        /// When greater than zero, events are processed as if the Game View has focus,
+        /// regardless of actual focus state. This affects event routing, disabled-device
+        /// discard, and UI module processing.
         /// </summary>
-        internal int m_ActiveReplayCount;
+        /// <remarks>
+        /// Use <see cref="StartEditorEventPassthrough"/> / <see cref="StopEditorEventPassthrough"/>
+        /// to manage this counter. Follows the same pattern as
+        /// <c>AssetDatabase.StartAssetEditing/StopAssetEditing</c>.
+        /// </remarks>
+        /// <seealso cref="StartEditorEventPassthrough"/>
+        /// <seealso cref="StopEditorEventPassthrough"/>
+        private int m_EditorEventPassthroughCount;
 
-        internal bool isReplayActive => m_ActiveReplayCount > 0;
+        internal bool isEditorEventPassthroughActive => m_EditorEventPassthroughCount > 0;
+
+        /// <summary>
+        /// Signals that events should bypass Game View focus gating. Ref-counted:
+        /// each call must be balanced by a corresponding <see cref="StopEditorEventPassthrough"/>.
+        /// </summary>
+        internal static void StartEditorEventPassthrough()
+        {
+            ++s_Manager.m_EditorEventPassthroughCount;
+        }
+
+        /// <summary>
+        /// Signals that the caller no longer needs events to bypass Game View focus gating.
+        /// Decrements the ref count started by <see cref="StartEditorEventPassthrough"/>.
+        /// </summary>
+        internal static void StopEditorEventPassthrough()
+        {
+            if (s_Manager != null && s_Manager.m_EditorEventPassthroughCount > 0)
+                --s_Manager.m_EditorEventPassthroughCount;
+        }
 #endif // UNITY_EDITOR
 
 
@@ -514,7 +540,7 @@ namespace UnityEngine.InputSystem
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
-                     m_RunPlayerUpdatesInEditMode || applicationHasFocus || gameShouldGetInputRegardlessOfFocus || isReplayActive;
+                     m_RunPlayerUpdatesInEditMode || applicationHasFocus || gameShouldGetInputRegardlessOfFocus || isEditorEventPassthroughActive;
 #else
             applicationHasFocus || gameShouldGetInputRegardlessOfFocus;
 #endif
@@ -3386,7 +3412,7 @@ namespace UnityEngine.InputSystem
                     // focus loss — the replay intentionally re-injects events for those devices.
                     if (device != null && !device.enabled &&
 #if UNITY_EDITOR
-                        !isReplayActive &&
+                        !isEditorEventPassthroughActive &&
 #endif
                         currentEventType != DeviceRemoveEvent.Type &&
                         currentEventType != DeviceConfigurationEvent.Type &&
