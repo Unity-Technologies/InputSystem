@@ -1135,6 +1135,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 InputSystem.onAfterUpdate -= DeferredStopEditorEventPassthrough;
                 StopEditorEventPassthrough();
             }
+
 #endif
             /// <summary>
             /// Replay events recorded from <paramref name="recordedDevice"/> on device <paramref name="playbackDevice"/>.

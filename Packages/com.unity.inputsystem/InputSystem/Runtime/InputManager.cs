@@ -527,6 +527,7 @@ namespace UnityEngine.InputSystem
             if (InputSystem.s_Manager != null && InputSystem.s_Manager.m_EditorEventPassthroughCount > 0)
                 --InputSystem.s_Manager.m_EditorEventPassthroughCount;
         }
+
 #endif // UNITY_EDITOR
 
 
