@@ -42,7 +42,7 @@ done
 
 COMBINED=$(IFS='|'; echo "${FORBIDDEN_REGEX[*]}")
 
-GREP_OUTPUT=$(grep -rn --include='*.cs' --color=never -E "$COMBINED" "$RUNTIME_DIR" || true)
+GREP_OUTPUT=$(grep -rnw --include='*.cs' --color=never -E "$COMBINED" "$RUNTIME_DIR" || true)
 
 if [ "$INCLUDE_COMMENTS" = false ]; then
     VIOLATIONS=$(echo "$GREP_OUTPUT" | grep -Ev ':[0-9]+:[[:space:]]*//' || true)
