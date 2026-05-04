@@ -3,7 +3,7 @@ set -euo pipefail
 
 RUNTIME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/Packages/com.unity.inputsystem/InputSystem/Runtime"
 
-# PCRE2 regexes — \b prevents matching identifiers that merely contain these strings.
+# Rust regexes (no PCRE2 required) — \b prevents matching identifiers that merely contain these strings.
 # (\.[A-Za-z0-9_]+)* covers sub-namespaces (UnityEditor.UI, …Editor.Tools, …).
 # Add more lines as needed, e.g. '\bUnityEditorInternal(\.[A-Za-z0-9_]+)*\b'
 FORBIDDEN_REGEX=(
@@ -24,7 +24,7 @@ for arg in "$@"; do
 Usage: $(basename "$0") [OPTIONS]
 
 Check that Runtime code has no Editor namespace dependencies.
-Patterns are PCRE2; edit FORBIDDEN_REGEX in this script to add roots.
+Edit FORBIDDEN_REGEX in this script to add patterns.
 
 Options:
   --include-comments   Also flag references inside XML doc and // comments
@@ -39,13 +39,16 @@ done
 
 COMBINED=$(IFS='|'; echo "${FORBIDDEN_REGEX[*]}")
 
-if [ "$INCLUDE_COMMENTS" = false ]; then
-    PATTERN="^(?!\s*//).*(?:$COMBINED)"
-else
-    PATTERN="(?:$COMBINED)"
-fi
+PATTERN="(?:$COMBINED)"
 
-VIOLATIONS=$(rg --type cs --line-number --no-heading --color never --pcre2 "$PATTERN" "$RUNTIME_DIR" 2>/dev/null || true)
+RG_OUTPUT=$(rg --type cs --line-number --no-heading --color never "$PATTERN" "$RUNTIME_DIR" || true)
+
+if [ "$INCLUDE_COMMENTS" = false ]; then
+    # Filter out pure comment lines (/// and //) by checking the content portion (field 3+)
+    VIOLATIONS=$(echo "$RG_OUTPUT" | grep -Ev ':[0-9]+:[[:space:]]*//' || true)
+else
+    VIOLATIONS="$RG_OUTPUT"
+fi
 
 if [ -z "$VIOLATIONS" ]; then
     echo -e "${GREEN}PASS: No Editor namespace references found in Runtime code.${NC}"
