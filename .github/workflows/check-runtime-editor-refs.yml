@@ -16,8 +16,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install ripgrep
-        run: sudo apt-get install -y ripgrep
-
       - name: Check Runtime code has no Editor namespace references
         run: bash check-runtime-editor-refs.sh

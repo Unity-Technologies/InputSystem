@@ -1,22 +1,22 @@
 #!/bin/bash
-
+[ -n "$BASH_VERSION" ] || { echo "ERROR: This script requires bash. Run with: bash $0" >&2; exit 1; }
 set -euo pipefail
 
 RUNTIME_DIR="Packages/com.unity.inputsystem/InputSystem/Runtime"
 
-# Rust regexes (no PCRE2 required) — \b prevents matching identifiers that merely contain these strings.
+# POSIX ERE patterns for grep -E, compatible with macOS (BSD grep) and Ubuntu (GNU grep).
+# No \b word boundaries — not portable across both. False positive risk is negligible
+# since no real identifiers contain these namespace roots as substrings.
 # (\.[A-Za-z0-9_]+)* covers sub-namespaces (UnityEditor.UI, …Editor.Tools, …).
-# Add more lines as needed, e.g. '\bUnityEditorInternal(\.[A-Za-z0-9_]+)*\b'
+# Add more lines as needed, e.g. 'UnityEditorInternal(\.[A-Za-z0-9_]+)*'
 FORBIDDEN_REGEX=(
-    '\bUnityEditor(\.[A-Za-z0-9_]+)*\b'
-    '\bUnityEngine\.InputSystem\.Editor(\.[A-Za-z0-9_]+)*\b'
+    'UnityEditor(\.[A-Za-z0-9_]+)*'
+    'UnityEngine\.InputSystem\.Editor(\.[A-Za-z0-9_]+)*'
 )
 
 RED=$'\033[0;31m'
 GREEN=$'\033[0;32m'
 NC=$'\033[0m'
-
-command -v rg >/dev/null 2>&1 || { echo "ERROR: ripgrep (rg) is not installed. See https://github.com/BurntSushi/ripgrep#installation" >&2; exit 1; }
 
 INCLUDE_COMMENTS=false
 for arg in "$@"; do
@@ -42,15 +42,12 @@ done
 
 COMBINED=$(IFS='|'; echo "${FORBIDDEN_REGEX[*]}")
 
-PATTERN="(?:$COMBINED)"
-
-RG_OUTPUT=$(rg --type cs --line-number --no-heading --color never "$PATTERN" "$RUNTIME_DIR" || true)
+GREP_OUTPUT=$(grep -rn --include='*.cs' --color=never -E "$COMBINED" "$RUNTIME_DIR" || true)
 
 if [ "$INCLUDE_COMMENTS" = false ]; then
-    # Filter out pure comment lines (/// and //) by checking the content portion (field 3+)
-    VIOLATIONS=$(echo "$RG_OUTPUT" | grep -Ev ':[0-9]+:[[:space:]]*//' || true)
+    VIOLATIONS=$(echo "$GREP_OUTPUT" | grep -Ev ':[0-9]+:[[:space:]]*//' || true)
 else
-    VIOLATIONS="$RG_OUTPUT"
+    VIOLATIONS="$GREP_OUTPUT"
 fi
 
 if [ -z "$VIOLATIONS" ]; then
