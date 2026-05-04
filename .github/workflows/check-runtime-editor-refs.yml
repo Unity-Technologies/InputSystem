@@ -3,9 +3,9 @@ name: Check Editor references in Runtime code
 on:
   pull_request:
     types:
-      - edited
       - opened
       - synchronize
+      - reopened
     branches: [ "develop" ]
 
   workflow_dispatch:
