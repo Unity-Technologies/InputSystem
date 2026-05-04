@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
 set -euo pipefail
 
 RUNTIME_DIR="Packages/com.unity.inputsystem/InputSystem/Runtime"
@@ -11,9 +12,9 @@ FORBIDDEN_REGEX=(
     '\bUnityEngine\.InputSystem\.Editor(\.[A-Za-z0-9_]+)*\b'
 )
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m'
+RED=$'\033[0;31m'
+GREEN=$'\033[0;32m'
+NC=$'\033[0m'
 
 command -v rg >/dev/null 2>&1 || { echo "ERROR: ripgrep (rg) is not installed. See https://github.com/BurntSushi/ripgrep#installation" >&2; exit 1; }
 
