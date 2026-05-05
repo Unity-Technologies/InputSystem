@@ -321,7 +321,28 @@ namespace UnityEngine.InputSystem
                 if (bindings[i].isPartOfComposite)
                     continue;
                 if (!bindingMask.Matches(bindings[i]))
-                    continue;
+                {
+                    // Composites are filtered atomically: any matching part promotes the whole
+                    // composite, consistent with how the integer-index renderer at lines 440-492
+                    // already treats composites as one display unit; per-part filtering would
+                    // require a separate API.
+                    if (!bindings[i].isComposite)
+                        continue;
+                    var lastPartIndex = i + 1;
+                    while (lastPartIndex < bindings.Count && bindings[lastPartIndex].isPartOfComposite)
+                        ++lastPartIndex;
+                    var anyPartMatches = false;
+                    for (var partIndex = i + 1; partIndex < lastPartIndex; ++partIndex)
+                    {
+                        if (bindingMask.Matches(bindings[partIndex]))
+                        {
+                            anyPartMatches = true;
+                            break;
+                        }
+                    }
+                    if (!anyPartMatches)
+                        continue;
+                }
 
                 ////REVIEW: should this filter out bindings that are not resolving to any controls?
 
