@@ -16,42 +16,19 @@ namespace UnityEngine.InputSystem.Editor
         public const int kMaxEventsPerHour = 100; // default: 1000
         public const int kMaxNumberOfElements = 100; // default: 1000
 
-        /// <summary>
-        /// Enumeration type for code authoring APIs mapping to <see cref="InputActionSetupExtensions"/>.
-        /// </summary>
-        /// <remarks>
-        /// This enumeration type may be added to, but NEVER changed, since it would break older data.
-        /// </remarks>
-        public enum Api
-        {
-            AddBinding = 0,
-            AddCompositeBinding = 1,
-            ChangeBinding = 2,
-            ChangeCompositeBinding = 3,
-            Rename = 4,
-            AddControlScheme = 5,
-            RemoveControlScheme = 6,
-            ControlSchemeWithBindingGroup = 7,
-            ControlSchemeWithDevice = 8,
-            ControlSchemeWithRequiredDevice = 9,
-            ControlSchemeWithOptionalDevice = 10,
-            ControlSchemeOrWithRequiredDevice = 11,
-            ControlSchemeOrWithOptionalDevice = 12
-        }
-
-        private static readonly int[] m_Counters = new int[Enum.GetNames(typeof(Api)).Length];
+        private static readonly int[] m_Counters = new int[Enum.GetNames(typeof(InputAnalytics.AuthoringApi)).Length];
 
         /// <summary>
         /// Registers a call to the associated API.
         /// </summary>
-        /// <param name="api">Enumeration identifying the API.</param>
-        public static void Register(Api api)
+        /// <param name="authoringApi">Enumeration identifying the API.</param>
+        public static void Register(InputAnalytics.AuthoringApi authoringApi)
         {
             if (suppress)
                 return;
 
             // Note: Currently discards detailed information and only sets a boolean (aggregated) value.
-            ++m_Counters[(int)api];
+            ++m_Counters[(int)authoringApi];
         }
 
         /// <summary>

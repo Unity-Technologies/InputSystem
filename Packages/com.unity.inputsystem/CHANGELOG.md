@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed `buttonSouth` returning the state of the east button (and so on for all the compass named buttons) when using a Nintendo Switch Pro Controller on iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
 - Fixed `aButton` returning the state of the east button (and so on for all the letter named buttons) when using a Nintendo Switch Pro Controller on Standalone & iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
 - Fixed an issue where `UIToolkit` `ClickEvent` could be fired on Android after device rotation due to inactive touch state being replayed during action initial state checks [UUM-100125](https://jira.unity3d.com/browse/UUM-100125).
+- Fixed InputSystem.onAnyButtonPress fails to trigger when the device receives a touch [UUM-137930](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137930).
 - Fixed an incorrect ArraysHelper.HaveDuplicateReferences implementation that didn't use its arguments right [ISXB-1792] (https://github.com/Unity-Technologies/InputSystem/pull/2376)
 
 ### Changed

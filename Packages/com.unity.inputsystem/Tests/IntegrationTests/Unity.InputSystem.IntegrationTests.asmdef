@@ -1,18 +1,26 @@
 {
     "name": "Unity.InputSystem.IntegrationTests",
+    "rootNamespace": "",
     "references": [
         "GUID:75469ad4d38634e559750d17036d5f7c",
-        "GUID:dc04f38471c3a459fb4d31124ee9127d"
-    ],
-    "optionalUnityReferences": [
-        "TestAssemblies"
+        "GUID:dc04f38471c3a459fb4d31124ee9127d",
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:d46adbc216ac24e9a86f26d7a54b2384",
+        "GUID:92e8d8d0b9a5e4f44b24c3e04451d190"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
     "autoReferenced": false,
-    "defineConstraints": ["UNITY_INCLUDE_TESTS"],
-    "versionDefines": []
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS",
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
