@@ -253,11 +253,6 @@ internal class ActuationPressPointTests : CoreTestsFixture
         Set(gamepad.leftTrigger, 0.6f);
         Press(gamepad.buttonSouth);
 
-        //// https://jira.unity3d.com/browse/ISX-926
-        ////REVIEW: IsPressed() should probably be renamed. As is apparent from the calls here, it's not always
-        ////        readily apparent that the way it is defined ("actuation level at least at button press threshold")
-        ////        does not always connect to what it intuitively means for the specific control.
-
         Assert.That(gamepad.leftTrigger.IsPressed(), Is.True);
         Assert.That(gamepad.rightTrigger.IsPressed(), Is.False);
         Assert.That(gamepad.buttonSouth.IsPressed(), Is.True);
