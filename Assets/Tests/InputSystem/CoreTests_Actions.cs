@@ -9253,6 +9253,23 @@ partial class CoreTests
             Is.EqualTo("A/D"));
     }
 
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141423
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForBindingsOnAction_MixedGroupCompositeIsRenderedAtomicallyWhenAnyPartMatchesBindingMask()
+    {
+        var action = new InputAction();
+
+        action.AddCompositeBinding("1DAxis")
+            .With("Negative", "<Keyboard>/a", groups: "Keyboard")
+            .With("Positive", "<Mouse>/leftButton", groups: "Mouse");
+
+        Assert.That(action.GetBindingDisplayString(InputBinding.MaskByGroup("Keyboard")),
+            Is.EqualTo("A/Left Button"));
+        Assert.That(action.GetBindingDisplayString(InputBinding.MaskByGroup("Mouse")),
+            Is.EqualTo("A/Left Button"));
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1321175/
     [Test]
     [Category("Actions")]

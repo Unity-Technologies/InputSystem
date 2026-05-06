@@ -323,16 +323,13 @@ namespace UnityEngine.InputSystem
                 if (!bindingMask.Matches(bindings[i]))
                 {
                     // Composites are filtered atomically: any matching part promotes the whole
-                    // composite, consistent with how the integer-index renderer at lines 440-492
-                    // already treats composites as one display unit; per-part filtering would
-                    // require a separate API.
+                    // composite, consistent with how the index-based GetBindingDisplayString
+                    // overload below treats composites as one display unit; per-part filtering
+                    // would require a separate API.
                     if (!bindings[i].isComposite)
                         continue;
-                    var lastPartIndex = i + 1;
-                    while (lastPartIndex < bindings.Count && bindings[lastPartIndex].isPartOfComposite)
-                        ++lastPartIndex;
                     var anyPartMatches = false;
-                    for (var partIndex = i + 1; partIndex < lastPartIndex; ++partIndex)
+                    for (var partIndex = i + 1; partIndex < bindings.Count && bindings[partIndex].isPartOfComposite; ++partIndex)
                     {
                         if (bindingMask.Matches(bindings[partIndex]))
                         {
