@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Removed 32-bit compilation check for HID on Windows players, which had no impact anymore. (ISX-2543)
 - Migrated sample scenes to use Universal Render Pipeline (URP) with Built-in Render Pipeline fallback shaders. The URP package is now required to run the samples. (ISX-2343)
 - Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.
+- Changed the UI for `InputSystem.inputsettings` asset to use UI Toolkit framework.
 
 ### Added
 
