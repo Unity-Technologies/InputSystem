@@ -1134,7 +1134,8 @@ namespace UnityEngine.InputSystem
         /// in the devices state memory. For example, in the gamepad state, button north (bit position 4) will be evaluated before button
         /// east (bit position 5), so if both buttons were pressed in the given event, button north would be returned.
         /// Note that the function returns null if the <paramref name="eventPtr"/> is not a StateEvent or DeltaStateEvent.</remarks>
-        public static unsafe InputControl GetFirstButtonPressOrNull(this InputEventPtr eventPtr, float magnitude = -1, bool buttonControlsOnly = true)
+        public static unsafe InputControl GetFirstButtonPressOrNull(this InputEventPtr eventPtr, float magnitude = -1,
+            bool buttonControlsOnly = true)
         {
             if (eventPtr.type != StateEvent.Type && eventPtr.type != DeltaStateEvent.Type)
                 return null;
@@ -1150,8 +1151,9 @@ namespace UnityEngine.InputSystem
                 // default (not pressed) before this event.
                 var stateInEvent = control.GetStatePtrFromStateEvent(eventPtr);
                 var currentState = control.currentStatePtr;
-                if (stateInEvent != null ? !control.CompareValue(currentState, stateInEvent)
-                    : control.CompareValue(currentState, control.defaultStatePtr))
+                if (stateInEvent != null
+                        ? !control.CompareValue(currentState, stateInEvent)
+                        : control.CompareValue(currentState, control.defaultStatePtr))
                     continue;
                 if (buttonControlsOnly && !control.isButton)
                     continue;
