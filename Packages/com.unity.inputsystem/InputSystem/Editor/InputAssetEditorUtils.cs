@@ -20,7 +20,7 @@ namespace UnityEngine.InputSystem.Editor
             InvalidPath,
 
             /// <summary>
-            /// The dialog was canceled by the user and the path is invalid.
+            /// The dialog was cancelled by the user and the path is invalid.
             /// </summary>
             Cancelled,
 
@@ -128,7 +128,12 @@ namespace UnityEngine.InputSystem.Editor
                 PopulateMakeActiveGui(container, target, target, entity, apply, allowAssignActive);
             })
             {
-                text = $"Assign as the {entity}"
+                text = $"Assign as the {entity}",
+                style =
+                {
+                    minHeight = 30,
+                    whiteSpace = WhiteSpace.Normal
+                }
             };
             assignButton.SetEnabled(allowAssignActive);
             container.Add(assignButton);
