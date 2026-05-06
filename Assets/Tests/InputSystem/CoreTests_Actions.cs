@@ -631,7 +631,9 @@ partial class CoreTests
 
         using (var trace = new InputActionTrace(action))
         {
-            runtime.PlayerFocusLost();
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
             Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
             InputSystem.Update(InputUpdateType.Editor);
 
@@ -661,13 +663,13 @@ partial class CoreTests
             // could just rely on order of event. Which means this test work for a fixed timestamp and it should
             // changed accordingly.
             currentTime += 1.0f;
-            runtime.PlayerFocusLost();
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
             currentTime += 1.0f;
             // Queuing an event like it would be in the editor when the GameView is out of focus.
             Set(mouse.position, new Vector2(0.234f, 0.345f) , queueEventOnly: true);
             currentTime += 1.0f;
             // Gaining focus like it would happen in the editor when the GameView regains focus.
-            runtime.PlayerFocusGained();
+            ScheduleFocusChangedEvent(applicationHasFocus: true);
             currentTime += 1.0f;
             // This emulates a device sync that happens when the player regains focus through an IOCTL command.
             // That's why it also has it's time incremented.
@@ -720,14 +722,15 @@ partial class CoreTests
 
             trace.Clear();
 
-            runtime.PlayerFocusLost();
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
+            InputSystem.Update(InputUpdateType.Dynamic);
             currentTime = 10;
 
             InputSystem.Update(InputUpdateType.Editor);
 
             Assert.That(trace, Is.Empty);
 
-            runtime.PlayerFocusGained();
+            ScheduleFocusChangedEvent(applicationHasFocus: true);
             InputSystem.Update(InputUpdateType.Dynamic);
 
             actions = trace.ToArray();
@@ -1398,6 +1401,45 @@ partial class CoreTests
             InputSystem.Update();
 
             Assert.That(trace, Is.Empty);
+        }
+    }
+
+    // Regression test for UUM-100125.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InitialStateCheckAfterConfigurationChange_DoesNotTriggerForInactiveTouch()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+        var action = new InputAction(type: InputActionType.Value, binding: "<Touchscreen>/primaryTouch/position");
+        action.Enable();
+
+        // Run the first initial state check from enabling the action.
+        InputSystem.Update();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            BeginTouch(1, new Vector2(123, 234));
+            EndTouch(1, new Vector2(345, 456));
+
+            Assert.That(touchscreen.primaryTouch.isInProgress, Is.False);
+            Assert.That(touchscreen.primaryTouch.position.ReadValue(), Is.Not.EqualTo(default(Vector2)));
+
+            trace.Clear();
+
+            // Configuration change causes full re-resolve and schedules initial state check.
+            InputSystem.QueueConfigChangeEvent(touchscreen);
+            InputSystem.Update();
+            InputSystem.Update();
+
+            // Full re-resolve may cancel the current action state. What must NOT happen is a synthetic
+            // Started/Performed pair from persisted inactive touch state.
+            Assert.AreEqual(1, trace.count);
+            foreach (var eventPtr in trace)
+            {
+                // The trace should only contain a Canceled event for the action.
+                Assert.AreEqual(InputActionPhase.Canceled, eventPtr.phase,
+                    $"inactive touch state should not produce action callbacks, but received {eventPtr.phase}.");
+            }
         }
     }
 
@@ -12481,17 +12523,20 @@ partial class CoreTests
 
         // Now when enabling actionMap ..
         actionMap.Enable();
-        // On the following update we will trigger OnBeforeUpdate which will rise started/performed
-        // from InputActionState.OnBeforeInitialUpdate as controls are "actuated"
+        // Inactive touches (ended before action was enabled) must NOT produce started/performed from
+        // OnBeforeInitialUpdate. Their persisted state (position, touchId) is non-default due to
+        // dontReset, but only TouchControl.isInProgress should be considered for initial-state check.
+        // Related to UUM-100125 and Actions_InitialStateCheckAfterConfigurationChange_DoesNotTriggerForInactiveTouch.
         InputSystem.Update();
-        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 0)); // started+performed arrive from OnBeforeUpdate
+        Assert.That(values.Count, Is.EqualTo(0));
         values.Clear();
 
-        // Now subsequent touches should not be ignored
         BeginTouch(200, new Vector2(1, 1));
-        Assert.That(values.Count, Is.EqualTo(1));
-        Assert.That(values[0].InputId, Is.EqualTo(200));
-        Assert.That(values[0].Position, Is.EqualTo(new Vector2(1, 1)));
+        // If prepopulated, action was never actuated (synthetic initial-check is suppressed),
+        // so BeginTouch fires started+performed (2 events).
+        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 1));
+        Assert.That(values[values.Count - 1].InputId, Is.EqualTo(200));
+        Assert.That(values[values.Count - 1].Position, Is.EqualTo(new Vector2(1, 1)));
     }
 
     // FIX: This test is currently checking if shortcut support is enabled by testing that the unwanted behaviour exists.

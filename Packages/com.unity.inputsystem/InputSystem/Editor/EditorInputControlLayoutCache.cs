@@ -248,7 +248,12 @@ namespace UnityEngine.InputSystem.Editor
         {
             var manager = InputSystem.manager;
             if (manager.m_LayoutRegistrationVersion == s_LayoutRegistrationVersion)
+            {
+                // Callers will still use InputControlLayout.cache; ensure we hold a ref (e.g. after InputSystem.Reset in tests).
+                if (InputControlLayout.s_CacheInstanceRef == 0)
+                    s_LayoutCacheRef = InputControlLayout.CacheRef();
                 return;
+            }
 
             Clear();
 

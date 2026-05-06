@@ -1,10 +1,10 @@
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEditor;
 using UnityEngine.UIElements;
 
-#if UNITY_EDITOR
 namespace UnityEngine.InputSystem.Editor
 {
     /// <summary>
@@ -106,4 +106,4 @@ namespace UnityEngine.InputSystem.Editor
         private string[] m_EnumDisplayNames;
     }
 }
- #endif // UNITY_EDITOR
+#endif // UNITY_EDITOR

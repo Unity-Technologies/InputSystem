@@ -12,6 +12,7 @@ using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.InputSystem.XR;
+using UnityEngineInternal.Input;
 #if UNITY_6000_5_OR_NEWER
 using UnityEngine.Assemblies;
 #endif
@@ -628,7 +629,7 @@ namespace UnityEngine.InputSystem
         public void BeginTouch(int touchId, Vector2 position, bool queueEventOnly = false, Touchscreen screen = null,
             double time = -1, double timeOffset = 0, byte displayIndex = 0)
         {
-            SetTouch(touchId, TouchPhase.Began, position, 1, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset, displayIndex: displayIndex);
+            SetTouch(touchId, TouchPhase.Began, position, pressure: 1, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset, displayIndex: displayIndex);
         }
 
         public void BeginTouch(int touchId, Vector2 position, float pressure, bool queueEventOnly = false, Touchscreen screen = null,
@@ -641,7 +642,7 @@ namespace UnityEngine.InputSystem
         public void MoveTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, TouchPhase.Moved, position, 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Moved, position, pressure: 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
         public void MoveTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
@@ -654,7 +655,7 @@ namespace UnityEngine.InputSystem
         public void EndTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0, byte displayIndex = 0)
         {
-            SetTouch(touchId, TouchPhase.Ended, position, 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset, displayIndex: displayIndex);
+            SetTouch(touchId, TouchPhase.Ended, position, pressure: 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset, displayIndex: displayIndex);
         }
 
         public void EndTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
@@ -667,7 +668,7 @@ namespace UnityEngine.InputSystem
         public void CancelTouch(int touchId, Vector2 position, Vector2 delta = default, bool queueEventOnly = false,
             Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, TouchPhase.Canceled, position, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
+            SetTouch(touchId, TouchPhase.Canceled, position, pressure: 1, delta, queueEventOnly: queueEventOnly, screen: screen, time: time, timeOffset: timeOffset);
         }
 
         public void CancelTouch(int touchId, Vector2 position, float pressure, Vector2 delta = default, bool queueEventOnly = false,
@@ -680,7 +681,7 @@ namespace UnityEngine.InputSystem
         public void SetTouch(int touchId, TouchPhase phase, Vector2 position, Vector2 delta = default,
             bool queueEventOnly = true, Touchscreen screen = null, double time = -1, double timeOffset = 0)
         {
-            SetTouch(touchId, phase, position, 1, delta: delta, queueEventOnly: queueEventOnly, screen: screen, time: time,
+            SetTouch(touchId, phase, position, pressure: 1, delta: delta, queueEventOnly: queueEventOnly, screen: screen, time: time,
                 timeOffset: timeOffset);
         }
 
@@ -838,6 +839,23 @@ namespace UnityEngine.InputSystem
 
             // If it's not a control that we know how to trigger - it's not implemented yet
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Utility function for manually scheduling an InputFocusEvent.
+        /// This is useful for testing how the system reacts to focus changes.
+        /// </summary>
+        /// <param name="applicationHasFocus">The focus state to be scheduled.</param>
+        public unsafe void ScheduleFocusChangedEvent(bool applicationHasFocus)
+        {
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+            // For now we only set application focus. In the future we want to add support for other focus as well
+            FocusFlags state = applicationHasFocus ? FocusFlags.ApplicationFocus : FocusFlags.None;
+            var evt = InputFocusEvent.Create(state);
+            InputSystem.QueueEvent(new InputEventPtr((InputEvent*)&evt.baseEvent));
+#else
+            runtime.InvokePlayerFocusChanged(applicationHasFocus);
+#endif
         }
 
         /// <summary>
@@ -1035,7 +1053,7 @@ namespace UnityEngine.InputSystem
             return Application.isEditor && !Application.isPlaying;
         }
 
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         /// <summary>
         /// Represents an analytics registration event captured by test harness.
         /// </summary>
@@ -1130,6 +1148,6 @@ namespace UnityEngine.InputSystem
             CollectAnalytics((_) => true);
         }
 
-        #endif
+#endif
     }
 }
