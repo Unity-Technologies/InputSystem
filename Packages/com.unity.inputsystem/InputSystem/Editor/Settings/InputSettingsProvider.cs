@@ -500,7 +500,6 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUIUtility.SetIconForObject(target, icon);
         }
 
-        //public override void OnInspectorGUI()
         public override VisualElement CreateInspectorGUI()
         {
             var root = new VisualElement();
