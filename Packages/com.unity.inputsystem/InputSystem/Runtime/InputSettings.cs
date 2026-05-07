@@ -988,7 +988,10 @@ namespace UnityEngine.InputSystem
         /// * support inspector view which only work in IMGUI for now.
         /// * prevent the UI to be rendered in IMGUI and UI Toolkit in the Input Actions Editor window.
         /// </summary>
-        public bool useIMGUIEditorForAssets => UnityEditor.EditorGUI.indentLevel > 0 || IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets);
+        public bool useIMGUIEditorForAssets =>
+            (s_GetIsInspectorIndented?.Invoke() == true) || IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets);
+
+        internal static Func<bool> s_GetIsInspectorIndented;
 #endif
 
         private static bool CompareFloats(float a, float b)

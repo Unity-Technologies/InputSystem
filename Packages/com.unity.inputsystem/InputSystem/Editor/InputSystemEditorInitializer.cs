@@ -277,6 +277,8 @@ namespace UnityEngine.InputSystem.Editor
             InputManager.s_GetProjectWideActions = () => ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
 
             InputActionReference.s_CheckImmutableReference = CheckImmutableInputActionReference;
+
+            InputSettings.s_GetIsInspectorIndented = () => EditorGUI.indentLevel > 0;
         }
 
         /// <summary>
