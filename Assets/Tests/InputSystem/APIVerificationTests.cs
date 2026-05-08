@@ -12,8 +12,8 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using HtmlAgilityPack;
 using UnityEngine.InputSystem.DualShock;
-using UnityEngine.InputSystem.Editor;
 using UnityEngine;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.iOS.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.TestTools;
@@ -212,12 +212,12 @@ class APIVerificationTests
 
     [Test]
     [Category("API")]
-    [TestCase("Keyboard", "Devices/Precompiled/FastKeyboard.cs")]
-    [TestCase("Mouse", "Devices/Precompiled/FastMouse.cs")]
-    [TestCase("Touchscreen", "Devices/Precompiled/FastTouchscreen.cs")]
+    [TestCase("Keyboard", "FastKeyboard.cs")]
+    [TestCase("Mouse", "FastMouse.cs")]
+    [TestCase("Touchscreen", "FastTouchscreen.cs")]
     public void API_PrecompiledLayoutsAreUpToDate(string layoutName, string filePath)
     {
-        var fullPath = "Packages/com.unity.inputsystem/InputSystem/" + filePath;
+        var fullPath = "Packages/com.unity.inputsystem/InputSystem/Runtime/Devices/Precompiled/" + filePath;
         var existingCode = File.ReadAllText(fullPath);
 
         // May be a git checkout with CRLF auto-conversion on. Strip all '\r' characters.
@@ -958,7 +958,7 @@ class APIVerificationTests
     [Category("API")]
     public void API_DefaultInputActionsClassIsUpToDate()
     {
-        const string assetFile = "Packages/com.unity.inputsystem/InputSystem/Plugins/PlayerInput/DefaultInputActions.inputactions";
+        const string assetFile = "Packages/com.unity.inputsystem/InputSystem/Runtime/Plugins/PlayerInput/DefaultInputActions.inputactions";
         Assert.That(File.Exists(assetFile), Is.True);
 
         var actions = new DefaultInputActions();

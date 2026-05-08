@@ -3,6 +3,7 @@
 using System;
 using System.IO;
 using UnityEditor;
+using UnityEngine.UIElements;
 
 namespace UnityEngine.InputSystem.Editor
 {
@@ -82,12 +83,32 @@ namespace UnityEngine.InputSystem.Editor
             return asset;
         }
 
-        public static void DrawMakeActiveGui<T>(T current, T target, string targetName, string entity, Action<T> apply, bool allowAssignActive = true)
+        public static VisualElement CreateMakeActiveGui<T>(Func<T> getCurrent, T target, string targetName, string entity,
+            Action<T> apply, Action<Action> subscribeToChanges, Action<Action> unsubscribeFromChanges,
+            bool allowAssignActive = true)
             where T : ScriptableObject
         {
+            var container = new VisualElement();
+
+            void Refresh() => PopulateMakeActiveGui(container, getCurrent(), target, entity, apply, allowAssignActive);
+
+            Refresh();
+
+            // Subscribe for as long as the element is part of a panel, matching the pattern used in InputParameterEditor.
+            container.RegisterCallback<AttachToPanelEvent>(_ => subscribeToChanges(Refresh));
+            container.RegisterCallback<DetachFromPanelEvent>(_ => unsubscribeFromChanges(Refresh));
+
+            return container;
+        }
+
+        private static void PopulateMakeActiveGui<T>(VisualElement container, T current, T target, string entity, Action<T> apply, bool allowAssignActive)
+            where T : ScriptableObject
+        {
+            container.Clear();
+
             if (current == target)
             {
-                EditorGUILayout.HelpBox($"These actions are assigned as the {entity}.", MessageType.Info);
+                container.Add(new HelpBox($"These actions are assigned as the {entity}.", HelpBoxMessageType.Info));
                 return;
             }
 
@@ -96,11 +117,26 @@ namespace UnityEngine.InputSystem.Editor
                 currentlyActiveAssetsPath = AssetDatabase.GetAssetPath(current);
             if (!string.IsNullOrEmpty(currentlyActiveAssetsPath))
                 currentlyActiveAssetsPath = $" The actions currently assigned as the {entity} are: {currentlyActiveAssetsPath}. ";
-            EditorGUILayout.HelpBox($"These actions are not assigned as the {entity} for the Input System. {currentlyActiveAssetsPath??""}", MessageType.Warning);
-            GUI.enabled = allowAssignActive;
-            if (GUILayout.Button($"Assign as the {entity}", EditorStyles.miniButton))
+
+            container.Add(new HelpBox(
+                $"These actions are not assigned as the {entity} for the Input System. {currentlyActiveAssetsPath ?? ""}",
+                HelpBoxMessageType.Warning));
+
+            var assignButton = new Button(() =>
+            {
                 apply(target);
-            GUI.enabled = true;
+                PopulateMakeActiveGui(container, target, target, entity, apply, allowAssignActive);
+            })
+            {
+                text = $"Assign as the {entity}",
+                style =
+                {
+                    minHeight = 30,
+                    whiteSpace = WhiteSpace.Normal
+                }
+            };
+            assignButton.SetEnabled(allowAssignActive);
+            container.Add(assignButton);
         }
 
         public static bool IsValidFileExtension(string path)
