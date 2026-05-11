@@ -125,7 +125,6 @@ namespace UnityEngine.InputSystem
         private InputEventPtr m_CurrentlyProcessingThisEvent;
         private Action m_OnBeforeUpdateDelegate;
         private Action m_OnAfterUpdateDelegate;
-
         private static readonly ProfilerMarker k_InputInitialActionStateCheckMarker = new ProfilerMarker("InitialActionStateCheck");
         private static readonly ProfilerMarker k_InputActionResolveConflictMarker = new ProfilerMarker("InputActionResolveConflict");
         private static readonly ProfilerMarker k_InputActionCallbackMarker = new ProfilerMarker("InputActionCallback");
@@ -650,8 +649,7 @@ namespace UnityEngine.InputSystem
                     var newControlIndex = FindControlIndexOnBinding(bindingIndex, control);
 
                     // This assert is used by test: Actions_ActiveBindingsHaveCorrectBindingIndicesAfterBindingResolution
-                    Debug.Assert(newControlIndex != kInvalidIndex,
-                        "Could not find active control after binding resolution");
+                    Debug.Assert(newControlIndex != kInvalidIndex, "Could not find active control after binding resolution");
                     if (newControlIndex != kInvalidIndex)
                     {
                         newActionState.phase = oldActionState.phase;
@@ -663,7 +661,8 @@ namespace UnityEngine.InputSystem
                     }
 
                     // Also bring over interaction states.
-                    Debug.Assert(newBindingState.interactionCount == oldBindingState.interactionCount, "Interaction count on binding must not have changed when doing a control-only resolve");
+                    Debug.Assert(newBindingState.interactionCount == oldBindingState.interactionCount,
+                        "Interaction count on binding must not have changed when doing a control-only resolve");
                     for (var n = 0; n < newBindingState.interactionCount; ++n)
                     {
                         ref var oldInteractionState = ref oldState.interactionStates[oldBindingState.interactionStartIndex + n];
@@ -835,7 +834,8 @@ namespace UnityEngine.InputSystem
         public void ResetActionState(int actionIndex, InputActionPhase toPhase = InputActionPhase.Waiting, bool hardReset = false)
         {
             Debug.Assert(actionIndex >= 0 && actionIndex < totalActionCount, "Action index out of range when resetting action");
-            Debug.Assert(toPhase == InputActionPhase.Waiting || toPhase == InputActionPhase.Disabled, "Phase must be Waiting or Disabled");
+            Debug.Assert(toPhase == InputActionPhase.Waiting || toPhase == InputActionPhase.Disabled,
+                "Phase must be Waiting or Disabled");
 
             // If the action in started or performed phase, cancel it first.
             var actionState = &actionStates[actionIndex];
@@ -867,7 +867,8 @@ namespace UnityEngine.InputSystem
                     // No interactions. Cancel the action directly.
 
                     Debug.Assert(actionState->bindingIndex != kInvalidIndex, "Binding index on trigger state is invalid");
-                    Debug.Assert(bindingStates[actionState->bindingIndex].interactionCount == 0, "Action has been triggered but apparently not from an interaction yet there's interactions on the binding that got triggered?!?");
+                    Debug.Assert(bindingStates[actionState->bindingIndex].interactionCount == 0,
+                        "Action has been triggered but apparently not from an interaction yet there's interactions on the binding that got triggered?!?");
 
                     if (actionState->phase != InputActionPhase.Canceled)
                         ChangePhaseOfAction(InputActionPhase.Canceled, ref actionStates[actionIndex],
@@ -1303,8 +1304,7 @@ namespace UnityEngine.InputSystem
                 if (!bindingState.initialStateCheckPending)
                     continue;
 
-                Debug.Assert(!bindingState.isPartOfComposite,
-                    "Initial state check flag must be set on composite, not on its parts");
+                Debug.Assert(!bindingState.isPartOfComposite, "Initial state check flag must be set on composite, not on its parts");
                 bindingState.initialStateCheckPending = false;
 
                 var controlStartIndex = bindingState.controlStartIndex;
@@ -1346,7 +1346,6 @@ namespace UnityEngine.InputSystem
                     }
                 }
             }
-
             manager.FireStateChangeNotifications();
 
             k_InputInitialActionStateCheckMarker.End();
@@ -1380,16 +1379,14 @@ namespace UnityEngine.InputSystem
                 return;
 #endif
 
-            SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex,
-                out var bindingIndex);
+            SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
             ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
         }
 
         void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time,
             long mapControlAndBindingIndex, int interactionIndex)
         {
-            SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex,
-                out var bindingIndex);
+            SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
             ProcessTimeout(time, mapIndex, controlIndex, bindingIndex, interactionIndex);
         }
 
@@ -1564,7 +1561,8 @@ namespace UnityEngine.InputSystem
                     }
 
                     // Check if we should suppress interaction processing notifications
-                    m_Suppressed = (eventPtr != null) && eventPtr.handled && InputSystem.manager.inputEventHandledPolicy == InputEventHandledPolicy.SuppressActionEventNotifications;
+                    m_Suppressed = (eventPtr != null) && eventPtr.handled &&
+                        InputSystem.manager.inputEventHandledPolicy == InputEventHandledPolicy.SuppressActionEventNotifications;
 
                     // Check if we have multiple concurrent actuations on the same action. This may lead us
                     // to ignore certain inputs (e.g. when we get an input of lesser magnitude while already having
@@ -2324,7 +2322,8 @@ namespace UnityEngine.InputSystem
                     for (var i = 0; i < numInteractions; ++i)
                     {
                         var index = interactionStartIndex + i;
-                        if (index != trigger.interactionIndex && (interactionStates[index].phase == InputActionPhase.Started || interactionStates[index].phase == InputActionPhase.Performed))
+                        if (index != trigger.interactionIndex && (interactionStates[index].phase == InputActionPhase.Started ||
+                                                                  interactionStates[index].phase == InputActionPhase.Performed))
                         {
                             // Trigger start.
                             var startTime = interactionStates[index].startTime;
