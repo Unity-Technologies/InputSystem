@@ -57,7 +57,6 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         public float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
 
-
         /// <summary>
         /// Default-initialize the control.
         /// </summary>
