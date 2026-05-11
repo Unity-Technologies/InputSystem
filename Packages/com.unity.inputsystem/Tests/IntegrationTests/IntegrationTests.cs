@@ -3,6 +3,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.LowLevel;
 using UnityEngine.Scripting;
 using UnityEngine.TestTools;
 #if UNITY_EDITOR
@@ -100,6 +101,54 @@ public class IntegrationTests
         finally
         {
             InputSystem.RemoveDevice(keyboard);
+        }
+    }
+
+    // Regression test for UUM-140343: resetting the player loop to the engine
+    // default (e.g. user code calling PlayerLoop.SetPlayerLoop(GetDefaultPlayerLoop()))
+    // wipes any subsystem the InputSystem injected into PlayerLoop.Initialization.
+    // Without re-injection / a fallback path, input state buffers stop being
+    // switched correctly between editor and player updates, and FixedUpdate sees
+    // stale input data.
+    [UnityTest]
+    [Category("Integration")]
+    public IEnumerator Integration_InputUpdatesContinue_AfterResettingPlayerLoopToDefault()
+    {
+        var originalPlayerLoop = PlayerLoop.GetCurrentPlayerLoop();
+
+        var addedMouse = false;
+        var mouse = InputSystem.GetDevice<Mouse>();
+        if (mouse == null)
+        {
+            mouse = InputSystem.AddDevice<Mouse>();
+            addedMouse = true;
+        }
+
+        try
+        {
+            // Reproduce the user scenario: reset the player loop to default mid-play.
+            PlayerLoop.SetPlayerLoop(PlayerLoop.GetDefaultPlayerLoop());
+
+            // Let one frame go by so any re-injection / detection has a chance to run.
+            yield return null;
+
+            // Queue a left-button-down event for the mouse.
+            InputSystem.QueueStateEvent(mouse, new MouseState().WithButton(MouseButton.Left));
+
+            // Wait for the next FixedUpdate phase. The InputSystem should have
+            // processed the queued event by the time FixedUpdate runs.
+            yield return new WaitForFixedUpdate();
+
+            Assert.That(mouse.leftButton.isPressed, Is.True,
+                "Expected LMB state to be observed in FixedUpdate after PlayerLoop was reset to default. " +
+                "If this fails with isPressed=False, the bug from UUM-140343 is reproduced.");
+        }
+        finally
+        {
+            // Restore the player loop so sibling tests are not contaminated.
+            PlayerLoop.SetPlayerLoop(originalPlayerLoop);
+            if (addedMouse)
+                InputSystem.RemoveDevice(mouse);
         }
     }
 
