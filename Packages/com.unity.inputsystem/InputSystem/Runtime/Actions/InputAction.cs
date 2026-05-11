@@ -604,7 +604,6 @@ namespace UnityEngine.InputSystem
                     if (controlIndex != InputActionState.kInvalidIndex)
                         return state.controls[controlIndex];
                 }
-
                 return null;
             }
         }
@@ -687,7 +686,6 @@ namespace UnityEngine.InputSystem
         /// ProfilerMarker for measuring the enabling/disabling of InputActions.
         /// </summary>
         static readonly ProfilerMarker k_InputActionEnableProfilerMarker = new ProfilerMarker("InputAction.Enable");
-
         static readonly ProfilerMarker k_InputActionDisableProfilerMarker = new ProfilerMarker("InputAction.Disable");
 
         /// <summary>
@@ -836,7 +834,6 @@ namespace UnityEngine.InputSystem
                     str += control.path;
                     isFirst = false;
                 }
-
                 str += "]";
             }
 
@@ -1136,8 +1133,7 @@ namespace UnityEngine.InputSystem
         public void Reset()
         {
             var state = GetOrCreateActionMap().m_State;
-            state?.ResetActionState(m_ActionIndexInState,
-                toPhase: enabled ? InputActionPhase.Waiting : InputActionPhase.Disabled, hardReset: true);
+            state?.ResetActionState(m_ActionIndexInState, toPhase: enabled ? InputActionPhase.Waiting : InputActionPhase.Disabled, hardReset: true);
         }
 
         /// <summary>
@@ -1193,7 +1189,6 @@ namespace UnityEngine.InputSystem
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 return actionStatePtr->isPressed;
             }
-
             return false;
         }
 
@@ -1210,7 +1205,6 @@ namespace UnityEngine.InputSystem
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
                 return actionStatePtr->phase.IsInProgress();
             }
-
             return false;
         }
 
@@ -1769,10 +1763,8 @@ namespace UnityEngine.InputSystem
 
                     if (interactionState.totalTimeoutCompletionTimeRemaining > 0)
                     {
-                        return (interactionState.totalTimeoutCompletionDone +
-                            timerCompletion * interactionState.timerDuration) /
-                            (interactionState.totalTimeoutCompletionDone +
-                                interactionState.totalTimeoutCompletionTimeRemaining);
+                        return (interactionState.totalTimeoutCompletionDone + timerCompletion * interactionState.timerDuration) /
+                            (interactionState.totalTimeoutCompletionDone + interactionState.totalTimeoutCompletionTimeRemaining);
                     }
                     else
                     {
@@ -1787,11 +1779,9 @@ namespace UnityEngine.InputSystem
         }
 
         ////REVIEW: it would be best if these were InternedStrings; however, for serialization, it has to be strings
-        [Tooltip(
-            "Human readable name of the action. Must be unique within its action map (case is ignored). Can be changed "
+        [Tooltip("Human readable name of the action. Must be unique within its action map (case is ignored). Can be changed "
             + "without breaking references to the action.")]
-        [SerializeField]
-        internal string m_Name;
+        [SerializeField] internal string m_Name;
 
         [Tooltip("Determines how the action triggers.\n"
             + "\n"
@@ -1805,21 +1795,16 @@ namespace UnityEngine.InputSystem
             + "\n"
             + "A Pass-Through action will not explicitly start and will never cancel. Instead, for every value change on any bound control, "
             + "the action will perform.")]
-        [SerializeField]
-        internal InputActionType m_Type;
+        [SerializeField] internal InputActionType m_Type;
 
         [FormerlySerializedAs("m_ExpectedControlLayout")]
-        [Tooltip(
-            "The type of control expected by the action (e.g. \"Digital\" for buttons, \"Vector2\" for sticks). This will limit the controls shown "
+        [Tooltip("The type of control expected by the action (e.g. \"Digital\" for buttons, \"Vector2\" for sticks). This will limit the controls shown "
             + "when setting up bindings in the UI and will also limit which controls can be bound interactively to the action.")]
-        [SerializeField]
-        internal string m_ExpectedControlType;
+        [SerializeField] internal string m_ExpectedControlType;
 
-        [Tooltip(
-            "Unique ID of the action (GUID). Used to reference the action from bindings such that actions can be renamed "
+        [Tooltip("Unique ID of the action (GUID). Used to reference the action from bindings such that actions can be renamed "
             + "without breaking references.")]
-        [SerializeField]
-        internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
+        [SerializeField] internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
 
         [SerializeField] internal string m_Processors;
         [SerializeField] internal string m_Interactions;
@@ -2456,9 +2441,9 @@ namespace UnityEngine.InputSystem
                 var value = default(TValue);
                 if (m_State != null)
                 {
-                    value = phase.IsInProgress()
-                        ? m_State.ReadValue<TValue>(bindingIndex, controlIndex)
-                        : m_State.ApplyProcessors(bindingIndex, value);
+                    value = phase.IsInProgress() ?
+                        m_State.ReadValue<TValue>(bindingIndex, controlIndex) :
+                        m_State.ApplyProcessors(bindingIndex, value);
                 }
 
                 return value;
@@ -2612,8 +2597,7 @@ namespace UnityEngine.InputSystem
             /// </example>
             public override string ToString()
             {
-                return
-                    $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
+                return $"{{ action={action} phase={phase} time={time} control={control} value={ReadValueAsObject()} interaction={interaction} }}";
             }
         }
     }
