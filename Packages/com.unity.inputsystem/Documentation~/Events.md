@@ -223,6 +223,9 @@ trace.Dispose();
 
 Dispose event traces after use, so that they do not leak memory on the unmanaged (C++) memory heap.
 
+> [!NOTE]
+> **Keyboard text input is not replayed to UI text fields.** Keyboard state (key presses) is captured and replayed correctly and remains accessible via `Keyboard.current`. However, there is a known limitation with character delivery to UI Framework components (uGUI `InputField` or UI Toolkit `TextField`). These components receive text through a separate native pipeline that is not fed by event replay. As a result, text typed into UI text fields during recording will not appear during playback.
+
 You can also write event traces out to files/streams, load them back in, and replay recorded streams.
 
 ```CSharp

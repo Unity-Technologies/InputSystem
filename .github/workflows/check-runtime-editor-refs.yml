@@ -1,0 +1,20 @@
+name: Check Editor references in Runtime code
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches: [ "develop" ]
+
+  workflow_dispatch:
+
+jobs:
+  check-runtime-editor-refs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Runtime code has no Editor namespace references
+        run: bash check-runtime-editor-refs.sh
