@@ -72,8 +72,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <remarks>
         /// The control is marked as <see cref="InputControl.synthetic"/>.
         /// </remarks>
-        [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1",
-            synthetic = true, displayName = "Up")]
+        [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Up")]
         // Set min&max on XY axes. We do this here as the documentation generator will not be happy
         // if we place this above the doc comment.
         // Also puts AxisDeadzones on the axes.
@@ -88,8 +87,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <remarks>
         /// The control is marked as <see cref="InputControl.synthetic"/>.
         /// </remarks>
-        [InputControl(useStateFrom = "y", processors = "axisDeadzone",
-            parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Down")]
+        [InputControl(useStateFrom = "y", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Down")]
         public ButtonControl down { get; set; }
 
         /// <summary>
@@ -99,8 +97,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <remarks>
         /// The control is marked as <see cref="InputControl.synthetic"/>.
         /// </remarks>
-        [InputControl(useStateFrom = "x", processors = "axisDeadzone",
-            parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Left")]
+        [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=-1,clampMax=0,invert", synthetic = true, displayName = "Left")]
         public ButtonControl left { get; set; }
 
         /// <summary>
@@ -110,8 +107,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <remarks>
         /// The control is marked as <see cref="InputControl.synthetic"/>.
         /// </remarks>
-        [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1",
-            synthetic = true, displayName = "Right")]
+        [InputControl(useStateFrom = "x", processors = "axisDeadzone", parameters = "clamp=2,clampMin=0,clampMax=1", synthetic = true, displayName = "Right")]
         public ButtonControl right { get; set; }
 
         protected override void FinishSetup()
