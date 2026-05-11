@@ -997,7 +997,11 @@ namespace UnityEngine.InputSystem.UI
             // if running in the background is enabled, we already have rules in place what kind of input
             // is allowed through and what isn't. And for the input that *IS* allowed through, the UI should
             // react.
-            get => explictlyIgnoreFocus || InputRuntime.s_Instance.runInBackground;
+            get => explictlyIgnoreFocus || InputRuntime.s_Instance.runInBackground
+#if UNITY_EDITOR
+            || InputSystem.s_Manager.isEditorEventPassthroughActive
+#endif
+            ;
         }
 
         /// <summary>
