@@ -58,8 +58,6 @@ namespace UnityEngine.InputSystem.Controls
 
         float IActuationPressPoint.pressPoint => pressPoint;
 
-        float IActuationPressPoint.pressPointOrDefault => pressPointOrDefault;
-
         /// <summary>
         /// Default-initialize the control.
         /// </summary>
