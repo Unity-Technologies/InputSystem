@@ -626,7 +626,7 @@ namespace UnityEngine.InputSystem
                     return true;
 
                 return MemoryHelpers.ReadSingleBit(secondPtr, control.m_StateBlock.bitOffset) ==
-                       MemoryHelpers.ReadSingleBit(firstPtr, control.m_StateBlock.bitOffset);
+                    MemoryHelpers.ReadSingleBit(firstPtr, control.m_StateBlock.bitOffset);
             }
 
             return MemoryHelpers.MemCmpBitRegion(firstPtr, secondPtr,
@@ -1092,7 +1092,7 @@ namespace UnityEngine.InputSystem
             InputDevice device = null, float magnitudeThreshold = 0)
         {
             return eventPtr.EnumerateControls
-                (Enumerate.IgnoreControlsInCurrentState, device, magnitudeThreshold);
+                    (Enumerate.IgnoreControlsInCurrentState, device, magnitudeThreshold);
         }
 
         /// <summary>
@@ -1144,7 +1144,7 @@ namespace UnityEngine.InputSystem
                 magnitude = InputSystem.settings.defaultButtonPressPoint;
 
             foreach (var control in eventPtr.EnumerateControls(Enumerate.IgnoreControlsInDefaultState,
-                         magnitudeThreshold: magnitude))
+                magnitudeThreshold: magnitude))
             {
                 // Skip if the value didn't change. For IInputStateCallbackReceiver devices (e.g. Touchscreen),
                 // the event may not carry full device state, so fall back to checking the control was at
@@ -1152,8 +1152,8 @@ namespace UnityEngine.InputSystem
                 var stateInEvent = control.GetStatePtrFromStateEvent(eventPtr);
                 var currentState = control.currentStatePtr;
                 if (stateInEvent != null
-                        ? !control.CompareValue(currentState, stateInEvent)
-                        : control.CompareValue(currentState, control.defaultStatePtr))
+                    ? !control.CompareValue(currentState, stateInEvent)
+                    : control.CompareValue(currentState, control.defaultStatePtr))
                     continue;
                 if (buttonControlsOnly && !control.isButton)
                     continue;
@@ -1185,7 +1185,7 @@ namespace UnityEngine.InputSystem
                 magnitude = InputSystem.settings.defaultButtonPressPoint;
 
             foreach (var control in eventPtr.EnumerateControls(Enumerate.IgnoreControlsInDefaultState,
-                         magnitudeThreshold: magnitude))
+                magnitudeThreshold: magnitude))
             {
                 if (buttonControlsOnly && !control.isButton)
                     continue;
@@ -1300,7 +1300,7 @@ namespace UnityEngine.InputSystem
             private float m_MagnitudeThreshold;
 
             internal InputEventControlEnumerator(InputEventPtr eventPtr, InputDevice device, Enumerate flags,
-                float magnitudeThreshold = 0)
+                                                 float magnitudeThreshold = 0)
             {
                 Debug.Assert(eventPtr.valid, "eventPtr should be valid at this point");
                 Debug.Assert(device != null, "Need to have valid device at this point");
@@ -1464,7 +1464,7 @@ namespace UnityEngine.InputSystem
                         {
                             // Otherwise, we may need to check the bit region specifically for the control.
                             if ((ignoreCurrent && MemoryHelpers.MemCmpBitRegion(m_EventState, m_CurrentState,
-                                    controlBitOffset - m_CurrentControlStateBitOffset, controlBitSize, m_NoiseMask))
+                                controlBitOffset - m_CurrentControlStateBitOffset, controlBitSize, m_NoiseMask))
                                 || (ignoreDefault && MemoryHelpers.MemCmpBitRegion(m_EventState, m_DefaultState,
                                     controlBitOffset - m_CurrentControlStateBitOffset, controlBitSize, m_NoiseMask)))
                                 continue;
@@ -1481,8 +1481,8 @@ namespace UnityEngine.InputSystem
                         if ((m_Flags & Enumerate.IncludeSyntheticControls) == 0)
                         {
                             var controlHasSharedState = (m_CurrentControl.m_ControlFlags &
-                                                         (InputControl.ControlFlags.UsesStateFromOtherControl |
-                                                          InputControl.ControlFlags.IsSynthetic)) != 0;
+                                (InputControl.ControlFlags.UsesStateFromOtherControl |
+                                    InputControl.ControlFlags.IsSynthetic)) != 0;
 
                             // Filter out synthetic and useStateFrom controls.
                             if (controlHasSharedState)
@@ -1503,7 +1503,7 @@ namespace UnityEngine.InputSystem
                         if (m_MagnitudeThreshold != 0)
                         {
                             var statePtr = m_EventState - (m_CurrentControlStateBitOffset >> 3) -
-                                           m_Device.m_StateBlock.byteOffset;
+                                m_Device.m_StateBlock.byteOffset;
                             var magnitude = m_CurrentControl.EvaluateMagnitude(statePtr);
                             if (magnitude >= 0 && magnitude < m_MagnitudeThreshold)
                                 continue;
@@ -1962,7 +1962,7 @@ namespace UnityEngine.InputSystem
                 var sizeOfNode = UnsafeUtility.SizeOf<InputDevice.ControlBitRangeNode>();
                 var numNodes = controlTreeNodes.Length / sizeOfNode;
                 device.m_ControlTreeNodes = new InputDevice.ControlBitRangeNode[numNodes];
-                fixed (byte* nodePtr = controlTreeNodes)
+                fixed(byte* nodePtr = controlTreeNodes)
                 {
                     for (var i = 0; i < numNodes; i++)
                     {

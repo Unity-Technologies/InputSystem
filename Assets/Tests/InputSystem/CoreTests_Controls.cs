@@ -603,14 +603,14 @@ partial class CoreTests
         var receivedCalls = 0;
         InputSystem.onEvent +=
             (eventPtr, device) =>
-            {
-                ++receivedCalls;
-                float value;
-                Assert.That(gamepad.leftTrigger.ReadValueFromEvent(eventPtr, out value), Is.True);
-                Assert.That(value, Is.EqualTo(0.234f).Within(0.00001));
-                Assert.That(gamepad.leftTrigger.ReadValueFromEventAsObject(eventPtr),
-                    Is.EqualTo(0.234f).Within(0.00001));
-            };
+        {
+            ++receivedCalls;
+            float value;
+            Assert.That(gamepad.leftTrigger.ReadValueFromEvent(eventPtr, out value), Is.True);
+            Assert.That(value, Is.EqualTo(0.234f).Within(0.00001));
+            Assert.That(gamepad.leftTrigger.ReadValueFromEventAsObject(eventPtr),
+                Is.EqualTo(0.234f).Within(0.00001));
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.234f });
         InputSystem.Update();
@@ -645,11 +645,11 @@ partial class CoreTests
         float? value = null;
         InputSystem.onEvent +=
             (eventPtr, _) =>
-            {
-                Assert.That(value, Is.Null);
-                ((AxisControl)device["extraControl"]).ReadValueFromEvent(eventPtr, out var eventValue);
-                value = eventValue;
-            };
+        {
+            Assert.That(value, Is.Null);
+            ((AxisControl)device["extraControl"]).ReadValueFromEvent(eventPtr, out var eventValue);
+            value = eventValue;
+        };
 
         InputSystem.QueueStateEvent(device, new GamepadState());
         InputSystem.Update();
@@ -667,10 +667,10 @@ partial class CoreTests
         var receivedCalls = 0;
         InputSystem.onEvent +=
             (eventPtr, device) =>
-            {
-                ++receivedCalls;
-                gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
-            };
+        {
+            ++receivedCalls;
+            gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState());
         InputSystem.Update();
@@ -688,10 +688,10 @@ partial class CoreTests
         var receivedCalls = 0;
         InputSystem.onEvent +=
             (eventPtr, device) =>
-            {
-                ++receivedCalls;
-                gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
-            };
+        {
+            ++receivedCalls;
+            gamepad.leftTrigger.WriteValueIntoEvent(0.1234f, eventPtr);
+        };
 
         InputSystem.QueueDeltaStateEvent(gamepad.leftTrigger, 0.8765f);
         InputSystem.Update();
@@ -1377,7 +1377,7 @@ partial class CoreTests
                     { keyboard.aKey, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey }));
 
             using (var toAdd =
-                   new InputControlList<InputControl>(gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest))
+                       new InputControlList<InputControl>(gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest))
                 list.AddSlice(toAdd, count: 1, destinationIndex: 1, sourceIndex: 2);
 
             Assert.That(list.Count, Is.EqualTo(6));
@@ -1506,7 +1506,7 @@ partial class CoreTests
             return;
 
         foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance |
-                                                    BindingFlags.DeclaredOnly))
+            BindingFlags.DeclaredOnly))
         {
             if (!typeof(InputControl).IsAssignableFrom(property.PropertyType))
                 continue;

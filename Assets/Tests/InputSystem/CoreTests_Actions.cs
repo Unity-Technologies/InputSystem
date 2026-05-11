@@ -439,7 +439,7 @@ partial class CoreTests
         if (!string.IsNullOrEmpty(modifier2))
         {
             action.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") +
-                                       "(modifiersOrder=1)")
+                "(modifiersOrder=1)")
                 .With("Modifier1", "<Keyboard>/" + modifier1)
                 .With("Modifier2", "<Keyboard>/" + modifier2)
                 .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
@@ -447,7 +447,7 @@ partial class CoreTests
         else
         {
             action.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") +
-                                       "(modifiersOrder=1)")
+                "(modifiersOrder=1)")
                 .With("Modifier", "<Keyboard>/" + modifier1)
                 .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
         }
@@ -477,9 +477,9 @@ partial class CoreTests
     [TestCase("leftShift", null, "space", false, false)]
     [TestCase("leftShift", "leftAlt", "space", false, false)]
     public void
-        Actions_WhenShortcutsAreEnabled_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut_ExceptIfOverridden(
-            string modifier1, string modifier2, string binding,
-            bool legacyComposites, bool overrideModifiersNeedToBePressedFirst)
+    Actions_WhenShortcutsAreEnabled_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut_ExceptIfOverridden(
+        string modifier1, string modifier2, string binding,
+        bool legacyComposites, bool overrideModifiersNeedToBePressedFirst)
     {
         InputSystem.settings.shortcutKeysConsumeInput = true;
 
@@ -489,9 +489,9 @@ partial class CoreTests
         if (!string.IsNullOrEmpty(modifier2))
         {
             action.AddCompositeBinding((legacyComposites ? "ButtonWithTwoModifiers" : "TwoModifiers") +
-                                       (overrideModifiersNeedToBePressedFirst
-                                           ? "(overrideModifiersNeedToBePressedFirst)"
-                                           : "(modifiersOrder=2)"))
+                (overrideModifiersNeedToBePressedFirst
+                    ? "(overrideModifiersNeedToBePressedFirst)"
+                    : "(modifiersOrder=2)"))
                 .With("Modifier1", "<Keyboard>/" + modifier1)
                 .With("Modifier2", "<Keyboard>/" + modifier2)
                 .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
@@ -499,9 +499,9 @@ partial class CoreTests
         else
         {
             action.AddCompositeBinding((legacyComposites ? "ButtonWithOneModifier" : "OneModifier") +
-                                       (overrideModifiersNeedToBePressedFirst
-                                           ? "(overrideModifiersNeedToBePressedFirst)"
-                                           : "(modifiersOrder=2)"))
+                (overrideModifiersNeedToBePressedFirst
+                    ? "(overrideModifiersNeedToBePressedFirst)"
+                    : "(modifiersOrder=2)"))
                 .With("Modifier", "<Keyboard>/" + modifier1)
                 .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/" + binding);
         }
@@ -657,7 +657,7 @@ partial class CoreTests
     [Test]
     [Category("Actions")]
     [Description("Tests that that only the latest event after focus is regained is able to trigger the action." +
-                 "Depends on background behavior. (ISXB-1671)")]
+        "Depends on background behavior. (ISXB-1671)")]
     [TestCase(InputSettings.BackgroundBehavior.IgnoreFocus)]
     [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableNonBackgroundDevices)]
     [TestCase(InputSettings.BackgroundBehavior.ResetAndDisableAllDevices)]
@@ -839,7 +839,7 @@ partial class CoreTests
     [Test]
     [Category("Actions")]
     public void
-        Actions_WhenSeveralBindingsResolveToSameControl_SameControlFeedsIntoActionMultipleTimes_ButIsListedInControlsOnlyOnce()
+    Actions_WhenSeveralBindingsResolveToSameControl_SameControlFeedsIntoActionMultipleTimes_ButIsListedInControlsOnlyOnce()
     {
         var gamepad = InputSystem.AddDevice<Gamepad>();
 
@@ -1339,9 +1339,9 @@ partial class CoreTests
 
             Assert.That(trace1,
                 Started(actionWithoutInteraction, control: gamepad.leftStick,
-                        value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
+                    value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
                     .AndThen(Performed(actionWithoutInteraction, control: gamepad.leftStick,
-                        value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f))))
+                    value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f))))
                     .AndThen(Performed(actionWithoutInteraction, control: gamepad.leftStick,
                         value: new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f)))));
             Assert.That(trace2, Started<HoldInteraction>(actionWithHold, control: gamepad.buttonSouth, value: 1f));
@@ -1548,24 +1548,24 @@ partial class CoreTests
         Action<InputAction.CallbackContext> delegate1 = null;
         delegate1 =
             _ =>
+        {
+            invocations.Add("delegate1");
+            switch (callback)
             {
-                invocations.Add("delegate1");
-                switch (callback)
-                {
-                    case "started":
-                        action.started -= delegate1;
-                        action.started += delegate2;
-                        break;
-                    case "performed":
-                        action.performed -= delegate1;
-                        action.performed += delegate2;
-                        break;
-                    case "canceled":
-                        action.canceled -= delegate1;
-                        action.canceled += delegate2;
-                        break;
-                }
-            };
+                case "started":
+                    action.started -= delegate1;
+                    action.started += delegate2;
+                    break;
+                case "performed":
+                    action.performed -= delegate1;
+                    action.performed += delegate2;
+                    break;
+                case "canceled":
+                    action.canceled -= delegate1;
+                    action.canceled += delegate2;
+                    break;
+            }
+        };
 
         switch (callback)
         {
@@ -1754,7 +1754,7 @@ partial class CoreTests
         actionWithModifier.AddCompositeBinding("OneModifier")
             .With("Binding", "<Keyboard>/space")
             .With("Modifier", "<Keyboard>/ctrl");
-        actionWithModifier.performed += _ => ++withModiferReceivedCalls;
+        actionWithModifier.performed += _ => ++ withModiferReceivedCalls;
 
         var actionWithoutModifier = map.AddAction("One", type: InputActionType.Button, binding: "<Keyboard>/space");
         actionWithoutModifier.performed += _ => actionWithModifier.Disable();
@@ -1791,10 +1791,10 @@ partial class CoreTests
         var received = new List<object>();
         InputSystem.onActionChange +=
             (obj, change) =>
-            {
-                received.Add(change);
-                received.Add(obj);
-            };
+        {
+            received.Add(change);
+            received.Add(obj);
+        };
 
         // Enable map.
         map.Enable();
@@ -2540,7 +2540,7 @@ partial class CoreTests
         var isHold = interactions?.StartsWith("hold") ?? false;
         var isPress = interactions?.StartsWith("press") ?? false;
         var isButtonLike = (action.type == InputActionType.Value && isPress) ||
-                           (action.type == InputActionType.Button && !isHold);
+            (action.type == InputActionType.Button && !isHold);
 
         using (var trace = new InputActionTrace(action))
         {
@@ -3177,10 +3177,10 @@ partial class CoreTests
         float? receivedValue = null;
         action.performed +=
             ctx =>
-            {
-                Assert.That(receivedValue, Is.Null);
-                receivedValue = ctx.ReadValue<float>();
-            };
+        {
+            Assert.That(receivedValue, Is.Null);
+            receivedValue = ctx.ReadValue<float>();
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
         InputSystem.Update();
@@ -3202,10 +3202,10 @@ partial class CoreTests
         bool? receivedValue = null;
         action.performed +=
             ctx =>
-            {
-                Assert.That(receivedValue, Is.Null);
-                receivedValue = ctx.ReadValueAsButton();
-            };
+        {
+            Assert.That(receivedValue, Is.Null);
+            receivedValue = ctx.ReadValueAsButton();
+        };
 
         Set(gamepad.leftTrigger, 0.25f);
 
@@ -3247,18 +3247,18 @@ partial class CoreTests
 
         action.performed +=
             ctx =>
-            {
-                Assert.That(receivedValueData, Is.Null);
-                Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
-                Assert.That(ctx.valueSizeInBytes, Is.EqualTo(sizeof(Vector2)));
+        {
+            Assert.That(receivedValueData, Is.Null);
+            Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
+            Assert.That(ctx.valueSizeInBytes, Is.EqualTo(sizeof(Vector2)));
 
-                var sizeInBytes = ctx.valueSizeInBytes;
-                receivedValueData = new byte[sizeInBytes];
-                fixed (byte* dataPtr = receivedValueData)
-                {
-                    ctx.ReadValue(dataPtr, sizeInBytes);
-                }
-            };
+            var sizeInBytes = ctx.valueSizeInBytes;
+            receivedValueData = new byte[sizeInBytes];
+            fixed(byte* dataPtr = receivedValueData)
+            {
+                ctx.ReadValue(dataPtr, sizeInBytes);
+            }
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f) });
         InputSystem.Update();
@@ -3300,10 +3300,10 @@ partial class CoreTests
 
         action.performed +=
             ctx =>
-            {
-                Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
-                Assert.That(ctx.action.activeValueType, Is.EqualTo(typeof(Vector2)));
-            };
+        {
+            Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
+            Assert.That(ctx.action.activeValueType, Is.EqualTo(typeof(Vector2)));
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f) });
         InputSystem.Update();
@@ -3345,10 +3345,10 @@ partial class CoreTests
 
         action.performed +=
             ctx =>
-            {
-                Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
-                Assert.That(ctx.action.activeValueType, Is.EqualTo(typeof(Vector2)));
-            };
+        {
+            Assert.That(ctx.valueType, Is.EqualTo(typeof(Vector2)));
+            Assert.That(ctx.action.activeValueType, Is.EqualTo(typeof(Vector2)));
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = new Vector2(0.123f, 0.234f) });
         InputSystem.Update();
@@ -3387,13 +3387,13 @@ partial class CoreTests
         var receivedCall = false;
         action.performed +=
             ctx =>
-            {
-                receivedCall = true;
-                Assert.That(() => ctx.ReadValue<Vector2>(),
-                    Throws.InvalidOperationException.With.Message.Contains("buttonSouth")
-                        .And.With.Message.Contains("float")
-                        .And.With.Message.Contains("Vector2"));
-            };
+        {
+            receivedCall = true;
+            Assert.That(() => ctx.ReadValue<Vector2>(),
+                Throws.InvalidOperationException.With.Message.Contains("buttonSouth")
+                    .And.With.Message.Contains("float")
+                    .And.With.Message.Contains("Vector2"));
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
         InputSystem.Update();
@@ -3846,11 +3846,11 @@ partial class CoreTests
             // map1/action1 should have been started and performed.
             Assert.That(trace,
                 Started(action1,
-                        value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(-1, 1),
-                        control: gamepad.leftStick, time: startTime + 0.123)
+                    value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(-1, 1),
+                    control: gamepad.leftStick, time: startTime + 0.123)
                     .AndThen(Performed(action1,
-                        value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(-1, 1),
-                        control: gamepad.leftStick, time: startTime + 0.123)));
+                    value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(-1, 1),
+                    control: gamepad.leftStick, time: startTime + 0.123)));
 
             trace.Clear();
 
@@ -3867,13 +3867,13 @@ partial class CoreTests
             Assert.That(trace,
                 // map1/action1 should have been canceled.
                 Canceled(action1, value: default(Vector2), control: gamepad.leftStick, time: startTime + 0.234)
-                    // map3/action4 should immediately start as the stick was already actuated
-                    // when we enabled the action.
-                    // NOTE: We get a different value here than what action1 got as we have a different
-                    //       processor on the binding.
+                // map3/action4 should immediately start as the stick was already actuated
+                // when we enabled the action.
+                // NOTE: We get a different value here than what action1 got as we have a different
+                //       processor on the binding.
                     .AndThen(Started(action4,
-                        value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(1, -1),
-                        control: gamepad.leftStick, time: startTime + 0.234))
+                    value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(1, -1),
+                    control: gamepad.leftStick, time: startTime + 0.234))
                     .AndThen(Performed(action4,
                         value: new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)) * new Vector2(1, -1),
                         control: gamepad.leftStick, time: startTime + 0.234))
@@ -3898,9 +3898,9 @@ partial class CoreTests
             Assert.That(trace,
                 // map2/action3 should have been canceled.
                 Canceled<TapInteraction>(action3, value: 0f, control: gamepad.buttonSouth, time: currentTime)
-                    // map3/action4 should have been canceled.
+                // map3/action4 should have been canceled.
                     .AndThen(Canceled(action4, value: default(Vector2), control: gamepad.leftStick,
-                        time: currentTime))
+                    time: currentTime))
                     // map3/action5 should have been canceled.
                     .AndThen(Canceled<TapInteraction>(action5, value: 0f, control: gamepad.buttonSouth,
                         time: currentTime)));
@@ -3955,13 +3955,13 @@ partial class CoreTests
         var action = new InputAction(binding: "<Gamepad>/leftStick");
         action.performed +=
             ctx =>
-            {
-                ++receivedCalls;
-                receivedAction = ctx.action;
-                receivedControl = ctx.control;
+        {
+            ++receivedCalls;
+            receivedAction = ctx.action;
+            receivedControl = ctx.control;
 
-                Assert.That(ctx.phase, Is.EqualTo(InputActionPhase.Performed));
-            };
+            Assert.That(ctx.phase, Is.EqualTo(InputActionPhase.Performed));
+        };
         action.Enable();
 
         // Actuate stick.
@@ -4098,8 +4098,8 @@ partial class CoreTests
             Set(gamepad.leftStick, new Vector2(0.345f, 0.456f));
 
             Assert.That(trace, Started(stickAction, control: gamepad.leftStick,
-                    value: new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f)))
-                .AndThen(Performed(stickAction, control: gamepad.leftStick,
+                value: new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f)))
+                    .AndThen(Performed(stickAction, control: gamepad.leftStick,
                     value: new StickDeadzoneProcessor().Process(new Vector2(0.345f, 0.456f)))));
 
             trace.Clear();
@@ -4561,10 +4561,10 @@ partial class CoreTests
         var action = new InputAction(binding: "/gamepad");
         action.performed +=
             ctx =>
-            {
-                ++receivedCalls;
-                receivedControl = ctx.control;
-            };
+        {
+            ++receivedCalls;
+            receivedControl = ctx.control;
+        };
         action.Enable();
 
         var state = new GamepadState
@@ -4594,32 +4594,32 @@ partial class CoreTests
 
         map.actionTriggered +=
             ctx =>
-            {
-                Assert.That(ctx.action, Is.SameAs(action));
-                Assert.That(ctx.control, Is.SameAs(gamepad.leftTrigger));
+        {
+            Assert.That(ctx.action, Is.SameAs(action));
+            Assert.That(ctx.control, Is.SameAs(gamepad.leftTrigger));
 
-                switch (ctx.phase)
-                {
-                    case InputActionPhase.Started:
-                        Assert.That(wasStarted, Is.False);
-                        Assert.That(wasPerformed, Is.False);
-                        Assert.That(wasCanceled, Is.False);
-                        wasStarted = true;
-                        break;
-                    case InputActionPhase.Performed:
-                        Assert.That(wasStarted, Is.True);
-                        Assert.That(wasPerformed, Is.False);
-                        Assert.That(wasCanceled, Is.False);
-                        wasPerformed = true;
-                        break;
-                    case InputActionPhase.Canceled:
-                        Assert.That(wasStarted, Is.True);
-                        Assert.That(wasPerformed, Is.True);
-                        Assert.That(wasCanceled, Is.False);
-                        wasCanceled = true;
-                        break;
-                }
-            };
+            switch (ctx.phase)
+            {
+                case InputActionPhase.Started:
+                    Assert.That(wasStarted, Is.False);
+                    Assert.That(wasPerformed, Is.False);
+                    Assert.That(wasCanceled, Is.False);
+                    wasStarted = true;
+                    break;
+                case InputActionPhase.Performed:
+                    Assert.That(wasStarted, Is.True);
+                    Assert.That(wasPerformed, Is.False);
+                    Assert.That(wasCanceled, Is.False);
+                    wasPerformed = true;
+                    break;
+                case InputActionPhase.Canceled:
+                    Assert.That(wasStarted, Is.True);
+                    Assert.That(wasPerformed, Is.True);
+                    Assert.That(wasCanceled, Is.False);
+                    wasCanceled = true;
+                    break;
+            }
+        };
 
         map.Enable();
 
@@ -4654,25 +4654,25 @@ partial class CoreTests
         var receivedChanges = new List<InputActionChange>();
         InputSystem.onActionChange +=
             (a, c) =>
+        {
+            Assert.That(a, Is.SameAs((InputAction)a));
+
+            // Notification must come *before* callback.
+            switch (((InputAction)a).phase)
             {
-                Assert.That(a, Is.SameAs((InputAction)a));
+                case InputActionPhase.Started:
+                    Assert.That(receivedStarted, Is.False);
+                    break;
+                case InputActionPhase.Canceled:
+                    Assert.That(receivedCanceled, Is.False);
+                    break;
+                case InputActionPhase.Performed:
+                    Assert.That(receivedPerformed, Is.False);
+                    break;
+            }
 
-                // Notification must come *before* callback.
-                switch (((InputAction)a).phase)
-                {
-                    case InputActionPhase.Started:
-                        Assert.That(receivedStarted, Is.False);
-                        break;
-                    case InputActionPhase.Canceled:
-                        Assert.That(receivedCanceled, Is.False);
-                        break;
-                    case InputActionPhase.Performed:
-                        Assert.That(receivedPerformed, Is.False);
-                        break;
-                }
-
-                receivedChanges.Add(c);
-            };
+            receivedChanges.Add(c);
+        };
 
         Set(gamepad.leftTrigger, 0.5f);
 
@@ -5359,7 +5359,7 @@ partial class CoreTests
     {
         if (name != null)
             return "{\n    \"version\": 0,\n    \"name\": \"" + name +
-                   "\",\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
+                "\",\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
         return "{\n    \"version\": 0,\n    \"maps\": [],\n    \"controlSchemes\": []\n}";
     }
 
@@ -6279,12 +6279,12 @@ partial class CoreTests
         var wasPerformed = false;
         action.performed +=
             ctx =>
-            {
-                Assert.That(wasPerformed, Is.False);
-                Assert.That(ctx.interaction, Is.TypeOf<TapInteraction>());
-                Assert.That(((TapInteraction)ctx.interaction).duration, Is.EqualTo(0.123).Within(0.00001));
-                wasPerformed = true;
-            };
+        {
+            Assert.That(wasPerformed, Is.False);
+            Assert.That(ctx.interaction, Is.TypeOf<TapInteraction>());
+            Assert.That(((TapInteraction)ctx.interaction).duration, Is.EqualTo(0.123).Within(0.00001));
+            wasPerformed = true;
+        };
 
         Press(gamepad.buttonSouth);
         currentTime += 0.1f;
@@ -6307,10 +6307,10 @@ partial class CoreTests
         Vector2? receivedVector = null;
         action.performed +=
             ctx =>
-            {
-                Assert.That(receivedVector, Is.Null);
-                receivedVector = ctx.ReadValue<Vector2>();
-            };
+        {
+            Assert.That(receivedVector, Is.Null);
+            receivedVector = ctx.ReadValue<Vector2>();
+        };
 
         Set(gamepad.leftStick, Vector2.one);
 
@@ -6333,12 +6333,12 @@ partial class CoreTests
         float? receivedFloat = null;
         action.performed +=
             ctx =>
-            {
-                Assert.That(receivedFloat, Is.Null);
-                // ConstantVector2TestProcessor processes Vector2s. It would throw an exception when
-                // trying to use it reading a float if not ignored.
-                receivedFloat = ctx.ReadValue<float>();
-            };
+        {
+            Assert.That(receivedFloat, Is.Null);
+            // ConstantVector2TestProcessor processes Vector2s. It would throw an exception when
+            // trying to use it reading a float if not ignored.
+            receivedFloat = ctx.ReadValue<float>();
+        };
 
         Set(gamepad.leftStick, Vector2.one);
 
@@ -6369,10 +6369,10 @@ partial class CoreTests
         Vector2? receivedVector = null;
         action.performed +=
             ctx =>
-            {
-                Assert.That(receivedVector, Is.Null);
-                receivedVector = ctx.ReadValue<Vector2>();
-            };
+        {
+            Assert.That(receivedVector, Is.Null);
+            receivedVector = ctx.ReadValue<Vector2>();
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftStick = Vector2.one });
         InputSystem.Update();
@@ -6436,12 +6436,12 @@ partial class CoreTests
         var receivedValues = new List<object>();
         action.performed +=
             ctx =>
-            {
-                if (ctx.control is ButtonControl)
-                    receivedValues.Add(ctx.ReadValue<float>());
-                else
-                    receivedValues.Add(ctx.ReadValue<Vector2>());
-            };
+        {
+            if (ctx.control is ButtonControl)
+                receivedValues.Add(ctx.ReadValue<float>());
+            else
+                receivedValues.Add(ctx.ReadValue<Vector2>());
+        };
 
         InputSystem.QueueStateEvent(gamepad,
             new GamepadState { leftStick = new Vector2(0.5f, 0.5f), leftTrigger = 0.5f });
@@ -6504,10 +6504,10 @@ partial class CoreTests
         float? receivedValue = null;
         action.performed +=
             ctx =>
-            {
-                Assert.That(receivedValue, Is.Null);
-                receivedValue = ctx.ReadValue<float>();
-            };
+        {
+            Assert.That(receivedValue, Is.Null);
+            receivedValue = ctx.ReadValue<float>();
+        };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.5f });
         InputSystem.Update();
@@ -6656,10 +6656,10 @@ partial class CoreTests
         var controlsChanged = new List<IInputActionCollection>();
         InputSystem.onActionChange +=
             (o, change) =>
-            {
-                if (change == InputActionChange.BoundControlsChanged)
-                    controlsChanged.Add((IInputActionCollection)o);
-            };
+        {
+            if (change == InputActionChange.BoundControlsChanged)
+                controlsChanged.Add((IInputActionCollection)o);
+        };
 
         InputSystem.RemoveDevice(gamepad);
 
@@ -6800,10 +6800,10 @@ partial class CoreTests
         var received = new List<object>();
         InputSystem.onActionChange +=
             (obj, change) =>
-            {
-                received.Add(obj);
-                received.Add(change);
-            };
+        {
+            received.Add(obj);
+            received.Add(change);
+        };
 
         InputSystem.AddDevice<Gamepad>();
 
@@ -6854,10 +6854,10 @@ partial class CoreTests
         var received = new List<object>();
         InputSystem.onActionChange +=
             (obj, change) =>
-            {
-                received.Add(obj);
-                received.Add(change);
-            };
+        {
+            received.Add(obj);
+            received.Add(change);
+        };
 
         InputSystem.AddDevice<Gamepad>();
 
@@ -6888,10 +6888,10 @@ partial class CoreTests
         var received = new List<object>();
         InputSystem.onActionChange +=
             (obj, change) =>
-            {
-                received.Add(obj);
-                received.Add(change);
-            };
+        {
+            received.Add(obj);
+            received.Add(change);
+        };
 
         InputSystem.AddDevice<Gamepad>();
 
@@ -7755,9 +7755,9 @@ partial class CoreTests
         var action2Performed = 0;
         var action3Performed = 0;
 
-        action1.performed += _ => ++action1Performed;
-        action2.performed += _ => ++action2Performed;
-        action3.performed += _ => ++action3Performed;
+        action1.performed += _ => ++ action1Performed;
+        action2.performed += _ => ++ action2Performed;
+        action3.performed += _ => ++ action3Performed;
 
         action1.Enable();
         action2.Enable();
@@ -7785,10 +7785,10 @@ partial class CoreTests
 
         action.performed +=
             ctx =>
-            {
-                receivedStartTime = ctx.startTime;
-                receivedTime = ctx.time;
-            };
+        {
+            receivedStartTime = ctx.startTime;
+            receivedTime = ctx.time;
+        };
 
         var startTime = 0.123;
         var endTime = 0.123 + InputSystem.settings.defaultSlowTapTime + 1.0;
@@ -9416,7 +9416,7 @@ partial class CoreTests
     [Category("Actions")]
     [Ignore("TODO")]
     public void
-        TODO_Actions_WhenGettingDisplayTextForBindingsOnAction_CanGetQualificationsForEachIndividualStringComponent()
+    TODO_Actions_WhenGettingDisplayTextForBindingsOnAction_CanGetQualificationsForEachIndividualStringComponent()
     {
         //interaction:Hold gamepad:A
         //is this actually useful? the use case here is localization but not sure this is the most usable approach
@@ -10230,7 +10230,7 @@ partial class CoreTests
         action.Enable();
 
         var performedCount = 0;
-        action.performed += ctx => ++performedCount;
+        action.performed += ctx => ++ performedCount;
 
         // Interaction should be processed only once.
         LogAssert.Expect(LogType.Assert, "LogInteraction.Process");
@@ -10714,7 +10714,7 @@ partial class CoreTests
             Assert.That(trace,
                 Started(action, gamepad.leftStick, new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))
                     .AndThen(Performed(action, gamepad.leftStick,
-                        new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))));
+                    new StickDeadzoneProcessor().Process(new Vector2(0.123f, 0.234f)))));
         }
     }
 
@@ -10842,11 +10842,11 @@ partial class CoreTests
             Set(gamepad.leftStick, new Vector2(0, 0.75f));
             Assert.That(trace,
                 Started(action,
-                        value: new AxisDeadzoneProcessor().Process(0.75f),
-                        control: gamepad.leftStick.up)
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
+                    control: gamepad.leftStick.up)
                     .AndThen(Performed(action,
-                        value: new AxisDeadzoneProcessor().Process(0.75f),
-                        control: gamepad.leftStick.up)));
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
+                    control: gamepad.leftStick.up)));
 
             trace.Clear();
 
@@ -10857,11 +10857,11 @@ partial class CoreTests
             // one of the constituents change.
             Assert.That(trace,
                 Performed(action,
-                        value: new AxisDeadzoneProcessor().Process(0.75f),
-                        control: gamepad.dpad.up)
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
+                    control: gamepad.dpad.up)
                     .AndThen(Performed(action,
-                        value: new AxisDeadzoneProcessor().Process(0.75f),
-                        control: gamepad.leftTrigger)));
+                    value: new AxisDeadzoneProcessor().Process(0.75f),
+                    control: gamepad.leftTrigger)));
 
             trace.Clear();
 
@@ -11754,19 +11754,19 @@ partial class CoreTests
         var kProfilerRegion2 = "Actions_EnablingAndDisablingRepeatedly_DoesNotAllocate_ENABLE";
 
         Assert.That(() =>
-            {
-                Profiler.BeginSample(kProfilerRegion1);
-                actions.Disable();
-                Profiler.EndSample();
-            },
+        {
+            Profiler.BeginSample(kProfilerRegion1);
+            actions.Disable();
+            Profiler.EndSample();
+        },
             Is.Not.AllocatingGCMemory());
 
         Assert.That(() =>
-            {
-                Profiler.BeginSample(kProfilerRegion2);
-                actions.Enable();
-                Profiler.EndSample();
-            },
+        {
+            Profiler.BeginSample(kProfilerRegion2);
+            actions.Enable();
+            Profiler.EndSample();
+        },
             Is.Not.AllocatingGCMemory());
     }
 
@@ -12061,7 +12061,7 @@ partial class CoreTests
             Assert.That(trace,
                 Started(primaryTouchAction, touchscreen.primaryTouch.position, new Vector2(0.123f, 0.234f))
                     .AndThen(Performed(primaryTouchAction, touchscreen.primaryTouch.position,
-                        new Vector2(0.123f, 0.234f)))
+                    new Vector2(0.123f, 0.234f)))
                     .AndThen(Started(positionAction, touchscreen.position, new Vector2(0.123f, 0.234f)))
                     .AndThen(Performed(positionAction, touchscreen.position, new Vector2(0.123f, 0.234f)))
                     .AndThen(Started(touch0Action, touchscreen.touches[0].position, new Vector2(0.123f, 0.234f)))
@@ -12733,8 +12733,8 @@ partial class CoreTests
 
         var action = map.AddAction(name: "Toggle", InputActionType.Button);
         action.AddBinding("<Gamepad>/leftTrigger");
-        action.started += context => ++started;
-        action.performed += context => ++performed;
+        action.started += context => ++ started;
+        action.performed += context => ++ performed;
         action.canceled += (context) =>
         {
             // In reported issue, map state is changed from cancellation callback.

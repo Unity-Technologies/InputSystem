@@ -761,7 +761,7 @@ namespace UnityEngine.InputSystem
         /// </example>
         /// </remarks>
         public InputAction(string name = null, InputActionType type = default, string binding = null,
-            string interactions = null, string processors = null, string expectedControlType = null)
+                           string interactions = null, string processors = null, string expectedControlType = null)
         {
             m_Name = name;
             m_Type = type;
@@ -1770,8 +1770,8 @@ namespace UnityEngine.InputSystem
                     if (interactionState.totalTimeoutCompletionTimeRemaining > 0)
                     {
                         return (interactionState.totalTimeoutCompletionDone +
-                                timerCompletion * interactionState.timerDuration) /
-                               (interactionState.totalTimeoutCompletionDone +
+                            timerCompletion * interactionState.timerDuration) /
+                            (interactionState.totalTimeoutCompletionDone +
                                 interactionState.totalTimeoutCompletionTimeRemaining);
                     }
                     else
@@ -1794,17 +1794,17 @@ namespace UnityEngine.InputSystem
         internal string m_Name;
 
         [Tooltip("Determines how the action triggers.\n"
-                 + "\n"
-                 + "A Value action will start and perform when a control moves from its default value and then "
-                 + "perform on every value change. It will cancel when controls go back to default value. Also, when enabled, a Value "
-                 + "action will respond right away to a control's current value.\n"
-                 + "\n"
-                 + "A Button action will start when a button is pressed and perform when the press threshold (see 'Default Button Press Point' in settings) "
-                 + "is reached. It will cancel when the button is going below the release threshold (see 'Button Release Threshold' in settings). Also, "
-                 + "if a button is already pressed when the action is enabled, the button has to be released first.\n"
-                 + "\n"
-                 + "A Pass-Through action will not explicitly start and will never cancel. Instead, for every value change on any bound control, "
-                 + "the action will perform.")]
+            + "\n"
+            + "A Value action will start and perform when a control moves from its default value and then "
+            + "perform on every value change. It will cancel when controls go back to default value. Also, when enabled, a Value "
+            + "action will respond right away to a control's current value.\n"
+            + "\n"
+            + "A Button action will start when a button is pressed and perform when the press threshold (see 'Default Button Press Point' in settings) "
+            + "is reached. It will cancel when the button is going below the release threshold (see 'Button Release Threshold' in settings). Also, "
+            + "if a button is already pressed when the action is enabled, the button has to be released first.\n"
+            + "\n"
+            + "A Pass-Through action will not explicitly start and will never cancel. Instead, for every value change on any bound control, "
+            + "the action will perform.")]
         [SerializeField]
         internal InputActionType m_Type;
 

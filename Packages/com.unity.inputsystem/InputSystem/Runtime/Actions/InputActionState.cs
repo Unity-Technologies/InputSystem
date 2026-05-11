@@ -1318,7 +1318,7 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
                 || InputState.currentUpdateType == InputUpdateType.Editor
 #endif
-               )
+            )
                 return;
 
             // Remove us from the callback as the processing we're doing here is a one-time thing.
@@ -1605,8 +1605,8 @@ namespace UnityEngine.InputSystem
 
                     // Check if we should suppress interaction processing notifications
                     m_Suppressed = (eventPtr != null) && eventPtr.handled &&
-                                   InputSystem.manager.inputEventHandledPolicy ==
-                                   InputEventHandledPolicy.SuppressActionEventNotifications;
+                        InputSystem.manager.inputEventHandledPolicy ==
+                        InputEventHandledPolicy.SuppressActionEventNotifications;
 
                     // Check if we have multiple concurrent actuations on the same action. This may lead us
                     // to ignore certain inputs (e.g. when we get an input of lesser magnitude while already having
@@ -1831,9 +1831,9 @@ namespace UnityEngine.InputSystem
 
             // Find out if we get triggered from the control that is actively driving the action.
             var isControlCurrentlyDrivingTheAction = triggerControlIndex == actionStateControlIndex ||
-                                                     controls[triggerControlIndex] ==
-                                                     controls[
-                                                         actionStateControlIndex]; // Same control, different binding.
+                controls[triggerControlIndex] ==
+                controls[
+                    actionStateControlIndex];                                      // Same control, different binding.
 
             // If the control is actuated *more* than the current level of actuation we recorded for the
             // action, we process the state change normally. If this isn't the control that is already
@@ -2210,15 +2210,15 @@ namespace UnityEngine.InputSystem
                 m_State = this,
                 m_TriggerState =
                     new TriggerState
-                    {
-                        phase = currentState.phase,
-                        time = time,
-                        mapIndex = mapIndex,
-                        controlIndex = controlIndex,
-                        bindingIndex = bindingIndex,
-                        interactionIndex = interactionIndex,
-                        startTime = currentState.startTime
-                    },
+                {
+                    phase = currentState.phase,
+                    time = time,
+                    mapIndex = mapIndex,
+                    controlIndex = controlIndex,
+                    bindingIndex = bindingIndex,
+                    interactionIndex = interactionIndex,
+                    startTime = currentState.startTime
+                },
                 timerHasExpired = true,
             };
 
@@ -2402,7 +2402,7 @@ namespace UnityEngine.InputSystem
                                 startTime = startTime,
                             };
                             if (!ChangePhaseOfAction(InputActionPhase.Started, ref triggerForInteraction,
-                                    phaseAfterPerformedOrCanceled))
+                                phaseAfterPerformedOrCanceled))
                                 return;
 
                             // If the interaction has already performed, trigger it now.
@@ -2420,7 +2420,7 @@ namespace UnityEngine.InputSystem
                                     startTime = startTime,
                                 };
                                 if (!ChangePhaseOfAction(InputActionPhase.Performed, ref triggerForInteraction,
-                                        phaseAfterPerformedOrCanceled))
+                                    phaseAfterPerformedOrCanceled))
                                     return;
 
                                 // We performed the action,
@@ -2530,7 +2530,7 @@ namespace UnityEngine.InputSystem
                     // No constraints on pass-through actions except if there are interactions driving the action.
                     ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger,
                         isDisablingAction: newPhase == InputActionPhase.Canceled &&
-                                           phaseAfterPerformedOrCanceled == InputActionPhase.Disabled);
+                        phaseAfterPerformedOrCanceled == InputActionPhase.Disabled);
                     if (!actionState->inProcessing)
                         return false;
                 }
@@ -2559,7 +2559,7 @@ namespace UnityEngine.InputSystem
                 {
                     ChangePhaseOfActionInternal(actionIndex, actionState, newPhase, ref trigger,
                         isDisablingAction: newPhase == InputActionPhase.Canceled &&
-                                           phaseAfterPerformedOrCanceled == InputActionPhase.Disabled);
+                        phaseAfterPerformedOrCanceled == InputActionPhase.Disabled);
                     if (!actionState->inProcessing)
                         return false;
 
@@ -2881,12 +2881,12 @@ namespace UnityEngine.InputSystem
             // Reset state record.
             interactionStates[interactionIndex] =
                 new InteractionState
-                {
-                    // We never set interactions to disabled. This way we don't have to go through them
-                    // when we disable/enable actions.
-                    phase = InputActionPhase.Waiting,
-                    triggerControlIndex = kInvalidIndex
-                };
+            {
+                // We never set interactions to disabled. This way we don't have to go through them
+                // when we disable/enable actions.
+                phase = InputActionPhase.Waiting,
+                triggerControlIndex = kInvalidIndex
+            };
         }
 
         internal int GetValueSizeInBytes(int bindingIndex, int controlIndex)
@@ -3548,7 +3548,7 @@ namespace UnityEngine.InputSystem
                     Debug.Assert(value != kInvalidIndex, "Control state index is invalid");
                     if (value >= ushort.MaxValue)
                         throw new NotSupportedException("Total control count in state cannot exceed byte.MaxValue=" +
-                                                        ushort.MaxValue);
+                            ushort.MaxValue);
                     m_ControlStartIndex = (ushort)value;
                 }
             }
@@ -3566,7 +3566,7 @@ namespace UnityEngine.InputSystem
                 {
                     if (value >= byte.MaxValue)
                         throw new NotSupportedException("Control count per binding cannot exceed byte.MaxValue=" +
-                                                        byte.MaxValue);
+                            byte.MaxValue);
                     m_ControlCount = (byte)value;
                 }
             }
@@ -3590,7 +3590,7 @@ namespace UnityEngine.InputSystem
                     {
                         if (value >= ushort.MaxValue)
                             throw new NotSupportedException("Interaction count cannot exceed ushort.MaxValue=" +
-                                                            ushort.MaxValue);
+                                ushort.MaxValue);
                         m_InteractionStartIndex = (ushort)value;
                     }
                 }
@@ -3606,7 +3606,7 @@ namespace UnityEngine.InputSystem
                 {
                     if (value >= byte.MaxValue)
                         throw new NotSupportedException("Interaction count per binding cannot exceed byte.MaxValue=" +
-                                                        byte.MaxValue);
+                            byte.MaxValue);
                     m_InteractionCount = (byte)value;
                 }
             }
@@ -3627,7 +3627,7 @@ namespace UnityEngine.InputSystem
                     {
                         if (value >= ushort.MaxValue)
                             throw new NotSupportedException("Processor count cannot exceed ushort.MaxValue=" +
-                                                            ushort.MaxValue);
+                                ushort.MaxValue);
                         m_ProcessorStartIndex = (ushort)value;
                     }
                 }
@@ -3640,7 +3640,7 @@ namespace UnityEngine.InputSystem
                 {
                     if (value >= byte.MaxValue)
                         throw new NotSupportedException("Processor count per binding cannot exceed byte.MaxValue=" +
-                                                        byte.MaxValue);
+                            byte.MaxValue);
                     m_ProcessorCount = (byte)value;
                 }
             }
@@ -3669,7 +3669,7 @@ namespace UnityEngine.InputSystem
                     {
                         if (value >= ushort.MaxValue)
                             throw new NotSupportedException("Action count cannot exceed ushort.MaxValue=" +
-                                                            ushort.MaxValue);
+                                ushort.MaxValue);
                         m_ActionIndex = (ushort)value;
                     }
                 }
@@ -3708,7 +3708,7 @@ namespace UnityEngine.InputSystem
                     {
                         if (value >= ushort.MaxValue)
                             throw new NotSupportedException("Composite count cannot exceed ushort.MaxValue=" +
-                                                            ushort.MaxValue);
+                                ushort.MaxValue);
                         m_CompositeOrCompositeBindingIndex = (ushort)value;
                     }
                 }
@@ -3822,7 +3822,7 @@ namespace UnityEngine.InputSystem
                         throw new ArgumentOutOfRangeException(nameof(value), "Part index must not be negative");
                     if (partIndex > byte.MaxValue)
                         throw new InvalidOperationException("Part count must not exceed byte.MaxValue=" +
-                                                            byte.MaxValue);
+                            byte.MaxValue);
                     m_PartIndex = (byte)value;
                 }
             }
