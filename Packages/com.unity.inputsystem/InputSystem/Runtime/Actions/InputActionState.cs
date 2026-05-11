@@ -1570,7 +1570,7 @@ namespace UnityEngine.InputSystem
                     // (e.g. when an input of previously greater magnitude has now fallen below the level of another
                     // ongoing input with now higher magnitude).
                     var isConflictingInput = IsConflictingInput(ref trigger, actionIndex);
-                    bindingStatePtr = &bindingStates[trigger.bindingIndex];     // IsConflictingInput may switch us to a different binding.
+                    bindingStatePtr = &bindingStates[trigger.bindingIndex]; // IsConflictingInput may switch us to a different binding.
 
                     // Process button presses/releases.
                     if (!isConflictingInput)
@@ -2296,7 +2296,7 @@ namespace UnityEngine.InputSystem
                 interactionState.performedTime = trigger.time;
 
             // See if it affects the phase of an associated action.
-            var actionIndex = bindingStates[bindingIndex].actionIndex;     // We already had to tap this array and entry in ProcessControlStateChange.
+            var actionIndex = bindingStates[bindingIndex].actionIndex; // We already had to tap this array and entry in ProcessControlStateChange.
             if (actionIndex != kInvalidIndex)
             {
                 if (actionStates[actionIndex].phase == InputActionPhase.Waiting)
@@ -3234,7 +3234,7 @@ namespace UnityEngine.InputSystem
 
             // If the binding that triggered the action is part of a composite, let
             // the composite determine the value we return.
-            if (!ignoreComposites && bindingStates[bindingIndex].isPartOfComposite)     ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
+            if (!ignoreComposites && bindingStates[bindingIndex].isPartOfComposite) ////TODO: instead, just have compositeOrCompositeBindingIndex be invalid
             {
                 var compositeBindingIndex = bindingStates[bindingIndex].compositeOrCompositeBindingIndex;
                 Debug.Assert(compositeBindingIndex >= 0 && compositeBindingIndex < totalBindingCount, "Binding index is out of range");
