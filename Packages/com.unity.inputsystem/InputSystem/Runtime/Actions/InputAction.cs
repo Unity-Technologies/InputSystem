@@ -1782,7 +1782,6 @@ namespace UnityEngine.InputSystem
         [Tooltip("Human readable name of the action. Must be unique within its action map (case is ignored). Can be changed "
             + "without breaking references to the action.")]
         [SerializeField] internal string m_Name;
-
         [Tooltip("Determines how the action triggers.\n"
             + "\n"
             + "A Value action will start and perform when a control moves from its default value and then "
@@ -1796,16 +1795,13 @@ namespace UnityEngine.InputSystem
             + "A Pass-Through action will not explicitly start and will never cancel. Instead, for every value change on any bound control, "
             + "the action will perform.")]
         [SerializeField] internal InputActionType m_Type;
-
         [FormerlySerializedAs("m_ExpectedControlLayout")]
         [Tooltip("The type of control expected by the action (e.g. \"Digital\" for buttons, \"Vector2\" for sticks). This will limit the controls shown "
             + "when setting up bindings in the UI and will also limit which controls can be bound interactively to the action.")]
         [SerializeField] internal string m_ExpectedControlType;
-
         [Tooltip("Unique ID of the action (GUID). Used to reference the action from bindings such that actions can be renamed "
             + "without breaking references.")]
         [SerializeField] internal string m_Id; // Can't serialize System.Guid and Unity's GUID is editor only.
-
         [SerializeField] internal string m_Processors;
         [SerializeField] internal string m_Interactions;
 
@@ -2381,8 +2377,7 @@ namespace UnityEngine.InputSystem
                     var valueSize = valueSizeInBytes;
                     if (bufferSize < valueSize)
                         throw new ArgumentException(
-                            $"Expected buffer of at least {valueSize} bytes but got buffer of only {bufferSize} bytes",
-                            nameof(bufferSize));
+                            $"Expected buffer of at least {valueSize} bytes but got buffer of only {bufferSize} bytes", nameof(bufferSize));
                     UnsafeUtility.MemClear(buffer, valueSizeInBytes);
                 }
             }
