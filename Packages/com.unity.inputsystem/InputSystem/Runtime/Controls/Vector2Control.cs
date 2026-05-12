@@ -49,7 +49,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <seealso cref="pressPointOrDefault"/>
         /// <seealso cref="IActuationPressPoint"/>
         /// <seealso cref="UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint"/>
-        public float pressPoint = -1;
+        public float pressPoint = -1.0f;
         float IActuationPressPoint.pressPoint => pressPoint;
 
         /// <summary>
