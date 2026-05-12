@@ -1933,8 +1933,33 @@ namespace UnityEngine.InputSystem
 
         public void Update(InputUpdateType updateType)
         {
+#if UNITY_EDITOR
+            // Manual InputSystem.Update() calls (especially from tests) are observable: callers
+            // expect to see s_LatestUpdateType reflect the type they just ran, and the active
+            // state buffer to match. Skip the editor->player auto-restore for these so we don't
+            // mutate observable state behind the caller's back. Automatic updates from the player
+            // loop still trigger the restore via OnUpdate's exit paths (see UUM-140343).
+            ++m_ManualUpdateDepth;
+            try
+            {
+                m_Runtime.Update(updateType);
+            }
+            finally
+            {
+                --m_ManualUpdateDepth;
+            }
+#else
             m_Runtime.Update(updateType);
+#endif
         }
+
+#if UNITY_EDITOR
+        // Non-zero when we're inside a manual InputManager.Update() call. Used to suppress the
+        // editor->player auto-restore in RestorePlayerStateAfterEditorUpdateIfNeeded, since manual
+        // callers expect to observe the post-update state untouched. Counter (not bool) so nested
+        // manual updates work correctly.
+        private int m_ManualUpdateDepth;
+#endif
 
         // Initialize project-wide actions:
         // - In editor (edit mode or play-mode) we always use the editor build preferences persisted setting.
@@ -3258,6 +3283,9 @@ namespace UnityEngine.InputSystem
                         ProcessStateChangeMonitorTimeouts();
 
                     InvokeAfterUpdateCallback(updateType);
+#if UNITY_EDITOR
+                    RestorePlayerStateAfterEditorUpdateIfNeeded(updateType);
+#endif
                     m_CurrentUpdate = InputUpdateType.None;
                     return;
                 }
@@ -3267,7 +3295,12 @@ namespace UnityEngine.InputSystem
 
 #else
                 if (LegacyEarlyOutFromEventProcessing(updateType, ref eventBuffer, ref dropStatusEvents))
+                {
+#if UNITY_EDITOR
+                    RestorePlayerStateAfterEditorUpdateIfNeeded(updateType);
+#endif
                     return;
+                }
 #endif
 
                 ProcessEventBuffer(updateType, ref eventBuffer, currentTime, timesliceEvents, dropStatusEvents);
@@ -3991,8 +4024,42 @@ namespace UnityEngine.InputSystem
             if (pointer != null && pointer.added && gameIsPlaying)
                 NativeInputSystem.DoSendMouseEvents(pointer.press.isPressed, pointer.press.wasPressedThisFrame, pointer.position.x.value, pointer.position.y.value);
 #endif
+
+#if UNITY_EDITOR
+            RestorePlayerStateAfterEditorUpdateIfNeeded(updateType);
+#endif
+
             m_CurrentUpdate = default;
         }
+
+#if UNITY_EDITOR
+        // After an editor update, restore the player-mode tracker + state buffers so that any
+        // subsequent reads (including from MonoBehaviour.FixedUpdate, which can run between editor
+        // updates without triggering an OnUpdate(Fixed) when Fixed is not in the update mask)
+        // resolve via the player buffer rather than the editor buffer.
+        //
+        // This used to be handled by OnPlayerLoopInitialization, fired from a PlayerLoopSystem we
+        // injected at PlayerLoop.Initialization. User code calling
+        // PlayerLoop.SetPlayerLoop(GetDefaultPlayerLoop()) wipes that injection (UUM-140343), so
+        // we do the restore here instead -- driven by NativeInputSystem.onUpdate, which is fired
+        // by Unity's built-in player-loop subsystems and therefore cannot be wiped by a
+        // user-initiated player loop reset.
+        private void RestorePlayerStateAfterEditorUpdateIfNeeded(InputUpdateType updateType)
+        {
+            // Skip when called from a manual InputManager.Update() — see Update() for rationale.
+            if (m_ManualUpdateDepth > 0)
+                return;
+
+            if (updateType.IsEditorUpdate()
+                && gameIsPlaying
+                && InputUpdate.s_LatestNonEditorUpdateType.IsPlayerUpdate())
+            {
+                InputUpdate.RestoreStateAfterEditorUpdate();
+                InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup = latestNonEditorTimeOffsetToRealtimeSinceStartup;
+                InputStateBuffers.SwitchTo(m_StateBuffers, InputUpdate.s_LatestUpdateType);
+            }
+        }
+#endif
 
 #if UNITY_EDITOR
         /// <summary>
