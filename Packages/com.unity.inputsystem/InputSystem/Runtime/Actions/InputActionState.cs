@@ -1624,7 +1624,7 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
-        private float GetActuationPressThreshold(InputControl control, BindingState* bindingStatePtr)
+        internal float GetActuationPressThreshold(InputControl control, BindingState* bindingStatePtr)
         {
             var bindingForInteractions = GetBindingStateForInteractionParameters(bindingStatePtr);
             float explicitPressThreshold = 0.0f;
