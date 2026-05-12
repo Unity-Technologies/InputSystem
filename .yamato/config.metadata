@@ -1,4 +1,5 @@
 editors:
+  - version: 2022.3
   - version: 6000.0
   - version: 6000.3
   - version: 6000.4
