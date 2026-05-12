@@ -3968,7 +3968,7 @@ partial class CoreTests
             Set(gamepad.leftStick, new Vector2(0.234f, 0.345f));
 
             Assert.That(trace,
-                erformed(action, gamepad.leftStick, new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f))));
+                Performed(action, gamepad.leftStick, new StickDeadzoneProcessor().Process(new Vector2(0.234f, 0.345f))));
 
             trace.Clear();
 
