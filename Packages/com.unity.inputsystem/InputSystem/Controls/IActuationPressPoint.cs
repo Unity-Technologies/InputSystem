@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.Controls
     /// </remarks>
     /// <seealso cref="ButtonControl"/>
     /// <seealso cref="Vector2Control"/>
-    public interface IActuationPressPoint
+    internal interface IActuationPressPoint
     {
         /// <summary>
         /// Layout-configured press threshold, or a value less than or equal to zero when unset.
