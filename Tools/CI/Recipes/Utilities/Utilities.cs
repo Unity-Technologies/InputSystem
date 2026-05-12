@@ -30,7 +30,7 @@ internal static class Utilities
     public static string GetPlatformName(Platform platform)
     {
 #pragma warning disable CS8603 // Possible null reference return.
-        return switch (platform.System)
+        return platform.System switch
             {
                 SystemType.Ps4 => "ps4",
                 SystemType.Ps5 => "ps5",
@@ -43,8 +43,7 @@ internal static class Utilities
                 SystemType.TvOS => "AppleTV",
                 SystemType.Android => "Android",
                 _ => Enum.GetName(typeof(SystemType), platform.System)
-            }
-        ;
+            };
 #pragma warning restore CS8603 // Possible null reference return.
     }
 
