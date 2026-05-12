@@ -608,8 +608,7 @@ partial class CoreTests
             float value;
             Assert.That(gamepad.leftTrigger.ReadValueFromEvent(eventPtr, out value), Is.True);
             Assert.That(value, Is.EqualTo(0.234f).Within(0.00001));
-            Assert.That(gamepad.leftTrigger.ReadValueFromEventAsObject(eventPtr),
-                Is.EqualTo(0.234f).Within(0.00001));
+            Assert.That(gamepad.leftTrigger.ReadValueFromEventAsObject(eventPtr), Is.EqualTo(0.234f).Within(0.00001));
         };
 
         InputSystem.QueueStateEvent(gamepad, new GamepadState { leftTrigger = 0.234f });
@@ -1196,16 +1195,12 @@ partial class CoreTests
     {
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryAction}"), Is.EqualTo("PrimaryAction [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick"), Is.EqualTo("Left Stick [Gamepad]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"),
-            Is.EqualTo("Left Stick/X [Gamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/leftStick/x"), Is.EqualTo("Left Stick/X [Gamepad]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/leftStick"), Is.EqualTo("leftStick [Any]"));
         Assert.That(InputControlPath.ToHumanReadableString("*/{PrimaryMotion}/x"), Is.EqualTo("PrimaryMotion/x [Any]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"),
-            Is.EqualTo("Button South [Gamepad]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<XInputController>/buttonSouth"),
-            Is.EqualTo("A [Xbox Controller]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<Touchscreen>/touch4/tap"),
-            Is.EqualTo("Touch #4/Tap [Touchscreen]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth"), Is.EqualTo("Button South [Gamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<XInputController>/buttonSouth"), Is.EqualTo("A [Xbox Controller]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Touchscreen>/touch4/tap"), Is.EqualTo("Touch #4/Tap [Touchscreen]"));
         Assert.That(InputControlPath.ToHumanReadableString("<XRController>{LeftHand}/position"),
 #if ENABLE_VR || UNITY_GAMECORE
             // The layout settings for the display name to change from XRController to XR Controller
@@ -1225,12 +1220,10 @@ partial class CoreTests
 
         // UseShortName.
         Assert.That(
-            InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth",
-                InputControlPath.HumanReadableStringOptions.UseShortNames),
+            InputControlPath.ToHumanReadableString("<Gamepad>/buttonSouth", InputControlPath.HumanReadableStringOptions.UseShortNames),
             Is.EqualTo(GamepadState.ButtonSouthShortDisplayName + " [Gamepad]"));
         Assert.That(
-            InputControlPath.ToHumanReadableString("<Mouse>/leftButton",
-                InputControlPath.HumanReadableStringOptions.UseShortNames),
+            InputControlPath.ToHumanReadableString("<Mouse>/leftButton", InputControlPath.HumanReadableStringOptions.UseShortNames),
             Is.EqualTo("LMB [Mouse]"));
     }
 
@@ -1243,8 +1236,7 @@ partial class CoreTests
         // Pretend 'a' key is mapped to 'q' in current keyboard layout.
         SetKeyInfo(Key.A, "q");
 
-        Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current),
-            Is.EqualTo("Q [Keyboard]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<Keyboard>/a", control: Keyboard.current), Is.EqualTo("Q [Keyboard]"));
     }
 
     private class DeviceWithoutAnyControls : InputDevice
@@ -1258,10 +1250,8 @@ partial class CoreTests
         // This one will throw as the layout will result in a zero-size memory block.
         InputSystem.RegisterLayout<DeviceWithoutAnyControls>();
 
-        Assert.That(InputControlPath.ToHumanReadableString("<UnknownGamepad>/leftStick"),
-            Is.EqualTo("leftStick [UnknownGamepad]"));
-        Assert.That(InputControlPath.ToHumanReadableString("<DeviceWithoutAnyControls>/control"),
-            Is.EqualTo("control [DeviceWithoutAnyControls]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<UnknownGamepad>/leftStick"), Is.EqualTo("leftStick [UnknownGamepad]"));
+        Assert.That(InputControlPath.ToHumanReadableString("<DeviceWithoutAnyControls>/control"), Is.EqualTo("control [DeviceWithoutAnyControls]"));
     }
 
     [Test]
@@ -1376,8 +1366,7 @@ partial class CoreTests
                 Is.EquivalentTo(new InputControl[]
                     { keyboard.aKey, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey }));
 
-            using (var toAdd =
-                       new InputControlList<InputControl>(gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest))
+            using (var toAdd = new InputControlList<InputControl>(gamepad.buttonNorth, gamepad.buttonEast, gamepad.buttonWest))
                 list.AddSlice(toAdd, count: 1, destinationIndex: 1, sourceIndex: 2);
 
             Assert.That(list.Count, Is.EqualTo(6));
@@ -1385,8 +1374,7 @@ partial class CoreTests
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
                 {
-                    keyboard.aKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey,
-                    keyboard.cKey
+                    keyboard.aKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey
                 }));
 
             list[0] = keyboard.zKey;
@@ -1394,8 +1382,7 @@ partial class CoreTests
             Assert.That(list,
                 Is.EquivalentTo(new InputControl[]
                 {
-                    keyboard.zKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey,
-                    keyboard.cKey
+                    keyboard.zKey, gamepad.buttonWest, gamepad.leftStick, keyboard.spaceKey, keyboard.bKey, keyboard.cKey
                 }));
 
             list.Clear();
@@ -1505,8 +1492,7 @@ partial class CoreTests
         if (!checkedTypes.Add(type))
             return;
 
-        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance |
-            BindingFlags.DeclaredOnly))
+        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
         {
             if (!typeof(InputControl).IsAssignableFrom(property.PropertyType))
                 continue;
@@ -1521,16 +1507,14 @@ partial class CoreTests
             if (typeof(InputDevice).IsAssignableFrom(type))
             {
                 // Properties on an InputDevice can be protected, since the precompiled layout will be an inherited class
-                var inputDeviceMessage =
-                    $"A public or protected setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
+                var inputDeviceMessage = $"A public or protected setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
                 Assert.That(setMethod, Is.Not.Null, inputDeviceMessage);
                 Assert.That(setMethod.IsPrivate, Is.Not.True, inputDeviceMessage);
                 Assert.That(setMethod.IsAssembly, Is.Not.True, inputDeviceMessage);
                 continue;
             }
 
-            var inputControlMessage =
-                $"A public setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
+            var inputControlMessage = $"A public setter is required on {type.FullName}.{property.Name} in order to support precompiled layouts";
             Assert.That(setMethod, Is.Not.Null, inputControlMessage);
             Assert.That(setMethod.IsPublic, Is.True, inputControlMessage);
         }
