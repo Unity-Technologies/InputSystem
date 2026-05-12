@@ -55,7 +55,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <summary>
         /// Return <see cref="pressPoint"/> if set, otherwise return <see cref="UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint"/>.
         /// </summary>
-        public float pressPointOrDefault => pressPoint > 0 ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
+        public float pressPointOrDefault => pressPoint > 0.0f ? pressPoint : ButtonControl.s_GlobalDefaultButtonPressPoint;
 
         /// <summary>
         /// Default-initialize the control.
