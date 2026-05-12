@@ -608,7 +608,7 @@ namespace UnityEngine.InputSystem.Editor
         private static void OpenUpdateModeDocumentation()
         {
             var link = new Uri(InputSystem.kDocUrl + "/manual/Settings.html#update-mode");
-            System.Diagnostics.Process.Start(link.AbsoluteUri);
+            Application.OpenURL(link.AbsoluteUri);
         }
 
         private static void ShowPlatformSettings()
