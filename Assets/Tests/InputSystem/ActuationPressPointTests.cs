@@ -1,6 +1,9 @@
+using System;
 using NUnit.Framework;
+using Unity.PerformanceTesting;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 
 // Covers IActuationPressPoint, defaultButtonPressPoint, InputAction.IsPressed, and InputControl.IsPressed().
@@ -352,6 +355,321 @@ internal class ActuationPressPointTests : CoreTestsFixture
 
         Set(gamepad.leftStick, new Vector2(0.55f, 0f));
         Assert.That(gamepad.leftStick.IsPressed(), Is.True);
+    }
+
+    #endregion
+
+    #region Performance (GetActuationPressThreshold vs legacy resolution)
+
+    // Run these with Window > Analysis > Test Report (Performance) or test-framework-performance.
+    // Sample groups use the default time unit (milliseconds) in the performance report.
+    // Each test uses MeasurementCount(1000) for comparable sample counts across runs.
+    // GetActuationPressThreshold.* samples only exist on branches that include that API; Legacy.*
+    // mirror develop's control-only resolution (no binding interaction scan) for side-by-side timing.
+
+    // Matches InputActionState.ProcessButtonState on develop (before actuation press alignment work):
+    // press point from ButtonControl when control is flagged as a button, otherwise global default.
+    private static float LegacyProcessButtonStateStylePressPoint(InputControl control)
+    {
+        return control.isButton
+            ? ((ButtonControl)control).pressPointOrDefault
+            : ButtonControl.s_GlobalDefaultButtonPressPoint;
+    }
+
+    // Matches InputActionState.ProcessDefaultInteraction button branches on develop:
+    // concrete ButtonControl pattern, else global default (Vector2 / stick used this path too).
+    private static float LegacyDefaultInteractionButtonStylePressPoint(InputControl control)
+    {
+        return control is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
+    }
+
+    private static unsafe bool TryGetStateBindingForControl(InputAction action, InputControl control,
+        out InputActionState state, out int bindingIndexInState)
+    {
+        state = null;
+        bindingIndexInState = -1;
+
+        var map = action.GetOrCreateActionMap();
+        map.ResolveBindingsIfNecessary();
+        state = map.m_State;
+        if (state == null)
+            return false;
+
+        var actionIndex = action.m_ActionIndexInState;
+        for (var i = 0; i < state.totalControlCount; ++i)
+        {
+            if (state.controls[i] != control)
+                continue;
+            var bindingIndex = state.controlIndexToBindingIndex[i];
+            if (state.bindingStates[bindingIndex].actionIndex != actionIndex)
+                continue;
+            bindingIndexInState = bindingIndex;
+            return true;
+        }
+
+        return false;
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public unsafe void Performance_GetActuationPressThreshold_GamepadButton_NoInteractions()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+        action.Enable();
+        Assert.That(TryGetStateBindingForControl(action, gamepad.buttonSouth, out var state, out var bindingIndex),
+            Is.True);
+
+        Measure.Method(() =>
+        {
+            var bindingPtr = &state.bindingStates[bindingIndex];
+            _ = state.GetActuationPressThreshold(gamepad.buttonSouth, bindingPtr);
+        })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("GetActuationPressThreshold.Button.NoInteractions")
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public void Performance_Legacy_ProcessButtonStateStyle_GamepadButton()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Measure.Method(() => { _ = LegacyProcessButtonStateStylePressPoint(gamepad.buttonSouth); })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("Legacy.ProcessButtonStateStyle.Button")
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public void Performance_Legacy_DefaultInteractionStyle_GamepadButton()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Measure.Method(() => { _ = LegacyDefaultInteractionButtonStylePressPoint(gamepad.buttonSouth); })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("Legacy.DefaultInteractionStyle.Button")
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public unsafe void Performance_GetActuationPressThreshold_GamepadStick_NoInteractions()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(
+            type: InputActionType.Value,
+            expectedControlType: "Vector2",
+            binding: "<Gamepad>/leftStick");
+        action.Enable();
+        Assert.That(TryGetStateBindingForControl(action, gamepad.leftStick, out var state, out var bindingIndex),
+            Is.True);
+
+        Measure.Method(() =>
+        {
+            var bindingPtr = &state.bindingStates[bindingIndex];
+            _ = state.GetActuationPressThreshold(gamepad.leftStick, bindingPtr);
+        })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("GetActuationPressThreshold.Vector2.NoInteractions")
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public void Performance_Legacy_ProcessButtonStateStyle_GamepadStick()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Measure.Method(() => { _ = LegacyProcessButtonStateStylePressPoint(gamepad.leftStick); })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("Legacy.ProcessButtonStateStyle.Vector2")
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public unsafe void Performance_GetActuationPressThreshold_TriggerWithPressInteraction_ScansInteractions()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(
+            type: InputActionType.Button,
+            binding: "<Gamepad>/leftTrigger",
+            interactions: "press(pressPoint=0.65),SlowTap(duration=0.4)");
+        action.Enable();
+        Assert.That(TryGetStateBindingForControl(action, gamepad.leftTrigger, out var state, out var bindingIndex),
+            Is.True);
+
+        Measure.Method(() =>
+        {
+            var bindingPtr = &state.bindingStates[bindingIndex];
+            _ = state.GetActuationPressThreshold(gamepad.leftTrigger, bindingPtr);
+        })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("GetActuationPressThreshold.WithInteractions.Scan")
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public void Performance_Legacy_DefaultInteractionStyle_GamepadTrigger()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        Measure.Method(() => { _ = LegacyDefaultInteractionButtonStylePressPoint(gamepad.leftTrigger); })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("Legacy.DefaultInteractionStyle.Axis")
+            .Run();
+    }
+
+    #endregion
+
+    #region Performance (InputControlExtensions.IsPressed — develop vs current)
+
+    // Develop used `control is ButtonControl` for default press-point resolution; current uses
+    // `control is IActuationPressPoint`. Legacy helper mirrors develop's IsPressed body when the
+    // optional threshold is omitted (same as default 0). Current tests call the real extension method.
+
+    /// <summary>
+    /// Matches <c>InputControlExtensions.IsPressed</c> on develop when <paramref name="buttonPressPoint"/> is 0
+    /// (default threshold path only).
+    /// </summary>
+    private static bool LegacyIsPressedDevelopStyle(InputControl control, float buttonPressPoint = 0)
+    {
+        if (control == null)
+            throw new ArgumentNullException(nameof(control));
+        if (Mathf.Approximately(0, buttonPressPoint))
+        {
+            if (control is ButtonControl button)
+                buttonPressPoint = button.pressPointOrDefault;
+            else
+                buttonPressPoint = ButtonControl.s_GlobalDefaultButtonPressPoint;
+        }
+
+        return control.IsActuated(buttonPressPoint);
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public void Performance_IsPressed_Current_GamepadButtonSouth()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Set(gamepad.buttonSouth, 0f);
+        InputSystem.Update();
+
+        Measure.Method(() => { _ = gamepad.buttonSouth.IsPressed(); })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("IsPressed.Current.ButtonSouth")
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public void Performance_IsPressed_LegacyDevelopStyle_GamepadButtonSouth()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Set(gamepad.buttonSouth, 0f);
+        InputSystem.Update();
+
+        Measure.Method(() => { _ = LegacyIsPressedDevelopStyle(gamepad.buttonSouth); })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("IsPressed.LegacyDevelopStyle.ButtonSouth")
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public void Performance_IsPressed_Current_GamepadLeftStick()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Set(gamepad.leftStick, Vector2.zero);
+        InputSystem.Update();
+
+        Measure.Method(() => { _ = gamepad.leftStick.IsPressed(); })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("IsPressed.Current.LeftStick")
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public void Performance_IsPressed_LegacyDevelopStyle_GamepadLeftStick()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Set(gamepad.leftStick, Vector2.zero);
+        InputSystem.Update();
+
+        Measure.Method(() => { _ = LegacyIsPressedDevelopStyle(gamepad.leftStick); })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("IsPressed.LegacyDevelopStyle.LeftStick")
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public void Performance_IsPressed_Current_GamepadLeftTrigger()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Set(gamepad.leftTrigger, 0f);
+        InputSystem.Update();
+
+        Measure.Method(() => { _ = gamepad.leftTrigger.IsPressed(); })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("IsPressed.Current.LeftTrigger")
+            .Run();
+    }
+
+    [Test, Performance]
+    [Category("Performance")]
+    [Category("ActuationPressPoint")]
+    public void Performance_IsPressed_LegacyDevelopStyle_GamepadLeftTrigger()
+    {
+        InputSystem.settings.defaultButtonPressPoint = 0.5f;
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        Set(gamepad.leftTrigger, 0f);
+        InputSystem.Update();
+
+        Measure.Method(() => { _ = LegacyIsPressedDevelopStyle(gamepad.leftTrigger); })
+            .MeasurementCount(1000)
+            .WarmupCount(5)
+            .SampleGroup("IsPressed.LegacyDevelopStyle.LeftTrigger")
+            .Run();
     }
 
     #endregion
