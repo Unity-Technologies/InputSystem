@@ -122,8 +122,6 @@ public class InputSystemSettings : AnnotatedSettingsBase
         };
 
         InputSystemPackage.CoverageCommands.Enabled = true;
-        // Unity Code Coverage: keep +Unity.InputSystem* but drop test assembly from instrumentation (see
-        // EditorFunctionalTests coverage-options assemblyFilters and .yamato/wrench/wrench_config.json coverageCommands).
 
         Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
 
