@@ -1159,7 +1159,9 @@ namespace UnityEngine.InputSystem
         /// use <see cref="IActuationPressPoint.pressPoint"/> / <see cref="IActuationPressPoint.pressPointOrDefault"/> when a positive
         /// control <c>pressPoint</c> is set. If not set on the control but the binding has a <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
         /// with <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero, that value is used so this
-        /// API stays aligned with the interaction. For composite bindings, interaction parameters are read from the composite binding.
+        /// API stays aligned with the interaction. If the binding lists several <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
+        /// instances, the first in interaction list order with an explicit <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/>
+        /// greater than zero is used. For composite bindings, interaction parameters are read from the composite binding.
         /// Otherwise <see cref="InputSettings.defaultButtonPressPoint"/> is used.
         ///
         /// <example>
@@ -1241,7 +1243,9 @@ namespace UnityEngine.InputSystem
         /// use <see cref="IActuationPressPoint.pressPoint"/> / <see cref="IActuationPressPoint.pressPointOrDefault"/> when a positive
         /// control <c>pressPoint</c> is set. If not set on the control but the binding has a <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
         /// with <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero, that value is used so this
-        /// API stays aligned with the interaction. For composite bindings, interaction parameters are read from the composite binding.
+        /// API stays aligned with the interaction. If the binding lists several <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
+        /// instances, the first in interaction list order with an explicit <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/>
+        /// greater than zero is used. For composite bindings, interaction parameters are read from the composite binding.
         /// Otherwise <see cref="InputSettings.defaultButtonPressPoint"/> is used.
         ///
         /// <example>
@@ -1338,7 +1342,9 @@ namespace UnityEngine.InputSystem
         /// use <see cref="IActuationPressPoint.pressPoint"/> / <see cref="IActuationPressPoint.pressPointOrDefault"/> when a positive
         /// control <c>pressPoint</c> is set. If not set on the control but the binding has a <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
         /// with <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero, that value is used so this
-        /// API stays aligned with the interaction. For composite bindings, interaction parameters are read from the composite binding.
+        /// API stays aligned with the interaction. If the binding lists several <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
+        /// instances, the first in interaction list order with an explicit <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/>
+        /// greater than zero is used. For composite bindings, interaction parameters are read from the composite binding.
         /// Otherwise <see cref="InputSettings.defaultButtonPressPoint"/> is used.
         ///
         /// <example>

@@ -1603,38 +1603,43 @@ namespace UnityEngine.InputSystem
             return bindingStatePtr;
         }
 
-        private float? TryGetExplicitPressInteractionPressPoint(BindingState* bindingStateForInteractions)
+        // Resolves the explicit press threshold used to keep IsPressed / WasPressedThisFrame / WasReleasedThisFrame aligned
+        // with PressInteraction when the driving control does not set IActuationPressPoint.pressPoint. When multiple
+        // PressInteraction instances exist on the binding, uses the first in interaction list order with pressPoint > 0.
+        private bool TryGetExplicitPressInteractionPressPoint(BindingState* bindingStateForInteractions, ref float explicitPressInteraction)
         {
             var count = bindingStateForInteractions->interactionCount;
             if (count == 0)
-                return null;
+                return false;
             var start = bindingStateForInteractions->interactionStartIndex;
             for (var i = 0; i < count; ++i)
             {
                 if (interactions[start + i] is PressInteraction press && press.pressPoint > 0)
-                    return press.pressPoint;
+                {
+                    explicitPressInteraction = press.pressPoint;
+                    return true;
+                }
             }
 
-            return null;
+            return false;
         }
 
         private float GetActuationPressThreshold(InputControl control, BindingState* bindingStatePtr)
         {
             var bindingForInteractions = GetBindingStateForInteractionParameters(bindingStatePtr);
-            var explicitPress = TryGetExplicitPressInteractionPressPoint(bindingForInteractions);
+            float explicitPressThreshold = 0.0f;
+            var hasExplicitPressThreshold = TryGetExplicitPressInteractionPressPoint(bindingForInteractions, ref explicitPressThreshold);
 
             if (control is IActuationPressPoint actuation)
             {
                 if (actuation.pressPoint > 0)
                     return actuation.pressPointOrDefault;
-                if (explicitPress.HasValue)
-                    return explicitPress.Value;
+                if (hasExplicitPressThreshold)
+                    return explicitPressThreshold;
                 return actuation.pressPointOrDefault;
             }
 
-            if (explicitPress.HasValue)
-                return explicitPress.Value;
-            return ButtonControl.s_GlobalDefaultButtonPressPoint;
+            return hasExplicitPressThreshold ? explicitPressThreshold : ButtonControl.s_GlobalDefaultButtonPressPoint;
         }
 
         private void ProcessButtonState(ref TriggerState trigger, int actionIndex, BindingState* bindingStatePtr)
