@@ -1072,6 +1072,9 @@ namespace UnityEngine.InputSystem.LowLevel
             private double m_StartTimeAsPerRuntime;
             private int m_AllEventsByTimeIndex = 0;
             private List<InputEventPtr> m_AllEventsByTime;
+#if UNITY_EDITOR
+            private bool m_EditorEventPassthroughActive;
+#endif
 
             internal ReplayController(InputEventTrace trace)
             {
@@ -1088,12 +1091,52 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 InputSystem.onBeforeUpdate -= OnBeginFrame;
                 finished = true;
-
+#if UNITY_EDITOR
+                StopEditorEventPassthrough();
+#endif
                 foreach (var device in m_CreatedDevices)
                     InputSystem.RemoveDevice(device);
                 m_CreatedDevices = default;
             }
 
+#if UNITY_EDITOR
+            private void StartEditorEventPassthrough()
+            {
+                if (!m_EditorEventPassthroughActive)
+                {
+                    m_EditorEventPassthroughActive = true;
+                    InputManager.StartEditorEventPassthrough();
+                }
+            }
+
+            private void StopEditorEventPassthrough()
+            {
+                // Clean up any pending deferred stop.
+                InputSystem.onAfterUpdate -= DeferredStopEditorEventPassthrough;
+
+                if (m_EditorEventPassthroughActive)
+                {
+                    m_EditorEventPassthroughActive = false;
+                    InputManager.StopEditorEventPassthrough();
+                }
+            }
+
+            // Defers passthrough stop to after the current update so events already queued
+            // in the native buffer are still processed with passthrough active.
+            private void ScheduleStopEditorEventPassthrough()
+            {
+                if (!m_EditorEventPassthroughActive)
+                    return;
+                InputSystem.onAfterUpdate += DeferredStopEditorEventPassthrough;
+            }
+
+            private void DeferredStopEditorEventPassthrough()
+            {
+                InputSystem.onAfterUpdate -= DeferredStopEditorEventPassthrough;
+                StopEditorEventPassthrough();
+            }
+
+#endif
             /// <summary>
             /// Replay events recorded from <paramref name="recordedDevice"/> on device <paramref name="playbackDevice"/>.
             /// </summary>
@@ -1249,6 +1292,9 @@ namespace UnityEngine.InputSystem.LowLevel
             public ReplayController PlayAllFramesOneByOne()
             {
                 finished = false;
+#if UNITY_EDITOR
+                StartEditorEventPassthrough();
+#endif
                 InputSystem.onBeforeUpdate += OnBeginFrame;
                 return this;
             }
@@ -1267,6 +1313,9 @@ namespace UnityEngine.InputSystem.LowLevel
             public ReplayController PlayAllEvents()
             {
                 finished = false;
+#if UNITY_EDITOR
+                StartEditorEventPassthrough();
+#endif
                 try
                 {
                     while (MoveNext(true, out var eventPtr))
@@ -1311,6 +1360,9 @@ namespace UnityEngine.InputSystem.LowLevel
 
                 // Start playback.
                 finished = false;
+#if UNITY_EDITOR
+                StartEditorEventPassthrough();
+#endif
                 m_StartTimeAsPerFirstEvent = -1;
                 m_AllEventsByTimeIndex = -1;
                 InputSystem.onBeforeUpdate += OnBeginFrame;
@@ -1381,6 +1433,11 @@ namespace UnityEngine.InputSystem.LowLevel
             {
                 finished = true;
                 InputSystem.onBeforeUpdate -= OnBeginFrame;
+#if UNITY_EDITOR
+                // Defer passthrough stop so events already queued in the native buffer
+                // this frame are still processed with passthrough active.
+                ScheduleStopEditorEventPassthrough();
+#endif
                 m_OnFinished?.Invoke();
             }
 

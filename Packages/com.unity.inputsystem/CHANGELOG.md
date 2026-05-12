@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed `InputRecorder` playback not starting when the Game View is not focused in the Editor [ISXB-1319](https://jira.unity3d.com/browse/ISXB-1319)
 - Fixed a `NullReferenceException` thrown when removing all action maps [UUM-137116](https://jira.unity3d.com/browse/UUM-137116)
 - Simplified default setting messaging by consolidating repetitive messages into a single HelpBox.
 - Fixed a `NullPointerReferenceException` thrown in `InputManagerStateMonitors.FireStateChangeNotifications` logging by adding validation [UUM-136095].
