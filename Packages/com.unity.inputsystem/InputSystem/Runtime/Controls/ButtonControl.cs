@@ -92,7 +92,7 @@ namespace UnityEngine.InputSystem.Controls
         /// </code>
         /// </example>
         /// <seealso cref="AxisControl"/>
-        /// <seealso cref="IActuationPressPoint"/>
+        /// <seealso cref="Vector2Control"/>
         public ButtonControl()
         {
             m_StateBlock.format = InputStateBlock.FormatBit;
