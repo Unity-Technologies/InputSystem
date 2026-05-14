@@ -1371,6 +1371,45 @@ partial class CoreTests
 #pragma warning restore CS0618 // Type or member is obsolete
     }
 
+    [Test]
+    [Category("Events")]
+    public void EventHandledPolicy_FromInputSettings_PropagatesToInputManager()
+    {
+        // Default (SuppressActionEventNotifications): handled events still update device state.
+        InputSystem.settings.eventHandledPolicy = InputEventHandledPolicy.SuppressActionEventNotifications;
+        InputSystem.settings.OnChange();
+        Assert.That(InputSystem.manager.inputEventHandledPolicy,
+            Is.EqualTo(InputEventHandledPolicy.SuppressActionEventNotifications));
+
+        var device = InputSystem.AddDevice<Gamepad>();
+        Action<InputEventPtr, InputDevice> markHandled = (evt, _) => evt.handled = true;
+        InputSystem.onEvent += markHandled;
+        try
+        {
+            InputSystem.QueueStateEvent(device, new GamepadState { rightTrigger = 0.45f });
+            InputSystem.Update();
+            Assert.That(device.rightTrigger.ReadValue(), Is.EqualTo(0.45f).Within(0.00001f),
+                "Under SuppressActionEventNotifications, handled events must still update device state.");
+
+            // Flip to legacy SuppressStateUpdates via the settings escape hatch.
+#pragma warning disable CS0618 // Type or member is obsolete
+            InputSystem.settings.eventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
+            InputSystem.settings.OnChange();
+            Assert.That(InputSystem.manager.inputEventHandledPolicy,
+                Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            InputSystem.QueueStateEvent(device, new GamepadState { rightTrigger = 0.85f });
+            InputSystem.Update();
+            Assert.That(device.rightTrigger.ReadValue(), Is.EqualTo(0.45f).Within(0.00001f),
+                "Under legacy SuppressStateUpdates, handled events must be discarded before state propagation.");
+        }
+        finally
+        {
+            InputSystem.onEvent -= markHandled;
+        }
+    }
+
     class SuppressedActionEventData
     {
         public bool MarkNextEventHandled;

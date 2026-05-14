@@ -281,6 +281,17 @@ Methods such as [`InputAction.WasPerformedThisFrame`](xref:UnityEngine.InputSyst
 
 You can query the [current/last update type](xref:UnityEngine.InputSystem.LowLevel.InputState.currentUpdateType) and [count](xref:UnityEngine.InputSystem.LowLevel.InputState.updateCount) from [`InputState`](xref:UnityEngine.InputSystem.LowLevel.InputState).
 
+### Handled events
+
+An [`InputEvent`](xref:UnityEngine.InputSystem.LowLevel.InputEvent) can be marked as handled (typically by an [`InputSystem.onEvent`](xref:UnityEngine.InputSystem.InputSystem.onEvent) callback) to indicate the event has already been consumed. The Input System's response to handled events is configured by the **Event Handling Policy** setting on the **Input System Package > Settings** page in **Project Settings**.
+
+Two values are available:
+
+- **Suppress Action Event Notifications** (default) — handled events still propagate through device state updates so device state stays synchronized with the source. Only [`InputAction`](xref:UnityEngine.InputSystem.InputAction) interaction notifications are suppressed for handled events. Polling APIs such as [`InputAction.WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPerformedThisFrame) also return `false` for state changes that originated from a handled event.
+- **Suppress State Updates** (legacy, deprecated) — handled events are discarded entirely before they reach state propagation. This leaves the Input System's state out of sync with actual device state and is preserved only as a compatibility option for projects that depended on the previous default. New projects should not select this value.
+
+The default was changed from **Suppress State Updates** to **Suppress Action Event Notifications** to fix a class of bugs where actions could trigger spuriously after device state diverged from input state.
+
 ### Merging of events
 
 Input system uses event mering to reduce amount of events required to be processed.

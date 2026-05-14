@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
+using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
 using UnityEngine.UIElements;
 
@@ -181,8 +182,52 @@ namespace UnityEngine.InputSystem.Editor
                         + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. "
                         , MessageType.None);
 
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Behaviour", EditorStyles.boldLabel);
+                EditorGUILayout.Space();
+                DrawEventHandlingPolicyDropdown();
+
                 if (EditorGUI.EndChangeCheck())
                     Apply();
+            }
+        }
+
+        // Hand-rolled popup so the dropdown surfaces only the two real values and avoids
+        // showing the InputEventHandledPolicy.Default alias as a phantom third entry.
+        private static readonly string[] s_EventHandlingPolicyDisplayNames =
+        {
+            "Suppress Action Event Notifications (Default)",
+            "Suppress State Updates (Legacy, deprecated)",
+        };
+
+#pragma warning disable CS0618 // Type or member is obsolete
+        private static readonly InputEventHandledPolicy[] s_EventHandlingPolicyValues =
+        {
+            InputEventHandledPolicy.SuppressActionEventNotifications,
+            InputEventHandledPolicy.SuppressStateUpdates,
+        };
+#pragma warning restore CS0618
+
+        private void DrawEventHandlingPolicyDropdown()
+        {
+            var currentValue = (InputEventHandledPolicy)m_EventHandlingPolicy.intValue;
+            var currentIndex = Array.IndexOf(s_EventHandlingPolicyValues, currentValue);
+            if (currentIndex < 0)
+                currentIndex = 0;
+
+            var newIndex = EditorGUILayout.Popup(m_EventHandlingPolicyContent, currentIndex, s_EventHandlingPolicyDisplayNames);
+            if (newIndex != currentIndex)
+                m_EventHandlingPolicy.intValue = (int)s_EventHandlingPolicyValues[newIndex];
+
+#pragma warning disable CS0618 // Type or member is obsolete
+            if ((InputEventHandledPolicy)m_EventHandlingPolicy.intValue == InputEventHandledPolicy.SuppressStateUpdates)
+#pragma warning restore CS0618
+            {
+                EditorGUILayout.HelpBox(
+                    "SuppressStateUpdates is deprecated and known to desynchronize Input System state from device state. " +
+                    "It is provided only as a compatibility option for projects that depended on the previous default behavior. " +
+                    "Switch to SuppressActionEventNotifications when possible.",
+                    MessageType.Warning);
             }
         }
 
@@ -300,6 +345,7 @@ namespace UnityEngine.InputSystem.Editor
             m_TapRadius = m_SettingsObject.FindProperty("m_TapRadius");
             m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
             m_ShortcutKeysConsumeInputs = m_SettingsObject.FindProperty("m_ShortcutKeysConsumeInputs");
+            m_EventHandlingPolicy = m_SettingsObject.FindProperty("m_EventHandlingPolicy");
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
 #if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
@@ -331,6 +377,7 @@ namespace UnityEngine.InputSystem.Editor
             m_TapRadiusContent = new GUIContent("Tap Radius", "Maximum distance between two finger taps on a touch screen device allowed for the system to consider this a tap of the same touch (as opposed to a new touch).");
             m_MultiTapDelayTimeContent = new GUIContent("MultiTap Delay Time", "Default delay to be allowed between taps for MultiTap interactions. Also used by by touch devices to count multi taps.");
             m_ShortcutKeysConsumeInputsContent = new GUIContent("Enable Input Consumption", "Actions are exclusively triggered and will consume/block other actions sharing the same input. E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.");
+            m_EventHandlingPolicyContent = new GUIContent("Event Handled Policy", "Specifies how input events marked 'handled' are propagated through the system. The default behavior is that event state propagation happens anyway while interaction events (callback or polled) are suppressed. The legacy (deprecated) behavior is still possible to select but is not recommended since it discards events before state propagation leading to the Input System getting desynchronized with actual device state.");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
@@ -442,6 +489,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_TapRadius;
         [NonSerialized] private SerializedProperty m_MultiTapDelayTime;
         [NonSerialized] private SerializedProperty m_ShortcutKeysConsumeInputs;
+        [NonSerialized] private SerializedProperty m_EventHandlingPolicy;
 
         [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;
@@ -468,6 +516,7 @@ namespace UnityEngine.InputSystem.Editor
         private GUIContent m_TapRadiusContent;
         private GUIContent m_MultiTapDelayTimeContent;
         private GUIContent m_ShortcutKeysConsumeInputsContent;
+        private GUIContent m_EventHandlingPolicyContent;
 
         [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
 

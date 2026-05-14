@@ -730,6 +730,24 @@ namespace UnityEngine.InputSystem
             OnChange();
         }
 
+        // Internal since essentially deprecated from its introduction. Serves as an escape hatch.
+        internal InputEventHandledPolicy eventHandledPolicy
+        {
+            get => m_EventHandlingPolicy;
+            set
+            {
+#pragma warning disable CS0618 // Type or member is obsolete
+                if (value != InputEventHandledPolicy.SuppressStateUpdates &&
+                    value != InputEventHandledPolicy.SuppressActionEventNotifications)
+#pragma warning restore CS0618 // Type or member is obsolete
+                {
+                    throw new ArgumentOutOfRangeException($"Invalid event handled policy: {value}");
+                }
+
+                m_EventHandlingPolicy = value;
+            }
+        }
+
         [Tooltip("Determine which type of devices are used by the application. By default, this is empty meaning that all devices recognized "
             + "by Unity will be used. Restricting the set of supported devices will make only those devices appear in the input system.")]
         [SerializeField] private string[] m_SupportedDevices;
@@ -759,6 +777,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
         [SerializeField] private bool m_ShortcutKeysConsumeInputs = false; // This is the shortcut support from v1.4. Temporarily moved here as an opt-in feature, while it's issues are investigated.
+        [SerializeField] private InputEventHandledPolicy m_EventHandlingPolicy = InputEventHandledPolicy.Default; // Introduced in 1.9.2 as an opt-in/opt-out for existing projects
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
 

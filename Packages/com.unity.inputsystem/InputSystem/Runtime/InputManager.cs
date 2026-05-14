@@ -3064,6 +3064,20 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            // Apply event handled policy
+            switch (m_Settings.eventHandledPolicy)
+            {
+#pragma warning disable CS0618 // Type or member is obsolete
+                case InputEventHandledPolicy.SuppressStateUpdates:
+#pragma warning restore CS0618 // Type or member is obsolete
+                case InputEventHandledPolicy.SuppressActionEventNotifications:
+                    m_InputEventHandledPolicy = m_Settings.eventHandledPolicy;
+                    break;
+                default:
+                    m_InputEventHandledPolicy = InputEventHandledPolicy.Default;
+                    break;
+            }
+
             // Apply feature flags.
             if (m_Settings.m_FeatureFlags != null)
             {

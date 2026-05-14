@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Migrated sample scenes to use Universal Render Pipeline (URP) with Built-in Render Pipeline fallback shaders. The URP package is now required to run the samples. (ISX-2343)
 - Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.
 - Changed the UI for `InputSystem.inputsettings` asset to use UI Toolkit framework.
+- Added `Event Handling Policy` setting to Input Settings as an opt-in escape hatch for projects that depended on the previous (deprecated) `SuppressStateUpdates` event handling behavior. New projects continue to use the new default `SuppressActionEventNotifications`. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
 
 ### Added
 
