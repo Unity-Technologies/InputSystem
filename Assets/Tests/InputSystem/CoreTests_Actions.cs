@@ -9277,6 +9277,21 @@ partial class CoreTests
             Is.EqualTo("A/LMB"));
     }
 
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141423
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForCompositeWithNoMatchingGroups_IsExcluded()
+    {
+        var action = new InputAction();
+
+        action.AddCompositeBinding("1DAxis")
+            .With("Negative", "<Keyboard>/a", groups: "Keyboard")
+            .With("Positive", "<Keyboard>/d", groups: "Keyboard");
+
+        Assert.That(action.GetBindingDisplayString(InputBinding.MaskByGroup("Gamepad")),
+            Is.Empty);
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1321175/
     [Test]
     [Category("Actions")]
