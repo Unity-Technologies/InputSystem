@@ -148,32 +148,62 @@ namespace UnityEngine.InputSystem.LowLevel
                 // TODO move it to a proper native callback instead
                 if (value != null)
                 {
-                    // Inject ourselves directly to PlayerLoop.Initialization as first subsystem to run,
-                    // Use InputSystemPlayerLoopRunnerInitializationSystem as system type
-                    var playerLoop = UnityEngine.LowLevel.PlayerLoop.GetCurrentPlayerLoop();
-                    var initStepIndex = playerLoop.subSystemList.IndexOf(x => x.type == typeof(PlayerLoop.Initialization));
-                    if (initStepIndex >= 0)
-                    {
-                        var systems = playerLoop.subSystemList[initStepIndex].subSystemList;
+                    EnsurePlayerLoopInjection();
 
-                        // Check if we're not already injected
-                        if (!systems.Select(x => x.type)
-                            .Contains(typeof(InputSystemPlayerLoopRunnerInitializationSystem)))
-                        {
-                            ArrayHelpers.InsertAt(ref systems, 0, new UnityEngine.LowLevel.PlayerLoopSystem
-                            {
-                                type = typeof(InputSystemPlayerLoopRunnerInitializationSystem),
-                                updateDelegate = () => m_PlayerLoopInitialization?.Invoke()
-                            });
-
-                            playerLoop.subSystemList[initStepIndex].subSystemList = systems;
-                            UnityEngine.LowLevel.PlayerLoop.SetPlayerLoop(playerLoop);
-                        }
-                    }
+                    // Watchdog for UUM-140343: user code calling
+                    // PlayerLoop.SetPlayerLoop(GetDefaultPlayerLoop()) wipes our injection,
+                    // and Unity provides no callback for SetPlayerLoop, no engine API to add to
+                    // the default loop, and no per-frame hook inside the player loop that we
+                    // could anchor to (anything in the loop can be wiped the same way).
+                    // EditorApplication.update is invoked by SceneTracker, not by the player loop
+                    // (see Editor/Src/Selection/SceneInspector.cpp), so it survives a user reset
+                    // and lets us re-inject on the next editor tick. The cost is one cheap
+                    // PlayerLoopSystem-array scan per editor tick while playing -- effectively zero
+                    // when nothing's wrong. Outside play mode the early-return below skips it.
+                    UnityEditor.EditorApplication.update -= EnsurePlayerLoopInjectionIfPlaying;
+                    UnityEditor.EditorApplication.update += EnsurePlayerLoopInjectionIfPlaying;
+                }
+                else
+                {
+                    UnityEditor.EditorApplication.update -= EnsurePlayerLoopInjectionIfPlaying;
                 }
 
                 m_PlayerLoopInitialization = value;
             }
+        }
+
+        // Idempotent: inserts InputSystemPlayerLoopRunnerInitializationSystem at the top of
+        // PlayerLoop.Initialization if it's not already there.
+        private void EnsurePlayerLoopInjection()
+        {
+            var playerLoop = UnityEngine.LowLevel.PlayerLoop.GetCurrentPlayerLoop();
+            var initStepIndex = playerLoop.subSystemList.IndexOf(x => x.type == typeof(PlayerLoop.Initialization));
+            if (initStepIndex < 0)
+                return;
+
+            var systems = playerLoop.subSystemList[initStepIndex].subSystemList;
+            if (systems.Select(x => x.type)
+                .Contains(typeof(InputSystemPlayerLoopRunnerInitializationSystem)))
+                return; // Already injected.
+
+            ArrayHelpers.InsertAt(ref systems, 0, new UnityEngine.LowLevel.PlayerLoopSystem
+            {
+                type = typeof(InputSystemPlayerLoopRunnerInitializationSystem),
+                updateDelegate = () => m_PlayerLoopInitialization?.Invoke()
+            });
+
+            playerLoop.subSystemList[initStepIndex].subSystemList = systems;
+            UnityEngine.LowLevel.PlayerLoop.SetPlayerLoop(playerLoop);
+        }
+
+        // Watchdog tick. Fires from EditorApplication.update (independent of the player loop) and
+        // re-injects only when actually needed. In edit mode we don't care; OnPlayerLoopInitialization
+        // is gated on gameIsPlaying anyway, so a wiped injection while not playing is harmless.
+        private void EnsurePlayerLoopInjectionIfPlaying()
+        {
+            if (!UnityEditor.EditorApplication.isPlaying)
+                return;
+            EnsurePlayerLoopInjection();
         }
         #endif
 

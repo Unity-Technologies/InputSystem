@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed an issue where `UIToolkit` `ClickEvent` could be fired on Android after device rotation due to inactive touch state being replayed during action initial state checks [UUM-100125](https://jira.unity3d.com/browse/UUM-100125).
 - Fixed InputSystem.onAnyButtonPress fails to trigger when the device receives a touch [UUM-137930](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137930).
 - Fixed an incorrect ArraysHelper.HaveDuplicateReferences implementation that didn't use its arguments right [ISXB-1792] (https://github.com/Unity-Technologies/InputSystem/pull/2376)
+- Fixed input state freezing in `FixedUpdate` (and other reads) after user code resets the player loop with `PlayerLoop.SetPlayerLoop(PlayerLoop.GetDefaultPlayerLoop())` [UUM-140343](https://jira.unity3d.com/browse/UUM-140343). The InputSystem now re-injects its `PlayerLoop.Initialization` hook on the next editor tick if a user-driven reset has wiped it.
 
 ### Changed
 - Removed 32-bit compilation check for HID on Windows players, which had no impact anymore. (ISX-2543)
