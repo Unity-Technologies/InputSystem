@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed `InputEventPtr.handled` not preventing actions from triggering when switching devices. The default event handled policy has been changed from `SuppressStateUpdates` (now deprecated) to `SuppressActionEventNotifications`, which keeps device state synchronized while suppressing action callbacks for handled events. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
+- Fixed all `InputAction.WasXxxThisFrame()` and `WasXxxThisDynamicUpdate()` polling APIs to use per-action suppression tracking instead of a map-wide flag. Previously, when multiple events arrived in the same frame with mixed handled/unhandled states, the last event's suppression state could incorrectly affect all actions in the map. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
 - Fixed `InputRecorder` playback not starting when the Game View is not focused in the Editor [ISXB-1319](https://jira.unity3d.com/browse/ISXB-1319)
 - Fixed a `NullReferenceException` thrown when removing all action maps [UUM-137116](https://jira.unity3d.com/browse/UUM-137116)
 - Simplified default setting messaging by consolidating repetitive messages into a single HelpBox.

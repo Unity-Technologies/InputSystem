@@ -1318,10 +1318,18 @@ partial class CoreTests
         Assert.That(wasHandled, Is.False);
     }
 
+    // ISXB-1097: This test verifies the deprecated SuppressStateUpdates behavior where handled
+    // events are discarded entirely, preventing device state from updating. This policy is
+    // deprecated because it desynchronizes the Input System's state from the source, but the
+    // behavior is preserved for backward compatibility when explicitly opted in.
     [Test]
     [Category("Events")]
     public void Events_CanPreventEventsFromBeingProcessed()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
+        InputSystem.manager.inputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
+#pragma warning restore CS0618 // Type or member is obsolete
+
         InputSystem.onEvent +=
             (inputEvent, _) =>
         {
@@ -1343,20 +1351,24 @@ partial class CoreTests
     public void EventHandledPolicy_ShouldReflectUserSetting()
     {
         // Assert default setting
-        Assert.That(InputSystem.manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
+        Assert.That(InputSystem.manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.Default));
 
         // Assert policy can be changed
         InputSystem.manager.inputEventHandledPolicy = InputEventHandledPolicy.SuppressActionEventNotifications;
         Assert.That(InputSystem.manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressActionEventNotifications));
 
         // Assert policy can be changed back
+#pragma warning disable CS0618 // Type or member is obsolete
         InputSystem.manager.inputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
         Assert.That(InputSystem.manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
+#pragma warning restore CS0618 // Type or member is obsolete
 
         // Assert setting property to an invalid value throws exception and do not have side-effects
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             InputSystem.manager.inputEventHandledPolicy = (InputEventHandledPolicy)123456);
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.That(InputSystem.manager.inputEventHandledPolicy, Is.EqualTo(InputEventHandledPolicy.SuppressStateUpdates));
+#pragma warning restore CS0618 // Type or member is obsolete
     }
 
     class SuppressedActionEventData
@@ -1375,7 +1387,9 @@ partial class CoreTests
     // Step 4: Press gamepad north and stick.
 
     // Press event is detected in step 2 (false positive) with default interaction
+#pragma warning disable CS0618 // Type or member is obsolete
     [TestCase(InputEventHandledPolicy.SuppressStateUpdates, // policy
+#pragma warning restore CS0618 // Type or member is obsolete
         null, // interactions
         new int[] { 0, 0, 1, 1, 2}, // started
         new int[] { 0, 0, 1, 1, 2}, // performed
@@ -1387,7 +1401,9 @@ partial class CoreTests
         new int[] { 0, 0, 0, 0, 1},
         new int[] {0, 0, 0, 1, 1})]
     // Press event is detected in step 2 (false positive) with explicit press interaction
+#pragma warning disable CS0618 // Type or member is obsolete
     [TestCase(InputEventHandledPolicy.SuppressStateUpdates,
+#pragma warning restore CS0618 // Type or member is obsolete
         "press",
         new int[] { 0, 0, 1, 1, 2},
         new int[] { 0, 0, 1, 1, 2},
@@ -1516,6 +1532,222 @@ partial class CoreTests
 
         Assert.That(Gamepad.current.buttonNorth.wasPressedThisFrame, Is.True);
         Assert.That(Gamepad.current.buttonNorth.wasReleasedThisFrame, Is.False);
+    }
+
+    [Test]
+    [Category("Events")]
+    [Description("ISXB-1097 Marking events as handled should prevent actions from triggering when switching devices")]
+    public void Events_HandledEventsShouldNotTriggerActionsWhenSwitchingDevices()
+    {
+        // Regression test for ISXB-1097: Under the old SuppressStateUpdates policy, marking
+        // events as handled discarded them entirely, desynchronizing device state. When the
+        // user then switched to a different device, the non-handled event from that device
+        // would arrive while the first device still had stale state, causing spurious action
+        // triggers. The fix (SuppressActionEventNotifications) ensures state always propagates
+        // so that no desynchronization occurs.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Action bound to both devices, mimicking a typical "Jump" binding.
+        var action = new InputAction(type: InputActionType.Button);
+        action.AddBinding("<Gamepad>/buttonSouth");
+        action.AddBinding("<Keyboard>/space");
+        action.Enable();
+
+        var performedCount = 0;
+        action.performed += _ => ++ performedCount;
+
+        // Suppress all events via onEvent listener (user scenario from the bug report).
+        InputSystem.onEvent += (eventPtr, _) => { eventPtr.handled = true; };
+
+        // Step 1: Press on keyboard (handled — should not trigger action).
+        Press(keyboard.spaceKey);
+        Assert.That(performedCount, Is.EqualTo(0), "Action should not trigger from handled keyboard event");
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+
+        // Step 2: Switch to gamepad (also handled — should not trigger action).
+        // Under the old policy this was the problematic transition: the keyboard press was
+        // never recorded in state, so the gamepad press appeared as a "new" actuation.
+        Press(gamepad.buttonSouth);
+        Assert.That(performedCount, Is.EqualTo(0), "Action should not trigger from handled gamepad event after device switch");
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+
+        // Step 3: Release and press again on gamepad (still handled).
+        Release(gamepad.buttonSouth);
+        Press(gamepad.buttonSouth);
+        Assert.That(performedCount, Is.EqualTo(0), "Action should not trigger from repeated handled gamepad events");
+
+        // Step 4: Verify state is synchronized despite suppression — device state should
+        // reflect the press even though action notifications were suppressed.
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True, "Device state should be updated even for handled events");
+        Assert.That(keyboard.spaceKey.isPressed, Is.True, "Keyboard state should reflect the handled press (state propagates)");
+    }
+
+    [Test]
+    [Category("Events")]
+    [Description("ISXB-1097 Multiple events per frame from a high-frequency device (e.g. DualSense at" +
+        " 600 Hz) should not trigger actions if the press-edge event is handled")]
+    public void Events_HandledPressEdgeInMultiEventFrameShouldNotTriggerActions()
+    {
+        // Regression test for a scenario where a high-frequency device queues multiple state
+        // events in a single frame. If the first event contains the button press edge and is
+        // marked as handled, subsequent events in the same frame that carry the same pressed
+        // state must not cause a spurious action trigger — even though from the action system's
+        // perspective the button transitions from "not pressed" to "pressed" on those events.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+        action.Enable();
+
+        var performedCount = 0;
+        action.performed += _ => ++ performedCount;
+
+        // Mark only the first event in each update as handled (simulating selective suppression
+        // of the press-edge event while allowing subsequent state updates through).
+        var handleNextEvent = true;
+        InputSystem.onEvent += (eventPtr, _) =>
+        {
+            if (handleNextEvent)
+            {
+                eventPtr.handled = true;
+                handleNextEvent = false;
+            }
+        };
+
+        // Queue multiple events in a single frame, as a high-frequency device would.
+        // Event 1: button press edge (will be handled).
+        // Event 2: same button still pressed + slight stick drift (not handled).
+        // Event 3: same button still pressed + more stick drift (not handled).
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState().WithButton(GamepadButton.South));
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState { leftStick = new Vector2(0.01f, 0f) }.WithButton(GamepadButton.South));
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState { leftStick = new Vector2(0.02f, 0f) }.WithButton(GamepadButton.South));
+        InputSystem.Update();
+
+        // ISXB-1097: The first event (press edge) was handled, so the action should not have
+        // triggered. The subsequent events carry the same pressed state but since state was
+        // already updated by the handled event, they do not represent a new press transition
+        // and should not trigger the action either.
+        Assert.That(performedCount, Is.EqualTo(0),
+            "Action should not trigger when press-edge event is handled, even with subsequent same-state events");
+        Assert.That(action.WasPressedThisFrame(), Is.False);
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True,
+            "Device state should still reflect the press from the handled event");
+
+        // Next frame: verify a genuine new press (unhanded) does trigger normally.
+        handleNextEvent = false;
+        InputSystem.QueueStateEvent(gamepad, new GamepadState()); // release
+        InputSystem.Update();
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState().WithButton(GamepadButton.South)); // new press
+        InputSystem.Update();
+
+        Assert.That(performedCount, Is.EqualTo(1),
+            "Action should trigger normally for non-handled press events");
+    }
+
+    [Test]
+    [Category("Events")]
+    [Description("ISXB-1097 All WasXxxThisFrame polling APIs should return false when events are" +
+        " suppressed via SuppressActionEventNotifications")]
+    public void Events_AllWasXxxThisFrameAPIsRespectEventSuppression()
+    {
+        // ISXB-1097: Verifies that all WasXxxThisFrame (and DynamicUpdate variants) consistently
+        // return false when the underlying event is handled under SuppressActionEventNotifications.
+        // Previously WasReleasedThisFrame and WasCompletedThisFrame were not gated by IsSuppressed.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var buttonAction = new InputAction(name: "button", type: InputActionType.Button,
+            binding: "<Gamepad>/buttonSouth");
+        buttonAction.Enable();
+
+        // Suppress all events.
+        InputSystem.onEvent += (eventPtr, _) => { eventPtr.handled = true; };
+
+        // Press: should suppress WasPressedThisFrame and WasPerformedThisFrame.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState().WithButton(GamepadButton.South));
+        InputSystem.Update();
+
+        Assert.That(buttonAction.WasPressedThisFrame(), Is.False, "WasPressedThisFrame should be suppressed");
+        Assert.That(buttonAction.WasPressedThisDynamicUpdate(), Is.False, "WasPressedThisDynamicUpdate should be suppressed");
+        Assert.That(buttonAction.WasPerformedThisFrame(), Is.False, "WasPerformedThisFrame should be suppressed");
+        Assert.That(buttonAction.WasPerformedThisDynamicUpdate(), Is.False, "WasPerformedThisDynamicUpdate should be suppressed");
+        // Device state should still reflect the press.
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+
+        // Release: should suppress WasReleasedThisFrame and WasCompletedThisFrame.
+        InputSystem.QueueStateEvent(gamepad, new GamepadState());
+        InputSystem.Update();
+
+        Assert.That(buttonAction.WasReleasedThisFrame(), Is.False, "WasReleasedThisFrame should be suppressed");
+        Assert.That(buttonAction.WasReleasedThisDynamicUpdate(), Is.False, "WasReleasedThisDynamicUpdate should be suppressed");
+        Assert.That(buttonAction.WasCompletedThisFrame(), Is.False, "WasCompletedThisFrame should be suppressed");
+        Assert.That(buttonAction.WasCompletedThisDynamicUpdate(), Is.False, "WasCompletedThisDynamicUpdate should be suppressed");
+        // Device state should reflect the release.
+        Assert.That(gamepad.buttonSouth.isPressed, Is.False);
+    }
+
+    [Test]
+    [Category("Events")]
+    [Description("ISXB-1097 Per-action suppression: mixed handled/unhandled events in the same" +
+        " frame should only suppress the actions affected by the handled event")]
+    public void Events_PerActionSuppressionWithMixedHandledEvents()
+    {
+        // ISXB-1097: When multiple events arrive in the same frame and only some are handled,
+        // the polling APIs should return correct results per-action. An action triggered by an
+        // unhandled event should not be affected by a different handled event in the same frame.
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var southAction = new InputAction(name: "south", type: InputActionType.Button,
+            binding: "<Gamepad>/buttonSouth");
+        var northAction = new InputAction(name: "north", type: InputActionType.Button,
+            binding: "<Gamepad>/buttonNorth");
+        southAction.Enable();
+        northAction.Enable();
+
+        // Handle events that press buttonSouth, but let buttonNorth events through.
+        InputSystem.onEvent += (eventPtr, device) =>
+        {
+            // We can't selectively handle per-control within a single event, so we use
+            // two separate events: one for south (handled) and one for north (not handled).
+        };
+
+        // Event 1: Press south only — mark as handled.
+        var handleNext = true;
+        InputSystem.onEvent += (eventPtr, _) =>
+        {
+            if (handleNext)
+            {
+                eventPtr.handled = true;
+                handleNext = false;
+            }
+        };
+
+        // Queue two events: first presses south (will be handled), second presses north
+        // (will not be handled). Both arrive in the same frame.
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState().WithButton(GamepadButton.South));
+        InputSystem.QueueStateEvent(gamepad,
+            new GamepadState().WithButton(GamepadButton.South).WithButton(GamepadButton.North));
+        InputSystem.Update();
+
+        // South was pressed by the handled event — its polling APIs should be suppressed.
+        Assert.That(southAction.WasPressedThisFrame(), Is.False,
+            "South action triggered by handled event should be suppressed");
+        Assert.That(southAction.WasPerformedThisFrame(), Is.False,
+            "South action triggered by handled event should be suppressed");
+
+        // North was pressed by the unhandled event — its polling APIs should report normally.
+        Assert.That(northAction.WasPressedThisFrame(), Is.True,
+            "North action triggered by unhandled event should NOT be suppressed");
+        Assert.That(northAction.WasPerformedThisFrame(), Is.True,
+            "North action triggered by unhandled event should NOT be suppressed");
+
+        // Both buttons should reflect actual device state regardless of suppression.
+        Assert.That(gamepad.buttonSouth.isPressed, Is.True);
+        Assert.That(gamepad.buttonNorth.isPressed, Is.True);
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 2)]

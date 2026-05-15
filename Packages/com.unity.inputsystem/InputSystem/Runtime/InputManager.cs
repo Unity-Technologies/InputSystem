@@ -338,9 +338,11 @@ namespace UnityEngine.InputSystem
                 switch (value)
                 {
                     case InputEventHandledPolicy.SuppressActionEventNotifications:
+#pragma warning disable CS0618 // Type or member is obsolete
                     case InputEventHandledPolicy.SuppressStateUpdates:
                         m_InputEventHandledPolicy = value;
                         break;
+#pragma warning restore CS0618 // Type or member is obsolete
                     default:
                         throw new ArgumentOutOfRangeException(
                             $"Unsupported input event handling policy: {value}");
@@ -1680,7 +1682,13 @@ namespace UnityEngine.InputSystem
                     stateEventPtr->baseEvent.sizeInBytes = InputEvent.kBaseEventSize + sizeof(int) + deviceStateBlockSize;
                     stateEventPtr->baseEvent.time = currentTime;
                     stateEventPtr->baseEvent.deviceId = device.deviceId;
-                    stateEventPtr->baseEvent.eventId = -1;
+                    // ISXB-1097: Using InvalidEventId (0) rather than -1 here. Setting eventId to -1
+                    // (0xFFFFFFFF) accidentally sets the handled bit (bit 31, kHandledMask) which
+                    // causes SuppressActionEventNotifications policy to suppress action callbacks
+                    // from this synthetic reset event. Whether reset events *should* suppress
+                    // pass-through Performed(0) notifications is a separate design question — but
+                    // it should be an intentional choice, not a side-effect of a sentinel value.
+                    stateEventPtr->baseEvent.eventId = InputEvent.InvalidEventId;
                     stateEventPtr->stateFormat = device.m_StateBlock.format;
 
                     // Decide whether we perform a soft reset or a hard reset.
@@ -2025,7 +2033,7 @@ namespace UnityEngine.InputSystem
             #endif
 
             // Default input event handled policy.
-            m_InputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
+            m_InputEventHandledPolicy = InputEventHandledPolicy.Default;
 
             // Register layouts.
             // NOTE: Base layouts must be registered before their derived layouts
@@ -3468,12 +3476,14 @@ namespace UnityEngine.InputSystem
                             new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
 
                         // If a listener marks the event as handled, we don't process it further.
+#pragma warning disable CS0618 // Type or member is obsolete
                         if (m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressStateUpdates &&
                             currentEventReadPtr->handled)
                         {
                             m_InputEventStream.Advance(false);
                             continue;
                         }
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
 
                     // Update metrics.
