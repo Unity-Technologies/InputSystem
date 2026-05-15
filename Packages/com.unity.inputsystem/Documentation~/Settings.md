@@ -120,6 +120,19 @@ To force the Editor to add all locally available Devices, even if they're not in
 > [!NOTE]
 > This setting is stored as a user setting, not a project setting. This means other users who open the project in their own Editor do not share the setting.
 
+## Improved Shortcut Support
+
+Under __Improved Shortcut Support__, two independent options control how the Input System resolves overlapping bindings on the same control (for example a plain __B__ key action versus __Shift+B__):
+
+| UI / API | Description |
+| -------- | ----------- |
+| __Complexity-Based Shortcut Resolution__ ([`shortcutKeysConsumeInput`](xref:UnityEngine.InputSystem.InputSettings.shortcutKeysConsumeInput)) | When enabled and action priority is off, composite bindings are ordered by automatic **complexity** (depth of the composite). The first action that performs can consume the input so simpler bindings on the same control are skipped. Modifier composites use **ordered** modifier evaluation while this mode is active. |
+| __Action Priority Shortcut Resolution__ ([`shortcutKeysUseActionPriority`](xref:UnityEngine.InputSystem.InputSettings.shortcutKeysUseActionPriority)) | When enabled, resolution uses each action's [`InputAction.Priority`](xref:UnityEngine.InputSystem.InputAction.Priority). Higher priority is handled first and can consume input for lower-priority actions. The **Priority** field appears in the Input Actions editor when this is on. Serialized priority values are always kept on the asset even when this option is off. |
+
+Both options default to **off**. If **Action Priority Shortcut Resolution** is on, it **takes precedence** over complexity-based resolution even if **Complexity-Based Shortcut Resolution** is also enabled.
+
+For more detail on complexity ordering, see [Multiple input sequences (such as keyboard shortcuts)](xref:input-system-action-bindings#multiple-input-sequences-such-as-keyboard-shortcuts).
+
 ## Platform-specific settings
 
 ### iOS/tvOS

@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added `InputSettings.shortcutKeysUseActionPriority` to opt into action-priority based shortcut overlap resolution. `shortcutKeysConsumeInput` enables complexity-based resolution when action priority is off (matching previous develop behavior). When both are enabled, action priority takes precedence. Serialized `InputAction` priority values are always kept; the Priority field in the Input Actions editor is shown only when action priority resolution is enabled. Both settings default to off.
+
 - Support for entering the play mode with domain reload turned off (i.e. Faster Enter Playmode feature) [ISX-2411]
 
 ## [1.19.0] - 2026-02-24

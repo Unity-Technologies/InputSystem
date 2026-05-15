@@ -101,7 +101,8 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": true
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""Look"",
@@ -110,7 +111,8 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": true
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""PickUp"",
@@ -119,7 +121,8 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""Drop"",
@@ -128,7 +131,8 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""Throw"",
@@ -137,7 +141,8 @@ namespace UnityEngine.InputSystem.Samples.InGameHints
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [

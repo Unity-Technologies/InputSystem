@@ -89,6 +89,8 @@ namespace UnityEngine.InputSystem.Editor
                 Dispatch(Commands.ChangeActionControlType(inputAction, 0));
             }
 
+            var showPriority = InputSystem.settings != null && InputSystem.settings.shortcutKeysUseActionPriority;
+
             var priorityField = new IntegerField("Priority")
             {
                 tooltip = InputActionsEditorConstants.ActionPriorityTooltip
@@ -101,7 +103,8 @@ namespace UnityEngine.InputSystem.Editor
             {
                 Dispatch(Commands.ChangeActionPriority(inputAction, evt.newValue));
             });
-            rootElement.Add(priorityField);
+            if (showPriority)
+                rootElement.Add(priorityField);
 
             if (inputAction.type != InputActionType.Value)
             {

@@ -115,7 +115,8 @@ namespace UnityEngine.InputSystem
         private ushort* controlGroupingAndPriority => memory.controlGroupingAndPriority;
 
         /// <summary>
-        /// Layout of <see cref="UnmanagedMemory.controlGroupingAndPriority"/>: interleaved ushort pairs (group id, binding priority) per control slot.
+        /// Layout of <see cref="UnmanagedMemory.controlGroupingAndPriority"/>: interleaved ushort pairs (group id, secondary) per control slot.
+        /// Secondary is action priority when <see cref="InputSettings.IsShortcutResolutionUsingActionPriority"/> is enabled; otherwise composite complexity (develop behavior).
         /// </summary>
         internal static class ControlGroupingTable
         {
@@ -165,42 +166,98 @@ namespace UnityEngine.InputSystem
             if (memory.controlGroupingInitialized)
                 return;
 
-            var currentGroup = 1u;
-
-            for (var i = 0; i < totalControlCount; ++i)
+            var settings = InputSystem.settings;
+            if (settings.IsShortcutResolutionUsingActionPriority)
             {
-                var control = controls[i];
+                var currentGroup = 1u;
 
-                int bindingIndex = controlIndexToBindingIndex[i];
-
-                ////REVIEW: take processors and interactions into account??
-
-                var action = GetActionOrNull(bindingIndex);
-
-                var priority = Math.Clamp(action != null ? action.Priority : 0, 0, 65535);
-
-                controlGroupingAndPriority[ControlGroupingTable.PriorityElementIndex(i)] = (ushort)priority;
-
-                // Compute grouping. If already set, skip.
-                if (controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] == 0)
+                for (var i = 0; i < totalControlCount; ++i)
                 {
-                    for (var n = 0; n < totalControlCount; ++n)
+                    var control = controls[i];
+
+                    var bindingIndex = controlIndexToBindingIndex[i];
+
+                    ////REVIEW: take processors and interactions into account??
+
+                    var action = GetActionOrNull(bindingIndex);
+
+                    var priority = Math.Clamp(action != null ? action.Priority : 0, 0, 65535);
+
+                    controlGroupingAndPriority[ControlGroupingTable.PriorityElementIndex(i)] = (ushort)priority;
+
+                    // Compute grouping. If already set, skip.
+                    if (controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] == 0)
                     {
-                        // NOTE: We could compute group numbers based on device index + control offsets
-                        //       and thus make them work globally in a stable way. But we'd need a mechanism
-                        //       to then determine ordering of actions globally such that it is clear which
-                        //       action gets a first shot at an input.
+                        for (var n = 0; n < totalControlCount; ++n)
+                        {
+                            // NOTE: We could compute group numbers based on device index + control offsets
+                            //       and thus make them work globally in a stable way. But we'd need a mechanism
+                            //       to then determine ordering of actions globally such that it is clear which
+                            //       action gets a first shot at an input.
 
-                        var otherControl = controls[n];
-                        if (control != otherControl)
-                            continue;
+                            var otherControl = controls[n];
+                            if (control != otherControl)
+                                continue;
 
-                        controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(n)] = (ushort)currentGroup;
+                            controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(n)] = (ushort)currentGroup;
+                        }
+
+                        controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] = (ushort)currentGroup;
+
+                        ++currentGroup;
+                    }
+                }
+            }
+            else
+            {
+                // Complexity-based path (same as develop when shortcutKeysConsumeInput is off: disable grouping).
+                var disableControlGrouping = !settings.shortcutKeysConsumeInput;
+
+                var currentGroup = 1u;
+                for (var i = 0; i < totalControlCount; ++i)
+                {
+                    var control = controls[i];
+                    var bindingIndex = controlIndexToBindingIndex[i];
+                    ref var binding = ref bindingStates[bindingIndex];
+
+                    ////REVIEW: take processors and interactions into account??
+
+                    // Compute complexity.
+                    var complexity = 1;
+                    if (binding.isPartOfComposite && !disableControlGrouping)
+                    {
+                        var compositeBindingIndex = binding.compositeOrCompositeBindingIndex;
+
+                        for (var n = compositeBindingIndex + 1; n < totalBindingCount; ++n)
+                        {
+                            ref var partBinding = ref bindingStates[n];
+                            if (!partBinding.isPartOfComposite || partBinding.compositeOrCompositeBindingIndex != compositeBindingIndex)
+                                break;
+                            ++complexity;
+                        }
                     }
 
-                    controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] = (ushort)currentGroup;
+                    controlGroupingAndPriority[ControlGroupingTable.PriorityElementIndex(i)] = (ushort)complexity;
 
-                    ++currentGroup;
+                    // Compute grouping. If already set, skip.
+                    if (controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] == 0)
+                    {
+                        if (!disableControlGrouping)
+                        {
+                            for (var n = 0; n < totalControlCount; ++n)
+                            {
+                                var otherControl = controls[n];
+                                if (control != otherControl)
+                                    continue;
+
+                                controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(n)] = (ushort)currentGroup;
+                            }
+                        }
+
+                        controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] = (ushort)currentGroup;
+
+                        ++currentGroup;
+                    }
                 }
             }
 
@@ -1037,6 +1094,9 @@ namespace UnityEngine.InputSystem
 
         internal void OnActionPriorityChanged(InputAction action)
         {
+            if (!InputSystem.settings.IsShortcutResolutionUsingActionPriority)
+                return;
+
             Debug.Assert(action != null, "Action must not be null");
             Debug.Assert(action.m_ActionMap != null, "Action must have action map");
 
@@ -1446,7 +1506,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Bit pack the mapIndex, controlIndex, bindingIndex and binding-priority components into a single long monitor index value.
+        /// Bit pack the mapIndex, controlIndex, bindingIndex and monitor sort value into a single long monitor index value.
         /// </summary>
         /// <param name="mapIndex">The mapIndex value to pack.</param>
         /// <param name="controlIndex">The controlIndex value to pack.</param>
@@ -1456,7 +1516,7 @@ namespace UnityEngine.InputSystem
         /// monitors. While we could look up map and binding indices from control indices, keeping
         /// all the information together avoids having to unnecessarily jump around in memory to grab
         /// the various pieces of data.
-        /// Priority is read from <see cref="ControlGroupingTable"/> data for <paramref name="controlIndex"/>.
+        /// The high bits store action priority or composite complexity depending on <see cref="InputSettings.IsShortcutResolutionUsingActionPriority"/>.
         /// </remarks>
         private long ToCombinedMapAndControlAndBindingIndex(int mapIndex, int controlIndex, int bindingIndex)
         {
@@ -1464,6 +1524,14 @@ namespace UnityEngine.InputSystem
             // action state (see TriggerState.kMaxNumXXX).
             return InputActionStateMonitorIndex.Create(mapIndex, controlIndex, bindingIndex,
                 GetControlBindingPriority(controlIndex)).Packed;
+        }
+
+        /// <summary>
+        /// Extract the complexity or priority component from the monitor index (high 8 bits).
+        /// </summary>
+        internal static int GetComplexityFromMonitorIndex(long mapControlAndBindingIndex)
+        {
+            return (int)((mapControlAndBindingIndex >> 48) & 0xff);
         }
 
         /// <summary>
@@ -2522,9 +2590,13 @@ namespace UnityEngine.InputSystem
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
 
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
-                // can then reset state monitors in the same group (strictly lower binding priority only).
-                // NOTE: We don't consume for controls at binding priority 0. Those we fire in unison.
-                if (GetControlBindingPriority(trigger.controlIndex) > 0 &&
+                // can reset other monitors (priority: strictly lower priority; complexity: same group after sort).
+                var settings = InputSystem.settings;
+                var secondary = GetControlBindingPriority(trigger.controlIndex);
+                var shouldConsumeHandled = settings.IsShortcutResolutionUsingActionPriority
+                    ? secondary > 0
+                    : secondary > 1;
+                if (shouldConsumeHandled &&
                     // we can end up switching to performed state from an interaction with a timeout, at which point
                     // the original event will probably have been removed from memory, so make sure to check
                     // we still have one
@@ -4218,7 +4290,7 @@ namespace UnityEngine.InputSystem
             ////REVIEW: make this an array of shorts rather than ints?
             public int* controlIndexToBindingIndex;
 
-            // Two shorts per control. First one is group number. Second one is priority.
+            // Two shorts per control. First one is group number. Second is priority or complexity (see InputActionState.ComputeControlGroupingIfNecessary).
             public ushort* controlGroupingAndPriority;
             public bool controlGroupingInitialized;
 
@@ -4522,6 +4594,23 @@ namespace UnityEngine.InputSystem
             }
 
             return numFound;
+        }
+
+        /// <summary>
+        /// Re-resolve bindings for every live action state so control grouping and monitor indices match shortcut settings.
+        /// </summary>
+        internal static void RequestBindingResolutionAfterShortcutSettingsChange()
+        {
+            for (var i = 0; i < s_GlobalState.globalList.length; ++i)
+            {
+                var handle = s_GlobalState.globalList[i];
+                if (!handle.IsAllocated || handle.Target == null)
+                    continue;
+                var state = (InputActionState)handle.Target;
+                if (state.totalMapCount == 0)
+                    continue;
+                state.maps[0].LazyResolveBindings(fullResolve: false);
+            }
         }
 
         ////TODO: when re-resolving, we need to preserve InteractionStates and not just reset them

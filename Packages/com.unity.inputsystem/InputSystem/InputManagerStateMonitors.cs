@@ -270,13 +270,24 @@ namespace UnityEngine.InputSystem
                 if (!previouslyHandled && eventPtr->handled)
                 {
                     var groupIndex = listeners[i].groupIndex;
-                    var handlerPriority = InputActionStateMonitorIndex.FromPacked(listener.monitorIndex).Priority;
-                    for (var n = i + 1; n < signals.length; ++n)
+                    if (InputSystem.settings.IsShortcutResolutionUsingActionPriority)
                     {
-                        if (listeners[n].groupIndex == groupIndex && listeners[n].monitor == listener.monitor)
+                        var handlerPriority = InputActionStateMonitorIndex.FromPacked(listener.monitorIndex).Priority;
+                        for (var n = i + 1; n < signals.length; ++n)
                         {
-                            var candidatePriority = InputActionStateMonitorIndex.FromPacked(listeners[n].monitorIndex).Priority;
-                            if (candidatePriority < handlerPriority)
+                            if (listeners[n].groupIndex == groupIndex && listeners[n].monitor == listener.monitor)
+                            {
+                                var candidatePriority = InputActionStateMonitorIndex.FromPacked(listeners[n].monitorIndex).Priority;
+                                if (candidatePriority < handlerPriority)
+                                    signals.ClearBit(n);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (var n = i + 1; n < signals.length; ++n)
+                        {
+                            if (listeners[n].groupIndex == groupIndex && listeners[n].monitor == listener.monitor)
                                 signals.ClearBit(n);
                         }
                     }
@@ -408,17 +419,33 @@ namespace UnityEngine.InputSystem
 
             public void SortMonitorsByIndex()
             {
+                var useActionPriority = InputSystem.settings.IsShortcutResolutionUsingActionPriority;
                 for (var i = 1; i < signalled.length; ++i)
                 {
                     for (var j = i; j > 0; --j)
                     {
-                        var firstPriority = InputActionStateMonitorIndex.FromPacked(listeners[j - 1].monitorIndex).Priority;
-                        var secondPriority = InputActionStateMonitorIndex.FromPacked(listeners[j].monitorIndex).Priority;
-                        if (firstPriority >= secondPriority)
-                            break;
+                        if (useActionPriority)
+                        {
+                            var firstPriority = InputActionStateMonitorIndex.FromPacked(listeners[j - 1].monitorIndex).Priority;
+                            var secondPriority = InputActionStateMonitorIndex.FromPacked(listeners[j].monitorIndex).Priority;
+                            if (firstPriority >= secondPriority)
+                                break;
+                        }
+                        else
+                        {
+                            // Sort by complexities only to keep the sort stable
+                            // i.e. don't reverse the order of controls which have the same complexity
+                            var firstComplexity = InputActionState.GetComplexityFromMonitorIndex(listeners[j - 1].monitorIndex);
+                            var secondComplexity = InputActionState.GetComplexityFromMonitorIndex(listeners[j].monitorIndex);
+                            if (firstComplexity >= secondComplexity)
+                                break;
+                        }
 
                         listeners.SwapElements(j, j - 1);
                         memoryRegions.SwapElements(j, j - 1);
+
+                        // We can ignore the `signalled` array here as we call this method only
+                        // when all monitors are in non-signalled state.
                     }
                 }
 

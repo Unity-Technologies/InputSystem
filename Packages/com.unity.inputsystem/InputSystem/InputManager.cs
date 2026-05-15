@@ -2432,6 +2432,9 @@ namespace UnityEngine.InputSystem
         internal InputManagerStateMonitors m_StateMonitors;
         private InputMetrics m_Metrics;
         private InputSettings m_Settings;
+        private bool m_HaveCachedShortcutResolutionSettings;
+        private bool m_CachedShortcutKeysConsumeInput;
+        private bool m_CachedShortcutKeysUseActionPriority;
 
         // Extract as booleans (from m_Settings) because feature check is in the hot path
 
@@ -3065,6 +3068,15 @@ namespace UnityEngine.InputSystem
             // Invalidate control caches due to potential changes to processors or value readers
             foreach (var device in devices)
                 device.MarkAsStaleRecursively();
+
+            var consume = m_Settings.shortcutKeysConsumeInput;
+            var useActionPriority = m_Settings.shortcutKeysUseActionPriority;
+            if (m_HaveCachedShortcutResolutionSettings &&
+                (m_CachedShortcutKeysConsumeInput != consume || m_CachedShortcutKeysUseActionPriority != useActionPriority))
+                InputActionState.RequestBindingResolutionAfterShortcutSettingsChange();
+            m_CachedShortcutKeysConsumeInput = consume;
+            m_CachedShortcutKeysUseActionPriority = useActionPriority;
+            m_HaveCachedShortcutResolutionSettings = true;
 
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,

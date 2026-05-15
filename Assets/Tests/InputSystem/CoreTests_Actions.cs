@@ -212,6 +212,7 @@ partial class CoreTests
     public void Actions_WhenShortcutsEnabled_CanConsumeInput(bool legacyComposites)
     {
         InputSystem.settings.shortcutKeysConsumeInput = true;
+        InputSystem.settings.shortcutKeysUseActionPriority = true;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -304,6 +305,7 @@ partial class CoreTests
     public void Actions_ShortcutSupportDisabledByDefault()
     {
         Assert.That(InputSystem.settings.shortcutKeysConsumeInput, Is.False);
+        Assert.That(InputSystem.settings.shortcutKeysUseActionPriority, Is.False);
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -323,6 +325,35 @@ partial class CoreTests
 
         Assert.That(action1.WasPerformedThisFrame(), Is.True);
         Assert.That(action2.WasPerformedThisFrame(), Is.True);
+    }
+
+    [Test]
+    [Category("Actions")]
+    public void InputSettings_ShortcutResolutionModeHelpers_MatchExpectedMatrix()
+    {
+        InputSystem.settings.shortcutKeysConsumeInput = false;
+        InputSystem.settings.shortcutKeysUseActionPriority = false;
+        Assert.That(InputSystem.settings.IsShortcutResolutionUsingActionPriority, Is.False);
+        Assert.That(InputSystem.settings.IsShortcutResolutionUsingComplexity, Is.False);
+        Assert.That(InputSystem.settings.IsShortcutComplexityModifierOrderActive, Is.False);
+
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+        InputSystem.settings.shortcutKeysUseActionPriority = false;
+        Assert.That(InputSystem.settings.IsShortcutResolutionUsingActionPriority, Is.False);
+        Assert.That(InputSystem.settings.IsShortcutResolutionUsingComplexity, Is.True);
+        Assert.That(InputSystem.settings.IsShortcutComplexityModifierOrderActive, Is.True);
+
+        InputSystem.settings.shortcutKeysConsumeInput = false;
+        InputSystem.settings.shortcutKeysUseActionPriority = true;
+        Assert.That(InputSystem.settings.IsShortcutResolutionUsingActionPriority, Is.True);
+        Assert.That(InputSystem.settings.IsShortcutResolutionUsingComplexity, Is.False);
+        Assert.That(InputSystem.settings.IsShortcutComplexityModifierOrderActive, Is.False);
+
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+        InputSystem.settings.shortcutKeysUseActionPriority = true;
+        Assert.That(InputSystem.settings.IsShortcutResolutionUsingActionPriority, Is.True);
+        Assert.That(InputSystem.settings.IsShortcutResolutionUsingComplexity, Is.False);
+        Assert.That(InputSystem.settings.IsShortcutComplexityModifierOrderActive, Is.False);
     }
 
     [Test]
@@ -515,6 +546,7 @@ partial class CoreTests
     public void Actions_WhenShortcutsAreEnabled_CanHaveShortcutsWithButtonsUsingInitialStateChecks()
     {
         InputSystem.settings.shortcutKeysConsumeInput = true;
+        InputSystem.settings.shortcutKeysUseActionPriority = true;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -1730,6 +1762,7 @@ partial class CoreTests
     {
         // Enables "Modifier must be pressed first" behavior on all Composite Bindings
         InputSystem.settings.shortcutKeysConsumeInput = true;
+        InputSystem.settings.shortcutKeysUseActionPriority = true;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var map = new InputActionMap("map");
@@ -12538,6 +12571,7 @@ partial class CoreTests
     public void Actions_ImprovedShortcutSupport_ConsumesWASD(bool shortcutsEnabled)
     {
         InputSystem.settings.shortcutKeysConsumeInput = shortcutsEnabled;
+        InputSystem.settings.shortcutKeysUseActionPriority = shortcutsEnabled;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
