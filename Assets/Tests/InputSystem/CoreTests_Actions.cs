@@ -9272,9 +9272,9 @@ partial class CoreTests
             .With("Positive", "<Mouse>/leftButton", groups: "Mouse");
 
         Assert.That(action.GetBindingDisplayString(InputBinding.MaskByGroup("Keyboard")),
-            Is.EqualTo("A/Left Button"));
+            Is.EqualTo("A/LMB"));
         Assert.That(action.GetBindingDisplayString(InputBinding.MaskByGroup("Mouse")),
-            Is.EqualTo("A/Left Button"));
+            Is.EqualTo("A/LMB"));
     }
 
     // https://fogbugz.unity3d.com/f/cases/1321175/
