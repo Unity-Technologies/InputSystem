@@ -321,7 +321,25 @@ namespace UnityEngine.InputSystem
                 if (bindings[i].isPartOfComposite)
                     continue;
                 if (!bindingMask.Matches(bindings[i]))
-                    continue;
+                {
+                    // Composites are filtered atomically: any matching part promotes the whole
+                    // composite, consistent with how the index-based GetBindingDisplayString
+                    // overload below treats composites as one display unit; per-part filtering
+                    // would require a separate API.
+                    if (!bindings[i].isComposite)
+                        continue;
+                    var anyPartMatches = false;
+                    for (var partIndex = i + 1; partIndex < bindings.Count && bindings[partIndex].isPartOfComposite; ++partIndex)
+                    {
+                        if (bindingMask.Matches(bindings[partIndex]))
+                        {
+                            anyPartMatches = true;
+                            break;
+                        }
+                    }
+                    if (!anyPartMatches)
+                        continue;
+                }
 
                 ////REVIEW: should this filter out bindings that are not resolving to any controls?
 
