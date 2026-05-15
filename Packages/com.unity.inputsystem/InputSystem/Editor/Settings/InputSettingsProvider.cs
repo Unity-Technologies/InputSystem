@@ -489,17 +489,36 @@ namespace UnityEngine.InputSystem.Editor
     [CustomEditor(typeof(InputSettings))]
     internal class InputSettingsEditor : UnityEditor.Editor
     {
-        public override void OnInspectorGUI()
+        public override VisualElement CreateInspectorGUI()
         {
-            EditorGUILayout.Space();
+            var root = new VisualElement();
 
-            if (GUILayout.Button("Open Input Settings Window", GUILayout.Height(30)))
-                InputSettingsProvider.Open();
+            var openButton = new Button(() => InputSettingsProvider.Open())
+            {
+                text = "Open Input Settings Window",
+                style = { minHeight = 30, whiteSpace = WhiteSpace.Normal }
+            };
+            root.Add(openButton);
 
-            EditorGUILayout.Space();
+            // UndoRedoCallback is void(), not Action, so an adapter is required.
+            // The variable is shared between the two lambdas so the same instance is removed on unsubscribe.
+            Undo.UndoRedoCallback undoRedoAdapter = null;
+            root.Add(InputAssetEditorUtils.CreateMakeActiveGui(
+                () => InputSystem.settings, target as InputSettings,
+                target.name, "settings", (value) => InputSystem.settings = value,
+                handler =>
+                {
+                    InputSystem.onSettingsChange += handler;
+                    undoRedoAdapter = () => handler();
+                    Undo.undoRedoPerformed += undoRedoAdapter;
+                },
+                handler =>
+                {
+                    InputSystem.onSettingsChange -= handler;
+                    Undo.undoRedoPerformed -= undoRedoAdapter;
+                }));
 
-            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.settings, target as InputSettings,
-                target.name, "settings", (value) => InputSystem.settings = value);
+            return root;
         }
 
         protected override bool ShouldHideOpenButton()

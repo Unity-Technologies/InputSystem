@@ -1260,9 +1260,11 @@ namespace UnityEngine.InputSystem
         public unsafe bool WasPressedThisFrame()
         {
             var state = GetOrCreateActionMap().m_State;
-            if (state != null && !state.IsSuppressed)
+            if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                if (actionStatePtr->isSuppressed)
+                    return false;
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
                 return actionStatePtr->pressedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
@@ -1303,6 +1305,8 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                if (actionStatePtr->isSuppressed)
+                    return false;
                 return actionStatePtr->framePressed == ExpectedFrame();
             }
 
@@ -1353,6 +1357,8 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                if (actionStatePtr->isSuppressed)
+                    return false;
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
                 return actionStatePtr->releasedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
@@ -1394,6 +1400,8 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                if (actionStatePtr->isSuppressed)
+                    return false;
                 return actionStatePtr->frameReleased == ExpectedFrame();
             }
 
@@ -1451,9 +1459,11 @@ namespace UnityEngine.InputSystem
         {
             var state = GetOrCreateActionMap().m_State;
 
-            if (state != null && !state.IsSuppressed)
+            if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                if (actionStatePtr->isSuppressed)
+                    return false;
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
                 return actionStatePtr->lastPerformedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
@@ -1493,6 +1503,8 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                if (actionStatePtr->isSuppressed)
+                    return false;
                 return actionStatePtr->framePerformed == ExpectedFrame();
             }
 
@@ -1574,6 +1586,8 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                if (actionStatePtr->isSuppressed)
+                    return false;
                 var currentUpdateStep = InputUpdate.s_UpdateStepCount;
                 return actionStatePtr->lastCompletedInUpdate == currentUpdateStep && currentUpdateStep != default;
             }
@@ -1615,6 +1629,8 @@ namespace UnityEngine.InputSystem
             if (state != null)
             {
                 var actionStatePtr = &state.actionStates[m_ActionIndexInState];
+                if (actionStatePtr->isSuppressed)
+                    return false;
                 return actionStatePtr->frameCompleted == ExpectedFrame();
             }
 

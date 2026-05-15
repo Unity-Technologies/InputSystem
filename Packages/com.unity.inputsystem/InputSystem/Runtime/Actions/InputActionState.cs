@@ -369,11 +369,6 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Check whether the state is currently reflecting a suppressed state.
-        /// </summary>
-        public bool IsSuppressed => m_Suppressed;
-
-        /// <summary>
         /// Check whether the state has any actions that are currently enabled.
         /// </summary>
         /// <returns></returns>
@@ -2540,6 +2535,12 @@ namespace UnityEngine.InputSystem
                 newState.startTime = newState.time;
             *actionState = newState;
 
+            // ISXB-1097: Stamp per-action suppression flag so polling APIs (WasPressedThisFrame,
+            // etc.) can check it after the update completes. This captures the suppression state
+            // of the specific event that changed this action, avoiding the last-event-wins issue
+            // with the map-wide m_Suppressed flag.
+            actionState->isSuppressed = m_Suppressed;
+
             // Let listeners know.
             var map = maps[trigger.mapIndex];
             Debug.Assert(actionIndex >= mapIndices[trigger.mapIndex].actionStartIndex,
@@ -3998,6 +3999,18 @@ namespace UnityEngine.InputSystem
                 }
             }
 
+            public bool isSuppressed
+            {
+                get => (flags & Flags.Suppressed) != 0;
+                set
+                {
+                    if (value)
+                        flags |= Flags.Suppressed;
+                    else
+                        flags &= ~Flags.Suppressed;
+                }
+            }
+
             public Flags flags
             {
                 get => (Flags)m_Flags;
@@ -4045,6 +4058,19 @@ namespace UnityEngine.InputSystem
                 Button = 1 << 5,
 
                 Pressed = 1 << 6,
+
+                /// <summary>
+                /// Whether the last event that changed this action's state was suppressed
+                /// (handled event under <see cref="InputEventHandledPolicy.SuppressActionEventNotifications"/>).
+                /// </summary>
+                /// <remarks>
+                /// ISXB-1097: This per-action flag is stamped when the action's phase changes,
+                /// capturing the suppression state of the specific event that caused the change.
+                /// Used by polling APIs (WasPressedThisFrame, etc.) instead of the map-wide
+                /// m_Suppressed flag which suffers from last-event-wins issues when multiple
+                /// events with different handled states arrive in the same frame.
+                /// </remarks>
+                Suppressed = 1 << 7,
             }
         }
 

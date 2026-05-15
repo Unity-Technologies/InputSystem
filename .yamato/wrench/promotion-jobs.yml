@@ -26,36 +26,6 @@ publish_dry_run_inputsystem:
       browsable: onNonSuccess
   dependencies:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2022_3_-_macos13
-    specific_options:
-      packages:
-        ignore_artifact: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2022.3-macos13
-        unzip: true
-      UTR:
-        location: results/UTR/validate-inputsystem-2022.3-macos13
-        unzip: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2022_3_-_ubuntu1804
-    specific_options:
-      packages:
-        ignore_artifact: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2022.3-ubuntu1804
-        unzip: true
-      UTR:
-        location: results/UTR/validate-inputsystem-2022.3-ubuntu1804
-        unzip: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2022_3_-_win10
-    specific_options:
-      packages:
-        ignore_artifact: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2022.3-win10
-        unzip: true
-      UTR:
-        location: results/UTR/validate-inputsystem-2022.3-win10
-        unzip: true
   - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_0_-_macos13
     specific_options:
       packages:
@@ -238,36 +208,6 @@ publish_inputsystem:
       browsable: onNonSuccess
   dependencies:
   - path: .yamato/wrench/package-pack-jobs.yml#package_pack_-_inputsystem
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2022_3_-_macos13
-    specific_options:
-      packages:
-        ignore_artifact: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2022.3-macos13
-        unzip: true
-      UTR:
-        location: results/UTR/validate-inputsystem-2022.3-macos13
-        unzip: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2022_3_-_ubuntu1804
-    specific_options:
-      packages:
-        ignore_artifact: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2022.3-ubuntu1804
-        unzip: true
-      UTR:
-        location: results/UTR/validate-inputsystem-2022.3-ubuntu1804
-        unzip: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2022_3_-_win10
-    specific_options:
-      packages:
-        ignore_artifact: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-2022.3-win10
-        unzip: true
-      UTR:
-        location: results/UTR/validate-inputsystem-2022.3-win10
-        unzip: true
   - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_0_-_macos13
     specific_options:
       packages:

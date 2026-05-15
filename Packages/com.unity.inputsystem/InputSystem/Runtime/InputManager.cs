@@ -338,9 +338,11 @@ namespace UnityEngine.InputSystem
                 switch (value)
                 {
                     case InputEventHandledPolicy.SuppressActionEventNotifications:
+#pragma warning disable CS0618 // Type or member is obsolete
                     case InputEventHandledPolicy.SuppressStateUpdates:
                         m_InputEventHandledPolicy = value;
                         break;
+#pragma warning restore CS0618 // Type or member is obsolete
                     default:
                         throw new ArgumentOutOfRangeException(
                             $"Unsupported input event handling policy: {value}");
@@ -492,7 +494,44 @@ namespace UnityEngine.InputSystem
             set => m_RunPlayerUpdatesInEditMode = value;
         }
 
+        /// <summary>
+        /// Ref-counted flag that bypasses Game View focus gating for event processing.
+        /// When greater than zero, events are processed as if the Game View has focus,
+        /// regardless of actual focus state. This affects event routing, disabled-device
+        /// discard, and UI module processing.
+        /// </summary>
+        /// <remarks>
+        /// Use <see cref="StartEditorEventPassthrough"/> / <see cref="StopEditorEventPassthrough"/>
+        /// to manage this counter. Follows the same pattern as
+        /// <c>AssetDatabase.StartAssetEditing/StopAssetEditing</c>.
+        /// </remarks>
+        /// <seealso cref="StartEditorEventPassthrough"/>
+        /// <seealso cref="StopEditorEventPassthrough"/>
+        private int m_EditorEventPassthroughCount;
+
+        internal bool isEditorEventPassthroughActive => m_EditorEventPassthroughCount > 0;
+
+        /// <summary>
+        /// Signals that events should bypass Game View focus gating. Ref-counted:
+        /// each call must be balanced by a corresponding <see cref="StopEditorEventPassthrough"/>.
+        /// </summary>
+        internal static void StartEditorEventPassthrough()
+        {
+            ++InputSystem.s_Manager.m_EditorEventPassthroughCount;
+        }
+
+        /// <summary>
+        /// Signals that the caller no longer needs events to bypass Game View focus gating.
+        /// Decrements the ref count started by <see cref="StartEditorEventPassthrough"/>.
+        /// </summary>
+        internal static void StopEditorEventPassthrough()
+        {
+            if (InputSystem.s_Manager != null && InputSystem.s_Manager.m_EditorEventPassthroughCount > 0)
+                --InputSystem.s_Manager.m_EditorEventPassthroughCount;
+        }
+
 #endif // UNITY_EDITOR
+
 
         private bool gameIsPlaying =>
 #if UNITY_EDITOR
@@ -504,7 +543,7 @@ namespace UnityEngine.InputSystem
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
-                     m_RunPlayerUpdatesInEditMode || applicationHasFocus || gameShouldGetInputRegardlessOfFocus;
+                     m_RunPlayerUpdatesInEditMode || applicationHasFocus || gameShouldGetInputRegardlessOfFocus || isEditorEventPassthroughActive;
 #else
             applicationHasFocus || gameShouldGetInputRegardlessOfFocus;
 #endif
@@ -1643,7 +1682,13 @@ namespace UnityEngine.InputSystem
                     stateEventPtr->baseEvent.sizeInBytes = InputEvent.kBaseEventSize + sizeof(int) + deviceStateBlockSize;
                     stateEventPtr->baseEvent.time = currentTime;
                     stateEventPtr->baseEvent.deviceId = device.deviceId;
-                    stateEventPtr->baseEvent.eventId = -1;
+                    // ISXB-1097: Using InvalidEventId (0) rather than -1 here. Setting eventId to -1
+                    // (0xFFFFFFFF) accidentally sets the handled bit (bit 31, kHandledMask) which
+                    // causes SuppressActionEventNotifications policy to suppress action callbacks
+                    // from this synthetic reset event. Whether reset events *should* suppress
+                    // pass-through Performed(0) notifications is a separate design question — but
+                    // it should be an intentional choice, not a side-effect of a sentinel value.
+                    stateEventPtr->baseEvent.eventId = InputEvent.InvalidEventId;
                     stateEventPtr->stateFormat = device.m_StateBlock.format;
 
                     // Decide whether we perform a soft reset or a hard reset.
@@ -1988,7 +2033,7 @@ namespace UnityEngine.InputSystem
             #endif
 
             // Default input event handled policy.
-            m_InputEventHandledPolicy = InputEventHandledPolicy.SuppressStateUpdates;
+            m_InputEventHandledPolicy = InputEventHandledPolicy.Default;
 
             // Register layouts.
             // NOTE: Base layouts must be registered before their derived layouts
@@ -3372,7 +3417,12 @@ namespace UnityEngine.InputSystem
 
                     // If device is disabled, we let the event through only in certain cases.
                     // Removal and configuration change events should always be processed.
+                    // During replay, allow events through for devices disabled due to background
+                    // focus loss — the replay intentionally re-injects events for those devices.
                     if (device != null && !device.enabled &&
+#if UNITY_EDITOR
+                        !isEditorEventPassthroughActive &&
+#endif
                         currentEventType != DeviceRemoveEvent.Type &&
                         currentEventType != DeviceConfigurationEvent.Type &&
                         (device.m_DeviceFlags & (InputDevice.DeviceFlags.DisabledInRuntime |
@@ -3411,7 +3461,6 @@ namespace UnityEngine.InputSystem
 #endif
                         if (!shouldProcess)
                         {
-                            // Skip event if PreProcessEvent considers it to be irrelevant.
                             m_InputEventStream.Advance(false);
                             continue;
                         }
@@ -3427,12 +3476,14 @@ namespace UnityEngine.InputSystem
                             new InputEventPtr(currentEventReadPtr), device, k_InputOnEventMarker, "InputSystem.onEvent");
 
                         // If a listener marks the event as handled, we don't process it further.
+#pragma warning disable CS0618 // Type or member is obsolete
                         if (m_InputEventHandledPolicy == InputEventHandledPolicy.SuppressStateUpdates &&
                             currentEventReadPtr->handled)
                         {
                             m_InputEventStream.Advance(false);
                             continue;
                         }
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
 
                     // Update metrics.

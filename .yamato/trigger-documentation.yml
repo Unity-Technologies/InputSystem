@@ -1,7 +1,6 @@
 tests_for_doc_changes:
   name: Tests for Documentation Changes
   dependencies:
-    - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_2022_3_-_win10
     - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_0_-_win10
     - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_3_-_win10
     - .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_6_-_win10

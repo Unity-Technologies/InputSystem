@@ -3748,6 +3748,13 @@ partial class CoreTests
             // does not cause the action to start back up. For pass-through actions, that is different
             // as *any* value change performs the action. So here, we see *both* a cancellation and then
             // immediately a performing of the action.
+            //
+            // ISXB-1097 DESIGN NOTE: Whether pass-through actions should emit Performed(0f) on reset is
+            // debatable. Emitting it is consistent with the pass-through contract ("any value
+            // change performs"). Suppressing it would be consistent with button/value actions and
+            // the idea that resets aren't real user input. If we decide to suppress, the synthetic
+            // reset event in ResetDevice should be explicitly marked as handled rather than
+            // relying on the old eventId=-1 sentinel side-effect (see InputManager.cs:1656).
             Assert.That(passThroughActionTrace, Canceled(passThroughAction).AndThen(Performed(passThroughAction, value: 0f)));
         }
     }
