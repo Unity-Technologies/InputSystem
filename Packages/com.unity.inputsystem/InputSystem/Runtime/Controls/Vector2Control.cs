@@ -41,7 +41,7 @@ namespace UnityEngine.InputSystem.Controls
         /// <see cref="UnityEngine.InputSystem.InputAction.IsPressed"/> when this control drives the action.
         /// </summary>
         /// <remarks>
-        /// By default, this property is set to -1. If the value of the property is negative,
+        /// By default, this field is set to -1. If the value of the property is negative,
         /// <see cref="UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint"/> is used unless a
         /// <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/> on the binding sets an explicit
         /// <c>pressPoint</c> (see <see cref="UnityEngine.InputSystem.InputAction.IsPressed"/> remarks).
