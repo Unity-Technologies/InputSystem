@@ -84,7 +84,7 @@ Finally, there are three methods you can use to poll for button presses and rele
 
 |Method|Description|
 |------|-----------|
-|[`InputAction.IsPressed()`](xref:UnityEngine.InputSystem.InputAction.IsPressed)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has crossed the applicable press point and did not yet fall to or below the [release threshold](xref:UnityEngine.InputSystem.InputSettings.buttonReleaseThreshold).|
+|[`InputAction.IsPressed()`](xref:UnityEngine.InputSystem.InputAction.IsPressed)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has crossed the applicable press point and hasn't fallen to or below the [release threshold](xref:UnityEngine.InputSystem.InputSettings.buttonReleaseThreshold).|
 |[`InputAction.WasPressedThisFrame()`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has, at any point during the current frame, reached or gone above the applicable press point.|
 |[`InputAction.WasReleasedThisFrame()`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has, at any point during the current frame, gone from being at or above the applicable press point to at or below the [release threshold](xref:UnityEngine.InputSystem.InputSettings.buttonReleaseThreshold).|
 
