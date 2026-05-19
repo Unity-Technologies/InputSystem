@@ -2,10 +2,16 @@
 uid: input-system-visualizers
 ---
 
-# Visualizers 
+# Visualizers sample
 
-The Input System package comes with a __Visualizers__ sample, which provides various components which let you monitor the state of various Input System elements in real time using on-screen visualizers.
+The Input System package comes with a __Visualizers__ sample, which provides components that  monitor the state of various Input System elements in real time using on-screen visualizers.
 
-To install the sample, navigate to the Input System package in the Package Manager window (see [Installation](Installation.md)), and next to the __Visualizers__ sample, click __Import in project__.
+To install the sample:
 
-The sample provides two visualizer components: `InputControlVisualizer` and `InputActionVisualizer`.
+1. Navigate to the Input System package in the Package Manager window (refer to [Installation](Installation.md)).
+1. Next to the __Visualizers__ sample, select __Import in project__.
+
+The sample provides two visualizer components: 
+
+* [`InputControlVisualizer`](visualise-input-controls)
+* [`InputActionVisualizer`](visualise-actions)
