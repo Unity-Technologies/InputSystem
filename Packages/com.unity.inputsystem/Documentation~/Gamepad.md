@@ -131,6 +131,7 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 >    * Android 11 or earlier
 >        * Rumble support is limited.
 >        * __Note:__ Only one motor is supported. If the gamepad has more than one motor, the higher value of the left and right motor strengths is applied to both.
+>        * __Note:__ In some cases, frequency control is limited, meaning the rumble strength can only be either 1.0 or 0.0.
 > * iOS:
 >     * TODO: Paulius
 
