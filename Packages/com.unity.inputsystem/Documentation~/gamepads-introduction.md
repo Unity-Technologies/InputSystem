@@ -4,19 +4,19 @@ uid: input-system-gamepads-intro
 
 # Gamepads introduction
 
-A gamepad is defined as a device with two thumbsticks, a D-pad, and four face buttons. Additionally, gamepads usually have two shoulder and two trigger buttons. Most gamepads also have two buttons in the middle.
+In the Input System, a **gamepad** is a controller that matches the [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) layout: two thumbsticks, a D-pad, four face buttons, shoulder and trigger buttons, and usually two center buttons. Use [Gamepads](devices-gamepads.md) to browse related setup and reference topics in this manual.
 
-A gamepad can have additional controls, such as a gyroscope, which the device can expose. However, all gamepads have at least the minimum set of controls defined in the properties of the [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) class.
+A gamepad can expose extra controls (for example a gyroscope). Every recognized gamepad still implements at least the controls defined on the [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) type.
 
-The Input System additionally has specific APIs available for the following devices:
+The Input System also provides device-specific APIs for:
 
-* PlayStation DualShock and DualSense devices, in the [`DualShock`](xref:UnityEngine.InputSystem.DualShock) namespace.  
-* Xbox XInput devices, in the [`XInput`](xref:UnityEngine.InputSystem.XInput) namespace.  
-* Switch Pro controllers, in the [`Switch`](xref:UnityEngine.InputSystem.Switch) namespace.
+* PlayStation DualShock and DualSense hardware in the [`DualShock`](xref:UnityEngine.InputSystem.DualShock) namespace.
+* Xbox controllers that use XInput in the [`XInput`](xref:UnityEngine.InputSystem.XInput) namespace.
+* Nintendo Switch Pro controllers in the [`Switch`](xref:UnityEngine.InputSystem.Switch) namespace.
 
-For a list of platforms that support gamepads, refer to [Supported devices reference](supported-devices-reference.md).
+For platform availability, refer to [Supported devices reference](supported-devices-reference.md).
 
-Gamepad support guarantees the correct location and functioning of controls across platforms and hardware. For example, a PlayStation 4 DualShock controller layout is identical regardless of which platform it's used on. A gamepad's south face button is always be the lowermost face button.
+When the Input System recognizes a device as a [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad), control placement stays consistent across platforms and hardware. For example, a PlayStation 4 DualShock maps to the same logical layout whether it is connected on Windows or macOS, and the south face button is always the bottom button in the diamond.
 
-> [!IMPORTANT] 
-> Generic [HID](hid-specification.md) gamepads aren't surfaced as [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) devices and are created as generic [joysticks](devices-joysticks.md). This is because the Input System can't guarantee correct mapping of buttons and axes on the controller. Only HID gamepads that are explicitly supported by the Input System (like the PlayStation 4 controller) are defined as gamepads. To set up the same kind of support for specific HID gamepads yourself refer to [Create a custom device layout](hid-create-custom-layout.md).
+> [!IMPORTANT]
+> Generic [HID](hid-specification.md) gamepads are not surfaced as [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) instances; they appear as generic [joysticks](devices-joysticks.md). The Input System cannot rely on HID descriptors alone to map every axis and button correctly. Only HID devices that ship with explicit [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) support (for example the PlayStation 4 controller) use the gamepad layout. To add comparable support for another HID controller, refer to [Create a custom device layout](hid-create-custom-layout.md).

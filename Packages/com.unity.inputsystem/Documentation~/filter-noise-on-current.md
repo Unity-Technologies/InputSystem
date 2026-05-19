@@ -1,1 +1,0 @@
-# Filter noise on current 

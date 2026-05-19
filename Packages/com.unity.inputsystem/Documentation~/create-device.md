@@ -14,10 +14,13 @@ After an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) is ful
 
 Once added, the [`InputDevice.added`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_added) flag is set to true.
 
+## Add devices manually
+
 To add devices manually, you can call one of the `InputSystem.AddDevice` methods such as [`InputSystem.AddDevice(layout)`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice_System_String_System_String_System_String_).
 
 ```CSharp
-// Add a gamepad. This bypasses the matching process and creates a device directly
+// Add a gamepad. This bypasses the matching process and creates 
+// a device directly
 // with the Gamepad layout.
 InputSystem.AddDevice<Gamepad>();
 

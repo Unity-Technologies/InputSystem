@@ -2,7 +2,7 @@
 uid: input-system-poll-actions
 ---
 
-# Poll actions
+# Polling actions
 
 Polling actions is one of the two main [ways to respond to actions](about-responding-to-input.md) using the recommended workflow.
 
