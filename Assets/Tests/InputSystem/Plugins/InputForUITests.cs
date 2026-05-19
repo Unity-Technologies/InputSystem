@@ -111,16 +111,20 @@ public class InputForUITests : InputTestFixture
         uiMap.AddAction("ScrollWheel", InputActionType.PassThrough, "<Mouse>/scroll");
         asset.AddActionMap(uiMap);
 
-        InputSystem.s_Manager.actions = asset;
+        InputSystem.manager.actions = asset;
+        try
+        {
+            m_InputSystemProvider.Initialize();
+            Assert.That(asset.enabled, Is.True, "Project-wide actions should be enabled by provider initialization.");
 
-        m_InputSystemProvider.Initialize();
-        Assert.That(asset.enabled, Is.True, "Project-wide actions should be enabled by provider initialization.");
-
-        EventProvider.ClearMockProvider();
-        m_ClearedMockProvider = true;
-        Assert.That(asset.enabled, Is.True, "Project-wide actions must remain enabled after provider shutdown.");
-
-        Object.DestroyImmediate(asset);
+            EventProvider.ClearMockProvider();
+            m_ClearedMockProvider = true;
+            Assert.That(asset.enabled, Is.True, "Project-wide actions must remain enabled after provider shutdown.");
+        }
+        finally
+        {
+            Object.DestroyImmediate(asset);
+        }
     }
 
     [Test]

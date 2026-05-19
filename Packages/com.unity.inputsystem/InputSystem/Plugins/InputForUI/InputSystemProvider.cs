@@ -639,10 +639,13 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_ScrollWheelAction = FindActionAndRegisterCallback(Actions.ScrollWheelAction, OnScrollWheelPerformed);
 
             // Only touch the UI map so we don't change the enabled state of unrelated maps.
-            m_UIActionMap = m_InputActionAsset?.FindActionMap("UI", true);
-            m_ShouldDisableUIActionMapOnUnregister = m_UIActionMap != null && !m_UIActionMap.enabled;
-            if (m_ShouldDisableUIActionMapOnUnregister)
+            m_UIActionMap = m_InputActionAsset?.FindActionMap("UI", false);
+            if (m_UIActionMap != null && !m_UIActionMap.enabled)
+            {
+                // Don't take ownership of the UI map lifecycle for project-wide actions — the user manages those.
+                m_ShouldDisableUIActionMapOnUnregister = m_InputActionAsset != InputSystem.actions;
                 m_UIActionMap.Enable();
+            }
         }
 
         void UnregisterAction(ref InputAction action, Action<InputAction.CallbackContext> callback = null)
