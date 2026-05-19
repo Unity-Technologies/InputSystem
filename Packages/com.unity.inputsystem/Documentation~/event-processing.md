@@ -8,7 +8,7 @@ uid: input-system-event-processing
 
 Each time input is processed, [`InputSystem.Update`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update_) is called implicitly by the Unity runtime.
 
-The interval at which this happens is determined by the ["Update Mode"](Settings.md#update-mode) configured in the settings. By default, input is processed in each frame __before__ <c>MonoBehaviour.Update</c> methods are called. If the setting is changed to process input in fixed updates, then this changes to input being processed each time before <c>MonoBehaviour.FixedUpdate</c> methods are called.
+The interval at which this happens is determined by the ["Update Mode"](update-mode.md) configured in the settings. By default, input is processed in each frame __before__ <c>MonoBehaviour.Update</c> methods are called. If the setting is changed to process input in fixed updates, then this changes to input being processed each time before <c>MonoBehaviour.FixedUpdate</c> methods are called.
 
 Normally, when input is processed, __all__ outstanding input events on the queue will be consumed. There are two exceptions to this, however.
 

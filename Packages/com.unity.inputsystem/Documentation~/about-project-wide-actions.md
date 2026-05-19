@@ -12,7 +12,7 @@ Unless you have specific project requirements that require more than one Action 
 
 ## Edit project-wide actions
 
-Once you have created and assigned project-wide actions, the Input System Package page in Project Settings displays the **Actions Editor** interface. Read more about how to use the [Actions Editor](ActionsEditor.md) to configure your actions.
+Once you have created and assigned project-wide actions, the Input System Package page in Project Settings displays the **Actions Editor** interface. Read more about how to use the [Actions Editor](actions-editor.md) to configure your actions.
 
 ![image alt text](./Images/ProjectSettingsInputActionsSimpleShot.png)
 *The Input System Package Project Settings after creating and assigning the default actions*

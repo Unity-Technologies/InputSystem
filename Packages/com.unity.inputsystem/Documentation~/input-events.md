@@ -22,4 +22,4 @@ Input events are represented by the [`InputEvent`](../api/UnityEngine.InputSyste
 |[`deviceId`](../api/UnityEngine.InputSystem.LowLevel.InputEvent.html#UnityEngine_InputSystem_LowLevel_InputEvent_deviceId)|ID of the Device that the event targets.|
 |[`sizeInBytes`](../api/UnityEngine.InputSystem.LowLevel.InputEvent.html#UnityEngine_InputSystem_LowLevel_InputEvent_sizeInBytes)|Total size of the event in bytes.|
 
-You can observe the events received for a specific input device in the [input debugger](Debugging.md#debugging-devices).
+You can observe the events received for a specific input device in the [input debugger](debug-device.md).

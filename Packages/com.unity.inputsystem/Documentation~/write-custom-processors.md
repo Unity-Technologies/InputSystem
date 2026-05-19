@@ -4,7 +4,7 @@ uid: input-system-custom-processors
 
 # Write custom processors
 
-You can write custom processors to use with [bindings](ActionBindings.md), [actions](actions.md) and [controls](controls.md) in your Project. Custom processors are available in the UI and code in the same way as the [built-in processors](built-in-processors.md). 
+You can write custom processors to use with [bindings](bindings.md), [actions](actions.md) and [controls](controls.md) in your Project. Custom processors are available in the UI and code in the same way as the [built-in processors](built-in-processors.md). 
 
 To create a custom processor:
 
@@ -30,7 +30,7 @@ public class MyValueShiftProcessor : InputProcessor<float>
 ```
 
 >[!IMPORTANT] 
->Processors must be __stateless__, because they are not part of the [input state](./Controls.md#control-state) that the Input System keeps. For this reason, you can't store local states in a processor if the processor changes based on the input value.
+>Processors must be __stateless__, because they are not part of the [input state](control-state.md) that the Input System keeps. For this reason, you can't store local states in a processor if the processor changes based on the input value.
 
 ## Register the new processor to the Input System
 
@@ -59,7 +59,7 @@ public class MyValueShiftProcessor : InputProcessor<float>
 }
 ```
 
-Your new Processor is now available in the in the [Input Actions Editor](ActionsEditor.md) and you can also add it in code like this:
+Your new Processor is now available in the in the [Input Actions Editor](actions-editor.md) and you can also add it in code like this:
 
 ```CSharp
 var action = new InputAction(processors: "myvalueshift(valueShift=2.3)");

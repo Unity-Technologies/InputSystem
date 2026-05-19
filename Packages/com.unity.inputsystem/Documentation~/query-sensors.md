@@ -54,7 +54,7 @@ Gyroscope.current.samplingFrequency = 16;
 
 ## Measure a device's acceleration
 
-Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. It reports the acceleration measured on a device both due to moving the device around, and due to gravity pulling the device down. You can use GravitySensor and LinearAccelerationSensor to get separate values for these. Values are affected by the [Compensate Orientation](Settings.md#compensate-orientation) setting.
+Use the accelerometer to measure the acceleration of a device. This is useful to control content by moving a device around. It reports the acceleration measured on a device both due to moving the device around, and due to gravity pulling the device down. You can use GravitySensor and LinearAccelerationSensor to get separate values for these. Values are affected by the [Compensate Orientation](compensate-orientation.md) setting.
 
 The following code traces all input events on the [`Accelerometer.current`](xref:UnityEngine.InputSystem.Accelerometer) device.
 
@@ -82,7 +82,7 @@ The following code traces all input events on the [`Accelerometer.current`](xref
 
 ## Determine the orientation of a device
 
-Use the attitude sensor to determine the orientation of a device. This is useful to control content by rotating a device. Values are affected by the [Compensate Orientation](Settings.md#compensate-orientation) setting.
+Use the attitude sensor to determine the orientation of a device. This is useful to control content by rotating a device. Values are affected by the [Compensate Orientation](compensate-orientation.md) setting.
 
 On Android devices, there are two types of attitude sensors: [`RotationVector`](https://developer.android.com/reference/android/hardware/Sensor#TYPE_ROTATION_VECTOR) and [`GameRotationVector`](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR). Some Android devices have both types of sensor, while other devices only have one or the other type available. These two types of attitude sensor behave slightly differently to each other. For more information, refer to the [Android documentation](https://developer.android.com/guide/topics/sensors/sensors_position#sensors-pos-gamerot). 
 

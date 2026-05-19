@@ -16,7 +16,7 @@ The Input System offers the following ways to set up input callbacks:
 - The global [On Action Change callback](#global-input-callback).
 
 
-You can also use [`InputActionTrace`](trace-actions.md) to record all changes happening on actions, which is useful for [debugging](Debugging.md).
+You can also use [`InputActionTrace`](trace-actions.md) to record all changes happening on actions, which is useful for [debugging](debugging.md).
 
 ## The Player Input component
 

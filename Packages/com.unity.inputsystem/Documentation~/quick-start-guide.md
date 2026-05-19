@@ -22,7 +22,7 @@ Once you have created and assigned some project-wide actions, the **Input Action
 
 You can use this window to view the Actions to find out their names, value types, and what their corresponding bindings. You can also edit, delete, or add new Actions here.
 
-[Read more about using the Input Action Settings Window.](ActionsEditor.md)
+[Read more about using the Input Action Settings Window.](actions-editor.md)
 
 
 ## The default Action Maps and Actions

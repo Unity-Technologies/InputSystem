@@ -1,4 +1,4 @@
-Actions.md
+actions.md
 Architecture.md
 Contributing.md
 EditorFeatures.md
@@ -9,8 +9,7 @@ Interactions.md
 KnownLimitations.md
 OnScreen.md
 PlayerInputManager.md
-Processors.md
-RespondingToActions.md
+processors.md
 Settings.md
 TableOfContents.md
 UserManagement.md

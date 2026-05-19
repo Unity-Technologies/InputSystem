@@ -17,7 +17,7 @@ There are three ways to specify the control path for a binding in the [Actions E
 For all these options, you must first:
 
 1. Open the [Actions Editor window](./actions-editor.md)
-2. Select the **action** you want to edit from the [actions panel](./actions-panel.md)
+2. Select the **action** you want to edit from the [actions panel](./input-actions-editor-window-reference.md#actions-panel-reference)
 3. Expand the action to reveal its bindings, or [add a new binding](./add-duplicate-delete-binding.md)
 4. Select the **binding** you want to edit
 

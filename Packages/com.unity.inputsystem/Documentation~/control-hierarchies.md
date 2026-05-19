@@ -4,7 +4,7 @@ uid: input-system-control-hierarchies
 
 # Control hierarchies
 
-Controls can be arranged in hierarchies. The root of a control hierarchy is always a [device](devices.md). You can find examples of hierarchies when browsing controls in the **Path** dropdown menu of the [Binding properties panel](./binding-properties-panel.md).
+Controls can be arranged in hierarchies. The root of a control hierarchy is always a [device](devices.md). You can find examples of hierarchies when browsing controls in the **Path** dropdown menu of the [Binding properties panel](./binding-properties-panel-reference.md).
 
 For example, the Dpad control of a gamepad has a  has child controls of left, right, up, down, and the separate horizontal and vertical 1D axes.
 

@@ -4,6 +4,6 @@ uid: input-system-debug-action
 
 # Debug an action 
 
-The Input Debugger window lists all enabled [Actions](actions.md) in the __Actions__ list. This list only appears if at least one Action is active and the Editor is in Play mode. If an Action has actively bound Controls, you can click the arrow next to the Action to see a list of the Controls. This is useful to debug whether your Bindings correctly map to the Controls you want them to bind to. See documentation on [Binding resolution](ActionBindings.md#binding-resolution) for more information about how Unity maps Bindings to Controls.
+The Input Debugger window lists all enabled [Actions](actions.md) in the __Actions__ list. This list only appears if at least one Action is active and the Editor is in Play mode. If an Action has actively bound Controls, you can click the arrow next to the Action to see a list of the Controls. This is useful to debug whether your Bindings correctly map to the Controls you want them to bind to. See documentation on [Binding resolution](binding-resolution.md) for more information about how Unity maps Bindings to Controls.
 
->__Note__: Actions that belong to [`InputUsers`](UserManagement.md) don't appear here. They appear in the [__Users__](#debugging-users-and-playerinput) list instead.
+>__Note__: Actions that belong to [`InputUsers`](user-management.md) don't appear here. They appear in the [__Users__](#debugging-users-and-playerinput) list instead.

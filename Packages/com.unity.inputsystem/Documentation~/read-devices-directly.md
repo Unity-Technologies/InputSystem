@@ -4,7 +4,7 @@ uid: input-system-read-devices-directly
 
 # Read devices directly
 
-The input system allows you to directly read the state of a device's controls, which can be useful in some situations. This isn't generally the recommended workflow because it bypasses many of the Input Systems useful features, such as [actions](Actions.md) and [bindings](bindings.md).
+The input system allows you to directly read the state of a device's controls, which can be useful in some situations. This isn't generally the recommended workflow because it bypasses many of the Input Systems useful features, such as [actions](actions.md) and [bindings](bindings.md).
 
 To read a device's controls directly you must:
 
@@ -35,7 +35,7 @@ The `InputSystem.devices` property provides an array of all currently connected 
 
 ## Identify the control property on the device
 
-Each type of device has its own configuration of [controls](controls.md), defined by its [layout](Layouts.md). Each control has an API property that allows you to access the value of that control.
+Each type of device has its own configuration of [controls](controls.md), defined by its [layout](layouts.md). Each control has an API property that allows you to access the value of that control.
 
 For example, all Gamepads have a `leftStick` and `rightStick` property, as well as a number of other properties which correspond to each of its controls.
 

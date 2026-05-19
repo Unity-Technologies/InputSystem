@@ -7,7 +7,7 @@ uid: input-system-workflow-project-wide-actions
 
 While the Input System has a variety of workflows to choose from, this is the primary recommended workflow, which suits most common scenarios for game and app input.
 
-In this workflow, you configure Actions in the [**Input Actions** editor](ActionsEditor.html), then set up references to those actions and read their values in your code.
+In this workflow, you configure Actions in the [**Input Actions** editor](actions-editor.md), then set up references to those actions and read their values in your code.
 
 ## Configure Actions in the Actions Editor
 
@@ -20,9 +20,9 @@ Once you have created and assigned the default project-wide actions, the Actions
 ![image alt text](./Images/ProjectSettingsInputActionsSimpleShot.png)
 *The Input Actions editor in the Project Settings window*
 
-The [Input Actions editor](ActionsEditor.html) provides a way to define and manage Actions which relate to what you want users to be able to do in your game or app. It also allows you to create bindings between your Actions and one or more types of control on various devices, such as a stick on a gamepad, a key on a keyboard, or a button on an XR controller.
+The [Input Actions editor](actions-editor.md) provides a way to define and manage Actions which relate to what you want users to be able to do in your game or app. It also allows you to create bindings between your Actions and one or more types of control on various devices, such as a stick on a gamepad, a key on a keyboard, or a button on an XR controller.
 
-Actions and Bindings allows you to separate the conceptual actions that you want in your game or app from the the specific decvices and controls that a player has to use to perform the actions, which can make your code simpler and more flexible. This is in contrast to [directly reading device states](Workflow-Direct.html) in your code, which can suit simple projects, but can become unwieldy and inflexible for more complex projects.
+Actions and Bindings allows you to separate the conceptual actions that you want in your game or app from the the specific decvices and controls that a player has to use to perform the actions, which can make your code simpler and more flexible. This is in contrast to [directly reading device states](using-direct-workflow.md) in your code, which can suit simple projects, but can become unwieldy and inflexible for more complex projects.
 
 ### The default Actions
 
@@ -103,6 +103,6 @@ public class Example : MonoBehaviour
 
 This is the recommended workflow with the Input System Package, providing a flexible but simple solution suitable for most projects.
 
-You benefit from the Action-based features such as Action Maps, Bindings, and the ability to configure them in the Actions Editor. You can also implement [user rebinding at run time](ActionBindings.html#interactive-rebinding).
+You benefit from the Action-based features such as Action Maps, Bindings, and the ability to configure them in the Actions Editor. You can also implement [user rebinding at run time](rebind-action-runtime.md).
 
 This workflow alone doesn't provide built-in support for local multiplayer scenarios with multiple devices, so if you are producing a local multiplayer game you might want to consider using the [Actions & PlayerInput](./using-playerinput-workflow.md) workflow.

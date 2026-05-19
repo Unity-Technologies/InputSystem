@@ -71,7 +71,7 @@ Gamepad.current["Triangle"]
 
 Deadzones prevent accidental input due to slight variations in where gamepad sticks come to rest at their center point. They allow a certain small inner area where the input is considered to be zero even if the input is slightly off from the zero position.
 
-To add a deadzone to gamepad stick, put a [stick deadzone Processor](Processors.md#stick-deadzone) on the sticks, like this:
+To add a deadzone to gamepad stick, put a [stick deadzone Processor](built-in-processors.md) on the sticks, like this:
 
 ```json
 
@@ -112,4 +112,4 @@ The gamepad layout already adds stick deadzone processors which take their minim
 
 To use a gamepad for driving mouse input, refer to the sample called Gamepad Mouse Cursor. To access the sample, open the Package Manager window, and select the Input System package. Then select the Samples tab. The sample demonstrates how to set up gamepad input to drive a virtual mouse cursor.
 
-You can also use the [`VirtualMouseInput`](xref:UnityEngine.InputSystem.UI.VirtualMouseInput) component to control the hardware or software cursor. For more information, refer to [`VirtualMouseInput` component](UISupport.md#virtual-mouse-cursor-control).
+You can also use the [`VirtualMouseInput`](xref:UnityEngine.InputSystem.UI.VirtualMouseInput) component to control the hardware or software cursor. For more information, refer to [`VirtualMouseInput` component](ui-input.md#virtual-mouse-cursor-control).

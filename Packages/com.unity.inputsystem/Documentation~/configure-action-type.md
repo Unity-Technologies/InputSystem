@@ -11,6 +11,6 @@ Configuring an action's **Action Type** is typically done when you create a new 
 To configure an action's action type:
 
 1. [Create a new action](./create-edit-delete-actions.md) or select an existing in the [Actions Editor window](./actions-editor.md).
-2. With the action selected, in the right-hand [Action Properties panel](./action-properties-panel.md), under **Action**, click the **Action Type** dropdown menu.
+2. With the action selected, in the right-hand [Action Properties panel](./action-properties-panel-reference.md), under **Action**, click the **Action Type** dropdown menu.
 3. Select the action type from the available [action type options](action-type-reference.md).
 

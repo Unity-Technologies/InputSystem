@@ -24,7 +24,7 @@ The Player Input component provides two related but separate features which can 
 ## Additional resources
 
 * [Set up PlayerInput Component for local multiplayer](set-up-player-input-component-local-multiplayer.md) 
-* [UI system](UISupport.md).
+* [UI system](ui-input.md).
 * [The Player Input Manager Component](player-input-manager-component.md)
 
 				

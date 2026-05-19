@@ -4,7 +4,7 @@ uid: input-system-action-properties-panel
 
 # Action Properties panel reference
 
-Use the Action Properties panel to configure actions, and their associated [interactions](interactions.md) and [processors](processors.md).
+Use the Action Properties panel to configure actions, and their associated [interactions](Interactions.md) and [processors](processors.md).
 
 The Action Properties panel changes depending on the **Action Type** of the selected Action.
 

@@ -52,7 +52,7 @@ However, the **Process Events in Dynamic Update** mode might introduce the probl
 
 ### Event-driven input with fixed update code
 
-For event-driven input, where the [Player Input component](./PlayerInput.md) calls events in your code, you should store the input values in variables which you can then read in your `FixedUpdate` call. For example:
+For event-driven input, where the [Player Input component](./player-input-component.md) calls events in your code, you should store the input values in variables which you can then read in your `FixedUpdate` call. For example:
 
 ```
 using UnityEngine;

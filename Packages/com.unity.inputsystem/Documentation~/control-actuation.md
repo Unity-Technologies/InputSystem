@@ -8,7 +8,7 @@ Control actuation refers to whether or not a [control](controls.md) is currently
 
 A control is considered actuated when it has moved away from its default state in such a way that it affects the value of the control.
 
-The recommended workflow is to [bind controls to actions](add-duplicate-delete-binding.md), and then [respond to input at runtime](./respond-to-input-at-runtime.md) by polling or recieving callbacks from those actions. For this reason, it is not typically necessary to directly check whether a control is actuated. Instead, actuation of a control bound to an action causes the action to be performed (according to its [interaction pattern](interactions.md), if an interaction has been assigned).
+The recommended workflow is to [bind controls to actions](add-duplicate-delete-binding.md), and then [respond to input at runtime](./respond-to-input.md) by polling or recieving callbacks from those actions. For this reason, it is not typically necessary to directly check whether a control is actuated. Instead, actuation of a control bound to an action causes the action to be performed (according to its [interaction pattern](Interactions.md), if an interaction has been assigned).
 
 However in some scenarios you might want to directly read the actuation of a control.
 

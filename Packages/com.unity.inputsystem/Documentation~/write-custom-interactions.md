@@ -58,7 +58,7 @@ public class MyExampleInteraction : IInputInteraction
 InputSystem.RegisterInteraction<MyExampleInteraction>();
 ```
 
-Your new Interaction is now available in the [Input Action Asset Editor window](ActionAssets.md).
+Your new Interaction is now available in the [Input Action Asset Editor window](action-assets.md).
 
 Alternatively, you can add it this way:
 

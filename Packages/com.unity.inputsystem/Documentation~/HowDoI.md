@@ -22,16 +22,16 @@ How do I...?
 
 - [find the gamepad that the player is currently using?](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current)
 
-- [know when a new device was plugged in?](Devices.md#monitoring-devices)
+- [know when a new device was plugged in?](monitor-devices.md)
 
 - [create my own custom devices?](hid-create-custom-layout.md)
 
 - create a simple "Fire" type action?</br>
 Use the same techniques shown for the "Jump" action in the [Workflows section](workflows.md)
 
-- [require a button to be held down for some duration before triggering an action?](Interactions.html#hold)
+- [require a button to be held down for some duration before triggering an action?](built-in-interactions.md#hold)
 
-- [use a "positive" and a "negative" button to drive an axis?](ActionBindings.html#1d-axis)
+- [use a "positive" and a "negative" button to drive an axis?](configure-bindings-from-code.md#1d-axis)
 
 - [create a UI to rebind input in my game?](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html)
 
@@ -39,11 +39,11 @@ Use the same techniques shown for the "Jump" action in the [Workflows section](w
 
 - [make my left-hand XR controller my right-hand one?](../api/UnityEngine.InputSystem.XR.XRController.html#UnityEngine_InputSystem_XR_XRController_leftHand)
 
-- [get all current touches from the touchscreen?](Touch.md#reading-all-touches)
+- [get all current touches from the touchscreen?](devices-touch.md#reading-all-touches)
 
 - [deal with my gamepad data arriving in a format different from `GamepadState`?](../api/UnityEngine.InputSystem.LowLevel.GamepadState.html)
 
-- [force the Input System to use my own layout when the native backend discovers a specific Device?](Devices.md#native-devices)
+- [force the Input System to use my own layout when the native backend discovers a specific Device?](native-devices.md)
 
 - [add deadzoning to my gamepad sticks?](query-gamepads.md#add-a-deadzone-to-a-gamepad)
 
@@ -53,4 +53,4 @@ Use the same techniques shown for the "Jump" action in the [Workflows section](w
 
 - [see events as they're processed?](debugging.md#other-tips)
 
-- [see what Devices I have and what state they're in?](Debugging.html#debugging-devices)
+- [see what Devices I have and what state they're in?](debug-device.md)

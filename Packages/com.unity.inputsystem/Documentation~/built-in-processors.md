@@ -4,7 +4,7 @@ uid: input-system-built-in-processors
 
 # Built-in processors
 
-The Input System package comes with a set of built-in Processors, which you can use with [bindings](ActionBindings.md), [actions](actions.md) and [controls](controls.md).
+The Input System package comes with a set of built-in Processors, which you can use with [bindings](bindings.md), [actions](actions.md) and [controls](controls.md).
 
 
 |**Processor name**|**Description**|**Operand type**|**Parameters**|

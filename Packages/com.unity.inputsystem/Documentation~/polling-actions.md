@@ -16,7 +16,7 @@ To poll an action whose type is **Value** or **Pass-through**, use:
 
 - [`ReadValue<>()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_ReadValue__1)
 
-You must use the corresponding type that matches the action's [control type's](control-types.md) value. For example, `ReadValue<Vector2>()` for a 2D axis.
+You must use the corresponding type that matches the action's [control type's](action-and-control-types.md) value. For example, `ReadValue<Vector2>()` for a 2D axis.
 
 ## Poll button-type actions
 
@@ -79,7 +79,7 @@ public class Example : MonoBehaviour
 ### Polling actions example using interaction phase 
 
 
-This example uses the Interact action from the [default actions](default-actions.md), which has a [Hold](Interactions.md#hold) interaction to make it perform only after the bound control is held for a period of time (for example, 0.4s):
+This example uses the Interact action from the [default actions](default-actions.md), which has a [Hold](built-in-interactions.md#hold) interaction to make it perform only after the bound control is held for a period of time (for example, 0.4s):
 
 ```CSharp
 using UnityEngine;

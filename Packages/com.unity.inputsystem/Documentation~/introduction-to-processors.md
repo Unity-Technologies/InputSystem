@@ -6,9 +6,9 @@ uid: input-system-intro-processors
 
 Input processors apply processing to input values, and return the result. The Input System’s [built-in processors](built-in-processors.md) can apply value clamping, scaling, normalization, inversion, and deadzones. You can also create [custom processors](write-custom-processors.md) to apply additional data processing to input values.
 
-You can install processors on [bindings](ActionBindings.md), [actions](actions.md) or [controls](controls.md). The Input System [registers](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterProcessor__1_System_String_) each processor with a unique name. This means that if you need to replace an existing processor, you need to register the new processor under the name of the existing processor.
+You can install processors on [bindings](bindings.md), [actions](actions.md) or [controls](controls.md). The Input System [registers](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterProcessor__1_System_String_) each processor with a unique name. This means that if you need to replace an existing processor, you need to register the new processor under the name of the existing processor.
 
-Processors can have boolean, integer, and floating-point number parameters. When created in data such as [bindings](./ActionBindings.md), processors are described as strings that look like function calls. 
+Processors can have boolean, integer, and floating-point number parameters. When created in data such as [bindings](./bindings.md), processors are described as strings that look like function calls. 
 
 For example, the following string references the processor registered as "scale" and sets its "factor" parameter to a floating-point value of 2.5:
 

@@ -25,7 +25,7 @@ using UnityEngine.InputSystem;
 
 ## Actions
 
-The [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html) class represents an action in the Input System. These are the same actions that you [create in the actions editor](Actions.md).
+The [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html) class represents an action in the Input System. These are the same actions that you [create in the actions editor](actions.md).
 
 With a reference to an action, you can then read values and state changes using eeither the [polling](polling-actions.md) or [callbacks](set-callbacks-on-actions.md) workflow.
 

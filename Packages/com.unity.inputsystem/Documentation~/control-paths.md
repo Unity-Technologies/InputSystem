@@ -13,7 +13,7 @@ At runtime, the Input System performs a look-up of all control paths against the
 
 ## Specificity
 
-When [selecting a control path for binding](select-control-binding.md), there are various levels of specificity you can use. These are available in the **Control paths** menu, in the [Binding Properties panel](binding-properties-panel.md).
+When [selecting a control path for binding](select-control-binding.md), there are various levels of specificity you can use. These are available in the **Control paths** menu, in the [Binding Properties panel](binding-properties-panel-reference.md).
 
 These levels of specificity depend on whether you want to refer to a certain type of device, specific models of device, or certain usages of a control regardless of device type.
 
@@ -49,7 +49,7 @@ The following table explains the use of each field:
 |Field|Description|Example|
 |-----|-----------|-------|
 |`<layoutName>`|Requires the control at the current level to be based on the given layout. The actual layout of the control may be the same or a layout *based* on the given layout.|`<Gamepad>/buttonSouth`|
-|`{usageName}`|Works differently for controls and Devices.<br><br>When used on a Device (the first component of a path), it requires the device to have the given usage. Refer to [Device usages](Devices.md#device-usages) for more details.<br><br>For looking up a control, the usage field is currently restricted to the path component immediately following the Device (the second component in the path). It finds the control on the Device that has the given usage. The control can be anywhere in the control hierarchy of the Device.|Device:<br><br>`<XRController>{LeftHand}/trigger`<br><br>Control:<br><br>`<Gamepad>/{Submit}`|
+|`{usageName}`|Works differently for controls and Devices.<br><br>When used on a Device (the first component of a path), it requires the device to have the given usage. Refer to [Device usages](device-usages.md) for more details.<br><br>For looking up a control, the usage field is currently restricted to the path component immediately following the Device (the second component in the path). It finds the control on the Device that has the given usage. The control can be anywhere in the control hierarchy of the Device.|Device:<br><br>`<XRController>{LeftHand}/trigger`<br><br>Control:<br><br>`<Gamepad>/{Submit}`|
 |`controlName`|Requires the control at the current level to have the given name. Takes both "proper" names ([`InputControl.name`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_name)) and aliases ([`InputControl.aliases`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_aliases)) into account.<br><br>This field can also be a wildcard (`*`) to match any name.|`MyGamepad/buttonSouth`<br><br>`*/{PrimaryAction}` (match `PrimaryAction` usage on Devices with any name)|
 |`#(displayName)`|Requires the control at the current level to have the given display name (i.e. [`InputControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName)). The display name may contain whitespace and symbols.|`<Keyboard>/#(a)` (matches the key that generates the "a" character, if any, according to the current keyboard layout).<br><br>`<Gamepad>/#(Cross)`|
 

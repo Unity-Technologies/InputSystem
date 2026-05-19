@@ -10,9 +10,9 @@ To apply Interactions to all Bindings on an Action, refer to [Apply Interactions
 
 ## Apply Interactions to Bindings via the Editor
 
-If you're using [project-wide actions](ActionsEditor.md), or [Input Action Assets](ActionAssets.md), you can add any Interaction to your Bindings via the Input Action editor. 
+If you're using [project-wide actions](actions-editor.md), or [Input Action Assets](action-assets.md), you can add any Interaction to your Bindings via the Input Action editor. 
 
-1. Once you have [created some Bindings](ActionsEditor.md#bindings), select the Binding you want to add Interactions to, so that the right pane of the window displays the properties for that Binding. 
+1. Once you have [created some Bindings](actions-editor.md#bindings), select the Binding you want to add Interactions to, so that the right pane of the window displays the properties for that Binding. 
 1. Select the plus icon on the __Interactions__ foldout to open a list of all available Interactions types. 
 1. Select an Interaction type to add an Interaction instance of that type. The Interaction now appears in the __Interactions__ foldout. 
 1. If the Interaction has any parameters, you can now edit them at this stage.

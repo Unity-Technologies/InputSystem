@@ -10,6 +10,6 @@ When disabled, no events other than removal ([`DeviceRemoveEvent`](../api/UnityE
 
 A Device can be manually disabled and re-enabled via [`InputSystem.DisableDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_) and [`InputSystem.EnableDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_) respectively.
 
-Note that [sensors](Sensors.md) start in a disabled state by default, and you need to enable them in order for them to generate events.
+Note that [sensors](devices-sensors.md) start in a disabled state by default, and you need to enable them in order for them to generate events.
 
 The Input System may automatically disable and re-enable Devices in certain situations, as detailed in the [next section](#background-and-focus-change-behavior).

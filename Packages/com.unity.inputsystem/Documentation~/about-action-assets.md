@@ -4,7 +4,7 @@ uid: input-system-about-action-assets
 
 # About action assets
 
-The Input System stores your configuration of [Input Actions](actions.md) and their associated [Bindings](ActionBindings.md), [Action Maps](ActionsEditor.html#configure-action-maps) and [Control Schemes](ActionBindings.md#control-schemes) in an [Action Asset](ActionAssets.md) file. These Assets have the `.inputactions` file extension and are stored in a plain JSON format.
+The Input System stores your configuration of [Input Actions](actions.md) and their associated [Bindings](bindings.md), [Action Maps](create-edit-delete-action-maps.md) and [Control Schemes](control-schemes.md) in an [Action Asset](action-assets.md) file. These Assets have the `.inputactions` file extension and are stored in a plain JSON format.
 
 ## Project-wide action assets
 

@@ -19,7 +19,7 @@ public class ExampleScript : MonoBehaviour
 
 The result is similar to using an Actions defined in the Input Actions editor, except the Actions are defined in the GameObject's properties and saved as Scene or Prefab data, instead of in a dedicated Asset.
 
-When you embed actions like this, by defining serialized InputAction fields in a MonoBehaviour, the GameObject's Inspector window displays an interface similar to the Actions column of the [Actions Editor](./ActionsEditor.md), which allows you to set up the bindings for those actions. For example:
+When you embed actions like this, by defining serialized InputAction fields in a MonoBehaviour, the GameObject's Inspector window displays an interface similar to the Actions column of the [Actions Editor](./actions-editor.md), which allows you to set up the bindings for those actions. For example:
 
 ![MyBehavior Inspector](Images/Workflow-EmbeddedActionsInspector.png)
 

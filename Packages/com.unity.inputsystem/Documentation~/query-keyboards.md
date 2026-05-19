@@ -15,7 +15,7 @@ To retrieve a key from a [`Keyboard`](xref:UnityEngine.InputSystem.Keyboard) dev
 
 ## Look up keys based on the character they produce
 
-To look up keys based on the character they produce, use [Control paths](Controls.md#control-paths). For example, you can query the key that produces the producing the a character from [`Keyboard`](xref:UnityEngine.InputSystem.Keyboard) using [`Keyboard.current\["\#(a)"\]`](xref:UnityEngine.InputSystem.Keyboard.Item(UnityEngine.InputSystem.Key)).
+To look up keys based on the character they produce, use [Control paths](control-paths.md). For example, you can query the key that produces the producing the a character from [`Keyboard`](xref:UnityEngine.InputSystem.Keyboard) using [`Keyboard.current\["\#(a)"\]`](xref:UnityEngine.InputSystem.Keyboard.Item(UnityEngine.InputSystem.Key)).
 
 ## Look up keyboard layouts
 

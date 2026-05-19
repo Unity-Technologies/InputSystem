@@ -4,7 +4,7 @@ uid: input-system-optimize-controls
 
 # Optimize controls
 
-The [recommended workflow](Workflows.md) is sufficiently optimized for most scenarios. However in some specialized situations when reading values directly from controls, you can make small performance gains by implementing some of the following techniques.
+The [recommended workflow](workflows.md) is sufficiently optimized for most scenarios. However in some specialized situations when reading values directly from controls, you can make small performance gains by implementing some of the following techniques.
 
 ## Avoiding defensive copies
 
@@ -12,7 +12,7 @@ Use [`InputControl<T>.value`](../api/UnityEngine.InputSystem.InputControl-1.html
 
 ## Control Value Caching
 
-When the `'USE_READ_VALUE_CACHING'` internal feature flag is set, the Input System will switch to an optimized path for reading control values. This path efficiently marks controls as 'stale' when they have been actuated. Subsequent calls to [`InputControl<T>.ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) will only apply control processing when there have been changes to that control or in case of control processing. Control processing in this case can mean any hard-coded processing that might exist on the control, such as with [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) which has built-in inversion, normalisation, scaling etc, or any processors that have been applied to the controls' [processor stack](Processors.md#processors-on-controls).
+When the `'USE_READ_VALUE_CACHING'` internal feature flag is set, the Input System will switch to an optimized path for reading control values. This path efficiently marks controls as 'stale' when they have been actuated. Subsequent calls to [`InputControl<T>.ReadValue`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_ReadValue) will only apply control processing when there have been changes to that control or in case of control processing. Control processing in this case can mean any hard-coded processing that might exist on the control, such as with [`AxisControl`](../api/UnityEngine.InputSystem.Controls.AxisControl.html) which has built-in inversion, normalisation, scaling etc, or any processors that have been applied to the controls' [processor stack](add-processors-controls.md).
 > Note: Performance improvements **are currently not guaranteed** for all use cases. Even though this performance path marks controls as "stale" in an efficient way, it still has an overhead which can degrade performance in some cases.
 
 A positive performance impact has been seen when:

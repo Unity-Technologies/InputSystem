@@ -4,7 +4,7 @@ uid: input-system-action-type-ref
 
 # Action types reference
 
-With an action selected in the [Actions Editor window](./actions-editor.md), the **Action Type** setting in the [actions panel](./actions-panel.md) allows you to [select the action type](./configure-action-type.md) from the following options:
+With an action selected in the [Actions Editor window](./actions-editor.md), the **Action Type** setting in the [actions panel](./input-actions-editor-window-reference.md#actions-panel-reference) allows you to [select the action type](./configure-action-type.md) from the following options:
 
 
 | Value                         | Description                    |

@@ -4,18 +4,18 @@ uid: input-system-about-respond-input
 
 # About responding to input
 
-The Input System offers various ways to respond to input at runtime, from the recommended workflow using [actions](Actions.md) and [bindings](bindings.md), to more direct techniques such as reading device controls directly.
+The Input System offers various ways to respond to input at runtime, from the recommended workflow using [actions](actions.md) and [bindings](bindings.md), to more direct techniques such as reading device controls directly.
 
 ## Recommended workflow
 
-Working with the Input System's [recommended workflow](Workflows.md) in your project involves two phases which you must approach in this order:
+Working with the Input System's [recommended workflow](workflows.md) in your project involves two phases which you must approach in this order:
 
 1. Configure your project's actions.
 2. Implement responses to actions. 
 
 ### Configure your project's actions
 
-You must first [configure input for your project](setting-up-input.md) as [actions](Actions.md), before you can respond to those actions.
+You must first [configure input for your project](setting-up-input.md) as [actions](actions.md), before you can respond to those actions.
 
 In some situations you might find the configuration in the [default project-wide actions](default-actions.md) covers all your needs, and you can go straight to implementing responses to input. In other cases you might want to start with the default configuration and [add or modify actions](configure-actions.md), or you can [start with an empty configuration and define your own](create-empty-action-asset.md).
 

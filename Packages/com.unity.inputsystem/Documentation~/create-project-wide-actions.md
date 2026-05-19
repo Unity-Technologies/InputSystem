@@ -4,7 +4,7 @@ uid: input-system-project-wide-assets
 
 # Create and assign a default project-wide actions asset
 
-Follow these steps to create an actions asset that contains the built-in [default actions](./TheDefaultActions.md), and assign them as project-wide.
+Follow these steps to create an actions asset that contains the built-in [default actions](./default-actions.md), and assign them as project-wide.
 
 Open the Input System Package panel in Project Settings, by going to **Edit** > **Project Settings** > **Input System Package**.
 
@@ -24,9 +24,9 @@ The Action Asset appears in your Project view, and is named "InputSystem_Actions
 ![](images/InputSystemActionsAsset.png)<br/>
 *The new Actions Asset in your Project window*
 
-When you create an action asset this way, the new asset contains a set of default actions that are useful in many common scenarios. You can [configure them](./ConfigureActions.md) or [add new actions](./CreateActions.md) to suit your project.
+When you create an action asset this way, the new asset contains a set of default actions that are useful in many common scenarios. You can [configure them](./configure-actions.md) or [add new actions](./create-edit-delete-actions.md) to suit your project.
 
 ![image alt text](./Images/ProjectSettingsInputActionsSimpleShot.png)
 *The Input System Package Project Settings after creating and assigning the default actions*
 
-Once you have created and assigned project-wide actions, the Input System Package page in Project Settings displays the **Actions Editor** interface. Read more about how to use the [Actions Editor](ActionsEditor.md) to configure your actions.
+Once you have created and assigned project-wide actions, the Input System Package page in Project Settings displays the **Actions Editor** interface. Read more about how to use the [Actions Editor](actions-editor.md) to configure your actions.

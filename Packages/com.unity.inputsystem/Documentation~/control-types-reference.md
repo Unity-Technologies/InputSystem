@@ -17,8 +17,8 @@ The Input System provides the following types of controls. These are available t
 |[`IntegerControl`](../api/UnityEngine.InputSystem.Controls.IntegerControl.html)|`int`|An integer value.|[`Touchscreen.primaryTouch.touchId`](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_touchId)|
 |[`StickControl`](../api/UnityEngine.InputSystem.Controls.StickControl.html)|`Vector2`|A 2D stick control like the thumbsticks on gamepads or the stick control of a joystick.|[`Gamepad.rightStick`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_rightStick)|
 |[`DpadControl`](../api/UnityEngine.InputSystem.Controls.DpadControl.html)|`Vector2`|A 4-way button control like the D-pad on gamepads or hatswitches on joysticks.|[`Gamepad.dpad`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_dpad)|
-|[`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)|`TouchState`|A control that represents all the properties of a touch on a [touch screen](Touch.md).|[`Touchscreen.primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch)|
+|[`TouchControl`](../api/UnityEngine.InputSystem.Controls.TouchControl.html)|`TouchState`|A control that represents all the properties of a touch on a [touch screen](devices-touch.md).|[`Touchscreen.primaryTouch`](../api/UnityEngine.InputSystem.Touchscreen.html#UnityEngine_InputSystem_Touchscreen_primaryTouch)|
 
-You can browse the set of all registered control layouts in the [input debugger](Debugging.md#debugging-layouts).
+You can browse the set of all registered control layouts in the [input debugger](debug-layouts.md).
 
 All controls are based on the [`InputControl`](../api/UnityEngine.InputSystem.InputControl.html) base class. Most concrete implementations are based on [`InputControl<TValue>`](../api/UnityEngine.InputSystem.InputControl-1.html).

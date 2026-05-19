@@ -4,7 +4,7 @@ uid: input-system-add-processors-bindings-actions
 
 # Add processors to bindings and actions
 
-To add a processor to an [action](actions.md) or [binding](ActionBindings.md) via the Input Actions Editor:
+To add a processor to an [action](actions.md) or [binding](bindings.md) via the Input Actions Editor:
 
 1. Select the action or binding you want to add processors to. The Properties panel opens in the right pane of the window. 
 1. In the Properties panel, navigate to the **Processors** foldout. Select the **Add (+)** icon on the header to open a list of all available processors that match your control type. 
@@ -32,4 +32,4 @@ action.AddBinding("<Gamepad>/leftStick")
 ```
 
 >[!NOTE]
->The received value and result value must be of the same type. To convert received input values into different types, see [composite Bindings](ActionBindings.md#composite-bindings).
+>The received value and result value must be of the same type. To convert received input values into different types, see [composite Bindings](composite-bindings.md).

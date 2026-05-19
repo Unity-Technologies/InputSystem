@@ -6,7 +6,7 @@ uid: input-system-control-state
 
 A control's **state** is the current value stored by the Input System based on the control's [actuation](control-actuation.md).
 
-The recommended workflow is to [bind controls to actions](add-duplicate-delete-binding.md), and then [respond to input at runtime](./respond-to-input-at-runtime.md) by polling or recieving callbacks from those actions. For this reason, it is not typically necessary to directly read control states.
+The recommended workflow is to [bind controls to actions](add-duplicate-delete-binding.md), and then [respond to input at runtime](./respond-to-input.md) by polling or recieving callbacks from those actions. For this reason, it is not typically necessary to directly read control states.
 
 However, the documentation on this page gives information about the details of how controls states are stored, and how to directly access the state, which may be useful if you are using a different workflow for a specialized situation.
 
@@ -26,5 +26,5 @@ Gamepad.current.leftStick.x.ReadValue();
 
 Each type of control has a specific type of values that it returns, regardless of how many different types of formats it supports for its state. You can access this value type through the [`InputControl.valueType`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_valueType) property.
 
-Reading a value from a control might apply one or more value Processors. Refer to [Processors](Processors.md) for more information.
+Reading a value from a control might apply one or more value Processors. Refer to [Processors](processors.md) for more information.
 

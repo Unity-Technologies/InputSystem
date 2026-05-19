@@ -1,6 +1,6 @@
 # Interactions Editor reference
 
-The Interactions foldout contains properties for [interactions](interactions.md) that you can assign to actions and bindings.
+The Interactions foldout contains properties for [interactions](Interactions.md) that you can assign to actions and bindings.
 
 All properties in the Interactions foldout correspond to the [`InputSystem.Interactions`](..api/UnityEngine.InputSystem.Interactions.html) API.
 

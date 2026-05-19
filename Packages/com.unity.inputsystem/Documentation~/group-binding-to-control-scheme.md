@@ -15,4 +15,4 @@ To do so:
 3. Select a binding to edit. For composite bindings, you must select one or more of its sub-bindings.
 4. In the Binding Properties panel, under **Use in control scheme**, enable or disable the control schemes that you want this binding to belong to.
 
-You can edit the control schemes listed under **Use in control scheme**, by using the [Control Schemes menu](./control-schemes-devices-menu.md) at the top left of the [Actions Editor window](./actions-editor.md).
+You can edit the control schemes listed under **Use in control scheme**, by using the [Control Schemes menu](./control-schemes-devices-menu-reference.md) at the top left of the [Actions Editor window](./actions-editor.md).

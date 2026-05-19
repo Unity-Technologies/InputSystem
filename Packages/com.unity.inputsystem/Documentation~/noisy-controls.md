@@ -14,7 +14,7 @@ If a control is marked as noisy:
 
 - The Input System performs additional event filtering to filter out noise, then calls [`InputDevice.MakeCurrent`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_MakeCurrent) if any non-noise values cause the control to change state. If an input event for a Device contains no state change on a control that is not marked noisy, then the Device will not be made current based on the event. This avoids, for example, a plugged in PS4 controller constantly making itself the current gamepad ([`Gamepad.current`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current)) due to its sensors constantly feeding data into the system.
 
-- When the application loses focus and Devices are [reset](Devices.md#device-resets) as a result, the state of noisy control will be preserved as is. This ensures that sensor readings will remain at their last value rather than being reset to default values.
+- When the application loses focus and Devices are [reset](reset-device.md) as a result, the state of noisy control will be preserved as is. This ensures that sensor readings will remain at their last value rather than being reset to default values.
 
 >**Note**: If any control on a device is noisy, the device itself is flagged as noisy.
 

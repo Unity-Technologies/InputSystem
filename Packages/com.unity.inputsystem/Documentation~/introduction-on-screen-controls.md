@@ -15,11 +15,11 @@ You can implement custom controls by extending the base [`OnScreenControl`](../a
 >[!NOTE]
 >On-screen controls don't have a predefined visual representation. It's up to you to set up the visual aspect of a control (for example, by adding a sprite or UI component to the GameObject). On-screen controls take care of the interaction logic and of setting up and generating input from interactions.
 
-Each on-screen control uses a [control path](Controls.md#control-paths) to reference the control that it should report input as. For example, the following on-screen button reports input as the right shoulder button of a gamepad:
+Each on-screen control uses a [control path](control-paths.md) to reference the control that it should report input as. For example, the following on-screen button reports input as the right shoulder button of a gamepad:
 
 ![OnScreenButton](Images/OnScreenButton.png)
 
-The collection of on-screen controls present in a Scene forms one or more [input devices](Devices.md). The Input System creates one input Device for each distinct type of device the controls reference. For example, if one on-screen button references `<Gamepad>/buttonSouth` and another on-screen button references `<Keyboard>/a`, the Input System creates both a `Gamepad` and a `Keyboard`. This happens automatically when the components are enabled. When disabled, the Input System automatically removes the devices again.
+The collection of on-screen controls present in a Scene forms one or more [input devices](devices.md). The Input System creates one input Device for each distinct type of device the controls reference. For example, if one on-screen button references `<Gamepad>/buttonSouth` and another on-screen button references `<Keyboard>/a`, the Input System creates both a `Gamepad` and a `Keyboard`. This happens automatically when the components are enabled. When disabled, the Input System automatically removes the devices again.
 
 To query the control (and, implicitly, the device) that an on-screen control feeds into, you can use the [`OnScreenControl.control`](../api/UnityEngine.InputSystem.OnScreen.OnScreenControl.html#UnityEngine_InputSystem_OnScreen_OnScreenControl_control) property.
 
