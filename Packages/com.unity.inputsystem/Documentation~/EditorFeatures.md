@@ -18,3 +18,5 @@ Read input from custom Editor windows, stream touch and sensor data from a mobil
 
 - [Debugging](debugging.md)
 - [The input debugger window](the-input-debugger-window.md)
+- [Testing](testing.md)
+- [See and record input event flow](see-record-input-event-flow.md)

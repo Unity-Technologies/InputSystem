@@ -21,3 +21,10 @@ A **binding** represents a connection between an [Action](actions.md) and one or
 | **[Restrict binding resolution to a specific device](restrict-binding-resolution-to-device.md)** | Specify which devices a binding should resolve to. |
 | **[Binding conflicts](binding-conflicts.md)** | Learn how the Input System resolves conflicting or ambiguous situations, such as when multiple bindings map to the same action. |
 | **[Initial state checks](binding-initial-state-checks.md)** | Learn how the Input System deals with if a control is already pressed when an action is enabled, and how to modify this behavior.  |
+
+## Additional resources
+
+- [Actions](actions.md)
+- [Control paths](control-paths.md)
+- [Control schemes](control-schemes.md)
+- [User rebinding at runtime](user-rebinding-runtime.md)

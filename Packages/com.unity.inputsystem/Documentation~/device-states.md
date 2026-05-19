@@ -2,14 +2,20 @@
 uid: input-system-device-states
 ---
 
-# Device states 
+# Device states
 
-Like any other type of [Control](controls.md#control-state), each Device has a block of memory allocated to it which stores the state of all the Controls associated with the Device.
+Observe and change Device control state from script beyond what native backends send.
 
-State changes are usually initiated through [state events](read-state-events.md) from the native backend, but you can use [`InputControl<>.WriteValueIntoState()`](../api/UnityEngine.InputSystem.InputControl-1.html#UnityEngine_InputSystem_InputControl_1_WriteValueIntoState__0_System_Void__) to manually overwrite the state of any Control.
+Each [Device](devices-scripting.md) stores control values in memory, usually updated by [state events](read-state-events.md). Use change monitors to react when values change, or synthesize state when you need derived or manual updates.
 
-
-| Topic | Description |
-| --- | --- |
+| **Topic** | **Description** |
+| :--- | :--- |
+| **[Monitor device state changes](monitor-device-state-changes.md)** | Register callbacks with `InputState.AddChangeMonitor` when control state changes. |
+| **[Synthesize a device state change](synthesize-device-state-change.md)** | Push state changes with `InputState.Change` for derived or manual control values. |
 
 ## Additional resources
+
+- [Controls](controls.md)
+- [Read state events](read-state-events.md)
+- [Device commands](device-commands.md)
+- [Working with devices](working-with-devices.md)

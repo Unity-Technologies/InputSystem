@@ -14,5 +14,7 @@ Set up local multiplayer games, where multiple players share a single screen and
 
 ## Additional resources
 
-* [Local multiplayer scenarios](local-multiplayer-scenarios.md)
-* [Set up PlayerInput Component for local multiplayer](set-up-player-input-component-local-multiplayer.md)
+- [The Player Input component](player-input-component.md)
+- [Responding to input](respond-to-input.md)
+- [Multiplayer UI input](multiplayer-ui-input.md)
+- [Local multiplayer scenarios](local-multiplayer-scenarios.md)

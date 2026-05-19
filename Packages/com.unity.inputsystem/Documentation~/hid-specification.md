@@ -12,3 +12,10 @@ Human Interface Device (HID) is a specification that describes peripheral user i
 | **[Create a custom device layout](hid-create-custom-layout.md)** | Override default HID mappings with a custom layout.|
 | **[Use an existing input device to create a layout](hid-create-custom-layout-existing.md)** | Create a custom layout with an existing device.|
 | **[Use a custom class to create a layout](hid-create-custom-layout-class.md)** | Create a custom class to make a custom layout.|
+
+## Additional resources
+
+- [Layouts](layouts.md)
+- [Custom devices](custom-devices.md)
+- [Debug layouts](debug-layouts.md)
+- [Devices](devices.md)

@@ -13,3 +13,10 @@ A common requirement in games is to allow your users to rebind the controls to a
 | **[Rebind an action at runtime](rebind-action-runtime.md)** | Allow users of your application to set their own bindings. |
 | **[Save and load rebinds](save-load-rebinds.md)** | Serialize override properties of bindings as JSON strings. |
 | **[Restore original bindings](restore-original-bindings.md)** | Remove binding overrides to restore defaults. |
+
+## Additional resources
+
+- [Bindings](bindings.md)
+- [Configure actions](configure-actions.md)
+- [Setting up input](setting-up-input.md)
+- [Input for user interfaces](ui-input.md)

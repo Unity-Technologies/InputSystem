@@ -20,4 +20,7 @@ An action's configuration includes its types, bindings, controls, control scheme
 
 ## Additional resources
 
--  [Actions Editor window reference](actions-editor.md)
+- [Actions Editor references](actions-editor.md)
+- [Setting up input](setting-up-input.md)
+- [Actions](actions.md)
+- [User rebinding at runtime](user-rebinding-runtime.md)

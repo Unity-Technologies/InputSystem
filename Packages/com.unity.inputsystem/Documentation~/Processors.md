@@ -13,3 +13,10 @@ Use an input processor to apply processing to input values and return the result
 | [**Write custom processors**](write-custom-processors.md) | Create and register your own processors for use with bindings, actions, and controls. |
 | [**Add processors to bindings and actions**](add-processors-bindings-actions.md) | Add processors to individual bindings, or to all bindings on an action, via the Editor or via code. |
 | [**Add processors to controls**](add-processors-controls.md) | Add processors to specific control inputs, including custom controls. |
+
+## Additional resources
+
+- [Bindings](bindings.md)
+- [Interactions](Interactions.md)
+- [Configure actions](configure-actions.md)
+- [Configure Bindings from code](configure-bindings-from-code.md)

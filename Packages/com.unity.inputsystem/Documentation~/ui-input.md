@@ -4,14 +4,23 @@ uid: input-system-user-interfaces
 
 # Input for user interfaces
 
-The Input System provides support for several UI systems in Unity. This section describes compatibility and configuration for UI input. 
+Wire the Input System to Unity UI so players can navigate menus, click buttons, and interact with on-screen widgets.
 
-| **Topic** | **Description**  |
+Choose a supported UI stack and UI Input Module, configure the built-in UI action map, and handle cases where gameplay and UI both receive input. Add virtual mice, multiplayer UI, or on-screen controls when your project needs them.
+
+| **Topic** | **Description** |
 | :--- | :--- |
-|**[Supported UI systems](supported-ui-systems.md)**|Understand the compatibility between the Input System and Unity's UI systems.|
-|**[Configure UI input actions](configure-ui-input-action-map.md)**|Configure UI input actions in the UI action map.|
-|**[Default UI Action Map reference](ui-action-map-reference.md)**|Reference documentation for the default UI action map on the project-wide actions asset.|
-|**[Handling input target ambiguity](handling-input-target-ambiguity.md)**|Understand how the Input System and Unity work together to distinguish which input actions are intended for UI, and which are intended for the game.|
-|**[Use a Virtual Mouse for UI cursor control](virtual-mouse-ui-cursor-control)**|Use a virtual mouse to allow gamepads and joysticks to control pointer inputs.|
-|**[Multiplayer UI input](multiplayer-ui)**|Configure multiple UI instances, so that multiple players can share a single screen and individually interact with the UI.|
-|**[Create on-screen controls](on-screen-controls)**|Simulate input devices with UI widgets that the user interacts with on the screen.|
+| **[Supported UI systems](supported-ui-systems.md)** | Compare uGUI, UI Toolkit, and IMGUI support and set up the UI Input Module. |
+| **[Configure UI Input Actions](configure-ui-input-action-map.md)** | Edit bindings for the built-in UI action map in the Actions Editor. |
+| **[Default UI Action Map reference](ui-action-map-reference.md)** | Look up Navigate, Submit, Point, Click, and other default UI actions. |
+| **[Handling input target ambiguity](handling-input-target-ambiguity.md)** | Route input between gameplay and UI when both are active. |
+| **[Use a Virtual Mouse for UI cursor control](virtual-mouse-ui-cursor-control.md)** | Drive uGUI pointer input from gamepads and joysticks with a virtual mouse. |
+| **[Multiplayer UI input](multiplayer-ui-input.md)** | Give each local player separate UI on a shared screen. |
+| **[Create on-screen controls](on-screen-controls.md)** | Simulate device input with on-screen buttons, sticks, and custom controls. |
+
+## Additional resources
+
+- [Actions](actions.md)
+- [About project-wide actions](about-project-wide-actions.md)
+- [Use the Player Input component with UI](use-player-input-component-ui.md)
+- [The Player Input component](player-input-component.md)

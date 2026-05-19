@@ -20,3 +20,10 @@ Learn about supported input devices and their unique features in this section.
 | **[Supported devices reference](supported-devices-reference.md)** | Explore platform support for each compatible device. |
 | **[Devices (scripting)](devices-scripting.md)** | Learn how to manage devices in code. |
 | **[Custom devices](custom-devices.md)** | Create events and custom devices. |
+
+## Additional resources
+
+- [Setting up input](setting-up-input.md)
+- [Responding to input](respond-to-input.md)
+- [Layouts](layouts.md)
+- [Debug a device](debug-device.md)

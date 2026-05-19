@@ -4,22 +4,23 @@ uid: input-system-setting-up
 
 # Setting up input
 
-Learn how to configure input to suit the needs of your project.
+Configure how your project maps physical controls to gameplay and UI behavior.
 
-Before you can read input from users, you must configure how you want to receive input. User input comes in many forms, from keyboard, mouse, gamepads, and more. The Input System allows you to configure the connection and meaning between controls on your user's physical input devices, and the way your game or app responds to those inputs.
-
-Once you have set up input, you can then [respond to input](respond-to-input.md).
+Use actions, action assets, and the Input Actions Editor to define what input means in your game, then wire bindings, interactions, and processors. When you are ready to read input in code, continue to [Respond to input](respond-to-input.md).
 
 | **Topic** | **Description** |
 | :--- | :--- |
-| **[Actions](actions.md)** | Associate the purpose of an input and the source device in a flexible way. |
-| **[Input action assets](action-assets.md)** | Store your configuration of actions and their associated bindings, action maps, and control schemes in an Action Asset file. |
-| **[Create action maps](create-edit-delete-action-maps.md)** | Group collections of actions that represent different input scenarios in your project. |
-| **[Create, edit, and delete actions](create-edit-delete-actions.md)** | Create actions using the Input Actions editor |
-| **[Configure actions](configure-actions.md)** | Set up an action, bind it to controls, and set up its responses. |
-| **[Input Actions Editor references](actions-editor.md)** | Create action maps, configure actions and bindings, connect controls, and assign interactions and processors. |
-| **[Configure input from code](configure-input-from-code.md)** | Summary |
+| **[Actions](actions.md)** | Separate input purpose from device controls and connect them with bindings. |
+| **[Input action assets](action-assets.md)** | Store actions, bindings, action maps, and control schemes in Input Action assets. |
+| **[Create action maps](create-edit-delete-action-maps.md)** | Group actions for different input scenarios such as gameplay and UI. |
+| **[Create, edit, and delete actions](create-edit-delete-actions.md)** | Create and manage actions in the Input Actions Editor. |
+| **[Configure actions](configure-actions.md)** | Set up action types, bindings, controls, schemes, interactions, and processors. |
+| **[Input Actions Editor references](actions-editor.md)** | Reference for the Actions Editor window and property panels. |
+| **[Configure input from code](configure-input-from-code.md)** | Define actions, bindings, and maps in script without relying on asset-only setup. |
 
 ## Additional resources
 
-- [Respond to input](./respond-to-input.md)
+- [Respond to input](respond-to-input.md)
+- [Using the Actions Workflow](using-actions-workflow.md)
+- [Devices](devices.md)
+- [The Player Input component](player-input-component.md)

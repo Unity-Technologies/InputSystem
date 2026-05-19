@@ -20,4 +20,7 @@ Learn how to implement responses to the input that you have configured in your p
 
 ## Additional resources
 
-- [Setting up Input](./setting-up-input.md)
+- [Setting up input](setting-up-input.md)
+- [Actions](actions.md)
+- [Devices](devices.md)
+- [User rebinding at runtime](user-rebinding-runtime.md)

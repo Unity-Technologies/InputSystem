@@ -15,4 +15,7 @@ Actions have an **Action Type** and **Control Type** which you can configure in 
 
 ## Additional resources
 
-* [Control types reference](control-types-reference.md)
+- [Control types reference](control-types-reference.md)
+- [Actions](actions.md)
+- [Bindings](bindings.md)
+- [Input Actions Editor references](actions-editor.md)

@@ -13,3 +13,9 @@ Pointer devices track positions on a 2D surface. Supported pointer devices inclu
 | **[Mouse devices](devices-mouse.md)** | Query and control mouse devices.|
 | **[Pen devices](devices-pen.md)** | Query and control pen devices. |
 
+## Additional resources
+
+- [Devices](devices.md)
+- [Pointer input UI support](supported-ui-input-types-pointer.md)
+- [Use a Virtual Mouse for UI cursor control](virtual-mouse-ui-cursor-control.md)
+- [Input for user interfaces](ui-input.md)

@@ -2,21 +2,25 @@
 uid: input-system-device-lifecycle
 ---
 
-# Device lifecycle 
+# Device lifecycle
 
-Use this section to script or debug behaviour beyond reading the current device or binding [actions](actions.md). 
+Manage how Input Devices are created, updated, and torn down at runtime and in the Editor.
 
-This section describes how [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) instances enter and leave the Input System, how you can reset or synchronize their state, enable or disable them, and how focus, background execution, and Editor domain reloads affect which devices exist and what state they hold. 
+Use these topics when you need to add or remove devices, reset or sync state, control whether devices process input, or understand focus and domain reload behavior.
 
 | **Topic** | **Description** |
 | :--- | :--- |
-| [**Create a device**](create-device.md) | Learn how to add a new device with `InputSystem.AddDevice`. |
-| [**Remove a device**](remove-device.md) | Learn how to remove devices from the Input System and what happens to their state and associated bindings. |
-| [**Reset a device**](reset-device.md) | Learn how to reset device controls to their default state, and what happens to the device's actions. |
-| [**Sync a device**](sync-device.md) | Learn how to request state synchronization so a device reflects current hardware state before processing input. |
-| [**Enable and disable devices**](enable-disable-devices.md) | Learn how to temporarily disable or re-enable devices and how that affects event processing and actions. |
-| [**Device background and focus changes**](device-background-focus-changes.md) | Learn how focus loss, regain, and background execution settings influence device availability and state updates. |
-| [**Devices and domain reloads**](devices-domain-reloads.md) | Learn how Editor domain reloads affect device instances and what to expect when scripts recompile. |
+| **[Create a device](create-device.md)** | Add devices with `InputSystem.AddDevice` and understand automatic layout instantiation. |
+| **[Remove a device](remove-device.md)** | Remove disconnected or manual devices and handle `onDeviceChange` notifications. |
+| **[Reset a device](reset-device.md)** | Reset controls to default state with `InputSystem.ResetDevice`. |
+| **[Sync a device](sync-device.md)** | Request current hardware state with `RequestSyncCommand` when the platform supports it. |
+| **[Enable and disable devices](enable-disable-devices.md)** | Control whether a device processes input using enabled state and commands. |
+| **[Device background and focus changes](device-background-focus-changes.md)** | Handle focus loss, regain, and background execution settings for device state. |
+| **[Devices and domain reloads](devices-domain-reloads.md)** | Understand how Editor domain reloads recreate devices and reset state. |
 
 ## Additional resources
 
+- [Working with devices](working-with-devices.md)
+- [Device states](device-states.md)
+- [Native devices](native-devices.md)
+- [Debug a device](debug-device.md)

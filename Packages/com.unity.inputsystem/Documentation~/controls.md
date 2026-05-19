@@ -22,3 +22,10 @@ A **control** is a part of a [device](devices.md) that sends values to the Input
 | **[Noisy controls](noisy-controls.md)** | Controls which can change value without any actual or intentional user interaction such as the accelerometer. |
 | **[Synthetic controls](synthetic-controls.md)** | A type of virtual control with values synthesized from input from a physical control on the device.  |
 | **[Optimize controls](optimize-controls.md)** | Detailed information about increasing input performance in some specialized scenarios. |
+
+## Additional resources
+
+- [Bindings](bindings.md)
+- [Devices](devices.md)
+- [Layouts](layouts.md)
+- [Device states](device-states.md)
