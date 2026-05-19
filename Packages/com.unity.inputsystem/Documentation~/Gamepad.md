@@ -121,6 +121,18 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 >* PS4, Xbox, and Switch controllers, when connected to their respective consoles. Only supported if you install console-specific input packages in your Project.
 >* PS4 controllers, when connected to Mac or Windows/UWP computers.
 >* Xbox controllers on Windows.
+>* Android:
+>    * Note: Rumble automatically stops about 10 seconds after the last SetMotorSpeeds call unless explicitly stopped.
+>    * Requires Unity 6000.6 or later
+>    * Android 12 or later
+>        * Most bluetooth-connected gamepads with rumble support are supported (PS4/PS5 controllers, Xbox controllers, etc.)
+>        * __Note:__ If the gamepad is connected via USB cable, rumble support may vary.
+>        * __Note:__ If the gamepad supports more than one motor, each motor's strength can be controlled individually.
+>    * Android 11 or earlier
+>        * Rumble support is limited.
+>        * __Note:__ Only one motor is supported. If the gamepad has more than one motor, the higher value of the left and right motor strengths is applied to both.
+> * iOS:
+>     * TODO: Paulius
 
 [//]: # (TODO: are we missing any supported configs?)
 
