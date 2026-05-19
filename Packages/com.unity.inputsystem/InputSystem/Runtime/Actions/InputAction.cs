@@ -1156,18 +1156,18 @@ namespace UnityEngine.InputSystem
         ///
         /// Press threshold (based on <see cref="InputControl.EvaluateMagnitude()"/> for the driving control):
         ///
-        /// 1. For a <see cref="ButtonControl"/>, <see cref="Vector2Control"/>, or <see cref="StickControl"/>, consult
-        ///    <see cref="ButtonControl.pressPoint"/> / <see cref="ButtonControl.pressPointOrDefault"/> or
-        ///    <see cref="Vector2Control.pressPoint"/> / <see cref="Vector2Control.pressPointOrDefault"/> (sticks use the vector rules)
-        ///    when a positive control <c>pressPoint</c> is set.
-        /// 2. If not set on the control but the binding has a <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
-        ///    with <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero, use that value so this
-        ///    API stays aligned with the interaction.
-        /// 3. If the binding lists several <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
-        ///    instances, use the first in interaction list order with an explicit
-        ///    <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero.
-        /// 4. For composite bindings, read interaction parameters from the composite binding.
-        /// 5. Otherwise use <see cref="InputSettings.defaultButtonPressPoint"/>.
+        /// 1. If the binding lists one or more <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
+        ///    instances, use the <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> from the first
+        ///    in interaction list order whose <c>pressPoint</c> is greater than zero (earlier interactions that are not
+        ///    <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>, or that leave <c>pressPoint</c> at the
+        ///    default of zero, are skipped) so this API stays aligned with the interaction.
+        /// 2. Otherwise, for a <see cref="ButtonControl"/>, <see cref="Vector2Control"/>, or <see cref="StickControl"/>, use
+        ///    <see cref="ButtonControl.pressPointOrDefault"/> or <see cref="Vector2Control.pressPointOrDefault"/>.
+        /// 3. For composite bindings, read interaction parameters from the composite binding.
+        /// 4. Otherwise use <see cref="InputSettings.defaultButtonPressPoint"/>.
+        ///
+        /// <see cref="InputControl.IsPressed"/> on the control itself always uses the control threshold and does not
+        /// consider binding interactions.
         ///
         /// <example>
         /// <code>
@@ -1244,18 +1244,18 @@ namespace UnityEngine.InputSystem
         ///
         /// Press threshold (based on <see cref="InputControl.EvaluateMagnitude()"/> for the driving control):
         ///
-        /// 1. For a <see cref="ButtonControl"/>, <see cref="Vector2Control"/>, or <see cref="StickControl"/>, consult
-        ///    <see cref="ButtonControl.pressPoint"/> / <see cref="ButtonControl.pressPointOrDefault"/> or
-        ///    <see cref="Vector2Control.pressPoint"/> / <see cref="Vector2Control.pressPointOrDefault"/> (sticks use the vector rules)
-        ///    when a positive control <c>pressPoint</c> is set.
-        /// 2. If not set on the control but the binding has a <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
-        ///    with <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero, use that value so this
-        ///    API stays aligned with the interaction.
-        /// 3. If the binding lists several <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
-        ///    instances, use the first in interaction list order with an explicit
-        ///    <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero.
-        /// 4. For composite bindings, read interaction parameters from the composite binding.
-        /// 5. Otherwise use <see cref="InputSettings.defaultButtonPressPoint"/>.
+        /// 1. If the binding lists one or more <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
+        ///    instances, use the <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> from the first
+        ///    in interaction list order whose <c>pressPoint</c> is greater than zero (earlier interactions that are not
+        ///    <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>, or that leave <c>pressPoint</c> at the
+        ///    default of zero, are skipped) so this API stays aligned with the interaction.
+        /// 2. Otherwise, for a <see cref="ButtonControl"/>, <see cref="Vector2Control"/>, or <see cref="StickControl"/>, use
+        ///    <see cref="ButtonControl.pressPointOrDefault"/> or <see cref="Vector2Control.pressPointOrDefault"/>.
+        /// 3. For composite bindings, read interaction parameters from the composite binding.
+        /// 4. Otherwise use <see cref="InputSettings.defaultButtonPressPoint"/>.
+        ///
+        /// <see cref="InputControl.IsPressed"/> on the control itself always uses the control threshold and does not
+        /// consider binding interactions.
         ///
         /// <example>
         /// <code>
@@ -1352,18 +1352,18 @@ namespace UnityEngine.InputSystem
         ///
         /// Press threshold (based on <see cref="InputControl.EvaluateMagnitude()"/> for the driving control):
         ///
-        /// 1. For a <see cref="ButtonControl"/>, <see cref="Vector2Control"/>, or <see cref="StickControl"/>, consult
-        ///    <see cref="ButtonControl.pressPoint"/> / <see cref="ButtonControl.pressPointOrDefault"/> or
-        ///    <see cref="Vector2Control.pressPoint"/> / <see cref="Vector2Control.pressPointOrDefault"/> (sticks use the vector rules)
-        ///    when a positive control <c>pressPoint</c> is set.
-        /// 2. If not set on the control but the binding has a <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
-        ///    with <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero, use that value so this
-        ///    API stays aligned with the interaction.
-        /// 3. If the binding lists several <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
-        ///    instances, use the first in interaction list order with an explicit
-        ///    <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> greater than zero.
-        /// 4. For composite bindings, read interaction parameters from the composite binding.
-        /// 5. Otherwise use <see cref="InputSettings.defaultButtonPressPoint"/>.
+        /// 1. If the binding lists one or more <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
+        ///    instances, use the <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> from the first
+        ///    in interaction list order whose <c>pressPoint</c> is greater than zero (earlier interactions that are not
+        ///    <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>, or that leave <c>pressPoint</c> at the
+        ///    default of zero, are skipped) so this API stays aligned with the interaction.
+        /// 2. Otherwise, for a <see cref="ButtonControl"/>, <see cref="Vector2Control"/>, or <see cref="StickControl"/>, use
+        ///    <see cref="ButtonControl.pressPointOrDefault"/> or <see cref="Vector2Control.pressPointOrDefault"/>.
+        /// 3. For composite bindings, read interaction parameters from the composite binding.
+        /// 4. Otherwise use <see cref="InputSettings.defaultButtonPressPoint"/>.
+        ///
+        /// <see cref="InputControl.IsPressed"/> on the control itself always uses the control threshold and does not
+        /// consider binding interactions.
         ///
         /// <example>
         /// <code>

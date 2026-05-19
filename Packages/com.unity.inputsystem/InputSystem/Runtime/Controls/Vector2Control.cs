@@ -42,9 +42,10 @@ namespace UnityEngine.InputSystem.Controls
         /// </summary>
         /// <remarks>
         /// By default, this field is set to -1. If the value of the property is negative,
-        /// <see cref="UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint"/> is used unless a
-        /// <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/> on the binding sets an explicit
-        /// <c>pressPoint</c> (see <see cref="UnityEngine.InputSystem.InputAction.IsPressed"/> remarks).
+        /// <see cref="UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint"/> is used for action-level press
+        /// APIs unless a <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/> on the binding sets an
+        /// explicit <c>pressPoint</c>, in which case that interaction threshold takes priority (see
+        /// <see cref="UnityEngine.InputSystem.InputAction.IsPressed"/> remarks).
         /// </remarks>
         /// <seealso cref="pressPointOrDefault"/>
         /// <seealso cref="ButtonControl"/>

@@ -1598,9 +1598,10 @@ namespace UnityEngine.InputSystem
             return bindingStatePtr;
         }
 
-        // Resolves the explicit press threshold used to keep IsPressed / WasPressedThisFrame / WasReleasedThisFrame aligned
-        // with PressInteraction when the driving control does not set IActuationPressPoint.pressPoint. When multiple
-        // PressInteraction instances exist on the binding, uses the first in interaction list order with pressPoint > 0.
+        // Resolves the explicit press threshold from PressInteraction on the binding. When multiple PressInteraction
+        // instances exist, uses the first in interaction list order with pressPoint > 0. GetActuationPressThreshold
+        // prefers this over a control pressPoint so IsPressed / WasPressedThisFrame / WasReleasedThisFrame stay aligned
+        // with PressInteraction.
         private bool TryGetExplicitPressInteractionPressPoint(BindingState* bindingStateForInteractions, ref float explicitPressInteraction)
         {
             var count = bindingStateForInteractions->interactionCount;
