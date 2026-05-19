@@ -1627,10 +1627,9 @@ namespace UnityEngine.InputSystem
 
             if (control is IActuationPressPoint actuation)
             {
-                if (actuation.pressPoint > 0)
-                    return actuation.pressPointOrDefault;
                 if (hasExplicitPressThreshold)
                     return explicitPressThreshold;
+
                 return actuation.pressPointOrDefault;
             }
 

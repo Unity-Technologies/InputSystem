@@ -14,11 +14,6 @@ namespace UnityEngine.InputSystem.Controls
     internal interface IActuationPressPoint
     {
         /// <summary>
-        /// Layout-configured press threshold, or a value less than or equal to zero when unset.
-        /// </summary>
-        float pressPoint { get; }
-
-        /// <summary>
         /// Effective press threshold: <see cref="pressPoint"/> when set, otherwise the global default.
         /// </summary>
         float pressPointOrDefault { get; }

@@ -97,7 +97,7 @@ internal class ActuationPressPointTests : CoreTestsFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_Vector2IsPressed_ControlPressPointOverridesPressInteraction()
+    public void Actions_Vector2IsPressed_PressInteractionOverridesControlPressPoint()
     {
         InputSystem.settings.defaultButtonPressPoint = 0.5f;
         InputSystem.settings.buttonReleaseThreshold = 0.8f;
@@ -111,11 +111,11 @@ internal class ActuationPressPointTests : CoreTestsFixture
             type: InputActionType.Value,
             expectedControlType: "Vector2",
             binding: "<Gamepad>/leftStick",
-            interactions: "press(pressPoint=0.6)");
-        gamepad.leftStick.pressPoint = 0.85f;
+            interactions: "press(pressPoint=0.85)");
+        gamepad.leftStick.pressPoint = 0.6f;
         action.Enable();
 
-        // Above interaction threshold (0.6) but below control threshold (0.85).
+        // Above control threshold (0.6) but below interaction threshold (0.85).
         Set(gamepad.leftStick, new Vector2(0.7f, 0f));
         InputSystem.Update();
         Assert.That(action.IsPressed(), Is.False);
