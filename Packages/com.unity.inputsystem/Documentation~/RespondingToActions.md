@@ -88,12 +88,12 @@ Finally, there are three methods you can use to poll for button presses and rele
 |[`InputAction.WasPressedThisFrame()`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has, at any point during the current frame, reached or gone above the applicable press point.|
 |[`InputAction.WasReleasedThisFrame()`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has, at any point during the current frame, gone from being at or above the applicable press point to at or below the [release threshold](xref:UnityEngine.InputSystem.InputSettings.buttonReleaseThreshold).|
 
-The applicable press point is chosen from, in order: 
+The applicable press point is chosen from, in order:
 
 1. A positive [`pressPoint`](xref:UnityEngine.InputSystem.Controls.ButtonControl.pressPoint) on the driving control when it is a [ButtonControl](xref:UnityEngine.InputSystem.Controls.ButtonControl).
 2. A positive [`pressPoint`](xref:UnityEngine.InputSystem.Controls.Vector2Control.pressPoint) when it is a [Vector2Control](xref:UnityEngine.InputSystem.Controls.Vector2Control) or [StickControl](xref:UnityEngine.InputSystem.Controls.StickControl).
 3. If the binding lists one or more [Press](xref:UnityEngine.InputSystem.Interactions.PressInteraction) interactions, the `pressPoint` from the first interaction order whose `pressPoint` is greater than zero (any interactions before this that are either not `Press`, or `Press` with the default `pressPoint` of zero, are skipped for this step).
-4. [defaultButtonPressPoint](xref:UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint). 
+4. [defaultButtonPressPoint](xref:UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint).
 
 On [composites](xref:input-system-action-bindings#composite-bindings), interaction parameters are taken from the composite binding.
 
