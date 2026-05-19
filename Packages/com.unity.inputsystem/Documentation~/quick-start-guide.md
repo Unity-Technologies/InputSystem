@@ -1,4 +1,6 @@
-
+---
+uid: quickstart-guide
+---
 # Quickstart Guide
 
 This page has a brief description of how to quickly start using the Input System. The Input System has [multiple workflows](workflows.md) which you might prefer that offer different benefits. This quickstart guide shows a workflow which suits most common scenarios.
