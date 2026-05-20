@@ -96,7 +96,7 @@ The applicable press point is chosen from, in order:
 
 On [composites](xref:input-system-action-bindings#composite-bindings), interaction parameters are taken from the composite binding.
 
-[`InputControl.IsPressed`](xref:UnityEngine.InputSystem.InputControlExtensions.IsPressed) does not consider binding interactions. If you do not pass a custom threshold, it uses [`pressPointOrDefault`](xref:UnityEngine.InputSystem.Controls.ButtonControl.pressPointOrDefault) when the control is a [`ButtonControl`](xref:UnityEngine.InputSystem.Controls.ButtonControl), and otherwise compares actuation magnitude to [defaultButtonPressPoint](xref:UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint) (including for [`Vector2Control`](xref:UnityEngine.InputSystem.Controls.Vector2Control) and [`StickControl`](xref:UnityEngine.InputSystem.Controls.StickControl)).
+[`InputControl.IsPressed`](xref:UnityEngine.InputSystem.InputControlExtensions.IsPressed(UnityEngine.InputSystem.InputControl,System.Single)) does not consider binding interactions. If you do not pass a custom threshold, it uses [`pressPointOrDefault`](xref:UnityEngine.InputSystem.Controls.ButtonControl.pressPointOrDefault) when the control is a [`ButtonControl`](xref:UnityEngine.InputSystem.Controls.ButtonControl), and otherwise compares actuation magnitude to [defaultButtonPressPoint](xref:UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint) (including for [`Vector2Control`](xref:UnityEngine.InputSystem.Controls.Vector2Control) and [`StickControl`](xref:UnityEngine.InputSystem.Controls.StickControl)).
 
 This example uses three actions called Shield, Teleport and Submit (which are not included in the [default actions](xref:project-wide-actions#the-default-actions)):
 
