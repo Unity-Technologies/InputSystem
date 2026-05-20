@@ -121,17 +121,16 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 >* PS4, Xbox, and Switch controllers, when connected to their respective consoles. Only supported if you install console-specific input packages in your Project.
 >* PS4 controllers, when connected to Mac or Windows/UWP computers.
 >* Xbox controllers on Windows.
->* Android:
->    * Note: Rumble automatically stops about 10 seconds after the last SetMotorSpeeds call unless explicitly stopped.
->    * Requires Unity 6000.6 or later
->    * Android 12 or later
->        * Most bluetooth-connected gamepads with rumble support are supported (PS4/PS5 controllers, Xbox controllers, etc.)
->        * __Note:__ If the gamepad is connected via USB cable, rumble support may vary.
->        * __Note:__ If the gamepad supports more than one motor, each motor's strength can be controlled individually.
->    * Android 11 or earlier
+>* Gamepads on Android. Rumble support varies with Android OS version and requires Unity 6000.6 or later.
+>    * Rumble automatically stops about 10 seconds after the last [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call unless you explicitly stop it.
+>    * Android 12 or later:
+>        * Supports most Bluetooth-connected gamepads with rumble support including PS4, PS5, and Xbox controllers.
+>        *  If the gamepad is connected via USB cable, rumble support might vary.
+>        *  If the gamepad supports more than one motor, you can control the speed of each motor individually.
+>    * Android 11 or earlier:
 >        * Rumble support is limited.
->        * __Note:__ Only one motor is supported. If the gamepad has more than one motor, the higher value of the left and right motor strengths is applied to both.
->        * __Note:__ In some cases, frequency control is limited, meaning the rumble strength can only be either 1.0 or 0.0.
+>        * Only one motor is supported. If the gamepad has more than one motor, the higher value of the left and right motor speed applies to both.
+>        * On some devices, motor speed control is limited. You can only set the left and right motor speed to either `1.0`(maximum speed) or `0.0` (turned off).
 > * iOS:
 >     * TODO: Paulius
 
