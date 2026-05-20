@@ -36,9 +36,9 @@ namespace UnityEngine.InputSystem.Controls
     /// In terms of memory, a stick controls is still just from one value for the X axis
     /// and one value for the Y axis.
     ///
-    /// Stick magnitude uses the same <see cref="Vector2Control.pressPoint"/> /
-    /// <see cref="Vector2Control.pressPointOrDefault"/> mechanism as <see cref="Vector2Control"/> for
-    /// press-style polling (for example <see cref="UnityEngine.InputSystem.InputAction.IsPressed"/>).
+    /// For press-style polling on the stick as a whole (for example <see cref="UnityEngine.InputSystem.InputAction.IsPressed"/>),
+    /// actuation magnitude is compared to <see cref="UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint"/> unless a binding
+    /// <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/> sets an explicit threshold (see <see cref="UnityEngine.InputSystem.InputAction.IsPressed"/> remarks).
     ///
     /// Unlike dpads (see <see cref="DpadControl"/>), sticks will usually have deadzone processors
     /// (see <see cref="StickDeadzoneProcessor"/>) applied to them to get rid of noise around the

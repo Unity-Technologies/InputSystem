@@ -36,22 +36,6 @@ namespace UnityEngine.InputSystem.Controls
         [InputControl(offset = 4, displayName = "Y")]
         public AxisControl y { get; set; }
 
-        // /// <summary>
-        // /// Minimum vector magnitude before the control is considered pressed for purposes such as
-        // /// <see cref="UnityEngine.InputSystem.InputAction.IsPressed"/> when this control drives the action.
-        // /// </summary>
-        // /// <remarks>
-        // /// By default, this field is set to -1. If the value of the property is negative,
-        // /// <see cref="UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint"/> is used for action-level press
-        // /// APIs unless a <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/> on the binding sets an
-        // /// explicit <c>pressPoint</c>, in which case that interaction threshold takes priority (see
-        // /// <see cref="UnityEngine.InputSystem.InputAction.IsPressed"/> remarks).
-        // /// </remarks>
-        // /// <seealso cref="pressPointOrDefault"/>
-        // /// <seealso cref="ButtonControl"/>
-        // /// <seealso cref="UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint"/>
-        // public float pressPoint = -1.0f;
-
         /// <summary>
         /// Default-initialize the control.
         /// </summary>

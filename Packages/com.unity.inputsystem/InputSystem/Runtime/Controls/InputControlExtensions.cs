@@ -46,16 +46,16 @@ namespace UnityEngine.InputSystem
         /// Check whether the given control is considered pressed according to the button press threshold.
         /// </summary>
         /// <param name="control">Control to check.</param>
-        /// <param name="buttonPressPoint">Optional custom press threshold. If not supplied, <see cref="Controls.ButtonControl"/> and
-        /// <see cref="Controls.Vector2Control"/> (including <see cref="Controls.StickControl"/>) use <see cref="Controls.ButtonControl.pressPointOrDefault"/>
-        /// or <see cref="Controls.Vector2Control.pressPointOrDefault"/>; otherwise <see cref="InputSettings.defaultButtonPressPoint"/> is used.</param>
+        /// <param name="buttonPressPoint">Optional custom press threshold. If not supplied, a <see cref="Controls.ButtonControl"/> uses
+        /// <see cref="Controls.ButtonControl.pressPointOrDefault"/>; other controls compare actuation magnitude to <see cref="InputSettings.defaultButtonPressPoint"/>.</param>
         /// <returns>True if the actuation of the given control is high enough for it to be considered pressed.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
         /// <remarks>
-        /// This method checks the actuation level of the control as <see cref="IsActuated"/> does. For <see cref="Controls.ButtonControl"/>,
-        /// <see cref="Controls.Vector2Control"/>, and <see cref="Controls.StickControl"/>, the default threshold comes from
-        /// <see cref="Controls.ButtonControl.pressPointOrDefault"/> or <see cref="Controls.Vector2Control.pressPointOrDefault"/>. For vector controls the threshold
-        /// applies to <see cref="InputControl.EvaluateMagnitude()"/>. For other <c>float</c> axes, the float value is compared to the threshold.
+        /// This method checks the actuation level of the control as <see cref="IsActuated"/> does. When no custom threshold is supplied,
+        /// a <see cref="Controls.ButtonControl"/> uses <see cref="Controls.ButtonControl.pressPointOrDefault"/>; other controls use
+        /// <see cref="InputSettings.defaultButtonPressPoint"/> (for controls with magnitude, including <see cref="Controls.Vector2Control"/> and
+        /// <see cref="Controls.StickControl"/>, the threshold applies to <see cref="InputControl.EvaluateMagnitude()"/>). For other <c>float</c> axes,
+        /// the float value is compared to the threshold.
         /// Note that if the control is an axis that can be both positive and negative, the press threshold works in
         /// both directions, i.e. it can be crossed both in the positive direction and in the negative direction.
         /// </remarks>
