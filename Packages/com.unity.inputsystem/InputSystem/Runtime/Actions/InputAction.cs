@@ -1166,7 +1166,6 @@ namespace UnityEngine.InputSystem
         ///
         /// For composite bindings, interaction parameters are read from the composite binding.
         ///
-        /// <see cref="InputControl.IsPressed"/> does not read binding interactions when resolving its default threshold:
         /// for a <see cref="ButtonControl"/> it uses <see cref="ButtonControl.pressPointOrDefault"/>, and for other controls
         /// with actuation magnitude (including <see cref="Vector2Control"/> and <see cref="StickControl"/>) it uses
         /// <see cref="InputSettings.defaultButtonPressPoint"/>.
@@ -1255,7 +1254,6 @@ namespace UnityEngine.InputSystem
         ///
         /// For composite bindings, interaction parameters are read from the composite binding.
         ///
-        /// <see cref="InputControl.IsPressed"/> does not read binding interactions when resolving its default threshold:
         /// for a <see cref="ButtonControl"/> it uses <see cref="ButtonControl.pressPointOrDefault"/>, and for other controls
         /// with actuation magnitude (including <see cref="Vector2Control"/> and <see cref="StickControl"/>) it uses
         /// <see cref="InputSettings.defaultButtonPressPoint"/>.
@@ -1365,7 +1363,6 @@ namespace UnityEngine.InputSystem
         ///
         /// For composite bindings, interaction parameters are read from the composite binding.
         ///
-        /// <see cref="InputControl.IsPressed"/> does not read binding interactions when resolving its default threshold:
         /// for a <see cref="ButtonControl"/> it uses <see cref="ButtonControl.pressPointOrDefault"/>, and for other controls
         /// with actuation magnitude (including <see cref="Vector2Control"/> and <see cref="StickControl"/>) it uses
         /// <see cref="InputSettings.defaultButtonPressPoint"/>.
