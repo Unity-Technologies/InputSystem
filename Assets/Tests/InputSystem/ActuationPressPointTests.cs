@@ -473,7 +473,6 @@ namespace Tests.InputSystem
         /// not allocate GC memory.
         /// </summary>
         [Test]
-        [Category("Actions")]
         [Category("ActuationPressPoint")]
         [Retry(2)] // Warm up JIT.
         public void Actions_EndToEndGamepadUpdates_WithPressInteractionBindings_DoNotAllocateGCMemory()
