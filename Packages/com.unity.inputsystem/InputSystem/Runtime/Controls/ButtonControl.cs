@@ -17,7 +17,7 @@ namespace UnityEngine.InputSystem.Controls
     /// <see cref="pressPoint"/> for how button presses on such buttons are handled.
     /// </remarks>
     [Serializable]
-    public class ButtonControl : AxisControl, IActuationPressPoint
+    public class ButtonControl : AxisControl
     {
         private bool m_NeedsToCheckFramePress = false;
         private uint m_UpdateCountLastPressed = uint.MaxValue;

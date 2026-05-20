@@ -68,8 +68,8 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(control));
             if (Mathf.Approximately(0, buttonPressPoint))
             {
-                if (control is IActuationPressPoint actuation)
-                    buttonPressPoint = actuation.pressPointOrDefault;
+                if (control is ButtonControl buttonControl)
+                    buttonPressPoint = buttonControl.pressPointOrDefault;
                 else
                     buttonPressPoint = ButtonControl.s_GlobalDefaultButtonPressPoint;
             }

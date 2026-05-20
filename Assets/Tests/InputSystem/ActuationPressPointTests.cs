@@ -43,36 +43,6 @@ internal class ActuationPressPointTests : CoreTestsFixture
 
     [Test]
     [Category("Actions")]
-    public void Actions_Vector2IsPressed_UsesVector2ControlPressPoint()
-    {
-        InputSystem.settings.defaultButtonPressPoint = 0.5f;
-        InputSystem.settings.buttonReleaseThreshold = 0.8f;
-
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        Set(gamepad.leftStick, Vector2.zero);
-        InputSystem.Update();
-
-        var action = new InputAction(
-            type: InputActionType.Value,
-            expectedControlType: "Vector2",
-            binding: "<Gamepad>/leftStick");
-        gamepad.leftStick.pressPoint = 0.7f;
-        action.Enable();
-
-        Set(gamepad.leftStick, new Vector2(0.65f, 0f));
-        InputSystem.Update();
-        Assert.That(action.IsPressed(), Is.False);
-
-        Set(gamepad.leftStick, new Vector2(0.75f, 0f));
-        InputSystem.Update();
-        Assert.That(action.IsPressed(), Is.True);
-
-        gamepad.leftStick.pressPoint = -1f;
-    }
-
-    [Test]
-    [Category("Actions")]
     public void Actions_ButtonIsPressed_UsesPressInteractionWhenControlPressPointUnset()
     {
         InputSystem.settings.defaultButtonPressPoint = 0.5f;
@@ -93,38 +63,6 @@ internal class ActuationPressPointTests : CoreTestsFixture
         Set(gamepad.leftTrigger, 0.65f);
         InputSystem.Update();
         Assert.That(action.IsPressed(), Is.True);
-    }
-
-    [Test]
-    [Category("Actions")]
-    public void Actions_Vector2IsPressed_PressInteractionOverridesControlPressPoint()
-    {
-        InputSystem.settings.defaultButtonPressPoint = 0.5f;
-        InputSystem.settings.buttonReleaseThreshold = 0.8f;
-
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        Set(gamepad.leftStick, Vector2.zero);
-        InputSystem.Update();
-
-        var action = new InputAction(
-            type: InputActionType.Value,
-            expectedControlType: "Vector2",
-            binding: "<Gamepad>/leftStick",
-            interactions: "press(pressPoint=0.85)");
-        gamepad.leftStick.pressPoint = 0.6f;
-        action.Enable();
-
-        // Above control threshold (0.6) but below interaction threshold (0.85).
-        Set(gamepad.leftStick, new Vector2(0.7f, 0f));
-        InputSystem.Update();
-        Assert.That(action.IsPressed(), Is.False);
-
-        Set(gamepad.leftStick, new Vector2(0.9f, 0f));
-        InputSystem.Update();
-        Assert.That(action.IsPressed(), Is.True);
-
-        gamepad.leftStick.pressPoint = -1f;
     }
 
     [Test]
@@ -332,29 +270,6 @@ internal class ActuationPressPointTests : CoreTestsFixture
         var gamepad = InputDevice.Build<Gamepad>("CustomGamepad");
 
         Assert.That(gamepad.rightTrigger.pressPoint, Is.EqualTo(0.2f).Within(0.0001f));
-    }
-
-    [Test]
-    [Category("Controls")]
-    public void Controls_Vector2ExtensionIsPressed_UsesPressPointOrDefault()
-    {
-        InputSystem.settings.defaultButtonPressPoint = 0.5f;
-
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-
-        gamepad.leftStick.pressPoint = 0.75f;
-        Set(gamepad.leftStick, new Vector2(0.6f, 0f));
-        Assert.That(gamepad.leftStick.IsPressed(), Is.False);
-
-        Set(gamepad.leftStick, new Vector2(0.8f, 0f));
-        Assert.That(gamepad.leftStick.IsPressed(), Is.True);
-
-        gamepad.leftStick.pressPoint = -1f;
-        Set(gamepad.leftStick, new Vector2(0.4f, 0f));
-        Assert.That(gamepad.leftStick.IsPressed(), Is.False);
-
-        Set(gamepad.leftStick, new Vector2(0.55f, 0f));
-        Assert.That(gamepad.leftStick.IsPressed(), Is.True);
     }
 
     #endregion
