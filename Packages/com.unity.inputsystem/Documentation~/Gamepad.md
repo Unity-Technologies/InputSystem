@@ -135,7 +135,7 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 >    * Rumble is supported on gamepads recognized by Apple's GameController framework, including PS4, PS5, Xbox, and Switch Pro controllers.
 >    * If the gamepad exposes both motors, you can control each speed individually. Otherwise, the higher value of the left and right motor speed applies to all motors.
 >    * The first [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call allocates rumble resources, which adds latency.
->    * When all motor speeds are set to `0.0`, an inactivity timer starts. After 2 minutes, rumble resources are released to preserve controller battery. The next [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call reallocates them and again incurs allocation latency.
+>    * When all motor speeds are set to `0.0`, an inactivity timer starts. After two minutes, rumble resources are released to preserve controller battery. The next [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call reallocates them and again incurs allocation latency.
 
 [//]: # (TODO: are we missing any supported configs?)
 
