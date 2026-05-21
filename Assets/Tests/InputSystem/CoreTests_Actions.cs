@@ -631,7 +631,9 @@ partial class CoreTests
 
         using (var trace = new InputActionTrace(action))
         {
-            runtime.PlayerFocusLost();
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
             Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
             InputSystem.Update(InputUpdateType.Editor);
 
@@ -661,13 +663,13 @@ partial class CoreTests
             // could just rely on order of event. Which means this test work for a fixed timestamp and it should
             // changed accordingly.
             currentTime += 1.0f;
-            runtime.PlayerFocusLost();
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
             currentTime += 1.0f;
             // Queuing an event like it would be in the editor when the GameView is out of focus.
             Set(mouse.position, new Vector2(0.234f, 0.345f) , queueEventOnly: true);
             currentTime += 1.0f;
             // Gaining focus like it would happen in the editor when the GameView regains focus.
-            runtime.PlayerFocusGained();
+            ScheduleFocusChangedEvent(applicationHasFocus: true);
             currentTime += 1.0f;
             // This emulates a device sync that happens when the player regains focus through an IOCTL command.
             // That's why it also has it's time incremented.
@@ -720,14 +722,15 @@ partial class CoreTests
 
             trace.Clear();
 
-            runtime.PlayerFocusLost();
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
+            InputSystem.Update(InputUpdateType.Dynamic);
             currentTime = 10;
 
             InputSystem.Update(InputUpdateType.Editor);
 
             Assert.That(trace, Is.Empty);
 
-            runtime.PlayerFocusGained();
+            ScheduleFocusChangedEvent(applicationHasFocus: true);
             InputSystem.Update(InputUpdateType.Dynamic);
 
             actions = trace.ToArray();
@@ -1398,6 +1401,45 @@ partial class CoreTests
             InputSystem.Update();
 
             Assert.That(trace, Is.Empty);
+        }
+    }
+
+    // Regression test for UUM-100125.
+    [Test]
+    [Category("Actions")]
+    public void Actions_InitialStateCheckAfterConfigurationChange_DoesNotTriggerForInactiveTouch()
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+        var action = new InputAction(type: InputActionType.Value, binding: "<Touchscreen>/primaryTouch/position");
+        action.Enable();
+
+        // Run the first initial state check from enabling the action.
+        InputSystem.Update();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            BeginTouch(1, new Vector2(123, 234));
+            EndTouch(1, new Vector2(345, 456));
+
+            Assert.That(touchscreen.primaryTouch.isInProgress, Is.False);
+            Assert.That(touchscreen.primaryTouch.position.ReadValue(), Is.Not.EqualTo(default(Vector2)));
+
+            trace.Clear();
+
+            // Configuration change causes full re-resolve and schedules initial state check.
+            InputSystem.QueueConfigChangeEvent(touchscreen);
+            InputSystem.Update();
+            InputSystem.Update();
+
+            // Full re-resolve may cancel the current action state. What must NOT happen is a synthetic
+            // Started/Performed pair from persisted inactive touch state.
+            Assert.AreEqual(1, trace.count);
+            foreach (var eventPtr in trace)
+            {
+                // The trace should only contain a Canceled event for the action.
+                Assert.AreEqual(InputActionPhase.Canceled, eventPtr.phase,
+                    $"inactive touch state should not produce action callbacks, but received {eventPtr.phase}.");
+            }
         }
     }
 
@@ -3706,6 +3748,13 @@ partial class CoreTests
             // does not cause the action to start back up. For pass-through actions, that is different
             // as *any* value change performs the action. So here, we see *both* a cancellation and then
             // immediately a performing of the action.
+            //
+            // ISXB-1097 DESIGN NOTE: Whether pass-through actions should emit Performed(0f) on reset is
+            // debatable. Emitting it is consistent with the pass-through contract ("any value
+            // change performs"). Suppressing it would be consistent with button/value actions and
+            // the idea that resets aren't real user input. If we decide to suppress, the synthetic
+            // reset event in ResetDevice should be explicitly marked as handled rather than
+            // relying on the old eventId=-1 sentinel side-effect (see InputManager.cs:1656).
             Assert.That(passThroughActionTrace, Canceled(passThroughAction).AndThen(Performed(passThroughAction, value: 0f)));
         }
     }
@@ -9196,6 +9245,53 @@ partial class CoreTests
         Assert.That(action.GetBindingDisplayString(8), Is.EqualTo("Left Shift|Right Shift+A"));
     }
 
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141423
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForBindingsOnAction_CompositeIsIncludedWhenAtLeastOnePartMatchesBindingMask()
+    {
+        var action = new InputAction();
+
+        action.AddCompositeBinding("1DAxis")
+            .With("Negative", "<Keyboard>/a", groups: "Keyboard")
+            .With("Positive", "<Keyboard>/d", groups: "Keyboard");
+
+        Assert.That(action.GetBindingDisplayString(InputBinding.MaskByGroup("Keyboard")),
+            Is.EqualTo("A/D"));
+    }
+
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141423
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForBindingsOnAction_MixedGroupCompositeIsRenderedAtomicallyWhenAnyPartMatchesBindingMask()
+    {
+        var action = new InputAction();
+
+        action.AddCompositeBinding("1DAxis")
+            .With("Negative", "<Keyboard>/a", groups: "Keyboard")
+            .With("Positive", "<Mouse>/leftButton", groups: "Mouse");
+
+        Assert.That(action.GetBindingDisplayString(InputBinding.MaskByGroup("Keyboard")),
+            Is.EqualTo("A/LMB"));
+        Assert.That(action.GetBindingDisplayString(InputBinding.MaskByGroup("Mouse")),
+            Is.EqualTo("A/LMB"));
+    }
+
+    // https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141423
+    [Test]
+    [Category("Actions")]
+    public void Actions_WhenGettingDisplayTextForCompositeWithNoMatchingGroups_IsExcluded()
+    {
+        var action = new InputAction();
+
+        action.AddCompositeBinding("1DAxis")
+            .With("Negative", "<Keyboard>/a", groups: "Keyboard")
+            .With("Positive", "<Keyboard>/d", groups: "Keyboard");
+
+        Assert.That(action.GetBindingDisplayString(InputBinding.MaskByGroup("Gamepad")),
+            Is.Empty);
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1321175/
     [Test]
     [Category("Actions")]
@@ -12481,17 +12577,20 @@ partial class CoreTests
 
         // Now when enabling actionMap ..
         actionMap.Enable();
-        // On the following update we will trigger OnBeforeUpdate which will rise started/performed
-        // from InputActionState.OnBeforeInitialUpdate as controls are "actuated"
+        // Inactive touches (ended before action was enabled) must NOT produce started/performed from
+        // OnBeforeInitialUpdate. Their persisted state (position, touchId) is non-default due to
+        // dontReset, but only TouchControl.isInProgress should be considered for initial-state check.
+        // Related to UUM-100125 and Actions_InitialStateCheckAfterConfigurationChange_DoesNotTriggerForInactiveTouch.
         InputSystem.Update();
-        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 0)); // started+performed arrive from OnBeforeUpdate
+        Assert.That(values.Count, Is.EqualTo(0));
         values.Clear();
 
-        // Now subsequent touches should not be ignored
         BeginTouch(200, new Vector2(1, 1));
-        Assert.That(values.Count, Is.EqualTo(1));
-        Assert.That(values[0].InputId, Is.EqualTo(200));
-        Assert.That(values[0].Position, Is.EqualTo(new Vector2(1, 1)));
+        // If prepopulated, action was never actuated (synthetic initial-check is suppressed),
+        // so BeginTouch fires started+performed (2 events).
+        Assert.That(values.Count, Is.EqualTo(prepopulateTouchesBeforeEnablingAction ? 2 : 1));
+        Assert.That(values[values.Count - 1].InputId, Is.EqualTo(200));
+        Assert.That(values[values.Count - 1].Position, Is.EqualTo(new Vector2(1, 1)));
     }
 
     // FIX: This test is currently checking if shortcut support is enabled by testing that the unwanted behaviour exists.

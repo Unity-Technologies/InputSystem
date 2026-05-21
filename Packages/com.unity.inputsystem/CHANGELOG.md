@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed `InputActionRebindingExtensions.GetBindingDisplayString(InputAction, InputBinding, ...)` returning an empty string for composite bindings when the binding mask filters by group [UUM-141423](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141423)
+- Fixed `InputEventPtr.handled` not preventing actions from triggering when switching devices. The default event handled policy has been changed from `SuppressStateUpdates` (now deprecated) to `SuppressActionEventNotifications`, which keeps device state synchronized while suppressing action callbacks for handled events. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
+- Fixed all `InputAction.WasXxxThisFrame()` and `WasXxxThisDynamicUpdate()` polling APIs to use per-action suppression tracking instead of a map-wide flag. Previously, when multiple events arrived in the same frame with mixed handled/unhandled states, the last event's suppression state could incorrectly affect all actions in the map. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
+- Fixed `InputRecorder` playback not starting when the Game View is not focused in the Editor [ISXB-1319](https://jira.unity3d.com/browse/ISXB-1319)
 - Fixed a `NullReferenceException` thrown when removing all action maps [UUM-137116](https://jira.unity3d.com/browse/UUM-137116)
 - Simplified default setting messaging by consolidating repetitive messages into a single HelpBox.
 - Fixed a `NullPointerReferenceException` thrown in `InputManagerStateMonitors.FireStateChangeNotifications` logging by adding validation [UUM-136095].
@@ -16,11 +20,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Improved New Input System warning dialog, Native Device Inputs Not Enabled [UUM-132151].
 - Fixed caching for InputControlPath display name [ISX-2501](https://jira.unity3d.com/browse/ISX-2501)
 - Fixed editor closing and not saving the input asset when clicking cancel in the dialog prompt [UUM-134748](https://jira.unity3d.com/browse/UUM-134748)
+- Fixed an incorrect ArraysHelper.Merge implementation that used the comparer incorrectly [ISXB-1790] (https://jira.unity3d.com/browse/ISXB-1790)
 - Fixed the input actions editor window entering a corrupt state when restarting Unity after the asset was edited. [UUM-134737](https://jira.unity3d.com/browse/UUM-134737)
+- Fixed the Input Actions Editor Window toolbar buttons overlapping each other when the window size is too small [ISXB-1783] (https://jira.unity3d.com/browse/ISXB-1783)
 - Fixed `buttonSouth` returning the state of the east button (and so on for all the compass named buttons) when using a Nintendo Switch Pro Controller on iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
 - Fixed `aButton` returning the state of the east button (and so on for all the letter named buttons) when using a Nintendo Switch Pro Controller on Standalone & iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
+- Fixed an issue where `UIToolkit` `ClickEvent` could be fired on Android after device rotation due to inactive touch state being replayed during action initial state checks [UUM-100125](https://jira.unity3d.com/browse/UUM-100125).
+- Fixed InputSystem.onAnyButtonPress fails to trigger when the device receives a touch [UUM-137930](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137930).
+- Fixed an incorrect ArraysHelper.HaveDuplicateReferences implementation that didn't use its arguments right [ISXB-1792] (https://github.com/Unity-Technologies/InputSystem/pull/2376)
 
 ### Changed
+- Removed 32-bit compilation check for HID on Windows players, which had no impact anymore. (ISX-2543)
+- Migrated sample scenes to use Universal Render Pipeline (URP) with Built-in Render Pipeline fallback shaders. The URP package is now required to run the samples. (ISX-2343)
+- Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.
+- Changed the UI for `InputSystem.inputsettings` asset to use UI Toolkit framework.
 
 ### Added
 
