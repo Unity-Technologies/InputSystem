@@ -1154,6 +1154,8 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
+        /// The same press threshold rules apply to APIs such as <see cref="WasPressedThisFrame"/> and <see cref="WasReleasedThisFrame"/>.
+        ///
         /// Press threshold (based on <see cref="InputControl.EvaluateMagnitude()"/> for the driving control):
         ///
         /// 1. If the binding lists one or more <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
@@ -1165,10 +1167,6 @@ namespace UnityEngine.InputSystem
         /// 3. Otherwise (for example a <see cref="Vector2Control"/> or <see cref="StickControl"/>), use <see cref="InputSettings.defaultButtonPressPoint"/>.
         ///
         /// For composite bindings, interaction parameters are read from the composite binding.
-        ///
-        /// for a <see cref="ButtonControl"/> it uses <see cref="ButtonControl.pressPointOrDefault"/>, and for other controls
-        /// with actuation magnitude (including <see cref="Vector2Control"/> and <see cref="StickControl"/>) it uses
-        /// <see cref="InputSettings.defaultButtonPressPoint"/>.
         ///
         /// <example>
         /// <code>
@@ -1242,21 +1240,7 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
-        /// Press threshold (based on <see cref="InputControl.EvaluateMagnitude()"/> for the driving control):
-        ///
-        /// 1. If the binding lists one or more <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
-        ///    instances, use the <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> from the first
-        ///    in interaction list order whose <c>pressPoint</c> is greater than zero (earlier interactions that are not
-        ///    <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>, or that leave <c>pressPoint</c> at the
-        ///    default of zero, are skipped) so this API stays aligned with the interaction.
-        /// 2. Otherwise, if the driving control is a <see cref="ButtonControl"/>, use <see cref="ButtonControl.pressPointOrDefault"/>.
-        /// 3. Otherwise (for example a <see cref="Vector2Control"/> or <see cref="StickControl"/>), use <see cref="InputSettings.defaultButtonPressPoint"/>.
-        ///
-        /// For composite bindings, interaction parameters are read from the composite binding.
-        ///
-        /// for a <see cref="ButtonControl"/> it uses <see cref="ButtonControl.pressPointOrDefault"/>, and for other controls
-        /// with actuation magnitude (including <see cref="Vector2Control"/> and <see cref="StickControl"/>) it uses
-        /// <see cref="InputSettings.defaultButtonPressPoint"/>.
+        /// Press threshold is defined the same way as for <see cref="IsPressed"/>; see that member's remarks.
         ///
         /// <example>
         /// <code>
@@ -1308,7 +1292,7 @@ namespace UnityEngine.InputSystem
         /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasPressedThisDynamicUpdate,
         /// you may want to use WasPressedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
         ///
-        /// Press threshold behavior matches <see cref="WasPressedThisFrame"/>; see its remarks.
+        /// Press threshold behavior matches <see cref="IsPressed"/>; see that member's remarks.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1340,7 +1324,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Returns true if the action's value crossed the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>)
-        /// at any point in the frame after being in pressed state (see remarks for press threshold).
+        /// at any point in the frame after being in pressed state (see <see cref="IsPressed"/> remarks for press threshold).
         /// </summary>
         /// <returns>True if the action was released this frame.</returns>
         /// <remarks>
@@ -1351,21 +1335,7 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
-        /// Press threshold (based on <see cref="InputControl.EvaluateMagnitude()"/> for the driving control):
-        ///
-        /// 1. If the binding lists one or more <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
-        ///    instances, use the <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> from the first
-        ///    in interaction list order whose <c>pressPoint</c> is greater than zero (earlier interactions that are not
-        ///    <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>, or that leave <c>pressPoint</c> at the
-        ///    default of zero, are skipped) so this API stays aligned with the interaction.
-        /// 2. Otherwise, if the driving control is a <see cref="ButtonControl"/>, use <see cref="ButtonControl.pressPointOrDefault"/>.
-        /// 3. Otherwise (for example a <see cref="Vector2Control"/> or <see cref="StickControl"/>), use <see cref="InputSettings.defaultButtonPressPoint"/>.
-        ///
-        /// For composite bindings, interaction parameters are read from the composite binding.
-        ///
-        /// for a <see cref="ButtonControl"/> it uses <see cref="ButtonControl.pressPointOrDefault"/>, and for other controls
-        /// with actuation magnitude (including <see cref="Vector2Control"/> and <see cref="StickControl"/>) it uses
-        /// <see cref="InputSettings.defaultButtonPressPoint"/>.
+        /// Press threshold is defined the same way as for <see cref="IsPressed"/>; see that member's remarks.
         ///
         /// <example>
         /// <code>
