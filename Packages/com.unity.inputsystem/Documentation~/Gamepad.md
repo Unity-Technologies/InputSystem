@@ -132,11 +132,6 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 >        * Only one motor is supported. If the gamepad has more than one motor, the higher value of the left and right motor speed applies to both.
 >        * On some devices, motor speed control is limited. You can only set the left and right motor speed to either `1.0` (maximum speed) or `0.0` (turned off).
 > * Gamepads on iOS, tvOS, and visionOS. Requires Unity 6000.6 or later.
->    * Rumble is supported on gamepads recognized by Apple's GameController framework, including PS4, PS5, Xbox, and Switch Pro controllers.
->    * If the gamepad exposes both motors, you can control each speed individually. Otherwise, the higher value of the left and right motor speed applies to all motors.
->    * The first [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call allocates rumble resources, which adds latency.
->    * When all motor speeds are set to `0.0`, an inactivity timer starts. After two minutes, rumble resources are released to preserve controller battery. The next [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call reallocates them and again incurs allocation latency.
-> * Gamepads on iOS, tvOS, and visionOS. Requires Unity 6000.6 or later.
 >    * Supports rumble on gamepads that Apple's GameController framework recognizes, including PS4, PS5, Xbox, and Switch Pro controllers.
 >    * If the gamepad supports left and right motors, you can control the speed of each motor individually. Otherwise, the higher value of the left and right motor speed applies to all motors on the gamepad.
 >    * The first [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call allocates rumble resources, which adds latency.
