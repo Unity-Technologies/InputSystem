@@ -125,7 +125,7 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 >    * Rumble automatically stops about 10 seconds after the last [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call unless you explicitly stop it.
 >    * Android 12 or later:
 >        * Supports most Bluetooth-connected gamepads with rumble support including PS4, PS5, and Xbox controllers.
->        *  If the gamepad is connected via USB cable, rumble support might vary.
+>        *  If the gamepad is connected with a USB cable, rumble support might vary.
 >        *  If the gamepad supports more than one motor, you can control the speed of each motor individually.
 >    * Android 11 or earlier:
 >        * Rumble support is limited.
