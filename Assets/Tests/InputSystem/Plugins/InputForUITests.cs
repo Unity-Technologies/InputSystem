@@ -115,11 +115,11 @@ public class InputForUITests : InputTestFixture
         try
         {
             m_InputSystemProvider.Initialize();
-            Assert.That(asset.enabled, Is.True, "Project-wide actions should be enabled by provider initialization.");
+            Assert.That(uiMap.enabled, Is.True, "UI action map should be enabled by provider initialization.");
 
             EventProvider.ClearMockProvider();
             m_ClearedMockProvider = true;
-            Assert.That(asset.enabled, Is.True, "Project-wide actions must remain enabled after provider shutdown.");
+            Assert.That(uiMap.enabled, Is.True, "UI action map must remain enabled after provider shutdown.");
         }
         finally
         {
