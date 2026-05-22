@@ -13,8 +13,6 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
         InputAction previous;
         InputAction sprint;
         InputAction crouch;
-        InputAction b;
-        InputAction shiftB;
 
         // Start is called before the first frame update
         void Start()
@@ -31,8 +29,6 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
                 previous = InputSystem.actions.FindAction("Player/Previous");
                 sprint = InputSystem.actions.FindAction("Player/Sprint");
                 crouch = InputSystem.actions.FindAction("Player/Crouch");
-                b = InputSystem.actions.FindAction("Player/B");
-                shiftB = InputSystem.actions.FindAction("Player/Shift B");
             }
             else
             {
@@ -44,18 +40,6 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
             {
                 attack.performed += OnAttack;
                 attack.canceled += OnCancel;
-            }
-
-            if (b != null)
-            {
-                b.performed += OnB;
-                b.canceled += OnCancel;
-            }
-
-            if (shiftB != null)
-            {
-                shiftB.performed += OnShiftB;
-                shiftB.canceled += OnCancel;
             }
         }
 
@@ -69,34 +53,12 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
             cube.GetComponent<Renderer>().material.color = Color.green;
         }
 
-        private void OnB(InputAction.CallbackContext ctx)
-        {
-            Debug.Log("B WAS PRESSED");
-            cube.GetComponent<Renderer>().material.color = Color.yellow;
-        }
-
-        private void OnShiftB(InputAction.CallbackContext ctx)
-        {
-            Debug.Log("SHIFT + B WAS PRESSED");
-            cube.GetComponent<Renderer>().material.color = Color.blue;
-        }
-
         void OnDestroy()
         {
             if (attack != null)
             {
                 attack.performed -= OnAttack;
                 attack.canceled -= OnCancel;
-            }
-            if (b != null)
-            {
-                b.performed -= OnB;
-                b.canceled -= OnCancel;
-            }
-            if (shiftB != null)
-            {
-                shiftB.performed -= OnShiftB;
-                shiftB.canceled -= OnCancel;
             }
         }
 
@@ -108,16 +70,6 @@ namespace UnityEngine.InputSystem.Samples.ProjectWideActions
             {
                 var moveVal = move.ReadValue<Vector2>() * 10.0f * Time.deltaTime;
                 cube.transform.Translate(new Vector3(moveVal.x, moveVal.y, 0));
-            }
-
-            if (shiftB.IsPressed())
-            {
-                Debug.Log("SHIFT + B WAS PRESSED");
-            }
-
-            if (b.IsPressed())
-            {
-                Debug.Log("B WAS PRESSED");
             }
         }
     } // class ProjectWideActionsExample
