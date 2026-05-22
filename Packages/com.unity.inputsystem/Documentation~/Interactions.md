@@ -172,6 +172,8 @@ If you haven't specifically added an Interaction to a Binding or its Action, the
 
 You can use a [`PressInteraction`](xref:UnityEngine.InputSystem.Interactions.PressInteraction) to explicitly force button-like interactions. Use the [`behavior`](xref:UnityEngine.InputSystem.Interactions.PressInteraction.behavior) parameter to select if the Interaction should trigger on button press, release, or both.
 
+If you stack several `Press` interactions on the same binding, each still runs with its own parameters. Separately, [`IsPressed`](xref:UnityEngine.InputSystem.InputAction.IsPressed), [`WasPressedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame), and [`WasReleasedThisFrame`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame) pick a single actuation threshold by scanning interactions in list order and using the `pressPoint` from the first `Press` interaction whose `pressPoint` is greater than zero.
+
 |__Parameters__|Type|Default value|
 |---|---|---|
 |[`pressPoint`](xref:UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint)|`float`|[`InputSettings.defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint)|

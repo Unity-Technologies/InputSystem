@@ -10,7 +10,7 @@ using RecipeEngine.Unity.Abstractions.Packages;
 
 namespace InputSystem.Cookbook.Recipes;
 
-public abstract class BaseRecipe: RecipeBase
+public abstract class BaseRecipe : RecipeBase
 {
     protected BaseRecipe()
     {

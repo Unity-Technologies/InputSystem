@@ -187,7 +187,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 if (m_selectedControlSchemeIndex >= controlSchemesArrayProperty.arraySize)
                     m_selectedControlSchemeIndex = 0;
-                m_ControlScheme = new InputControlScheme(
+                m_ControlScheme = InputControlSchemeEditorExtensions.FromSerializedProperty(
                     controlSchemesArrayProperty.GetArrayElementAtIndex(other.m_selectedControlSchemeIndex));
                 // TODO Preserve device requirement index
             }

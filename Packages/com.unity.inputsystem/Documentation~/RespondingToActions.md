@@ -84,9 +84,19 @@ Finally, there are three methods you can use to poll for button presses and rele
 
 |Method|Description|
 |------|-----------|
-|[`InputAction.IsPressed()`](xref:UnityEngine.InputSystem.InputAction.IsPressed)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has crossed the [press point](xref:UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint) and did not yet fall to or below the [release threshold](xref:UnityEngine.InputSystem.InputSettings.buttonReleaseThreshold).|
-|[`InputAction.WasPressedThisFrame()`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has, at any point during the current frame, reached or gone above the [press point](xref:UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint).|
-|[`InputAction.WasReleasedThisFrame()`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has, at any point during the current frame, gone from being at or above the [press point](xref:UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint) to at or below the [release threshold](xref:UnityEngine.InputSystem.InputSettings.buttonReleaseThreshold).|
+|[`InputAction.IsPressed()`](xref:UnityEngine.InputSystem.InputAction.IsPressed)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has crossed the applicable press point and hasn't fallen to or below the [release threshold](xref:UnityEngine.InputSystem.InputSettings.buttonReleaseThreshold).|
+|[`InputAction.WasPressedThisFrame()`](xref:UnityEngine.InputSystem.InputAction.WasPressedThisFrame)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has, at any point during the current frame, reached or gone above the applicable press point.|
+|[`InputAction.WasReleasedThisFrame()`](xref:UnityEngine.InputSystem.InputAction.WasReleasedThisFrame)|True if the level of [actuation](xref:UnityEngine.InputSystem.InputControl.EvaluateMagnitude) on the action has, at any point during the current frame, gone from being at or above the applicable press point to at or below the [release threshold](xref:UnityEngine.InputSystem.InputSettings.buttonReleaseThreshold).|
+
+The applicable press point is chosen from, in order:
+
+1. If the binding lists one or more [Press](xref:UnityEngine.InputSystem.Interactions.PressInteraction) interactions, the `pressPoint` from the first `Press` interaction in list order whose `pressPoint` is greater than zero (any interactions before this that are either not `Press`, or `Press` with the default `pressPoint` of zero, are skipped) so action-level press APIs stay aligned with the interaction.
+2. Otherwise, if the driving control is a [ButtonControl](xref:UnityEngine.InputSystem.Controls.ButtonControl), [`pressPointOrDefault`](xref:UnityEngine.InputSystem.Controls.ButtonControl.pressPointOrDefault) on that control.
+3. Otherwise (for example the action is driven by a [Vector2Control](xref:UnityEngine.InputSystem.Controls.Vector2Control) or [StickControl](xref:UnityEngine.InputSystem.Controls.StickControl) magnitude), [defaultButtonPressPoint](xref:UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint).
+
+On [composites](xref:input-system-action-bindings#composite-bindings), interaction parameters are taken from the composite binding.
+
+[`InputControl.IsPressed`](xref:UnityEngine.InputSystem.InputControlExtensions.IsPressed(UnityEngine.InputSystem.InputControl,System.Single)) does not consider binding interactions. If you do not pass a custom threshold, it uses [`pressPointOrDefault`](xref:UnityEngine.InputSystem.Controls.ButtonControl.pressPointOrDefault) when the control is a [`ButtonControl`](xref:UnityEngine.InputSystem.Controls.ButtonControl), and otherwise compares actuation magnitude to [defaultButtonPressPoint](xref:UnityEngine.InputSystem.InputSettings.defaultButtonPressPoint) (including for [`Vector2Control`](xref:UnityEngine.InputSystem.Controls.Vector2Control) and [`StickControl`](xref:UnityEngine.InputSystem.Controls.StickControl)).
 
 This example uses three actions called Shield, Teleport and Submit (which are not included in the [default actions](xref:project-wide-actions#the-default-actions)):
 
