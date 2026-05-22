@@ -20,7 +20,7 @@ internal static class PriorityTestExtensions
                 action.AddBinding("<Keyboard>/" + bindings[0]);
                 return action;
             }
-            
+
             case 2:
             {
                 var modifier = bindings[0];
@@ -53,18 +53,18 @@ internal static class PriorityTestExtensions
 
             default:
                 return null;
-        }        
+        }
     }
 }
 
 internal partial class CoreTests
 {
-    private static readonly List<(string[], string[])> k_TwoInputActionTestCases = new ()
+    private static readonly List<(string[], string[])> k_TwoInputActionTestCases = new()
     {
-        (new[]{"ctrl", "x"}, new[]{"x"}),
-        (new[]{"shift", "n"}, new[]{"n"}),
-        (new[]{"ctrl", "shift", "h"}, new[]{"shift", "h"}),
-        (new[]{"ctrl", "shift", "v"}, new[]{"shift", "v"}),
+        (new[] {"ctrl", "x"}, new[] {"x"}),
+        (new[] {"shift", "n"}, new[] {"n"}),
+        (new[] {"ctrl", "shift", "h"}, new[] {"shift", "h"}),
+        (new[] {"ctrl", "shift", "v"}, new[] {"shift", "v"}),
     };
 
     private void PressBindingsForInputActions(Keyboard keyboard, InputAction action1, InputAction action2, InputAction action3 = null)
@@ -265,13 +265,13 @@ internal partial class CoreTests
         Assert.That(action2WasPerformed, Is.True);
     }
 
-    private static readonly List<(string[], string[])> k_TwoInputActionNoConflictingBindingTestCases = new ()
+    private static readonly List<(string[], string[])> k_TwoInputActionNoConflictingBindingTestCases = new()
     {
-        (new[]{"ctrl", "x"}, new[]{"k"}),
-        (new[]{"shift", "n"}, new[]{"l"}),
-        (new[]{"shift", "h"}, new[]{"l"}),
-        (new[]{"shift", "h"}, new[]{"ctrl", "shift", "o"}),
-        (new[]{"ctrl", "shift", "v"}, new[]{"shift", "z"})
+        (new[] {"ctrl", "x"}, new[] {"k"}),
+        (new[] {"shift", "n"}, new[] {"l"}),
+        (new[] {"shift", "h"}, new[] {"l"}),
+        (new[] {"shift", "h"}, new[] {"ctrl", "shift", "o"}),
+        (new[] {"ctrl", "shift", "v"}, new[] {"shift", "z"})
     };
 
     [Test]
