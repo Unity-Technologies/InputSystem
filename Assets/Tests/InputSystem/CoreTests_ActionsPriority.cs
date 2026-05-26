@@ -59,6 +59,25 @@ internal static class PriorityTestExtensions
 
 internal partial class CoreTests
 {
+    /// <summary>
+    /// Overlap resolution uses <see cref="InputAction.Priority"/> and per-control grouping written from actions.
+    /// </summary>
+    private static void EnableActionPriorityShortcutResolution()
+    {
+        InputSystem.settings.shortcutKeysUseActionPriority = true;
+        InputSystem.settings.shortcutKeysConsumeInput = false;
+    }
+
+    /// <summary>
+    /// Overlap resolution uses composite binding complexity; <see cref="InputAction.Priority"/> is not applied at runtime.
+    /// Requires shortcut consumption on so control grouping merges slots on the same physical control.
+    /// </summary>
+    private static void EnableComplexityShortcutResolution()
+    {
+        InputSystem.settings.shortcutKeysConsumeInput = true;
+        InputSystem.settings.shortcutKeysUseActionPriority = false;
+    }
+
     private static readonly List<(string[], string[])> k_TwoInputActionTestCases = new()
     {
         (new[] {"ctrl", "x"}, new[] {"x"}),
@@ -111,6 +130,7 @@ internal partial class CoreTests
     [TestCaseSource(nameof(k_TwoInputActionTestCases))]
     public void Actions_Priority_OnlyOneActionIsFired_WhenOnePriorityIsHigherThanOther((string[] a1, string[] a2) actions)
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         InputActionMap map = new InputActionMap("map");
@@ -145,6 +165,7 @@ internal partial class CoreTests
     [TestCaseSource(nameof(k_TwoInputActionTestCases))]
     public void Actions_Priority_OnlyOneActionIsFired_WhenOnePriorityIsHigherThanOtherInversePriorityOrder((string[] a1, string[] a2) actions)
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         InputActionMap map = new InputActionMap("map");
@@ -179,6 +200,7 @@ internal partial class CoreTests
     [TestCaseSource(nameof(k_TwoInputActionTestCases))] // TODO: Darren, Should both actions be performed this frame here??
     public void Actions_Priority_BothActionsArePerformed_DueToKeyPressOrderForShortcut((string[] larger, string[] smaller) actions)
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         InputActionMap map = new InputActionMap("map");
@@ -219,6 +241,7 @@ internal partial class CoreTests
     [TestCaseSource(nameof(k_TwoInputActionTestCases))]
     public void Actions_Priority_BothActionFires_WhenPriorityIsEqual((string[] a1, string[] a2) actions)
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         InputActionMap map = new InputActionMap("map");
@@ -242,6 +265,7 @@ internal partial class CoreTests
     [TestCaseSource(nameof(k_TwoInputActionTestCases))]
     public void Actions_Priority_BothActionsFire_WhenPriorityIsZero((string[] a1, string[] a2) actions)
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         InputActionMap map = new InputActionMap("map");
@@ -279,6 +303,7 @@ internal partial class CoreTests
     [TestCaseSource(nameof(k_TwoInputActionNoConflictingBindingTestCases))]
     public void Actions_Priority_BothActionsWithDifferentPriorityFire_WhenThereIsNoConflictingBinding((string[] a1, string[] a2) actions)
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         InputActionMap map = new InputActionMap("map");
@@ -309,6 +334,7 @@ internal partial class CoreTests
     [TestCaseSource(nameof(k_TwoInputActionNoConflictingBindingTestCases))]
     public void Actions_Priority_BothActionsWithDifferentPriorityFire_WhenThereIsNoConflictingBindingInverseOrder((string[] a1, string[] a2) actions)
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         InputActionMap map = new InputActionMap("map");
@@ -339,6 +365,7 @@ internal partial class CoreTests
     [TestCaseSource(nameof(k_TwoInputActionNoConflictingBindingTestCases))]
     public void Actions_Priority_BothActionsWithEqualPriorityFire_WhenThereIsNoConflictingBinding((string[] a1, string[] a2) actions)
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
         InputActionMap map = new InputActionMap("map");
@@ -420,6 +447,7 @@ internal partial class CoreTests
     [Category("Actions Priority")]
     public unsafe void Actions_Priority_ControlGrouping_SamePhysicalControlSharesGroupId()
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var map = new InputActionMap("priority_group_test");
         map.AddAction("a", binding: "<Keyboard>/z");
@@ -452,6 +480,7 @@ internal partial class CoreTests
     [Category("Actions Priority")]
     public unsafe void Actions_Priority_ControlGrouping_WritesPerControlSlotPriorityFromAction()
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
         var map = new InputActionMap("priority_per_slot_test");
         var actionLow = map.AddAction("low", binding: "<Keyboard>/x");
@@ -494,6 +523,7 @@ internal partial class CoreTests
     [Category("Actions Priority")]
     public IEnumerator Actions_Priority_BothActionsArePerformed_WhenAHoldAndBasicActionHaveDifferentTiming()
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
         using var map = new InputActionMap("HoldChord");
 
@@ -543,6 +573,7 @@ internal partial class CoreTests
     [Category("Actions Priority")]
     public IEnumerator Actions_Priority_OnlyOneHoldActionIsPerformed_WhenOnePriorityIsHigher()
     {
+        EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
         using var map = new InputActionMap("HoldChord");
 
@@ -582,5 +613,214 @@ internal partial class CoreTests
         Release(keyboard.bKey);
         Release(keyboard.leftShiftKey);
         map.Disable();
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public unsafe void Actions_Complexity_ControlGrouping_SamePhysicalControlSharesGroupId_WhenShortcutConsumptionEnabled()
+    {
+        EnableComplexityShortcutResolution();
+
+        InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("complexity_group_test");
+        map.AddAction("a", binding: "<Keyboard>/z");
+        map.AddAction("b", binding: "<Keyboard>/z");
+        map.Enable();
+
+        var state = map.m_State;
+        Assert.That(state, Is.Not.Null);
+        Assert.That(state.memory.controlGroupingInitialized, Is.True);
+
+        for (var i = 0; i < state.totalControlCount; ++i)
+        {
+            for (var j = i + 1; j < state.totalControlCount; ++j)
+            {
+                if (state.controls[i] != state.controls[j])
+                    continue;
+
+                var gi = InputActionState.ControlGroupingTable.GroupElementIndex(i);
+                var gj = InputActionState.ControlGroupingTable.GroupElementIndex(j);
+                Assert.That(state.memory.controlGroupingAndPriority[gi], Is.EqualTo(state.memory.controlGroupingAndPriority[gj]));
+                Assert.That(state.memory.controlGroupingAndPriority[gi], Is.Not.EqualTo(0));
+                return;
+            }
+        }
+
+        Assert.Fail("Expected two control slots bound to the same physical control.");
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public unsafe void Actions_Complexity_ControlGrouping_WritesPerControlSlotComplexity_NotActionPriority()
+    {
+        EnableComplexityShortcutResolution();
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("complexity_per_slot_test");
+        var actionLow = map.AddAction("low", binding: "<Keyboard>/x");
+        var actionHigh = map.AddAction("high", binding: "<Keyboard>/x");
+        actionLow.Priority = 4;
+        actionHigh.Priority = 11;
+        map.Enable();
+
+        var state = map.m_State;
+        Assert.That(state, Is.Not.Null);
+
+        var lowIndex = -1;
+        var highIndex = -1;
+        for (var i = 0; i < state.totalControlCount; ++i)
+        {
+            if (state.controls[i] != keyboard.xKey)
+                continue;
+            var bindingIndex = state.controlIndexToBindingIndex[i];
+            var actionIndex = state.bindingStates[bindingIndex].actionIndex;
+            if (actionIndex == actionLow.m_ActionIndexInState)
+                lowIndex = i;
+            else if (actionIndex == actionHigh.m_ActionIndexInState)
+                highIndex = i;
+        }
+
+        Assert.That(lowIndex, Is.GreaterThanOrEqualTo(0));
+        Assert.That(highIndex, Is.GreaterThanOrEqualTo(0));
+
+        var pLow = InputActionState.ControlGroupingTable.PriorityElementIndex(lowIndex);
+        var pHigh = InputActionState.ControlGroupingTable.PriorityElementIndex(highIndex);
+        // Secondary column stores composite complexity; two simple bindings on the same key both have depth 1.
+        Assert.That(state.memory.controlGroupingAndPriority[pLow], Is.EqualTo(1));
+        Assert.That(state.memory.controlGroupingAndPriority[pHigh], Is.EqualTo(1));
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public unsafe void Actions_Complexity_ControlGrouping_WritesHigherComplexityOnSharedControlVersusSimpleBinding()
+    {
+        EnableComplexityShortcutResolution();
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("complexity_composite_vs_simple");
+        var composite = map.AddAction("chord", binding: null);
+        composite.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/ctrl")
+            .With("Binding", "<Keyboard>/x");
+        var simple = map.AddAction("plain", binding: "<Keyboard>/x");
+        composite.Priority = 0;
+        simple.Priority = 99;
+        map.Enable();
+
+        var state = map.m_State;
+        Assert.That(state, Is.Not.Null);
+
+        var compositeXIndex = -1;
+        var simpleXIndex = -1;
+        for (var i = 0; i < state.totalControlCount; ++i)
+        {
+            if (state.controls[i] != keyboard.xKey)
+                continue;
+            var bindingIndex = state.controlIndexToBindingIndex[i];
+            var actionIndex = state.bindingStates[bindingIndex].actionIndex;
+            if (actionIndex == composite.m_ActionIndexInState)
+                compositeXIndex = i;
+            else if (actionIndex == simple.m_ActionIndexInState)
+                simpleXIndex = i;
+        }
+
+        Assert.That(compositeXIndex, Is.GreaterThanOrEqualTo(0));
+        Assert.That(simpleXIndex, Is.GreaterThanOrEqualTo(0));
+
+        var pComposite = InputActionState.ControlGroupingTable.PriorityElementIndex(compositeXIndex);
+        var pSimple = InputActionState.ControlGroupingTable.PriorityElementIndex(simpleXIndex);
+        Assert.That(state.memory.controlGroupingAndPriority[pSimple], Is.EqualTo(1));
+        Assert.That(
+            state.memory.controlGroupingAndPriority[pComposite],
+            Is.GreaterThan(state.memory.controlGroupingAndPriority[pSimple]),
+            "Composite binding chain depth should exceed a simple binding on the same physical control.");
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    [TestCaseSource(nameof(k_TwoInputActionTestCases))]
+    public void Actions_Complexity_CompositeWinsOverlappingSimple_IgnoresActionPriority((string[] a1, string[] a2) actions)
+    {
+        EnableComplexityShortcutResolution();
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("map");
+
+        var actionComposite = map.SetupTestAction(actions.a1);
+        var actionSimple = map.SetupTestAction(actions.a2);
+
+        // Deliberately favor the simple binding in the Priority field; complexity resolution must still prefer the composite.
+        actionComposite.Priority = 0;
+        actionSimple.Priority = 100;
+
+        map.Enable();
+
+        Assert.That(actionComposite.WasPerformedThisFrame(), Is.False);
+        Assert.That(actionSimple.WasPerformedThisFrame(), Is.False);
+
+        PressBindingsForInputActions(keyboard, actionComposite, actionSimple);
+
+        Assert.That(actionComposite.WasPerformedThisFrame(), Is.True);
+        Assert.That(actionSimple.WasPerformedThisFrame(), Is.False);
+
+        ReleaseBindingsForActions(keyboard, actionComposite, actionSimple);
+
+        InputSystem.Update();
+
+        Assert.That(actionComposite.WasPerformedThisFrame(), Is.False);
+        Assert.That(actionSimple.WasPerformedThisFrame(), Is.False);
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    [TestCaseSource(nameof(k_TwoInputActionTestCases))]
+    public void Actions_Complexity_CompositeWinsOverlappingSimple_EvenWhenCompositeHasHigherPriorityField(
+        (string[] a1, string[] a2) actions)
+    {
+        EnableComplexityShortcutResolution();
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("map");
+
+        var actionComposite = map.SetupTestAction(actions.a1);
+        var actionSimple = map.SetupTestAction(actions.a2);
+
+        actionComposite.Priority = 100;
+        actionSimple.Priority = 1;
+
+        map.Enable();
+
+        PressBindingsForInputActions(keyboard, actionComposite, actionSimple);
+
+        Assert.That(actionComposite.WasPerformedThisFrame(), Is.True);
+        Assert.That(actionSimple.WasPerformedThisFrame(), Is.False);
+
+        ReleaseBindingsForActions(keyboard, actionComposite, actionSimple);
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Complexity_BothSimpleActionsOnSameControlPerform_WhenEqualComplexity()
+    {
+        EnableComplexityShortcutResolution();
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("map");
+        var action1 = map.AddAction("a", binding: "<Keyboard>/y");
+        var action2 = map.AddAction("b", binding: "<Keyboard>/y");
+        action1.Priority = 2;
+        action2.Priority = 99;
+        map.Enable();
+
+        Press((ButtonControl)action1.controls[0], queueEventOnly: true);
+        Press((ButtonControl)action2.controls[0], queueEventOnly: true);
+        InputSystem.Update();
+
+        Assert.That(action1.WasPerformedThisFrame(), Is.True);
+        Assert.That(action2.WasPerformedThisFrame(), Is.True);
+
+        Release((ButtonControl)action1.controls[0], queueEventOnly: true);
+        Release((ButtonControl)action2.controls[0], queueEventOnly: true);
+        InputSystem.Update();
     }
 }

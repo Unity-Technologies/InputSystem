@@ -211,7 +211,6 @@ partial class CoreTests
     public void Actions_WhenShortcutsEnabled_CanConsumeInput(bool legacyComposites)
     {
         InputSystem.settings.shortcutKeysConsumeInput = true;
-        InputSystem.settings.shortcutKeysUseActionPriority = true;
 
         var keyboard = InputSystem.AddDevice<Keyboard>();
 
@@ -240,6 +239,9 @@ partial class CoreTests
         action5.Priority = 1;
 
         action1.AddBinding("<Keyboard>/space");
+        // Ordered modifier evaluation: modifier must be pressed before the button for this chord shape.
+        // With shortcutKeysUseActionPriority on, IsShortcutComplexityModifierOrderActive is false, so
+        // Default would resolve to Unordered and pressing space then shift would still satisfy the composite.
         action2.AddCompositeBinding(legacyComposites ? "ButtonWithOneModifier" : "OneModifier")
             .With("Modifier", "<Keyboard>/shift")
             .With(legacyComposites ? "Button" : "Binding", "<Keyboard>/space");
