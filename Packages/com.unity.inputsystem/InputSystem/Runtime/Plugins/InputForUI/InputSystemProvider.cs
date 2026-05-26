@@ -642,8 +642,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_UIActionMap = m_InputActionAsset?.FindActionMap("UI", false);
             if (m_UIActionMap != null && !m_UIActionMap.enabled)
             {
-                // Don't take ownership of the UI map lifecycle for project-wide actions — the user manages those.
-                m_ShouldDisableUIActionMapOnUnregister = m_InputActionAsset != InputSystem.actions;
+                // We enabled the map, so we are responsible for restoring it on shutdown.
+                // This applies to both provider-owned assets and project-wide actions: if the
+                // user had the UI map disabled before initialization, we must not leave it
+                // permanently enabled after the provider goes away.
+                m_ShouldDisableUIActionMapOnUnregister = true;
                 m_UIActionMap.Enable();
             }
         }
