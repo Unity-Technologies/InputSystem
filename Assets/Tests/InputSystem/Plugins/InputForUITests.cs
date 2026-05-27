@@ -96,12 +96,14 @@ public class InputForUITests : InputTestFixture
             "Test is invalid since InputSystemProvider actions are not available");
     }
 
-    // SelectInputActionAsset() only requires a map named "UI" to exist; no specific
-    // actions are needed for the provider lifecycle tests.
+    // Creates a minimal project-wide asset recognised by SelectInputActionAsset().
+    // At least one action is required: InputActionMap.enabled is m_EnabledActionsCount > 0,
+    // so an empty map can never report as enabled.
     static InputActionAsset CreateProjectWideAssetWithUIMap(out InputActionMap uiMap)
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
         uiMap = new InputActionMap("UI");
+        uiMap.AddAction("Point", InputActionType.PassThrough, "<Mouse>/position");
         asset.AddActionMap(uiMap);
         return asset;
     }
