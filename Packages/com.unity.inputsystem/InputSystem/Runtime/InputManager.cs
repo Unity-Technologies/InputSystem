@@ -2288,12 +2288,15 @@ namespace UnityEngine.InputSystem
                 m_NativeBeforeUpdateHooked = true;
             }
 
-            #if UNITY_ANALYTICS || UNITY_EDITOR
+#if UNITY_ANALYTICS || UNITY_EDITOR
             InputAnalytics.Initialize(this);
             m_Runtime.onShutdown = () => InputAnalytics.OnShutdown(this);
 #endif
 
-            m_StateMonitors = new InputManagerStateMonitors(() => m_DevicesCount, () => isProcessingEvents, m_Runtime);
+            // Recreate only when there is no collection yet or the runtime instance changed. Reusing the same
+            // IInputRuntime (e.g. test Restore()) must keep registered control monitors and pending timeouts.
+            if (m_StateMonitors == null || !ReferenceEquals(m_StateMonitors.CapturedRuntime, m_Runtime))
+                m_StateMonitors = new InputManagerStateMonitors(() => m_DevicesCount, () => isProcessingEvents, m_Runtime);
         }
 
         internal void InstallGlobals()

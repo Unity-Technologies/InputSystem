@@ -25,6 +25,12 @@ namespace UnityEngine.InputSystem
             m_Runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
         }
 
+        /// <summary>
+        /// Runtime instance this monitor collection was constructed with. Used to avoid recreating the collection
+        /// when <see cref="InputManager.InstallRuntime"/> is called again with the same runtime (same object identity).
+        /// </summary>
+        internal IInputRuntime CapturedRuntime => m_Runtime;
+
         ////TODO: support combining monitors for bitfields
         public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex, uint groupIndex)
         {
