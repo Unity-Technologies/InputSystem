@@ -1127,6 +1127,9 @@ namespace UnityEngine.InputSystem
                 for (var n = 0; n < controlCount; ++n)
                 {
                     var controlIndex = bindingState->controlStartIndex + n;
+                    // Must match EnableControls: monitors are keyed by the binding that owns the control (composite part),
+                    // not necessarily the binding entry we are iterating (e.g. composite root).
+                    var bindingIndexForMonitor = controlIndexToBindingIndex[controlIndex];
                     var prioritySlot = ControlGroupingTable.PriorityElementIndex(controlIndex);
                     var oldSecondaryForRemoval = controlGroupingAndPriority[prioritySlot];
 
@@ -1139,13 +1142,13 @@ namespace UnityEngine.InputSystem
                     // Remove using the monitor index that was registered (packed with the previous secondary value).
                     // `action.Priority` is already updated before we get here; `ToCombinedMapAndControlAndBindingIndex`
                     // reads from `controlGroupingAndPriority`, so we must not overwrite the slot before removal.
-                    var oldMonitorIndex = InputActionStateMonitorIndex.Create(mapIndex, controlIndex, bindingIndex,
+                    var oldMonitorIndex = InputActionStateMonitorIndex.Create(mapIndex, controlIndex, bindingIndexForMonitor,
                         oldSecondaryForRemoval).Packed;
                     manager.RemoveStateChangeMonitor(controls[controlIndex], this, oldMonitorIndex);
 
                     controlGroupingAndPriority[prioritySlot] = clampedPriority;
 
-                    var newMonitorIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+                    var newMonitorIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndexForMonitor);
                     manager.AddStateChangeMonitor(controls[controlIndex], this, newMonitorIndex,
                         controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(controlIndex)]);
                 }

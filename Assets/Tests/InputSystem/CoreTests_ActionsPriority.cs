@@ -514,6 +514,49 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions Priority")]
+    public void Actions_Priority_ChangingPriorityOnCompositeAction_UpdatesMonitorPackedPriorityOnPartControls()
+    {
+        EnableActionPriorityShortcutResolution();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("map");
+        var shiftB = map.AddAction("shiftB");
+        shiftB.AddCompositeBinding("OneModifier")
+            .With("Modifier", "<Keyboard>/leftShift")
+            .With("Binding", "<Keyboard>/b");
+        shiftB.Priority = 3;
+        map.Enable();
+
+        var state = map.m_State;
+        Assert.That(state, Is.Not.Null);
+
+        static int PackedPriorityForMonitor(InputActionState actionState, InputControl control)
+        {
+            var deviceIndex = control.device.m_DeviceIndex;
+            ref var bucket = ref InputSystem.manager.m_StateMonitors.m_MonitorsPerDevice[deviceIndex];
+            for (var i = 0; i < bucket.count; ++i)
+            {
+                if (bucket.memoryRegions[i].sizeInBits == 0)
+                    continue;
+                if (!ReferenceEquals(bucket.listeners[i].monitor, actionState) ||
+                    bucket.listeners[i].control != control)
+                    continue;
+                return InputActionStateMonitorIndex.FromPacked(bucket.listeners[i].monitorIndex).Priority;
+            }
+
+            return int.MinValue;
+        }
+
+        Assert.That(PackedPriorityForMonitor(state, keyboard.bKey), Is.EqualTo(3));
+        Assert.That(PackedPriorityForMonitor(state, keyboard.leftShiftKey), Is.EqualTo(3));
+
+        shiftB.Priority = 7;
+
+        Assert.That(PackedPriorityForMonitor(state, keyboard.bKey), Is.EqualTo(7));
+        Assert.That(PackedPriorityForMonitor(state, keyboard.leftShiftKey), Is.EqualTo(7));
+    }
+
+    [Test]
+    [Category("Actions Priority")]
     public void Actions_Priority_InputActionStateMonitorIndex_ImplicitConversionToLongMatchesPackedProperty()
     {
         var index = InputActionStateMonitorIndex.Create(1, 2, 3, 4);
