@@ -199,7 +199,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Priority of this action when multiple bindings resolve to the same control.
         /// </summary>
-        /// <value>Effective range at runtime is 0–65535; the value is combined with control grouping data as an unsigned 16-bit integer.</value>
+        /// <value>Effective range is 0–65535. Values outside that range are clamped when set; the stored value always matches what overlap resolution uses.</value>
         /// <remarks>
         /// Applies to all bindings that target this action. At runtime this value is used only when
         /// <see cref="InputSettings.shortcutKeysUseActionPriority"/> is enabled. In that mode the system orders overlapping
@@ -208,17 +208,17 @@ namespace UnityEngine.InputSystem
         /// group are suppressed; priority zero does not mark the event handled for that purpose.
         /// When action priority is disabled, overlap resolution instead follows <see cref="InputSettings.shortcutKeysConsumeInput"/>
         /// (automatic composite complexity) and does not consult this property.
-        /// Values outside the 0–65535 range are truncated when stored in the internal representation.
         /// </remarks>
         public int Priority
         {
             get => m_Priority;
             set
             {
-                if (m_Priority == value)
+                var clamped = Math.Clamp(value, 0, ushort.MaxValue);
+                if (m_Priority == clamped)
                     return;
 
-                m_Priority = value;
+                m_Priority = clamped;
                 m_ActionMap?.m_State?.OnActionPriorityChanged(this);
             }
         }

@@ -505,8 +505,7 @@ partial class CoreTests
     [TestCase("leftShift", "leftAlt", "space", true, false)]
     [TestCase("leftShift", null, "space", false, false)]
     [TestCase("leftShift", "leftAlt", "space", false, false)]
-    public void
-    Actions_WhenShortcutsAreEnabled_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut_ExceptIfOverridden(string modifier1, string modifier2, string binding, bool legacyComposites, bool overrideModifiersNeedToBePressedFirst)
+    public void Actions_WhenShortcutsAreEnabled_PressingShortcutSequenceInWrongOrder_DoesNotTriggerShortcut_ExceptIfOverridden(string modifier1, string modifier2, string binding, bool legacyComposites, bool overrideModifiersNeedToBePressedFirst)
     {
         InputSystem.settings.shortcutKeysConsumeInput = true;
 

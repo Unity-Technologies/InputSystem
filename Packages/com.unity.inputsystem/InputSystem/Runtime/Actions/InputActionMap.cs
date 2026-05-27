@@ -1598,11 +1598,7 @@ namespace UnityEngine.InputSystem
                         actionType = InputActionType.Button;
                 }
 
-                var clampedPriority = priority;
-                if (clampedPriority < 0)
-                    clampedPriority = 0;
-                else if (clampedPriority > 65535)
-                    clampedPriority = 65535;
+                var clampedPriority = Math.Clamp(priority, 0, ushort.MaxValue);
 
                 return new InputAction(actionName ?? name, actionType)
                 {
@@ -2013,7 +2009,11 @@ namespace UnityEngine.InputSystem
             {
                 var actionCount = m_Actions.Length;
                 for (var i = 0; i < actionCount; ++i)
-                    m_Actions[i].m_ActionMap = this;
+                {
+                    var action = m_Actions[i];
+                    action.m_ActionMap = this;
+                    action.m_Priority = Math.Clamp(action.m_Priority, 0, ushort.MaxValue);
+                }
             }
 
             // Make sure we don't retain any cached per-action data when using serialization

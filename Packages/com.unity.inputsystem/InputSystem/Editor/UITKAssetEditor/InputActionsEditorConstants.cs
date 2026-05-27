@@ -36,7 +36,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public const string ActionPriorityTooltip =
             "Priority for this action when several bindings share the same control. Applies to all bindings on the action. "
-            + "Effective range is 0–65535 at runtime (unsigned 16-bit). When Action Priority Shortcut Resolution is enabled, "
+            + "Values are clamped to 0–65535 when set (unsigned 16-bit at runtime). When Action Priority Shortcut Resolution is enabled, "
             + "higher values are ordered first; when the action performs, priority 0 does not mark the input event as handled "
             + "for overlap suppression, while any value greater than 0 can.";
 

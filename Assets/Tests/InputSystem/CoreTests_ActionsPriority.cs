@@ -86,6 +86,23 @@ internal partial class CoreTests
         (new[] {"ctrl", "shift", "v"}, new[] {"shift", "v"}),
     };
 
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_Setter_ClampsToRepresentableRange()
+    {
+        var map = new InputActionMap("m");
+        var action = map.AddAction("a", binding: "<Keyboard>/x");
+
+        action.Priority = -1;
+        Assert.That(action.Priority, Is.EqualTo(0));
+
+        action.Priority = 70000;
+        Assert.That(action.Priority, Is.EqualTo(65535));
+
+        action.Priority = 100;
+        Assert.That(action.Priority, Is.EqualTo(100));
+    }
+
     private void PressBindingsForInputActions(Keyboard keyboard, InputAction action1, InputAction action2, InputAction action3 = null)
     {
         for (int i = 0; i < action1.controls.Count; i++)
