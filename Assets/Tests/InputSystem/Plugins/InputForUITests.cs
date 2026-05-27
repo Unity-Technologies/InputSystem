@@ -106,7 +106,6 @@ public class InputForUITests : InputTestFixture
         var gameplayMap = new InputActionMap("Gameplay");
         gameplayMap.AddAction("Jump", InputActionType.Button, "<Keyboard>/space");
         asset.AddActionMap(gameplayMap);
-        gameplayMap.Enable();
 
         var uiMap = new InputActionMap("UI");
         uiMap.AddAction("Point", InputActionType.PassThrough, "<Mouse>/position");
@@ -118,6 +117,9 @@ public class InputForUITests : InputTestFixture
         uiMap.AddAction("RightClick", InputActionType.PassThrough, "<Mouse>/rightButton");
         uiMap.AddAction("ScrollWheel", InputActionType.PassThrough, "<Mouse>/scroll");
         asset.AddActionMap(uiMap);
+
+        // Enable after all maps are added; modifying the asset while any map is enabled is not allowed.
+        gameplayMap.Enable();
 
         // InputSystem.actions setter throws in play mode, so we use the internal manager property here.
         InputSystem.manager.actions = asset;
