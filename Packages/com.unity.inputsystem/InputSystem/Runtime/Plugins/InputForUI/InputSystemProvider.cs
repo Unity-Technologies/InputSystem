@@ -642,12 +642,13 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_UIActionMap = m_InputActionAsset?.FindActionMap("UI", false);
             if (m_UIActionMap != null && !m_UIActionMap.enabled)
             {
-                // We enabled the map, so we are responsible for restoring it on shutdown.
-                // This applies to both provider-owned assets and project-wide actions: if the
-                // user had the UI map disabled before initialization, we must not leave it
-                // permanently enabled after the provider goes away.
-                m_ShouldDisableUIActionMapOnUnregister = true;
                 m_UIActionMap.Enable();
+
+                // For provider-owned assets we are responsible for cleanup on shutdown.
+                // For project-wide actions the play-mode lifecycle manages the asset, so
+                // leave it as-is when the provider goes away.
+                if (m_InputActionAsset != InputSystem.actions)
+                    m_ShouldDisableUIActionMapOnUnregister = true;
             }
         }
 

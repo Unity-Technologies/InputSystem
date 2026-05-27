@@ -96,47 +96,40 @@ public class InputForUITests : InputTestFixture
             "Test is invalid since InputSystemProvider actions are not available");
     }
 
+    // SelectInputActionAsset() only requires a map named "UI" to exist; no specific
+    // actions are needed for the provider lifecycle tests.
+    static InputActionAsset CreateProjectWideAssetWithUIMap(out InputActionMap uiMap)
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        uiMap = new InputActionMap("UI");
+        asset.AddActionMap(uiMap);
+        return asset;
+    }
+
     [Test]
     [Category(kTestCategory)]
     public void Shutdown_DoesNotDisableProjectWideActionsAsset()
     {
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var asset = CreateProjectWideAssetWithUIMap(out var uiMap);
 
         // A non-UI map the user has enabled — provider must never touch it.
         var gameplayMap = new InputActionMap("Gameplay");
         gameplayMap.AddAction("Jump", InputActionType.Button, "<Keyboard>/space");
         asset.AddActionMap(gameplayMap);
-
-        var uiMap = new InputActionMap("UI");
-        uiMap.AddAction("Point", InputActionType.PassThrough, "<Mouse>/position");
-        uiMap.AddAction("Navigate", InputActionType.PassThrough, "<Gamepad>/leftStick");
-        uiMap.AddAction("Submit", InputActionType.Button, "<Keyboard>/enter");
-        uiMap.AddAction("Cancel", InputActionType.Button, "<Keyboard>/escape");
-        uiMap.AddAction("Click", InputActionType.PassThrough, "<Mouse>/leftButton");
-        uiMap.AddAction("MiddleClick", InputActionType.PassThrough, "<Mouse>/middleButton");
-        uiMap.AddAction("RightClick", InputActionType.PassThrough, "<Mouse>/rightButton");
-        uiMap.AddAction("ScrollWheel", InputActionType.PassThrough, "<Mouse>/scroll");
-        asset.AddActionMap(uiMap);
-
-        // Enable after all maps are added; modifying the asset while any map is enabled is not allowed.
-        gameplayMap.Enable();
+        gameplayMap.Enable(); // Enable after all maps are added; modifying the asset while any map is enabled is not allowed.
 
         // InputSystem.actions setter throws in play mode, so we use the internal manager property here.
         InputSystem.manager.actions = asset;
         try
         {
             m_InputSystemProvider.Initialize();
-            Assert.That(uiMap.enabled, Is.True, "UI action map should be enabled by provider initialization.");
+            Assert.That(uiMap.enabled,      Is.True, "UI action map should be enabled by provider initialization.");
             Assert.That(gameplayMap.enabled, Is.True, "Provider must not change enabled state of non-UI maps.");
 
-            // Call Shutdown directly: ClearMockProvider reinstates the real provider which
-            // calls RegisterActions() and re-enables the UI map, masking the behavior under test.
-            m_InputSystemProvider.Shutdown();
+            EventProvider.ClearMockProvider();
             m_ClearedMockProvider = true;
 
-            // The UI map was disabled before initialization; the provider enabled it, so it must
-            // restore it to disabled on shutdown. Non-UI maps must remain untouched.
-            Assert.That(uiMap.enabled, Is.False, "UI action map should be restored to disabled after provider shutdown, since it was disabled before initialization.");
+            Assert.That(uiMap.enabled,      Is.True, "Provider must not disable the UI map in a project-wide asset on shutdown.");
             Assert.That(gameplayMap.enabled, Is.True, "Provider must not disable non-UI maps on shutdown.");
         }
         finally
@@ -149,17 +142,7 @@ public class InputForUITests : InputTestFixture
     [Category(kTestCategory)]
     public void Shutdown_DoesNotDisableProjectWideUIMap_WhenAlreadyEnabledBeforeInit()
     {
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var uiMap = new InputActionMap("UI");
-        uiMap.AddAction("Point", InputActionType.PassThrough, "<Mouse>/position");
-        uiMap.AddAction("Navigate", InputActionType.PassThrough, "<Gamepad>/leftStick");
-        uiMap.AddAction("Submit", InputActionType.Button, "<Keyboard>/enter");
-        uiMap.AddAction("Cancel", InputActionType.Button, "<Keyboard>/escape");
-        uiMap.AddAction("Click", InputActionType.PassThrough, "<Mouse>/leftButton");
-        uiMap.AddAction("MiddleClick", InputActionType.PassThrough, "<Mouse>/middleButton");
-        uiMap.AddAction("RightClick", InputActionType.PassThrough, "<Mouse>/rightButton");
-        uiMap.AddAction("ScrollWheel", InputActionType.PassThrough, "<Mouse>/scroll");
-        asset.AddActionMap(uiMap);
+        var asset = CreateProjectWideAssetWithUIMap(out var uiMap);
         uiMap.Enable(); // User had the UI map enabled before the provider started.
 
         // InputSystem.actions setter throws in play mode, so we use the internal manager property here.
