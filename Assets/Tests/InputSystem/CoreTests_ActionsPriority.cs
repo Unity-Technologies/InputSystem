@@ -428,10 +428,37 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions Priority")]
-    public void Actions_Priority_InputActionStateMonitorIndex_PriorityUsesLowEightBitsInPackedRepresentation()
+    public void Actions_Priority_InputActionStateMonitorIndex_PriorityRoundTripsFullSixteenBits()
     {
-        var index = InputActionStateMonitorIndex.Create(0, 1, 0, priority: 300);
-        Assert.That(index.Priority, Is.EqualTo(300 & 0xff));
+        var index300 = InputActionStateMonitorIndex.Create(0, 1, 0, priority: 300);
+        Assert.That(index300.Priority, Is.EqualTo(300));
+        Assert.That(InputActionState.GetComplexityFromMonitorIndex(index300.Packed), Is.EqualTo(300));
+
+        var index65535 = InputActionStateMonitorIndex.Create(0, 1, 0, priority: 65535);
+        Assert.That(index65535.Priority, Is.EqualTo(65535));
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_PrioritiesAbove255_ResolveInOrder()
+    {
+        EnableActionPriorityShortcutResolution();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("map");
+        var lower = map.AddAction("lower", binding: "<Keyboard>/x");
+        var higher = map.AddAction("higher", binding: "<Keyboard>/x");
+        lower.Priority = 300;
+        higher.Priority = 400;
+        map.Enable();
+
+        Press((ButtonControl)keyboard.xKey, queueEventOnly: true);
+        InputSystem.Update();
+
+        Assert.That(higher.WasPerformedThisFrame(), Is.True);
+        Assert.That(lower.WasPerformedThisFrame(), Is.False);
+
+        Release((ButtonControl)keyboard.xKey);
+        InputSystem.Update();
     }
 
     [Test]

@@ -1511,7 +1511,7 @@ namespace UnityEngine.InputSystem
         /// monitors. While we could look up map and binding indices from control indices, keeping
         /// all the information together avoids having to unnecessarily jump around in memory to grab
         /// the various pieces of data.
-        /// The high bits store action priority or composite complexity depending on <see cref="InputSettings.IsShortcutResolutionUsingActionPriority"/>.
+        /// The high 16 bits store action priority or composite complexity depending on <see cref="InputSettings.IsShortcutResolutionUsingActionPriority"/>.
         /// </remarks>
         private long ToCombinedMapAndControlAndBindingIndex(int mapIndex, int controlIndex, int bindingIndex)
         {
@@ -1522,11 +1522,11 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Extract the complexity or priority component from the monitor index (high 8 bits).
+        /// Extract the complexity or priority component from the monitor index (high 16 bits).
         /// </summary>
         internal static int GetComplexityFromMonitorIndex(long mapControlAndBindingIndex)
         {
-            return (int)((mapControlAndBindingIndex >> 48) & 0xff);
+            return (int)(((ulong)mapControlAndBindingIndex >> 48) & 0xffff);
         }
 
         /// <summary>

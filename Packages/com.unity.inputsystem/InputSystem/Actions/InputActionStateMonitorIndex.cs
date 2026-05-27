@@ -24,7 +24,10 @@ namespace UnityEngine.InputSystem
             long result = controlIndex;
             result |= (long)bindingIndex << 24;
             result |= (long)mapIndex << 40;
-            result |= (long)priority << 48;
+            // Bits 48–63 hold priority or composite complexity (ushort); use ulong shift so values ≥32768
+            // pack without corrupting the signed long layout.
+            var priorityBits = (ulong)(ushort)(priority & 0xffff);
+            result |= (long)(priorityBits << 48);
             return new InputActionStateMonitorIndex(result);
         }
 
@@ -35,8 +38,8 @@ namespace UnityEngine.InputSystem
         public int MapIndex => (int)((m_Packed >> 40) & 0xff);
 
         /// <summary>
-        /// Only the low 8 bits are stored; larger <see cref="InputAction.Priority"/> values truncate when packed.
+        /// The high 16 bits of the packed index (matching the ushort priority/complexity slot in <see cref="InputActionState"/>).
         /// </summary>
-        public int Priority => (int)((m_Packed >> 48) & 0xff);
+        public int Priority => (int)(((ulong)m_Packed >> 48) & 0xffff);
     }
 }
