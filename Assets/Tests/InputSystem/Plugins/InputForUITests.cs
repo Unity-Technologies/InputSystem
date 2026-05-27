@@ -65,6 +65,7 @@ public class InputForUITests : InputTestFixture
             EventProvider.ClearMockProvider();
         m_InputForUIEvents.Clear();
 
+        // InputSystem.actions setter throws in play mode, so we use the internal manager property here.
         InputSystem.manager.actions = storedActions;
 
 #if UNITY_EDITOR
@@ -100,6 +101,13 @@ public class InputForUITests : InputTestFixture
     public void Shutdown_DoesNotDisableProjectWideActionsAsset()
     {
         var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+
+        // A non-UI map the user has enabled — provider must never touch it.
+        var gameplayMap = new InputActionMap("Gameplay");
+        gameplayMap.AddAction("Jump", InputActionType.Button, "<Keyboard>/space");
+        asset.AddActionMap(gameplayMap);
+        gameplayMap.Enable();
+
         var uiMap = new InputActionMap("UI");
         uiMap.AddAction("Point", InputActionType.PassThrough, "<Mouse>/position");
         uiMap.AddAction("Navigate", InputActionType.PassThrough, "<Gamepad>/leftStick");
@@ -111,20 +119,84 @@ public class InputForUITests : InputTestFixture
         uiMap.AddAction("ScrollWheel", InputActionType.PassThrough, "<Mouse>/scroll");
         asset.AddActionMap(uiMap);
 
+        // InputSystem.actions setter throws in play mode, so we use the internal manager property here.
         InputSystem.manager.actions = asset;
         try
         {
             m_InputSystemProvider.Initialize();
             Assert.That(uiMap.enabled, Is.True, "UI action map should be enabled by provider initialization.");
+            Assert.That(gameplayMap.enabled, Is.True, "Provider must not change enabled state of non-UI maps.");
 
             EventProvider.ClearMockProvider();
             m_ClearedMockProvider = true;
-            Assert.That(uiMap.enabled, Is.True, "UI action map must remain enabled after provider shutdown.");
+
+            // The UI map was disabled before initialization; the provider enabled it, so it must
+            // restore it to disabled on shutdown. Non-UI maps must remain untouched.
+            Assert.That(uiMap.enabled, Is.False, "UI action map should be restored to disabled after provider shutdown, since it was disabled before initialization.");
+            Assert.That(gameplayMap.enabled, Is.True, "Provider must not disable non-UI maps on shutdown.");
         }
         finally
         {
             Object.DestroyImmediate(asset);
         }
+    }
+
+    [Test]
+    [Category(kTestCategory)]
+    public void Shutdown_DoesNotDisableProjectWideUIMap_WhenAlreadyEnabledBeforeInit()
+    {
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiMap = new InputActionMap("UI");
+        uiMap.AddAction("Point", InputActionType.PassThrough, "<Mouse>/position");
+        uiMap.AddAction("Navigate", InputActionType.PassThrough, "<Gamepad>/leftStick");
+        uiMap.AddAction("Submit", InputActionType.Button, "<Keyboard>/enter");
+        uiMap.AddAction("Cancel", InputActionType.Button, "<Keyboard>/escape");
+        uiMap.AddAction("Click", InputActionType.PassThrough, "<Mouse>/leftButton");
+        uiMap.AddAction("MiddleClick", InputActionType.PassThrough, "<Mouse>/middleButton");
+        uiMap.AddAction("RightClick", InputActionType.PassThrough, "<Mouse>/rightButton");
+        uiMap.AddAction("ScrollWheel", InputActionType.PassThrough, "<Mouse>/scroll");
+        asset.AddActionMap(uiMap);
+        uiMap.Enable(); // User had the UI map enabled before the provider started.
+
+        // InputSystem.actions setter throws in play mode, so we use the internal manager property here.
+        InputSystem.manager.actions = asset;
+        try
+        {
+            m_InputSystemProvider.Initialize();
+            Assert.That(uiMap.enabled, Is.True, "UI action map should remain enabled after provider initialization.");
+
+            EventProvider.ClearMockProvider();
+            m_ClearedMockProvider = true;
+
+            // The provider did not enable the map, so it must not disable it on shutdown.
+            Assert.That(uiMap.enabled, Is.True, "UI action map must remain enabled after provider shutdown when the user had it enabled before initialization.");
+        }
+        finally
+        {
+            Object.DestroyImmediate(asset);
+        }
+    }
+
+    [Test]
+    [Category(kTestCategory)]
+    public void Shutdown_DisablesUIActionMap_ForProviderOwnedAsset()
+    {
+        InputActionMap capturedUIMap = null;
+        InputSystemProvider.SetOnRegisterActions(asset =>
+            capturedUIMap = asset?.FindActionMap("UI", false));
+
+        // Remove project-wide actions so the provider falls back to its own internal default asset.
+        // InputSystem.actions setter throws in play mode, so we use the internal manager property here.
+        InputSystem.manager.actions = null;
+        m_InputSystemProvider.Initialize();
+        InputSystemProvider.SetOnRegisterActions(null);
+
+        Assert.That(capturedUIMap, Is.Not.Null, "Provider should have a UI action map in its internal default asset.");
+        Assert.That(capturedUIMap.enabled, Is.True, "UI action map should be enabled by provider initialization.");
+
+        EventProvider.ClearMockProvider();
+        m_ClearedMockProvider = true;
+        Assert.That(capturedUIMap.enabled, Is.False, "UI action map should be disabled after provider shutdown for provider-owned assets.");
     }
 
     [Test]
