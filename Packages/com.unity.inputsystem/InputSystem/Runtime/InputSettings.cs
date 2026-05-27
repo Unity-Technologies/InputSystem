@@ -708,6 +708,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// If this is enabled, it takes precedence over <see cref="shortcutKeysConsumeInput"/> for resolution behavior: the system uses priority-based consumption and ordering even when complexity-based consumption is also toggled on.
+        /// Among overlapping actions on the same control, when a higher-priority action reaches <see cref="InputActionPhase.Performed"/>, a <see cref="InputAction.Priority"/> greater than zero can mark the input event as handled so lower-priority actions are suppressed; priority zero does not.
         /// Serialized priority values on actions are always kept; when this is off, priorities are not applied at runtime and the Priority field is hidden in the Input Actions editor.
         /// </remarks>
         /// <seealso cref="shortcutKeysConsumeInput"/>

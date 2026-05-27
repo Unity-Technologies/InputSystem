@@ -201,10 +201,13 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <value>Effective range at runtime is 0–65535; the value is combined with control grouping data as an unsigned 16-bit integer.</value>
         /// <remarks>
-        /// Applies to all bindings that target this action. It influences how the input system handles overlapping
-        /// bindings on a shared control—for example whether a performed action can mark the underlying input event as
-        /// handled, which affects further processing for other actions in the same group. Values 0–1 follow one path;
-        /// values greater than 1 follow another when the input system resolves overlapping bindings on the same control.
+        /// Applies to all bindings that target this action. At runtime this value is used only when
+        /// <see cref="InputSettings.shortcutKeysUseActionPriority"/> is enabled. In that mode the system orders overlapping
+        /// bindings on a shared control by priority, and when the action reaches <see cref="InputActionPhase.Performed"/>,
+        /// a value greater than zero can mark the underlying input event as handled so lower-priority actions in the same
+        /// group are suppressed; priority zero does not mark the event handled for that purpose.
+        /// When action priority is disabled, overlap resolution instead follows <see cref="InputSettings.shortcutKeysConsumeInput"/>
+        /// (automatic composite complexity) and does not consult this property.
         /// Values outside the 0–65535 range are truncated when stored in the internal representation.
         /// </remarks>
         public int Priority
