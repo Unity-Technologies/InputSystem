@@ -129,7 +129,9 @@ public class InputForUITests : InputTestFixture
             Assert.That(uiMap.enabled, Is.True, "UI action map should be enabled by provider initialization.");
             Assert.That(gameplayMap.enabled, Is.True, "Provider must not change enabled state of non-UI maps.");
 
-            EventProvider.ClearMockProvider();
+            // Call Shutdown directly: ClearMockProvider reinstates the real provider which
+            // calls RegisterActions() and re-enables the UI map, masking the behavior under test.
+            m_InputSystemProvider.Shutdown();
             m_ClearedMockProvider = true;
 
             // The UI map was disabled before initialization; the provider enabled it, so it must
