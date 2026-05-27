@@ -1127,14 +1127,27 @@ namespace UnityEngine.InputSystem
                 for (var n = 0; n < controlCount; ++n)
                 {
                     var controlIndex = bindingState->controlStartIndex + n;
-                    controlGroupingAndPriority[controlIndex * 2 + 1] = clampedPriority;
+                    var prioritySlot = ControlGroupingTable.PriorityElementIndex(controlIndex);
+                    var oldSecondaryForRemoval = controlGroupingAndPriority[prioritySlot];
 
                     if (!IsControlEnabled(controlIndex))
+                    {
+                        controlGroupingAndPriority[prioritySlot] = clampedPriority;
                         continue;
+                    }
 
-                    var mapControlAndBindingIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
-                    manager.RemoveStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex);
-                    manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex, controlGroupingAndPriority[controlIndex * 2]);
+                    // Remove using the monitor index that was registered (packed with the previous secondary value).
+                    // `action.Priority` is already updated before we get here; `ToCombinedMapAndControlAndBindingIndex`
+                    // reads from `controlGroupingAndPriority`, so we must not overwrite the slot before removal.
+                    var oldMonitorIndex = InputActionStateMonitorIndex.Create(mapIndex, controlIndex, bindingIndex,
+                        oldSecondaryForRemoval).Packed;
+                    manager.RemoveStateChangeMonitor(controls[controlIndex], this, oldMonitorIndex);
+
+                    controlGroupingAndPriority[prioritySlot] = clampedPriority;
+
+                    var newMonitorIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndex);
+                    manager.AddStateChangeMonitor(controls[controlIndex], this, newMonitorIndex,
+                        controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(controlIndex)]);
                 }
             }
         }

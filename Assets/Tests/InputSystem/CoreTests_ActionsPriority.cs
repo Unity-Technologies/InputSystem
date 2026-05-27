@@ -463,6 +463,57 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions Priority")]
+    public void Actions_Priority_ChangingPriorityWhileEnabled_ReplacesStateMonitorInsteadOfDuplicating()
+    {
+        EnableActionPriorityShortcutResolution();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var map = new InputActionMap("map");
+        var action = map.AddAction("a", binding: "<Keyboard>/x");
+        action.Priority = 1;
+        map.Enable();
+
+        var state = map.m_State;
+        Assert.That(state, Is.Not.Null);
+
+        var control = keyboard.xKey;
+        var deviceIndex = keyboard.m_DeviceIndex;
+        Assert.That(deviceIndex, Is.GreaterThanOrEqualTo(0));
+
+        int CountMonitorsForActionStateOnControl()
+        {
+            ref var bucket = ref InputSystem.manager.m_StateMonitors.m_MonitorsPerDevice[deviceIndex];
+            var c = 0;
+            for (var i = 0; i < bucket.count; ++i)
+            {
+                if (bucket.memoryRegions[i].sizeInBits == 0)
+                    continue;
+                if (ReferenceEquals(bucket.listeners[i].monitor, state) && bucket.listeners[i].control == control)
+                    ++c;
+            }
+
+            return c;
+        }
+
+        Assert.That(CountMonitorsForActionStateOnControl(), Is.EqualTo(1));
+
+        action.Priority = 5;
+        action.Priority = 10;
+        action.Priority = 20;
+
+        Assert.That(CountMonitorsForActionStateOnControl(), Is.EqualTo(1));
+
+        var performedCount = 0;
+        action.performed += _ => performedCount++;
+        Press((ButtonControl)keyboard.xKey, queueEventOnly: true);
+        InputSystem.Update();
+        Assert.That(performedCount, Is.EqualTo(1));
+
+        Release((ButtonControl)keyboard.xKey);
+        InputSystem.Update();
+    }
+
+    [Test]
+    [Category("Actions Priority")]
     public void Actions_Priority_InputActionStateMonitorIndex_ImplicitConversionToLongMatchesPackedProperty()
     {
         var index = InputActionStateMonitorIndex.Create(1, 2, 3, 4);
