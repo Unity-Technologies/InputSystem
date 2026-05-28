@@ -99,9 +99,12 @@ namespace UnityEngine.InputSystem.Editor
             priorityLabel.style.minWidth = m_DropdownLabelWidth;
             priorityLabel.style.width = m_DropdownLabelWidth;
             priorityField.SetValueWithoutNotify(inputAction.priority);
-            priorityField.RegisterValueChangedCallback(evt =>
+            priorityField.RegisterCallback<FocusOutEvent>(_ => CommitActionPriorityIfChanged(priorityField, inputAction));
+            priorityField.RegisterCallback<KeyDownEvent>(evt =>
             {
-                Dispatch(Commands.ChangeActionPriority(inputAction, evt.newValue));
+                if (evt.keyCode != KeyCode.Return && evt.keyCode != KeyCode.KeypadEnter)
+                    return;
+                priorityField.Blur();
             });
             if (showPriority)
                 rootElement.Add(priorityField);
@@ -119,6 +122,16 @@ namespace UnityEngine.InputSystem.Editor
                 });
                 rootElement.Add(initialStateCheck);
             }
+        }
+
+        void CommitActionPriorityIfChanged(IntegerField priorityField, SerializedInputAction inputAction)
+        {
+            var priorityProperty = inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Priority));
+            var newPriority = priorityField.value;
+            if (newPriority == priorityProperty.intValue)
+                return;
+
+            Dispatch(Commands.ChangeActionPriority(inputAction, newPriority));
         }
     }
 }
