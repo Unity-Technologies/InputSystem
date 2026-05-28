@@ -1598,7 +1598,7 @@ namespace UnityEngine.InputSystem
                         actionType = InputActionType.Button;
                 }
 
-                var clampedPriority = Math.Clamp(priority, 0, ushort.MaxValue);
+                var clampedPriority = InputAction.ClampPriority(priority);
 
                 return new InputAction(actionName ?? name, actionType)
                 {
@@ -2012,7 +2012,7 @@ namespace UnityEngine.InputSystem
                 {
                     var action = m_Actions[i];
                     action.m_ActionMap = this;
-                    action.m_Priority = Math.Clamp(action.m_Priority, 0, ushort.MaxValue);
+                    action.m_Priority = InputAction.ClampPriority(action.m_Priority);
                 }
             }
 

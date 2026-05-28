@@ -181,7 +181,7 @@ namespace UnityEngine.InputSystem
 
                     var action = GetActionOrNull(bindingIndex);
 
-                    var priority = Math.Clamp(action != null ? action.Priority : 0, 0, 65535);
+                    var priority = InputAction.ClampPriority(action != null ? action.Priority : InputAction.MinPriority);
 
                     controlGroupingAndPriority[ControlGroupingTable.PriorityElementIndex(i)] = (ushort)priority;
 
@@ -1107,7 +1107,7 @@ namespace UnityEngine.InputSystem
             if (mapIndex < 0 || mapIndex >= totalMapCount)
                 return;
 
-            var clampedPriority = (ushort)Math.Clamp(action.Priority, 0, ushort.MaxValue);
+            var clampedPriority = (ushort)InputAction.ClampPriority(action.Priority);
             var manager = InputSystem.manager;
             var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
             var bindingCount = mapIndices[mapIndex].bindingCount;

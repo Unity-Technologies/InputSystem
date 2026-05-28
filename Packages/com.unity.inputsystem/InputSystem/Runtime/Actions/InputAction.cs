@@ -197,9 +197,21 @@ namespace UnityEngine.InputSystem
         public InputActionType type => m_Type;
 
         /// <summary>
+        /// Minimum allowed value for <see cref="Priority"/>.
+        /// </summary>
+        internal const int MinPriority = 0;
+
+        /// <summary>
+        /// Maximum allowed value for <see cref="Priority"/> (stored as unsigned 16-bit at runtime).
+        /// </summary>
+        internal const int MaxPriority = ushort.MaxValue;
+
+        internal static int ClampPriority(int priority) => Math.Clamp(priority, MinPriority, MaxPriority);
+
+        /// <summary>
         /// Priority of this action when multiple bindings resolve to the same control.
         /// </summary>
-        /// <value>Effective range is 0–65535. Values outside that range are clamped when set; the stored value always matches what overlap resolution uses.</value>
+        /// <value>Effective range is <see cref="MinPriority"/>–<see cref="MaxPriority"/>. Values outside that range are clamped when set; the stored value always matches what overlap resolution uses.</value>
         /// <remarks>
         /// Applies to all bindings that target this action. At runtime this value is used only when
         /// <see cref="InputSettings.shortcutKeysUseActionPriority"/> is enabled. In that mode the system orders overlapping
@@ -214,7 +226,7 @@ namespace UnityEngine.InputSystem
             get => m_Priority;
             set
             {
-                var clamped = Math.Clamp(value, 0, ushort.MaxValue);
+                var clamped = ClampPriority(value);
                 if (m_Priority == clamped)
                     return;
 

@@ -540,7 +540,7 @@ namespace UnityEngine.InputSystem.Editor
             return (in InputActionsEditorState state) =>
             {
                 var priorityProperty = inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Priority));
-                priorityProperty.intValue = Mathf.Clamp(priority, 0, 65535);
+                priorityProperty.intValue = InputAction.ClampPriority(priority);
                 state.serializedObject.ApplyModifiedProperties();
                 state.m_Analytics?.RegisterActionEdit();
                 return state;
