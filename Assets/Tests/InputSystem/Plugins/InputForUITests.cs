@@ -65,8 +65,6 @@ public class InputForUITests : InputTestFixture
             EventProvider.ClearMockProvider();
         m_InputForUIEvents.Clear();
 
-        InputSystemProvider.SetOnRegisterActions(null);
-
         // InputSystem.actions setter throws in play mode, so we use the internal manager property here.
         InputSystem.manager.actions = storedActions;
 
