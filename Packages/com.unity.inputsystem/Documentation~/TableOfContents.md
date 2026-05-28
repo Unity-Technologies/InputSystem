@@ -139,6 +139,7 @@
     * [Introduction to sensors](sensors-introduction.md)
     * [Query sensors in code](query-sensors.md)
     * [Supported sensors reference](supported-sensors-reference.md)
+  * [Tracked Input Devices](TrackedInputDevices.md)
   * [Human Interface Device specification](hid-specification.md)
     * [Human Interface Device specification introduction](hid-specification-introduction.md)
     * [Create a custom device layout](hid-create-custom-layout.md)
