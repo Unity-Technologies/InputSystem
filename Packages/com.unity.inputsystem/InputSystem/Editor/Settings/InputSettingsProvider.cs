@@ -345,8 +345,8 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultHoldTimeContent = new GUIContent("Default Hold Time", "Default duration to be used for Hold interactions.");
             m_TapRadiusContent = new GUIContent("Tap Radius", "Maximum distance between two finger taps on a touch screen device allowed for the system to consider this a tap of the same touch (as opposed to a new touch).");
             m_MultiTapDelayTimeContent = new GUIContent("MultiTap Delay Time", "Default delay to be allowed between taps for MultiTap interactions. Also used by by touch devices to count multi taps.");
-            m_ShortcutKeysConsumeInputsContent = new GUIContent("Complexity-Based Shortcut Resolution", "When enabled (and action priority resolution is off), composite bindings consume overlapping input using binding-chain depth (complexity), not per-action priority.");
-            m_ShortcutKeysUseActionPriorityContent = new GUIContent("Action Priority Shortcut Resolution", "When enabled, overlapping actions are resolved using each action's Priority value. This overrides complexity-based resolution even if it is also enabled.");
+            m_ShortcutKeysConsumeInputsContent = new GUIContent("Complexity Consumption", "When enabled (and action priority resolution is off), composite bindings consume overlapping input using binding-chain depth (complexity), not per-action priority.");
+            m_ShortcutKeysUseActionPriorityContent = new GUIContent("Priority Consumption", "When enabled, overlapping actions are resolved using each action's Priority value. This overrides complexity-based resolution even if it is also enabled.");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
