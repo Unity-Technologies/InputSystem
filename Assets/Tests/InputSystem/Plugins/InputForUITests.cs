@@ -124,7 +124,7 @@ public class InputForUITests : InputTestFixture
         InputSystem.manager.actions = asset;
         try
         {
-            m_InputSystemProvider.Initialize();
+            m_InputSystemProvider.OnActionsChange();
             Assert.That(uiMap.enabled,      Is.True, "UI action map should be enabled by provider initialization.");
             Assert.That(gameplayMap.enabled, Is.True, "Provider must not change enabled state of non-UI maps.");
 
@@ -151,7 +151,7 @@ public class InputForUITests : InputTestFixture
         InputSystem.manager.actions = asset;
         try
         {
-            m_InputSystemProvider.Initialize();
+            m_InputSystemProvider.OnActionsChange();
             Assert.That(uiMap.enabled, Is.True, "UI action map should remain enabled after provider initialization.");
 
             EventProvider.ClearMockProvider();
@@ -177,7 +177,7 @@ public class InputForUITests : InputTestFixture
         // Remove project-wide actions so the provider falls back to its own internal default asset.
         // InputSystem.actions setter throws in play mode, so we use the internal manager property here.
         InputSystem.manager.actions = null;
-        m_InputSystemProvider.Initialize();
+        m_InputSystemProvider.OnActionsChange();
         InputSystemProvider.SetOnRegisterActions(null);
 
         Assert.That(capturedUIMap, Is.Not.Null, "Provider should have a UI action map in its internal default asset.");
