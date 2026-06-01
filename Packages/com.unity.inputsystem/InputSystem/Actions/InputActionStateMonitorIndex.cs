@@ -6,9 +6,14 @@ namespace UnityEngine.InputSystem
     /// </summary>
     internal readonly struct InputActionStateMonitorIndex
     {
+        // Bit layout (64 bits total):
+        //  [0–23]  controlIndex   (24 bits)
+        //  [24–39] bindingIndex   (16 bits)
+        //  [40–47] mapIndex       (8 bits)
+        //  [48–63] priority or composite complexity (ushort, 16 bits)
         readonly long m_Packed;
 
-        public InputActionStateMonitorIndex(long packed)
+        private InputActionStateMonitorIndex(long packed)
         {
             m_Packed = packed;
         }

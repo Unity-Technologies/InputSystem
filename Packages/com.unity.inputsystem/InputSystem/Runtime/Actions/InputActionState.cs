@@ -1092,11 +1092,12 @@ namespace UnityEngine.InputSystem
             if (!InputSystem.settings.IsShortcutResolutionUsingActionPriority)
                 return;
 
-            Debug.Assert(action != null, "Action must not be null");
-            Debug.Assert(action.m_ActionMap != null, "Action must have action map");
-
             if (action == null || action.m_ActionMap == null)
+            {
+                Debug.Assert(action != null, "Action must not be null");
+                Debug.Assert(action?.m_ActionMap != null, "Action must have action map");
                 return;
+            }
 
             var actionIndex = action.m_ActionIndexInState;
             if (actionIndex < 0 || actionIndex >= totalActionCount)
