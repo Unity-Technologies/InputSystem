@@ -181,17 +181,17 @@ namespace UnityEngine.InputSystem.Editor
                 else if (m_ShortcutKeysUseActionPriority.boolValue)
                 {
                     EditorGUILayout.HelpBox(
-                        "When several enabled actions share the same control, the action with the higher Priority value is ordered first and can consume input so lower-priority actions do not trigger on the same event. "
-                        + "Set Priority on each action in the Input Actions editor. Serialized priority values are kept when this option is disabled.",
+                        "When several enabled actions are bound to the same control, the one with the highest Priority is evaluated first and consumes the input, so lower-priority actions don't also trigger from that event. "
+                        + "Set each action's Priority in the Input Actions editor. Priority values stay saved on the asset even when Action Priority Shortcut Resolution is turned off.",
                         MessageType.None);
                 }
                 else if (m_ShortcutKeysConsumeInputs.boolValue)
                 {
                     EditorGUILayout.HelpBox(
-                        "Composite bindings can consume overlapping input using binding-chain depth (complexity): actions with more composite parts are considered before simpler bindings on the same controls. "
-                        + "This works well for shortcut keys; when two composites have the same depth, resolution can be non-deterministic. "
-                        + "Conflicts can occur between different action maps (for example UI navigation versus gameplay on the same keys) but not between different action assets. "
-                        + "Since consumption applies to enabled actions only, disable maps or actions you do not need in the current context to reduce surprises.",
+                        "Overlapping shortcuts are resolved by composite complexity: an action whose composite has more parts (e.g. Ctrl+Shift+S) wins over one with fewer parts — or a plain binding — on the same control, and consumes the input so the simpler action doesn't also fire. "
+                        + "Two composites of equal complexity have no guaranteed order between them. "
+                        + "Resolution applies across action maps within the same asset (for example UI navigation vs. gameplay on the same keys), but never across separate action assets. "
+                        + "Only enabled actions consume input, so disable maps or actions you don't need in the current context to avoid unexpected behaviour.",
                         MessageType.None);
                 }
 
