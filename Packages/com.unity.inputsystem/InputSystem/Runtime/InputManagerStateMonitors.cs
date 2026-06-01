@@ -375,6 +375,7 @@ namespace UnityEngine.InputSystem
                     return;
 
                 for (var i = 0; i < signalled.length; ++i)
+                {
                     if (ReferenceEquals(listeners[i].monitor, monitor) && listeners[i].monitorIndex == monitorIndex)
                     {
                         if (deferRemoval)
@@ -391,6 +392,7 @@ namespace UnityEngine.InputSystem
 
                         break;
                     }
+                }
             }
 
             public void Clear()
