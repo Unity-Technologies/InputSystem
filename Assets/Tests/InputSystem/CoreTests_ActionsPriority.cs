@@ -214,7 +214,7 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions Priority")]
-    [TestCaseSource(nameof(k_TwoInputActionTestCases))] // TODO: Darren, Should both actions be performed this frame here??
+    [TestCaseSource(nameof(k_TwoInputActionTestCases))]
     public void Actions_Priority_BothActionsArePerformed_DueToKeyPressOrderForShortcut((string[] larger, string[] smaller) actions)
     {
         EnableActionPriorityShortcutResolution();
@@ -421,7 +421,7 @@ internal partial class CoreTests
     [Category("Actions Priority")]
     public void Actions_Priority_InputActionStateMonitorIndex_RoundTripsComponents()
     {
-        var index = InputActionStateMonitorIndex.Create(mapIndex: 7, controlIndex: 0x00abcdef, bindingIndex: 0x0bcd,
+        InputActionStateMonitorIndex index = InputActionStateMonitorIndex.Create(mapIndex: 7, controlIndex: 0x00abcdef, bindingIndex: 0x0bcd,
             priority: 200);
 
         Assert.That(index.MapIndex, Is.EqualTo(7));
@@ -445,6 +445,8 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions Priority")]
+    // Priority is stored as a 16-bit field in the packed index. This test ensures values above byte.MaxValue (255)
+    // are not silently truncated, confirming the field is ushort-wide end-to-end.
     public void Actions_Priority_InputActionStateMonitorIndex_PriorityRoundTripsFullSixteenBits()
     {
         var index300 = InputActionStateMonitorIndex.Create(0, 1, 0, priority: 300);
@@ -457,7 +459,9 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions Priority")]
-    public void Actions_Priority_PrioritiesAbove255_ResolveInOrder()
+    // Priority is a ushort (0–65535). This verifies that values above byte.MaxValue (255) still resolve in
+    // the correct order, guarding against accidental byte-truncation in the sort path.
+    public void Actions_Priority_PrioritiesExceedingByteRange_ResolveInOrder()
     {
         EnableActionPriorityShortcutResolution();
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -576,7 +580,7 @@ internal partial class CoreTests
     [Category("Actions Priority")]
     public void Actions_Priority_InputActionStateMonitorIndex_ImplicitConversionToLongMatchesPackedProperty()
     {
-        var index = InputActionStateMonitorIndex.Create(1, 2, 3, 4);
+        InputActionStateMonitorIndex index = InputActionStateMonitorIndex.Create(1, 2, 3, 4);
         long asLong = index;
         Assert.That(asLong, Is.EqualTo(index.Packed));
     }
@@ -789,6 +793,9 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions Priority")]
+    // In complexity mode the secondary column of the control-grouping table holds binding-chain depth (composite
+    // complexity), not the action's Priority value. Two simple (non-composite) bindings on the same key each have
+    // depth 1 regardless of what Priority is set on their actions, because Priority is irrelevant in this mode.
     public unsafe void Actions_Complexity_ControlGrouping_WritesPerControlSlotComplexity_NotActionPriority()
     {
         EnableComplexityShortcutResolution();

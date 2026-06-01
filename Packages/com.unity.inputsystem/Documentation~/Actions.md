@@ -162,7 +162,7 @@ When several enabled actions share the same physical control (for example a plai
 | [Complexity-Based Shortcut Resolution](xref:UnityEngine.InputSystem.InputSettings.shortcutKeysConsumeInput) | Orders overlapping bindings by composite **complexity** (binding-chain depth). This is the default develop behavior when action priority is off. |
 | [Action Priority Shortcut Resolution](xref:UnityEngine.InputSystem.InputSettings.shortcutKeysUseActionPriority) | Orders overlapping bindings by each action's [`InputAction.Priority`](xref:UnityEngine.InputSystem.InputAction.Priority). When enabled, it **takes precedence** over complexity-based resolution even if both options are on. |
 
-Each action has a [`Priority`](xref:UnityEngine.InputSystem.InputAction.Priority) property (range **0**–**65535**, clamped when set). The value applies to all bindings on that action. Serialized priority is always stored on the asset; at runtime it is used only when **Action Priority Shortcut Resolution** is enabled. In that case the **Priority** field is also shown in the [Input Actions Editor](xref:input-system-configuring-input).
+Each action has a [`Priority`](xref:UnityEngine.InputSystem.InputAction.Priority) property (range **0**–**65535**, clamped when set; higher value = higher priority, notified first). The value applies to all bindings on that action. Serialized priority is always stored on the asset; at runtime it is used only when **Action Priority Shortcut Resolution** is enabled. In that case the **Priority** field is also shown in the [Input Actions Editor](xref:input-system-configuring-input).
 
 When action priority resolution is active:
 
