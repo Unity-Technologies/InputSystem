@@ -122,7 +122,7 @@ To force the Editor to add all locally available Devices, even if they're not in
 
 ## Improved Shortcut Support
 
-Under __Improved Shortcut Support__, two independent options control how the Input System resolves overlapping bindings on the same control (for example a plain __B__ key action versus __Shift+B__):
+Under **Improved Shortcut Support**, two independent options control how the Input System resolves overlapping bindings on the same control (for example, a plain **B** key action as opposed to **Shift**+**B**):
 
 | UI / API | Description |
 | -------- | ----------- |
