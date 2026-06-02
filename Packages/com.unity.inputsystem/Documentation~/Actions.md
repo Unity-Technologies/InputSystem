@@ -180,6 +180,6 @@ fireAction.Priority = 10;
 reloadAction.Priority = 5;
 ```
 
-Or edit the **Priority** field on an action in the Input Actions Editor when **Action Priority Shortcut Resolution** is enabled.
+You can also edit the **Priority** field on an action in the Input Actions Editor when **Action Priority Shortcut Resolution** is enabled.
 
 For composite shortcuts and complexity ordering, see [Multiple input sequences (such as keyboard shortcuts)](xref:input-system-action-bindings#multiple-input-sequences-such-as-keyboard-shortcuts).
