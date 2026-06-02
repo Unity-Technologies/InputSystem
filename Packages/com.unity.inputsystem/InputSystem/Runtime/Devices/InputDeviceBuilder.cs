@@ -925,14 +925,8 @@ namespace UnityEngine.InputSystem.Layouts
                     throw new NotSupportedException($"Control '{control}' exceeds maximum supported state bit size of {(1U << InputDevice.kStateSizeBits) - 1} (bit offset {control.stateBlock.sizeInBits})");
             }
 
-            // Construct control bit range tree. Skip synthetic controls (e.g. DpadControl's
-            // x/y axes, StickControl's up/down/left/right) — they don't have their own state
-            // bits (FinishSetup will alias their state block to a non-synthetic sibling/parent),
-            // so any state-change detection on their bits is covered by that sibling/parent
-            // already being in the tree. Including them was UUM-143659: synthetic controls
-            // can carry pre-FinishSetup offsets that fall outside the device's bit range,
-            // sending InsertControlBitRangeNode into infinite recursion.
-            if (control != m_Device && !control.synthetic)
+            // Construct control bit range tree
+            if (control != m_Device)
                 InsertControlBitRangeNode(ref m_Device.m_ControlTreeNodes[0], control, ref controlIndiciesNextFreeIndex, 0);
 
             // Add all leaf controls to state offset mapping.
