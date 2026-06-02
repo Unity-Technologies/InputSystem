@@ -3506,8 +3506,8 @@ namespace UnityEngine.InputSystem
             #endif
 
             // Automatically enable remoting in development players.
-            #if !UNITY_EDITOR
-            if (Debug.isDebugBuild && ShouldEnableRemoting())
+            #if DEBUG && !UNITY_EDITOR
+            if (ShouldEnableRemoting())
                 SetUpRemoting();
             #endif
 
