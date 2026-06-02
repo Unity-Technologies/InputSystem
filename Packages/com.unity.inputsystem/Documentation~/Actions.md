@@ -169,7 +169,7 @@ Each action has a [`Priority`](xref:UnityEngine.InputSystem.InputAction.Priority
 When action priority resolution is active:
 
 - Higher priority actions are notified before lower-priority actions on the same control.
-- When an action reaches the **Performed** phase, priority **0** does **not** mark the input event as handled, so lower-priority actions in the same overlap group can still respond on that event.
+- When an action reaches the Performed phase, priority `0 doesn't mark the input event as handled, so lower-priority actions in the same overlap group can still respond on that event.
 - Any priority **greater than zero** can mark the event handled and suppress strictly lower-priority actions in the same group for that event.
 - Actions with the **same** priority are not suppressed relative to each other; both can perform in the same update if their bindings fire.
 
