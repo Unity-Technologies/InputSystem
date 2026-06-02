@@ -182,4 +182,4 @@ reloadAction.Priority = 5;
 
 You can also edit the **Priority** field on an action in the Input Actions Editor when **Action Priority Shortcut Resolution** is enabled.
 
-For composite shortcuts and complexity ordering, see [Multiple input sequences (such as keyboard shortcuts)](xref:input-system-action-bindings#multiple-input-sequences-such-as-keyboard-shortcuts).
+For information about composite shortcuts and complexity ordering, refer to [Multiple input sequences (such as keyboard shortcuts)](xref:input-system-action-bindings#multiple-input-sequences-such-as-keyboard-shortcuts).
