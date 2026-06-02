@@ -424,6 +424,7 @@ internal class HIDTests : CoreTestsFixture
     // logged "Could not create a device for ...", so the device never showed up.
     [Test]
     [Category("Devices")]
+    [Description("Regression test for case UUM-143659")]
     public void Devices_CanCreateGenericHID_FromGamepadWithEightBitHatSwitch()
     {
         // Minimal Gamepad collection that contains a hat switch whose Report Size
