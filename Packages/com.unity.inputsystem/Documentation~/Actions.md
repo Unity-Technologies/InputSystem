@@ -155,14 +155,7 @@ While enabled, an action actively monitors the [controls](xref:input-system-cont
 
 ## Overlapping bindings and action priority
 
-When several enabled actions share the same physical control (for example, a plain **B** key action and a **Shift**+**B** composite), the Input System can resolve which action should respond first. 
-
-You can control this behavior in **Project Settings** > **Input System Package** > [**Improved Shortcut Support**](xref:input-system-settings#improved-shortcut-support).
-
-| Setting | Behavior |
-| ------- | -------- |
-| [Complexity-Based Shortcut Resolution](xref:UnityEngine.InputSystem.InputSettings.shortcutKeysConsumeInput) | Orders overlapping bindings by composite **complexity** (binding-chain depth). This is the default develop behavior when action priority is off. |
-| [Action Priority Shortcut Resolution](xref:UnityEngine.InputSystem.InputSettings.shortcutKeysUseActionPriority) | Orders overlapping bindings by each action's [`InputAction.Priority`](xref:UnityEngine.InputSystem.InputAction.Priority). When enabled, it **takes precedence** over complexity-based resolution even if both options are on. |
+When several enabled actions share the same physical control (for example a plain **B** key action and a **Shift**+**B** composite), the Input System can resolve which action should respond first using either complexity-based or priority-based resolution. Both modes are configured in **Project Settings** > **Input System Package** under [Improved Shortcut Support](xref:input-system-settings#improved-shortcut-support).
 
 Each action has a [`Priority`](xref:UnityEngine.InputSystem.InputAction.Priority) property (range **0**–**65535**, clamped when set; higher value = higher priority, notified first). The value applies to all bindings on that action. Serialized priority is always stored on the asset; at runtime it is used only when **Action Priority Shortcut Resolution** is enabled. In that case the **Priority** field is also shown in the [Input Actions Editor](xref:input-system-configuring-input).
 
