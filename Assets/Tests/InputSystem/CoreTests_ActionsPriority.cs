@@ -968,5 +968,4 @@ internal partial class CoreTests
         Release((ButtonControl)action2.controls[0], queueEventOnly: true);
         InputSystem.Update();
     }
-
 }
