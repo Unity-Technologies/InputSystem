@@ -330,7 +330,7 @@ namespace UnityEngine.InputSystem.LowLevel
                 // NOTE: This also means that device indices of
                 if (device.m_StateBlock.byteOffset == InputStateBlock.InvalidOffset)
                 {
-                    #if DEVELOPMENT_BUILD || UNITY_EDITOR
+                    #if DEBUG
                     for (var n = i + 1; n < deviceCount; ++n)
                         Debug.Assert(devices[n].m_StateBlock.byteOffset == InputStateBlock.InvalidOffset,
                             "New devices must be appended to the array; found an old device coming in the array after a newly added device");
