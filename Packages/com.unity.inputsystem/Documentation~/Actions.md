@@ -155,7 +155,9 @@ While enabled, an action actively monitors the [controls](xref:input-system-cont
 
 ## Overlapping bindings and action priority
 
-When several enabled actions share the same physical control (for example a plain **B** key action and a **Shift+B** composite), the Input System can resolve which action should respond first. This is controlled in **Project Settings** > **Input System Package** under [Improved Shortcut Support](xref:input-system-settings#improved-shortcut-support).
+When several enabled actions share the same physical control (for example, a plain **B** key action and a **Shift**+**B** composite), the Input System can resolve which action should respond first. 
+
+You can control this behavior in **Project Settings** > **Input System Package** > [**Improved Shortcut Support**](xref:input-system-settings#improved-shortcut-support).
 
 | Setting | Behavior |
 | ------- | -------- |
