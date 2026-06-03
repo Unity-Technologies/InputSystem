@@ -25,6 +25,14 @@ namespace UnityEngine.InputSystem.Interactions
     /// behavior available out of the box when binding <see cref="InputActionType.Button"/> type actions to button-type controls
     /// (<see cref="UnityEngine.InputSystem.Controls.ButtonControl"/>) corresponds to using a press modifier with <see cref="behavior"/>
     /// set to <see cref="PressBehavior.PressOnly"/> and <see cref="pressPoint"/> left at default.
+    ///
+    /// When several <see cref="PressInteraction"/> instances are stacked on the same binding, each still runs with its own
+    /// parameters during interaction processing. Separately, button-style press tracking on the action (for example
+    /// <see cref="InputAction.IsPressed"/>, <see cref="InputAction.WasPressedThisFrame"/>, and <see cref="InputAction.WasReleasedThisFrame"/>)
+    /// resolves a single actuation threshold by scanning interactions on the binding in list order and using the
+    /// <see cref="pressPoint"/> of the first <see cref="PressInteraction"/> in that sequence whose <see cref="pressPoint"/> is greater than zero.
+    /// Earlier interactions that are not a <see cref="PressInteraction"/>, or that leave <see cref="pressPoint"/> at the default of zero, are skipped
+    /// for this lookup. If none match, the control or project default applies instead.
     /// </remarks>
     [DisplayName("Press")]
     public class PressInteraction : IInputInteraction

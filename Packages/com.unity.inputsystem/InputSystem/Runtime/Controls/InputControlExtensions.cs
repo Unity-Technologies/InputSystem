@@ -46,14 +46,17 @@ namespace UnityEngine.InputSystem
         /// Check whether the given control is considered pressed according to the button press threshold.
         /// </summary>
         /// <param name="control">Control to check.</param>
-        /// <param name="buttonPressPoint">Optional custom button press point. If not supplied, <see cref="InputSettings.defaultButtonPressPoint"/>
-        /// is used.</param>
+        /// <param name="buttonPressPoint">Optional custom press threshold. If not supplied, a <see cref="Controls.ButtonControl"/> uses
+        /// <see cref="Controls.ButtonControl.pressPointOrDefault"/>; other controls compare actuation magnitude to <see cref="InputSettings.defaultButtonPressPoint"/>.</param>
         /// <returns>True if the actuation of the given control is high enough for it to be considered pressed.</returns>
         /// <exception cref="ArgumentNullException"><paramref name="control"/> is <c>null</c>.</exception>
         /// <remarks>
-        /// This method checks the actuation level of the control as <see cref="IsActuated"/> does. For <see cref="Controls.ButtonControl"/>s
-        /// and other <c>float</c> value controls, this will effectively check whether the float value of the control exceeds the button
-        /// point threshold. Note that if the control is an axis that can be both positive and negative, the press threshold works in
+        /// This method checks the actuation level of the control as <see cref="IsActuated"/> does. When no custom threshold is supplied,
+        /// a <see cref="Controls.ButtonControl"/> uses <see cref="Controls.ButtonControl.pressPointOrDefault"/>; other controls use
+        /// <see cref="InputSettings.defaultButtonPressPoint"/> (for controls with magnitude, including <see cref="Controls.Vector2Control"/> and
+        /// <see cref="Controls.StickControl"/>, the threshold applies to <see cref="InputControl.EvaluateMagnitude()"/>). For other <c>float</c> axes,
+        /// the float value is compared to the threshold.
+        /// Note that if the control is an axis that can be both positive and negative, the press threshold works in
         /// both directions, i.e. it can be crossed both in the positive direction and in the negative direction.
         /// </remarks>
         /// <seealso cref="IsActuated"/>
@@ -65,8 +68,8 @@ namespace UnityEngine.InputSystem
                 throw new ArgumentNullException(nameof(control));
             if (Mathf.Approximately(0, buttonPressPoint))
             {
-                if (control is ButtonControl button)
-                    buttonPressPoint = button.pressPointOrDefault;
+                if (control is ButtonControl buttonControl)
+                    buttonPressPoint = buttonControl.pressPointOrDefault;
                 else
                     buttonPressPoint = ButtonControl.s_GlobalDefaultButtonPressPoint;
             }
@@ -1021,7 +1024,10 @@ namespace UnityEngine.InputSystem
                     throw new ArgumentException($"Cannot find device with ID {deviceId} referenced by event", nameof(eventPtr));
             }
 
-            return new InputEventControlCollection { m_Device = device, m_EventPtr = eventPtr, m_Flags = flags, m_MagnitudeThreshold = magnitudeThreshold };
+            return new InputEventControlCollection
+            {
+                m_Device = device, m_EventPtr = eventPtr, m_Flags = flags, m_MagnitudeThreshold = magnitudeThreshold
+            };
         }
 
         /// <summary>
@@ -1119,8 +1125,9 @@ namespace UnityEngine.InputSystem
                 // default (not pressed) before this event.
                 var stateInEvent = control.GetStatePtrFromStateEvent(eventPtr);
                 var currentState = control.currentStatePtr;
-                if (stateInEvent != null ? !control.CompareValue(currentState, stateInEvent)
-                    : control.CompareValue(currentState, control.defaultStatePtr))
+                if (stateInEvent != null ?
+                    !control.CompareValue(currentState, stateInEvent) :
+                    control.CompareValue(currentState, control.defaultStatePtr))
                     continue;
                 if (buttonControlsOnly && !control.isButton)
                     continue;
@@ -1609,12 +1616,12 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder At(InputDevice device, int index)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (device == null)
                     throw new ArgumentNullException(nameof(device));
                 if (index < 0 || index >= device.m_ChildrenForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(index));
-                #endif
+#endif
                 device.m_ChildrenForEachControl[index] = control;
                 control.m_Device = device;
                 return this;
@@ -1623,12 +1630,12 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithParent(InputControl parent)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (parent == null)
                     throw new ArgumentNullException(nameof(parent));
                 if (parent == control)
                     throw new ArgumentException("Control cannot be its own parent", nameof(parent));
-                #endif
+#endif
                 control.m_Parent = parent;
                 return this;
             }
@@ -1636,10 +1643,10 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithName(string name)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (string.IsNullOrEmpty(name))
                     throw new ArgumentNullException(nameof(name));
-                #endif
+#endif
                 control.m_Name = new InternedString(name);
                 return this;
             }
@@ -1647,10 +1654,10 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithDisplayName(string displayName)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (string.IsNullOrEmpty(displayName))
                     throw new ArgumentNullException(nameof(displayName));
-                #endif
+#endif
                 control.m_DisplayNameFromLayout = new InternedString(displayName);
                 return this;
             }
@@ -1658,10 +1665,10 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithShortDisplayName(string shortDisplayName)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (string.IsNullOrEmpty(shortDisplayName))
                     throw new ArgumentNullException(nameof(shortDisplayName));
-                #endif
+#endif
                 control.m_ShortDisplayNameFromLayout = new InternedString(shortDisplayName);
                 return this;
             }
@@ -1669,10 +1676,10 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithLayout(InternedString layout)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (layout.IsEmpty())
                     throw new ArgumentException("Layout name cannot be empty", nameof(layout));
-                #endif
+#endif
                 control.m_Layout = layout;
                 return this;
             }
@@ -1680,12 +1687,12 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithUsages(int startIndex, int count)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (startIndex < 0 || startIndex >= control.device.m_UsagesForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(startIndex));
                 if (count < 0 || startIndex + count > control.device.m_UsagesForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(count));
-                #endif
+#endif
                 control.m_UsageStartIndex = startIndex;
                 control.m_UsageCount = count;
                 return this;
@@ -1694,12 +1701,12 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithAliases(int startIndex, int count)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (startIndex < 0 || startIndex >= control.device.m_AliasesForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(startIndex));
                 if (count < 0 || startIndex + count > control.device.m_AliasesForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(count));
-                #endif
+#endif
                 control.m_AliasStartIndex = startIndex;
                 control.m_AliasCount = count;
                 return this;
@@ -1708,12 +1715,12 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithChildren(int startIndex, int count)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (startIndex < 0 || startIndex >= control.device.m_ChildrenForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(startIndex));
                 if (count < 0 || startIndex + count > control.device.m_ChildrenForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(count));
-                #endif
+#endif
                 control.m_ChildStartIndex = startIndex;
                 control.m_ChildCount = count;
                 return this;
@@ -1747,10 +1754,10 @@ namespace UnityEngine.InputSystem
                 where TValue : struct
                 where TProcessor : InputProcessor<TValue>
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (processor == null)
                     throw new ArgumentNullException(nameof(processor));
-                #endif
+#endif
                 ////REVIEW: have a parameterized version of ControlBuilder<TValue> so we don't need the cast?
                 ////TODO: size array to exact needed size before-hand
                 ((InputControl<TValue>)control).m_ProcessorStack.Append(processor);
@@ -1801,10 +1808,10 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithName(string name)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (string.IsNullOrEmpty(name))
                     throw new ArgumentNullException(nameof(name));
-                #endif
+#endif
                 device.m_Name = new InternedString(name);
                 return this;
             }
@@ -1812,10 +1819,10 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithDisplayName(string displayName)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (string.IsNullOrEmpty(displayName))
                     throw new ArgumentNullException(nameof(displayName));
-                #endif
+#endif
                 device.m_DisplayNameFromLayout = new InternedString(displayName);
                 return this;
             }
@@ -1823,10 +1830,10 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithShortDisplayName(string shortDisplayName)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (string.IsNullOrEmpty(shortDisplayName))
                     throw new ArgumentNullException(nameof(shortDisplayName));
-                #endif
+#endif
                 device.m_ShortDisplayNameFromLayout = new InternedString(shortDisplayName);
                 return this;
             }
@@ -1834,10 +1841,10 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithLayout(InternedString layout)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (layout.IsEmpty())
                     throw new ArgumentException("Layout name cannot be empty", nameof(layout));
-                #endif
+#endif
                 device.m_Layout = layout;
                 return this;
             }
@@ -1845,12 +1852,12 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithChildren(int startIndex, int count)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (startIndex < 0 || startIndex >= device.device.m_ChildrenForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(startIndex));
                 if (count < 0 || startIndex + count > device.device.m_ChildrenForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(count));
-                #endif
+#endif
                 device.m_ChildStartIndex = startIndex;
                 device.m_ChildCount = count;
                 return this;
@@ -1873,14 +1880,14 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithControlUsage(int controlIndex, InternedString usage, InputControl control)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (controlIndex < 0 || controlIndex >= device.m_UsagesForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(controlIndex));
                 if (usage.IsEmpty())
                     throw new ArgumentException(nameof(usage));
                 if (control == null)
                     throw new ArgumentNullException(nameof(control));
-                #endif
+#endif
                 device.m_UsagesForEachControl[controlIndex] = usage;
                 device.m_UsageToControl[controlIndex] = control;
                 return this;
@@ -1889,12 +1896,12 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithControlAlias(int controlIndex, InternedString alias)
             {
-                #if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 if (controlIndex < 0 || controlIndex >= device.m_AliasesForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(controlIndex));
                 if (alias.IsEmpty())
                     throw new ArgumentException(nameof(alias));
-                #endif
+#endif
                 device.m_AliasesForEachControl[controlIndex] = alias;
                 return this;
             }

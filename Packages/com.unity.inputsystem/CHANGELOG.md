@@ -28,8 +28,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed an issue where `UIToolkit` `ClickEvent` could be fired on Android after device rotation due to inactive touch state being replayed during action initial state checks [UUM-100125](https://jira.unity3d.com/browse/UUM-100125).
 - Fixed InputSystem.onAnyButtonPress fails to trigger when the device receives a touch [UUM-137930](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137930).
 - Fixed an incorrect ArraysHelper.HaveDuplicateReferences implementation that didn't use its arguments right [ISXB-1792] (https://github.com/Unity-Technologies/InputSystem/pull/2376)
+- Fixed `InputAction.IsPressed`, `WasPressedThisFrame`, and `WasReleasedThisFrame` using a `ButtonControl`'s `pressPoint` when a binding also had an explicit `PressInteraction` with its own `pressPoint`, which could make those APIs disagree with the interaction's press and release behavior. Action-level press APIs now follow the interaction threshold when both are set explicitly.
 
 ### Changed
+- Action-level `IsPressed`, `WasPressedThisFrame`, and `WasReleasedThisFrame` for bindings to `Vector2Control` / `StickControl` no longer consult a per-control `pressPoint` on the vector (that field was removed). Use a `Press` interaction to set a custom threshold, or rely on `defaultButtonPressPoint`.
 - Removed 32-bit compilation check for HID on Windows players, which had no impact anymore. (ISX-2543)
 - Migrated sample scenes to use Universal Render Pipeline (URP) with Built-in Render Pipeline fallback shaders. The URP package is now required to run the samples. (ISX-2343)
 - Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.

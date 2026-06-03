@@ -5,10 +5,10 @@ using System.Runtime.InteropServices;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Interactions;
 using UnityEngine.InputSystem.LowLevel;
 using Unity.Profiling;
 using UnityEngine.InputSystem.Utilities;
-
 using ProfilerMarker = Unity.Profiling.ProfilerMarker;
 
 ////TODO: now that we can bind to controls by display name, we need to re-resolve controls when those change (e.g. when the keyboard layout changes)
@@ -1273,9 +1273,9 @@ namespace UnityEngine.InputSystem
         private void OnBeforeInitialUpdate()
         {
             if (InputState.currentUpdateType == InputUpdateType.BeforeRender
-                #if UNITY_EDITOR
+#if UNITY_EDITOR
                 || InputState.currentUpdateType == InputUpdateType.Editor
-                #endif
+#endif
             )
                 return;
 
@@ -1369,10 +1369,10 @@ namespace UnityEngine.InputSystem
         void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time,
             InputEventPtr eventPtr, long mapControlAndBindingIndex)
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             if (InputState.currentUpdateType == InputUpdateType.Editor)
                 return;
-            #endif
+#endif
 
             SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
             ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
@@ -1591,12 +1591,45 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        private BindingState* GetBindingStateForInteractionParameters(BindingState* bindingStatePtr)
+        {
+            if (bindingStatePtr->isPartOfComposite)
+                return &bindingStates[bindingStatePtr->compositeOrCompositeBindingIndex];
+            return bindingStatePtr;
+        }
+
+        internal float GetActuationPressThreshold(InputControl control, BindingState* bindingStatePtr)
+        {
+            var bindingForInteractions = GetBindingStateForInteractionParameters(bindingStatePtr);
+
+            // Resolves the explicit press threshold from PressInteraction on the binding.
+            // When multiple PressInteraction instances exist, uses the first in interaction list order with pressPoint > 0. GetActuationPressThreshold
+            // prefers this over a control pressPoint so IsPressed / WasPressedThisFrame / WasReleasedThisFrame stay aligned with PressInteraction.
+            var count = bindingForInteractions->interactionCount;
+            if (count > 0)
+            {
+                var start = bindingForInteractions->interactionStartIndex;
+                for (var i = 0; i < count; ++i)
+                {
+                    if (interactions[start + i] is PressInteraction press && press.pressPoint > 0)
+                    {
+                        return press.pressPoint;
+                    }
+                }
+            }
+
+            if (control is ButtonControl buttonControl)
+            {
+                return buttonControl.pressPointOrDefault;
+            }
+
+            return ButtonControl.s_GlobalDefaultButtonPressPoint;
+        }
+
         private void ProcessButtonState(ref TriggerState trigger, int actionIndex, BindingState* bindingStatePtr)
         {
             var control = controls[trigger.controlIndex];
-            var pressPoint = control.isButton
-                ? ((ButtonControl)control).pressPointOrDefault
-                : ButtonControl.s_GlobalDefaultButtonPressPoint;
+            var pressPoint = GetActuationPressThreshold(control, bindingStatePtr);
 
             // NOTE: This method relies on conflict resolution happening *first*. Otherwise, we may inadvertently
             //       detect a "release" from a control that is not actually driving the action.
@@ -1961,6 +1994,7 @@ namespace UnityEngine.InputSystem
                 "Action index out of range when processing default interaction");
 
             var actionState = &actionStates[actionIndex];
+            var bindingStatePtr = &bindingStates[trigger.bindingIndex];
             switch (actionState->phase)
             {
                 case InputActionPhase.Waiting:
@@ -1979,7 +2013,7 @@ namespace UnityEngine.InputSystem
                         var actuation = trigger.magnitude;
                         if (actuation > 0)
                             ChangePhaseOfAction(InputActionPhase.Started, ref trigger);
-                        var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
+                        var threshold = GetActuationPressThreshold(controls[trigger.controlIndex], bindingStatePtr);
                         if (actuation >= threshold)
                         {
                             ChangePhaseOfAction(InputActionPhase.Performed, ref trigger,
@@ -2009,7 +2043,7 @@ namespace UnityEngine.InputSystem
                     if (actionState->isButton)
                     {
                         var actuation = trigger.magnitude;
-                        var threshold = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
+                        var threshold = GetActuationPressThreshold(controls[trigger.controlIndex], bindingStatePtr);
                         if (actuation >= threshold)
                         {
                             // Button crossed press threshold. Perform.
@@ -2045,7 +2079,7 @@ namespace UnityEngine.InputSystem
                     if (actionState->isButton)
                     {
                         var actuation = trigger.magnitude;
-                        var pressPoint = controls[trigger.controlIndex] is ButtonControl button ? button.pressPointOrDefault : ButtonControl.s_GlobalDefaultButtonPressPoint;
+                        var pressPoint = GetActuationPressThreshold(controls[trigger.controlIndex], bindingStatePtr);
                         if (Mathf.Approximately(0f, actuation))
                         {
                             ChangePhaseOfAction(InputActionPhase.Canceled, ref trigger);
@@ -3241,17 +3275,12 @@ namespace UnityEngine.InputSystem
 
         internal bool ReadValueAsButton(int bindingIndex, int controlIndex)
         {
-            var buttonControl = default(ButtonControl);
-            if (!bindingStates[bindingIndex].isPartOfComposite)
-                buttonControl = controls[controlIndex] as ButtonControl;
-
             // Read float value.
             var floatValue = ReadValue<float>(bindingIndex, controlIndex);
 
-            // Compare to press point.
-            if (buttonControl != null)
-                return floatValue >= buttonControl.pressPointOrDefault;
-            return floatValue >= ButtonControl.s_GlobalDefaultButtonPressPoint;
+            var bindingPtr = &bindingStates[bindingIndex];
+            var threshold = GetActuationPressThreshold(controls[controlIndex], bindingPtr);
+            return floatValue >= threshold;
         }
 
         /// <summary>
@@ -4361,13 +4390,13 @@ namespace UnityEngine.InputSystem
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void InitializeGlobalActionState()
         {
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             // Appears we shouldn't really reset globals in case the domain reload is enabled.
             // This is because in that case, we've just had the whole system init'ed via static ctors
             // Moreover, later in GlobalInialize we skip initialization specifically in this case.
             if (!(InputSystem.s_IsDomainReloadDisabled?.Invoke() ?? false))
                 return;
-            #endif
+#endif
 
             ResetGlobals();
             s_GlobalState = default;

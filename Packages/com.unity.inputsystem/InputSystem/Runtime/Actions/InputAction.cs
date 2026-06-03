@@ -1137,9 +1137,8 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Check whether the current actuation of the action has crossed the button press threshold (see
-        /// <see cref="InputSettings.defaultButtonPressPoint"/>) and has not yet fallen back below the
-        /// release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>).
+        /// Check whether the current actuation of the action has crossed the press threshold (see remarks) and
+        /// has not yet fallen back below the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>).
         /// </summary>
         /// <returns>True if the action is considered to be in "pressed" state, false otherwise.</returns>
         /// <remarks>
@@ -1155,8 +1154,19 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
-        /// Finally, note that custom button press points of controls (see <see cref="ButtonControl.pressPoint"/>)
-        /// are respected and will take precedence over <see cref="InputSettings.defaultButtonPressPoint"/>.
+        /// The same press threshold rules apply to APIs such as <see cref="WasPressedThisFrame"/> and <see cref="WasReleasedThisFrame"/>.
+        ///
+        /// Press threshold (based on <see cref="InputControl.EvaluateMagnitude()"/> for the driving control):
+        ///
+        /// 1. If the binding lists one or more <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>
+        ///    instances, use the <see cref="UnityEngine.InputSystem.Interactions.PressInteraction.pressPoint"/> from the first
+        ///    in interaction list order whose <c>pressPoint</c> is greater than zero (earlier interactions that are not
+        ///    <see cref="UnityEngine.InputSystem.Interactions.PressInteraction"/>, or that leave <c>pressPoint</c> at the
+        ///    default of zero, are skipped) so this API stays aligned with the interaction.
+        /// 2. Otherwise, if the driving control is a <see cref="ButtonControl"/>, use <see cref="ButtonControl.pressPointOrDefault"/>.
+        /// 3. Otherwise (for example a <see cref="Vector2Control"/> or <see cref="StickControl"/>), use <see cref="InputSettings.defaultButtonPressPoint"/>.
+        ///
+        /// For composite bindings, interaction parameters are read from the composite binding.
         ///
         /// <example>
         /// <code>
@@ -1213,17 +1223,15 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Returns true if the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
-        /// at any point in the frame.
+        /// Returns true if the action's value crossed the press threshold (see remarks) at any point in the frame.
         /// </summary>
         /// <returns>True if the action was pressed this frame.</returns>
         /// <remarks>
         /// This method is different from <see cref="WasPerformedThisFrame"/> in that it is not bound
         /// to <see cref="phase"/>. Instead, if the action's level of actuation (that is, the level of
         /// magnitude -- see <see cref="InputControl.EvaluateMagnitude()"/> -- of the control(s) bound
-        /// to the action) crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
-        /// at any point in the frame, this method will return true. It will do so even if there is an
-        /// interaction on the action that has not yet performed the action in response to the press.
+        /// to the action) crossed the press threshold at any point in the frame, this method will return true.
+        /// It will do so even if there is an interaction on the action that has not yet performed the action in response to the press.
         ///
         /// This method works with any <see cref="type"/> of action, not just buttons.
         ///
@@ -1232,8 +1240,7 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
-        /// Finally, note that custom button press points of controls (see <see cref="ButtonControl.pressPoint"/>)
-        /// are respected and will take precedence over <see cref="InputSettings.defaultButtonPressPoint"/>.
+        /// Press threshold is defined the same way as for <see cref="IsPressed"/>; see that member's remarks.
         ///
         /// <example>
         /// <code>
@@ -1273,7 +1280,7 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Returns true if the action's value crossed the press threshold (see <see cref="InputSettings.defaultButtonPressPoint"/>)
+        /// Returns true if the action's value crossed the press threshold (see <see cref="WasPressedThisFrame"/> remarks)
         /// in the MonoBehaviour Update cycle (rendering frame).
         /// </summary>
         /// <returns>True if the action was pressed in the MonoBehaviour Update cycle (rendering frame).</returns>
@@ -1284,6 +1291,8 @@ namespace UnityEngine.InputSystem
         ///
         /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasPressedThisDynamicUpdate,
         /// you may want to use WasPressedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
+        ///
+        /// Press threshold behavior matches <see cref="IsPressed"/>; see that member's remarks.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1315,7 +1324,7 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Returns true if the action's value crossed the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>)
-        /// at any point in the frame after being in pressed state.
+        /// at any point in the frame after being in pressed state (see <see cref="IsPressed"/> remarks for press threshold).
         /// </summary>
         /// <returns>True if the action was released this frame.</returns>
         /// <remarks>
@@ -1326,8 +1335,7 @@ namespace UnityEngine.InputSystem
         /// to a <see cref="StickControl"/>, the control will be considered "pressed" once the magnitude
         /// of the Vector2 of the control has crossed the press threshold.
         ///
-        /// Finally, note that custom button press points of controls (see <see cref="ButtonControl.pressPoint"/>)
-        /// are respected and will take precedence over <see cref="InputSettings.defaultButtonPressPoint"/>.
+        /// Press threshold is defined the same way as for <see cref="IsPressed"/>; see that member's remarks.
         ///
         /// <example>
         /// <code>
@@ -1368,7 +1376,8 @@ namespace UnityEngine.InputSystem
 
         /// <summary>
         /// Returns true if the action's value crossed the release threshold (see <see cref="InputSettings.buttonReleaseThreshold"/>)
-        /// at any point in the MonoBehaviour Update cycle (rendering frame).
+        /// at any point in the MonoBehaviour Update cycle (rendering frame), after having been in the pressed state described by
+        /// <see cref="WasReleasedThisFrame"/>.
         /// </summary>
         /// <returns>True if the action was released in the MonoBehaviour Update cycle (rendering frame).</returns>
         /// <remarks>
@@ -1378,6 +1387,8 @@ namespace UnityEngine.InputSystem
         ///
         /// When processing input events manually, updating the InputSystem in the dynamic Update cycle will lead to a delay of one frame for WasReleasedThisDynamicUpdate,
         /// you may want to use WasReleasedThisFrame to avoid this, or set the input update mode to InputSettings.UpdateMode.ProcessEventsInDynamicUpdate.
+        ///
+        /// Press and release threshold behavior matches <see cref="WasReleasedThisFrame"/>; see its remarks.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1760,7 +1771,7 @@ namespace UnityEngine.InputSystem
 
                     if (interactionState.totalTimeoutCompletionTimeRemaining > 0)
                     {
-                        return (interactionState.totalTimeoutCompletionDone + timerCompletion * interactionState.timerDuration)  /
+                        return (interactionState.totalTimeoutCompletionDone + timerCompletion * interactionState.timerDuration) /
                             (interactionState.totalTimeoutCompletionDone + interactionState.totalTimeoutCompletionTimeRemaining);
                     }
                     else
@@ -2447,9 +2458,7 @@ namespace UnityEngine.InputSystem
             /// </summary>
             /// <returns>True if the action is considered in "pressed" state, false otherwise.</returns>
             /// <remarks>
-            /// If the currently active control is a <see cref="ButtonControl"/>, the <see cref="ButtonControl.pressPoint"/>
-            /// of the button will be taken into account (if set). If there is no custom button press point, the
-            /// global <see cref="InputSettings.defaultButtonPressPoint"/> will be used.
+            /// The same press rules as <see cref="IsPressed"/> apply; see that method's remarks.
             /// </remarks>
             /// <example>
             /// <code>
