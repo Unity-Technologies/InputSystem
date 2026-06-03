@@ -28,7 +28,7 @@ inputsystem-standaloneil2cppfunctionaltests_-_6000_0_-_ubuntu2204:
   name: InputSystem-StandaloneIl2CppFunctionalTests - 6000.0 - Ubuntu2204
   agent:
     image: package-ci/ubuntu-22.04:v4
-    type: Unity::VM
+    type: Unity::VM::GPU
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
@@ -83,7 +83,7 @@ inputsystem-standaloneil2cppfunctionaltests_-_6000_3_-_ubuntu2204:
   name: InputSystem-StandaloneIl2CppFunctionalTests - 6000.3 - Ubuntu2204
   agent:
     image: package-ci/ubuntu-22.04:v4
-    type: Unity::VM
+    type: Unity::VM::GPU
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
@@ -138,7 +138,7 @@ inputsystem-standaloneil2cppfunctionaltests_-_6000_4_-_ubuntu2204:
   name: InputSystem-StandaloneIl2CppFunctionalTests - 6000.4 - Ubuntu2204
   agent:
     image: package-ci/ubuntu-22.04:v4
-    type: Unity::VM
+    type: Unity::VM::GPU
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
@@ -193,7 +193,7 @@ inputsystem-standaloneil2cppfunctionaltests_-_6000_5_-_ubuntu2204:
   name: InputSystem-StandaloneIl2CppFunctionalTests - 6000.5 - Ubuntu2204
   agent:
     image: package-ci/ubuntu-22.04:v4
-    type: Unity::VM
+    type: Unity::VM::GPU
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
@@ -249,7 +249,7 @@ inputsystem-standaloneil2cppfunctionaltests_-_6000_6_-_ubuntu2204:
   name: InputSystem-StandaloneIl2CppFunctionalTests - 6000.6 - Ubuntu2204
   agent:
     image: package-ci/ubuntu-22.04:v4
-    type: Unity::VM
+    type: Unity::VM::GPU
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
