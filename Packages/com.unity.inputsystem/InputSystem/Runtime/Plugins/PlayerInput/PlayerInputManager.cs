@@ -706,7 +706,7 @@ namespace UnityEngine.InputSystem
 
         private void ValidateInputActionAsset()
         {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if UNITY_EDITOR || UNITY_ENABLE_CHECKS
             if (m_PlayerPrefab == null || m_PlayerPrefab.GetComponentInChildren<PlayerInput>() == null)
                 return;
 

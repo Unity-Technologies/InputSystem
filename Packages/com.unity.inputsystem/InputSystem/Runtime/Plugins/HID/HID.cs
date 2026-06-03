@@ -323,7 +323,7 @@ namespace UnityEngine.InputSystem.HID
             public string displayName;
             public HIDDeviceDescriptor hidDescriptor;
             public string parentLayout;
-            public Type deviceType;
+            [NonSerialized] public Type deviceType;
 
             public InputControlLayout Build()
             {
@@ -517,8 +517,8 @@ namespace UnityEngine.InputSystem.HID
             public HIDElementFlags flags;
 
             // Fields only relevant to arrays.
-            public int? usageMin;
-            public int? usageMax;
+            [NonSerialized] public int? usageMin;
+            [NonSerialized] public int? usageMax;
 
             public bool hasNullState => (flags & HIDElementFlags.NullState) == HIDElementFlags.NullState;
 

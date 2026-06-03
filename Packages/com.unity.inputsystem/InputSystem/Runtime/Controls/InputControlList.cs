@@ -45,7 +45,7 @@ namespace UnityEngine.InputSystem
     /// </remarks>
     /// <typeparam name="TControl">Type of <see cref="InputControl"/> to store in the list.</typeparam>
     [DebuggerDisplay("Count = {Count}")]
-    #if UNITY_EDITOR || DEVELOPMENT_BUILD
+    #if UNITY_EDITOR || UNITY_ENABLE_CHECKS
     [DebuggerTypeProxy(typeof(InputControlListDebugView<>))]
     #endif
     public unsafe struct InputControlList<TControl> : IList<TControl>, IReadOnlyList<TControl>, IDisposable
@@ -597,7 +597,7 @@ namespace UnityEngine.InputSystem
         }
     }
 
-    #if UNITY_EDITOR || DEVELOPMENT_BUILD
+    #if UNITY_EDITOR || UNITY_ENABLE_CHECKS
     internal struct InputControlListDebugView<TControl>
         where TControl : InputControl
     {
