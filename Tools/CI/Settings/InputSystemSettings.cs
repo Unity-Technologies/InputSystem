@@ -127,11 +127,6 @@ public class InputSystemSettings : AnnotatedSettingsBase
 
         OverridePackagePlatform(InputSystemPackage);
 
-        foreach ((string name, WrenchPackage package) in Wrench.Packages)
-        {
-            Wrench.Packages[name].EditorPlatforms[SystemType.MacOS] = new Platform(new Agent("package-ci/macos-13-arm64:v4", FlavorType.MacDefault, ResourceType.VmOsx, "M1"), SystemType.MacOS);
-        }
-
         ReadMobileConfig();
 
         var oldIOSAgent = MobileTestPlatforms[SystemType.IOS].Agent;
