@@ -5,7 +5,7 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
-#if UNITY_EDITOR || UNITY_ENABLE_CHECKS
+#if UNITY_EDITOR || DEBUG
     /// <summary>
     /// Snapshot of the state used by the input system.
     /// </summary>

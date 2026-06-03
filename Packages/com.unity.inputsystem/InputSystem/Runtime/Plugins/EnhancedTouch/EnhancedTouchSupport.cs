@@ -202,7 +202,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
         #endif
 
-        [Conditional("UNITY_ENABLE_CHECKS")]
+        [Conditional("DEBUG")]
         [Conditional("UNITY_EDITOR")]
         internal static void CheckEnabled()
         {

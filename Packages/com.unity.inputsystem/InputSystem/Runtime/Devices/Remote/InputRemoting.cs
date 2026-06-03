@@ -757,7 +757,7 @@ namespace UnityEngine.InputSystem
             return JsonUtility.FromJson<TData>(json);
         }
 
-#if UNITY_EDITOR || UNITY_ENABLE_CHECKS
+#if UNITY_EDITOR || DEBUG
         // State we want to take across domain reloads. We can only take some of the
         // state across. Subscriptions will be lost and have to be manually restored.
         [Serializable]

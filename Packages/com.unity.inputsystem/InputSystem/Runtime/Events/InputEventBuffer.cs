@@ -298,7 +298,7 @@ namespace UnityEngine.InputSystem.LowLevel
             if (numRemainingEvents > 1)
             {
                 // Don't perform safety check in non-debug builds.
-                #if UNITY_EDITOR || UNITY_ENABLE_CHECKS
+                #if UNITY_EDITOR || DEBUG
                 newReadPos = InputEvent.GetNextInMemoryChecked(currentReadPos, ref this);
                 #else
                 newReadPos = InputEvent.GetNextInMemory(currentReadPos);
