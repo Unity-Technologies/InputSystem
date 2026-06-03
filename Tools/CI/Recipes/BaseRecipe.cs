@@ -39,9 +39,11 @@ public abstract class BaseRecipe : RecipeBase
         foreach (var unityEditor in package.UnityEditors)
         {
             var version = unityEditor.Version.Version;
-            foreach (var platform in GetJobPlatforms(unityEditor))
+            foreach (var (platformType, editorPlatform) in unityEditor.EditorPlatforms.Items)
             {
-                builders.Add(ProduceJob(package, platform, version));
+                var platform = new Platform(editorPlatform.Agent, editorPlatform.System);
+                var jobName = GetJobName(version, platformType);
+                builders.Add(ProduceJob(jobName, package, platform, version));
             }
         }
 
@@ -91,6 +93,8 @@ public abstract class BaseRecipe : RecipeBase
     public virtual IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => package.UnityEditors[0].EditorPlatforms;
 
     protected virtual string GetName() => Name;
+    protected string GetJobName(string editorVersion, EditorPlatformType platformType)
+        => $"{GetName()} - {editorVersion} - {platformType}";
     protected string GetJobName(string editorVersion, SystemType systemType)
         => $"{GetName()} - {editorVersion} - {systemType}";
 }
