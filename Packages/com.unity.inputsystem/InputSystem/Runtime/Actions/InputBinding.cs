@@ -779,6 +779,12 @@ namespace UnityEngine.InputSystem
         ///
         /// Note that all comparisons are case-insensitive.
         ///
+        /// This method does not test bindings for equality. A binding may not match itself if one of
+        /// its mask properties contains a value that does not match as a filter. For example, a binding
+        /// with <see cref="groups"/> set to an empty string has a group filter but no non-empty group
+        /// to match against. To compare bindings for equivalence, use <see cref="Equals(InputBinding)"/>
+        /// or <see cref="operator=="/>.
+        ///
         /// <example>
         /// <code>
         /// // Create a couple bindings which we can test against.
@@ -837,6 +843,7 @@ namespace UnityEngine.InputSystem
         /// </code>
         /// </example>
         /// </remarks>
+        /// <seealso cref="Equals(InputBinding)"/>
         public bool Matches(InputBinding binding)
         {
             return Matches(ref binding);
