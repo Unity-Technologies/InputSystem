@@ -157,7 +157,7 @@ While enabled, an action actively monitors the [controls](xref:input-system-cont
 
 When several enabled actions share the same physical control (for example a plain **B** key action and a **Shift**+**B** composite), the Input System can resolve which action should respond first using either complexity-based or priority-based resolution. Both modes are configured in **Project Settings** > **Input System Package** under [Improved Shortcut Support](xref:input-system-settings#improved-shortcut-support).
 
-Each action has a [`Priority`](xref:UnityEngine.InputSystem.InputAction.Priority) property. The range is from 0 to 65535, and is clamped when set. A higher value means a higher priority, notified first. 
+Each action has a [`Priority`](xref:UnityEngine.InputSystem.InputAction.Priority) property. The range is from 0 to 65535, and is clamped when set. A higher value means a higher priority, notified first.
 
 The `Priority` value applies to all bindings on that action. Serialized priority is always stored on the asset; at runtime it's used only when **Action Priority Shortcut Resolution** is enabled. In that case, the **Priority** field is also shown in the [Input Actions Editor](xref:input-system-configuring-input).
 
