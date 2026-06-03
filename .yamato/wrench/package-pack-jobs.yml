@@ -11,7 +11,7 @@ package_pack_-_inputsystem:
   name: Package Pack - inputsystem
   agent:
     image: package-ci/ubuntu-22.04:v4
-    type: Unity::VM
+    type: Unity::VM::GPU
     flavor: b1.large
   commands:
   - command: npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
