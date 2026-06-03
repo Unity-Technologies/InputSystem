@@ -5,6 +5,7 @@ using RecipeEngine.Api.Extensions;
 using RecipeEngine.Api.Platforms;
 using RecipeEngine.Api.Recipes;
 using RecipeEngine.Modules.Wrench.Models;
+using RecipeEngine.Modules.Wrench.Platforms;
 using RecipeEngine.Platforms;
 using RecipeEngine.Unity.Abstractions.Packages;
 

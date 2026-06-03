@@ -126,6 +126,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
         Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
 
         OverridePackagePlatform(InputSystemPackage);
+        ExcludeUnsupportedPlatforms(InputSystemPackage);
 
         foreach ((string name, WrenchPackage package) in Wrench.Packages)
         {
@@ -151,6 +152,19 @@ public class InputSystemSettings : AnnotatedSettingsBase
             unityEditor.EditorPlatforms.Items[EditorPlatformType.MacOs13]
                 = new EditorPlatform(EditorPlatformType.MacOs13,
                 new Agent("package-ci/macos-13:v4", FlavorType.BuildExtraLarge, ResourceType.VmOsx));
+        }
+    }
+
+    // MacOs13 jobs are currently failing for Unity 6.6 with "Bad CPU type in executable".
+    // Remove this once Mac support for 6.6 is confirmed working.
+    private void ExcludeUnsupportedPlatforms(WrenchPackage package)
+    {
+        foreach (UnityEditor unityEditor in package.UnityEditors)
+        {
+            if (unityEditor.Version.Version == "6000.6")
+            {
+                unityEditor.EditorPlatforms.Items.Remove(EditorPlatformType.MacOs13);
+            }
         }
     }
 
