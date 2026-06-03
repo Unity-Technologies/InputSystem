@@ -220,24 +220,6 @@ inputsystem-editorperformancetests_-_6000_5_-_windows:
       paths:
       - artifacts/**/*
 
-# InputSystem-EditorPerformanceTests - 6000.6 - MacOS
-inputsystem-editorperformancetests_-_6000_6_-_macos:
-  name: InputSystem-EditorPerformanceTests - 6000.6 - MacOS
-  agent:
-    image: package-ci/macos-13:v4
-    type: Unity::VM::osx
-    flavor: b1.xlarge
-  commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
-  after:
-  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
-  artifacts:
-    artifacts:
-      paths:
-      - artifacts/**/*
-
 # InputSystem-EditorPerformanceTests - 6000.6 - Ubuntu
 inputsystem-editorperformancetests_-_6000_6_-_ubuntu:
   name: InputSystem-EditorPerformanceTests - 6000.6 - Ubuntu

@@ -220,24 +220,6 @@ inputsystem-standaloneil2cppfunctionaltests_-_6000_5_-_windows:
       paths:
       - artifacts/**/*
 
-# InputSystem-StandaloneIl2CppFunctionalTests - 6000.6 - MacOS
-inputsystem-standaloneil2cppfunctionaltests_-_6000_6_-_macos:
-  name: InputSystem-StandaloneIl2CppFunctionalTests - 6000.6 - MacOS
-  agent:
-    image: package-ci/macos-13:v4
-    type: Unity::VM::osx
-    flavor: b1.xlarge
-  commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u trunk -c Editor -c StandaloneSupport-IL2CPP --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --scripting-backend=il2cpp --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
-  after:
-  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
-  artifacts:
-    artifacts:
-      paths:
-      - artifacts/**/*
-
 # InputSystem-StandaloneIl2CppFunctionalTests - 6000.6 - Ubuntu
 inputsystem-standaloneil2cppfunctionaltests_-_6000_6_-_ubuntu:
   name: InputSystem-StandaloneIl2CppFunctionalTests - 6000.6 - Ubuntu
