@@ -118,7 +118,7 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 
 > [!NOTE]
 > Only the following combinations of devices/OSes currently support rumble:
->* PS4, Xbox, and Switch controllers, when connected to their respective consoles. Only supported if you install console-specific input packages in your Project.
+>* PS4, Xbox, and Nintendo Switch controllers, when connected to their respective consoles. Only supported if you install console-specific input packages in your Project.
 >* PS4 controllers, when connected to Mac or Windows/UWP computers.
 >* Xbox controllers on Windows.
 >* Gamepads on Android. Rumble support varies with Android OS version and requires Unity 6000.6 or later.
@@ -132,7 +132,7 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 >        * Only one motor is supported. If the gamepad has more than one motor, the higher value of the left and right motor speed applies to both.
 >        * On some devices, motor speed control is limited. You can only set the left and right motor speed to either `1.0` (maximum speed) or `0.0` (turned off).
 > * Gamepads on iOS, tvOS, and visionOS. Requires Unity 6000.6 or later.
->    * Supports rumble on gamepads that Apple's GameController framework recognizes, including PS4, PS5, Xbox, and Switch Pro controllers.
+>    * Supports rumble on gamepads that Apple's GameController framework recognizes, including PS4, PS5, Xbox, and Nintendo Switch Pro controllers.
 >    * If the gamepad supports left and right motors, you can control the speed of each motor individually. Otherwise, the higher value of the left and right motor speed applies to all motors on the gamepad.
 >    * The first [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call allocates rumble resources, which adds latency.
 >    * When you set all motor speeds to `0.0`, an inactivity timer starts. After two minutes, the system releases rumble resources to preserve the controller's battery. The next [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call reallocates resources and again incurs allocation latency.
