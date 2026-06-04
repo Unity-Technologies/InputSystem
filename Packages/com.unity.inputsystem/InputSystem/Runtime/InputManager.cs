@@ -4481,7 +4481,7 @@ namespace UnityEngine.InputSystem
 
         // Stuff everything that we want to survive a domain reload into
         // a m_SerializedState.
-        #if UNITY_EDITOR || DEVELOPMENT_BUILD
+        #if DEBUG
         [Serializable]
         internal struct DeviceState
         {
@@ -4795,6 +4795,6 @@ namespace UnityEngine.InputSystem
             return true;
         }
 
-#endif // UNITY_EDITOR || DEVELOPMENT_BUILD
+#endif // DEBUG
     }
 }

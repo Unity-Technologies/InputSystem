@@ -5,6 +5,7 @@ using RecipeEngine.Api.Extensions;
 using RecipeEngine.Api.Platforms;
 using RecipeEngine.Api.Recipes;
 using RecipeEngine.Modules.Wrench.Models;
+using RecipeEngine.Modules.Wrench.Platforms;
 using RecipeEngine.Platforms;
 using RecipeEngine.Unity.Abstractions.Packages;
 
@@ -35,13 +36,14 @@ public abstract class BaseRecipe : RecipeBase
         List<IJobBuilder> builders = new();
 
         var package = Settings.InputSystemPackage;
-        var platforms = GetJobPlatforms(package);
-        foreach (var platform in platforms)
+        foreach (var unityEditor in package.UnityEditors)
         {
-            var supportedVersions = package.SupportedEditorVersions;
-            foreach (var version in supportedVersions)
+            var version = unityEditor.Version.Version;
+            foreach (var (platformType, editorPlatform) in unityEditor.EditorPlatforms.Items)
             {
-                builders.Add(ProduceJob(package, platform, version));
+                var platform = new Platform(editorPlatform.Agent, editorPlatform.System);
+                var jobName = GetJobName(version, platformType);
+                builders.Add(ProduceJob(jobName, package, platform, version));
             }
         }
 
@@ -74,13 +76,25 @@ public abstract class BaseRecipe : RecipeBase
     protected abstract IJobBuilder ProduceJob(string jobName, Package package, Platform platform, string unityVersion);
 
     /// <summary>
-    /// Implement this to provide the platforms for which this job should be generated.
+    /// Override to provide the platforms for a given UnityEditor instance.
+    /// Desktop recipes use this to respect per-editor platform sets (e.g. a platform
+    /// removed for a specific editor version will be absent here).
+    /// </summary>
+    /// <param name="unityEditor">The editor whose platforms should be returned.</param>
+    /// <returns>The platforms for this editor.</returns>
+    public virtual IEnumerable<Platform> GetJobPlatforms(UnityEditor unityEditor) => unityEditor.EditorPlatforms;
+
+    /// <summary>
+    /// Override to provide a fixed platform list regardless of editor version.
+    /// Used by mobile recipes whose platforms come from config, not from UnityEditors.
     /// </summary>
     /// <param name="package"> The package that the job should target.</param>
     /// <returns>The system types.</returns>
     public virtual IEnumerable<Platform> GetJobPlatforms(WrenchPackage package) => package.UnityEditors[0].EditorPlatforms;
 
     protected virtual string GetName() => Name;
+    protected string GetJobName(string editorVersion, EditorPlatformType platformType)
+        => $"{GetName()} - {editorVersion} - {platformType}";
     protected string GetJobName(string editorVersion, SystemType systemType)
         => $"{GetName()} - {editorVersion} - {systemType}";
 }
