@@ -242,15 +242,16 @@ namespace UnityEngine.InputSystem.Utilities
             unchecked
             {
                 // 64bit blocks.
-                #if UNITY_64
-                while (numBytes >= 8)
+                if (IntPtr.Size >= 8)
                 {
-                    *(ulong*)&to[pos] = ((ulong)value << 56) | ((ulong)value << 48) | ((ulong)value << 40) | ((ulong)value << 32)
-                        | ((ulong)value << 24) | ((ulong)value << 16) | ((ulong)value << 8) | value;
-                    numBytes -= 8;
-                    pos += 8;
+                    while (numBytes >= 8)
+                    {
+                        *(ulong*)&to[pos] = ((ulong)value << 56) | ((ulong)value << 48) | ((ulong)value << 40) | ((ulong)value << 32)
+                            | ((ulong)value << 24) | ((ulong)value << 16) | ((ulong)value << 8) | value;
+                        numBytes -= 8;
+                        pos += 8;
+                    }
                 }
-                #endif
 
                 // 32bit blocks.
                 while (numBytes >= 4)
@@ -288,15 +289,16 @@ namespace UnityEngine.InputSystem.Utilities
             unchecked
             {
                 // Copy 64bit blocks.
-                #if UNITY_64
-                while (numBytes >= 8)
+                if (IntPtr.Size >= 8)
                 {
-                    *(ulong*)(to + pos) &= ~*(ulong*)(bits + pos); // Preserve unmasked bits.
-                    *(ulong*)(to + pos) |= *(ulong*)(from + pos) & *(ulong*)(bits + pos); // Copy masked bits.
-                    numBytes -= 8;
-                    pos += 8;
+                    while (numBytes >= 8)
+                    {
+                        *(ulong*)(to + pos) &= ~*(ulong*)(bits + pos); // Preserve unmasked bits.
+                        *(ulong*)(to + pos) |= *(ulong*)(from + pos) & *(ulong*)(bits + pos); // Copy masked bits.
+                        numBytes -= 8;
+                        pos += 8;
+                    }
                 }
-                #endif
 
                 // Copy 32bit blocks.
                 while (numBytes >= 4)

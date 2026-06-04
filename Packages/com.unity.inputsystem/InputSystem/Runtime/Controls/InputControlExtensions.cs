@@ -1616,7 +1616,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder At(InputDevice device, int index)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (device == null)
                     throw new ArgumentNullException(nameof(device));
                 if (index < 0 || index >= device.m_ChildrenForEachControl.Length)
@@ -1630,7 +1630,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithParent(InputControl parent)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (parent == null)
                     throw new ArgumentNullException(nameof(parent));
                 if (parent == control)
@@ -1643,7 +1643,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithName(string name)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (string.IsNullOrEmpty(name))
                     throw new ArgumentNullException(nameof(name));
 #endif
@@ -1654,7 +1654,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithDisplayName(string displayName)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (string.IsNullOrEmpty(displayName))
                     throw new ArgumentNullException(nameof(displayName));
 #endif
@@ -1665,7 +1665,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithShortDisplayName(string shortDisplayName)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (string.IsNullOrEmpty(shortDisplayName))
                     throw new ArgumentNullException(nameof(shortDisplayName));
 #endif
@@ -1676,7 +1676,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithLayout(InternedString layout)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (layout.IsEmpty())
                     throw new ArgumentException("Layout name cannot be empty", nameof(layout));
 #endif
@@ -1687,7 +1687,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithUsages(int startIndex, int count)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (startIndex < 0 || startIndex >= control.device.m_UsagesForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(startIndex));
                 if (count < 0 || startIndex + count > control.device.m_UsagesForEachControl.Length)
@@ -1701,7 +1701,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithAliases(int startIndex, int count)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (startIndex < 0 || startIndex >= control.device.m_AliasesForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(startIndex));
                 if (count < 0 || startIndex + count > control.device.m_AliasesForEachControl.Length)
@@ -1715,7 +1715,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ControlBuilder WithChildren(int startIndex, int count)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (startIndex < 0 || startIndex >= control.device.m_ChildrenForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(startIndex));
                 if (count < 0 || startIndex + count > control.device.m_ChildrenForEachControl.Length)
@@ -1754,7 +1754,7 @@ namespace UnityEngine.InputSystem
                 where TValue : struct
                 where TProcessor : InputProcessor<TValue>
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (processor == null)
                     throw new ArgumentNullException(nameof(processor));
 #endif
@@ -1808,7 +1808,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithName(string name)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (string.IsNullOrEmpty(name))
                     throw new ArgumentNullException(nameof(name));
 #endif
@@ -1819,7 +1819,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithDisplayName(string displayName)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (string.IsNullOrEmpty(displayName))
                     throw new ArgumentNullException(nameof(displayName));
 #endif
@@ -1830,7 +1830,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithShortDisplayName(string shortDisplayName)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (string.IsNullOrEmpty(shortDisplayName))
                     throw new ArgumentNullException(nameof(shortDisplayName));
 #endif
@@ -1841,7 +1841,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithLayout(InternedString layout)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (layout.IsEmpty())
                     throw new ArgumentException("Layout name cannot be empty", nameof(layout));
 #endif
@@ -1852,7 +1852,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithChildren(int startIndex, int count)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (startIndex < 0 || startIndex >= device.device.m_ChildrenForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(startIndex));
                 if (count < 0 || startIndex + count > device.device.m_ChildrenForEachControl.Length)
@@ -1880,7 +1880,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithControlUsage(int controlIndex, InternedString usage, InputControl control)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (controlIndex < 0 || controlIndex >= device.m_UsagesForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(controlIndex));
                 if (usage.IsEmpty())
@@ -1896,7 +1896,7 @@ namespace UnityEngine.InputSystem
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public DeviceBuilder WithControlAlias(int controlIndex, InternedString alias)
             {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if DEBUG
                 if (controlIndex < 0 || controlIndex >= device.m_AliasesForEachControl.Length)
                     throw new ArgumentOutOfRangeException(nameof(controlIndex));
                 if (alias.IsEmpty())

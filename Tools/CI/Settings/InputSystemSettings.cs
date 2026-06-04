@@ -135,6 +135,8 @@ public class InputSystemSettings : AnnotatedSettingsBase
 
     // Default FlavorType was changed for Win & Mac in Wrench 2.0.
     // Overriding this to keep them the same esp. for performance jobs.
+    // Ubuntu2204 is overridden to use a GPU VM to avoid software rendering slowdowns
+    // when running standalone player tests.
     private void OverridePackagePlatform(WrenchPackage package)
     {
         foreach (UnityEditor unityEditor in package.UnityEditors)
@@ -143,9 +145,17 @@ public class InputSystemSettings : AnnotatedSettingsBase
                 = new EditorPlatform(EditorPlatformType.Win10,
                 new Agent("package-ci/win10:v4", FlavorType.BuildLarge, ResourceType.Vm));
 
-            unityEditor.EditorPlatforms.Items[EditorPlatformType.MacOs13]
-                = new EditorPlatform(EditorPlatformType.MacOs13,
-                new Agent("package-ci/macos-13:v4", FlavorType.BuildExtraLarge, ResourceType.VmOsx));
+            // Unity 6.6 defaults to MacOs13Arm in Wrench 2.12.0 — don't override it back to Intel.
+            if (unityEditor.Version.Version != "6000.6")
+            {
+                unityEditor.EditorPlatforms.Items[EditorPlatformType.MacOs13]
+                    = new EditorPlatform(EditorPlatformType.MacOs13,
+                    new Agent("package-ci/macos-13:v4", FlavorType.BuildExtraLarge, ResourceType.VmOsx));
+            }
+
+            unityEditor.EditorPlatforms.Items[EditorPlatformType.Ubuntu2204]
+                = new EditorPlatform(EditorPlatformType.Ubuntu2204,
+                new Agent("package-ci/ubuntu-22.04:v4", FlavorType.BuildLarge, ResourceType.VmGpu));
         }
     }
 
