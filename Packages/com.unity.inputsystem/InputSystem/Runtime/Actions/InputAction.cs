@@ -197,6 +197,45 @@ namespace UnityEngine.InputSystem
         public InputActionType type => m_Type;
 
         /// <summary>
+        /// Minimum allowed value for <see cref="Priority"/>.
+        /// </summary>
+        internal const int MinPriority = 0;
+
+        /// <summary>
+        /// Maximum allowed value for <see cref="Priority"/> (stored as unsigned 16-bit at runtime).
+        /// </summary>
+        internal const int MaxPriority = ushort.MaxValue;
+
+        internal static int ClampPriority(int priority) => Math.Clamp(priority, MinPriority, MaxPriority);
+
+        /// <summary>
+        /// Priority of this action when multiple bindings resolve to the same control.
+        /// </summary>
+        /// <value>Effective range is <see cref="MinPriority"/>–<see cref="MaxPriority"/>. Values outside that range are clamped when set; the stored value always matches what overlap resolution uses.</value>
+        /// <remarks>
+        /// Applies to all bindings that target this action. At runtime this value is used only when
+        /// <see cref="InputSettings.shortcutKeysUseActionPriority"/> is enabled. In that mode the system orders overlapping
+        /// bindings on a shared control by priority, and when the action reaches <see cref="InputActionPhase.Performed"/>,
+        /// a value greater than zero can mark the underlying input event as handled so lower-priority actions in the same
+        /// group are suppressed; priority zero does not mark the event handled for that purpose.
+        /// When action priority is disabled, overlap resolution instead follows <see cref="InputSettings.shortcutKeysConsumeInput"/>
+        /// (automatic composite complexity) and does not consult this property.
+        /// </remarks>
+        public int Priority
+        {
+            get => m_Priority;
+            set
+            {
+                var clamped = ClampPriority(value);
+                if (m_Priority == clamped)
+                    return;
+
+                m_Priority = clamped;
+                m_ActionMap?.m_State?.OnActionPriorityChanged(this);
+            }
+        }
+
+        /// <summary>
         /// A stable, unique identifier for the action.
         /// </summary>
         /// <value>Unique ID of the action.</value>
@@ -971,6 +1010,7 @@ namespace UnityEngine.InputSystem
                 m_Interactions = m_Interactions,
                 m_Processors = m_Processors,
                 m_Flags = m_Flags,
+                m_Priority = m_Priority,
             };
             return clone;
         }
@@ -1817,6 +1857,7 @@ namespace UnityEngine.InputSystem
         // For any other type of action, this is null.
         [SerializeField] internal InputBinding[] m_SingletonActionBindings;
         [SerializeField] internal ActionFlags m_Flags;
+        [SerializeField] internal int m_Priority;
 
         [NonSerialized] internal InputBinding? m_BindingMask;
         [NonSerialized] internal int m_BindingsStartIndex;

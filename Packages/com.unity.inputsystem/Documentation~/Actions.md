@@ -152,3 +152,29 @@ When you enable an action, the Input System resolves its bindings, unless it has
 You can't change certain aspects of the configuration, such as action bindings, while an action is enabled. To stop actions or action maps from responding to input, call  [`Disable`](xref:UnityEngine.InputSystem.InputAction.Disable).
 
 While enabled, an action actively monitors the [controls](xref:input-system-controls) it's bound to. If a bound control changes state, the action processes the change. If the control's change represents an [interaction](xref:input-system-interactions) change, the action creates a response. All of this happens during the Input System update logic. Depending on the [update mode](xref:input-system-settings#update-mode) selected in the input settings, this happens once every frame, once every fixed update, or manually if updates are set to manual.
+
+## Overlapping bindings and action priority
+
+When several enabled actions share the same physical control (for example a plain **B** key action and a **Shift**+**B** composite), the Input System can resolve which action should respond first using either complexity-based or priority-based resolution. Both modes are configured in **Project Settings** > **Input System Package** under [Improved Shortcut Support](xref:input-system-settings#improved-shortcut-support).
+
+Each action has a [`Priority`](xref:UnityEngine.InputSystem.InputAction.Priority) property. The range is from 0 to 65535, and is clamped when set. A higher value means a higher priority, notified first.
+
+The `Priority` value applies to all bindings on that action. Serialized priority is always stored on the asset; at runtime it's used only when **Action Priority Shortcut Resolution** is enabled. In that case, the **Priority** field is also shown in the [Input Actions Editor](xref:input-system-configuring-input).
+
+When action priority resolution is active:
+
+- Higher priority actions are notified before lower-priority actions on the same control.
+- When an action reaches the Performed phase, priority `0 doesn't mark the input event as handled, so lower-priority actions in the same overlap group can still respond on that event.
+- Any priority **greater than zero** can mark the event handled and suppress strictly lower-priority actions in the same group for that event.
+- Actions with the **same** priority are not suppressed relative to each other; both can perform in the same update if their bindings fire.
+
+Set priority in code:
+
+```CSharp
+fireAction.Priority = 10;
+reloadAction.Priority = 5;
+```
+
+You can also edit the **Priority** field on an action in the Input Actions Editor when **Action Priority Shortcut Resolution** is enabled.
+
+For information about composite shortcuts and complexity ordering, refer to [Multiple input sequences (such as keyboard shortcuts)](xref:input-system-action-bindings#multiple-input-sequences-such-as-keyboard-shortcuts).

@@ -118,10 +118,19 @@ Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
 
 > [!NOTE]
 > Only the following combinations of devices/OSes currently support rumble:
->* PS4, Xbox, and Switch controllers, when connected to their respective consoles. Only supported if you install console-specific input packages in your Project.
+>* PS4, Xbox, and Nintendo Switch controllers, when connected to their respective consoles. Only supported if you install console-specific input packages in your Project.
 >* PS4 controllers, when connected to Mac or Windows/UWP computers.
 >* Xbox controllers on Windows.
-
+>* Gamepads on Android. Rumble support varies with Android OS version and requires Unity 6000.6 or later.
+>    * Rumble automatically stops about 10 seconds after the last [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call unless you explicitly stop it.
+>    * Android 12 or later:
+>        * Supports most Bluetooth-connected gamepads with rumble support including PS4, PS5, and Xbox controllers.
+>        *  If the gamepad is connected with a USB cable, rumble support might vary.
+>        *  If the gamepad supports more than one motor, you can control the speed of each motor individually.
+>    * Android 11 or earlier:
+>        * Rumble support is limited.
+>        * Only one motor is supported. If the gamepad has more than one motor, the higher value of the left and right motor speed applies to both.
+>        * On some devices, motor speed control is limited. You can only set the left and right motor speed to either `1.0` (maximum speed) or `0.0` (turned off).
 [//]: # (TODO: are we missing any supported configs?)
 
 ### Pausing, resuming, and stopping haptics

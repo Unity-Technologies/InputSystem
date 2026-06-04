@@ -112,7 +112,27 @@ namespace UnityEngine.InputSystem
         public BindingState* bindingStates => memory.bindingStates;
         public InteractionState* interactionStates => memory.interactionStates;
         public int* controlIndexToBindingIndex => memory.controlIndexToBindingIndex;
-        public ushort* controlGroupingAndComplexity => memory.controlGroupingAndComplexity;
+        private ushort* controlGroupingAndPriority => memory.controlGroupingAndPriority;
+
+        /// <summary>
+        /// Layout of <see cref="UnmanagedMemory.controlGroupingAndPriority"/>: interleaved ushort pairs (group id, secondary) per control slot.
+        /// Secondary is action priority when <see cref="InputSettings.IsShortcutResolutionUsingActionPriority"/> is enabled; otherwise composite complexity (develop behavior).
+        /// </summary>
+        internal static class ControlGroupingTable
+        {
+            public const int Stride = 2;
+
+            public static int GroupElementIndex(int controlIndex) => controlIndex * Stride;
+
+            public static int PriorityElementIndex(int controlIndex) => controlIndex * Stride + 1;
+        }
+
+        private uint GetControlMonitorGroupIndex(int controlIndex) =>
+            controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(controlIndex)];
+
+        private int GetControlBindingPriority(int controlIndex) =>
+            controlGroupingAndPriority[ControlGroupingTable.PriorityElementIndex(controlIndex)];
+
         public float* controlMagnitudes => memory.controlMagnitudes;
         public uint* enabledControls => (uint*)memory.enabledControls;
 
@@ -146,39 +166,27 @@ namespace UnityEngine.InputSystem
             if (memory.controlGroupingInitialized)
                 return;
 
-            // If shortcut support is disabled, we simply put put all bindings at complexity=1 and
-            // in their own group.
-            var disableControlGrouping = !InputSystem.settings.shortcutKeysConsumeInput;
-
-            var currentGroup = 1u;
-            for (var i = 0; i < totalControlCount; ++i)
+            var settings = InputSystem.settings;
+            if (settings.IsShortcutResolutionUsingActionPriority)
             {
-                var control = controls[i];
-                var bindingIndex = controlIndexToBindingIndex[i];
-                ref var binding = ref bindingStates[bindingIndex];
+                var currentGroup = 1u;
 
-                ////REVIEW: take processors and interactions into account??
-
-                // Compute complexity.
-                var complexity = 1;
-                if (binding.isPartOfComposite && !disableControlGrouping)
+                for (var i = 0; i < totalControlCount; ++i)
                 {
-                    var compositeBindingIndex = binding.compositeOrCompositeBindingIndex;
+                    var control = controls[i];
 
-                    for (var n = compositeBindingIndex + 1; n < totalBindingCount; ++n)
-                    {
-                        ref var partBinding = ref bindingStates[n];
-                        if (!partBinding.isPartOfComposite || partBinding.compositeOrCompositeBindingIndex != compositeBindingIndex)
-                            break;
-                        ++complexity;
-                    }
-                }
-                controlGroupingAndComplexity[i * 2 + 1] = (ushort)complexity;
+                    var bindingIndex = controlIndexToBindingIndex[i];
 
-                // Compute grouping. If already set, skip.
-                if (controlGroupingAndComplexity[i * 2] == 0)
-                {
-                    if (!disableControlGrouping)
+                    ////REVIEW: take processors and interactions into account??
+
+                    var action = GetActionOrNull(bindingIndex);
+
+                    var priority = InputAction.ClampPriority(action != null ? action.Priority : InputAction.MinPriority);
+
+                    controlGroupingAndPriority[ControlGroupingTable.PriorityElementIndex(i)] = (ushort)priority;
+
+                    // Compute grouping. If already set, skip.
+                    if (controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] == 0)
                     {
                         for (var n = 0; n < totalControlCount; ++n)
                         {
@@ -191,13 +199,65 @@ namespace UnityEngine.InputSystem
                             if (control != otherControl)
                                 continue;
 
-                            controlGroupingAndComplexity[n * 2] = (ushort)currentGroup;
+                            controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(n)] = (ushort)currentGroup;
+                        }
+
+                        controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] = (ushort)currentGroup;
+
+                        ++currentGroup;
+                    }
+                }
+            }
+            else
+            {
+                // Complexity-based path (same as develop when shortcutKeysConsumeInput is off: disable grouping).
+                var disableControlGrouping = !settings.shortcutKeysConsumeInput;
+
+                var currentGroup = 1u;
+                for (var i = 0; i < totalControlCount; ++i)
+                {
+                    var control = controls[i];
+                    var bindingIndex = controlIndexToBindingIndex[i];
+                    ref var binding = ref bindingStates[bindingIndex];
+
+                    ////REVIEW: take processors and interactions into account??
+
+                    // Compute complexity.
+                    var complexity = 1;
+                    if (binding.isPartOfComposite && !disableControlGrouping)
+                    {
+                        var compositeBindingIndex = binding.compositeOrCompositeBindingIndex;
+
+                        for (var n = compositeBindingIndex + 1; n < totalBindingCount; ++n)
+                        {
+                            ref var partBinding = ref bindingStates[n];
+                            if (!partBinding.isPartOfComposite || partBinding.compositeOrCompositeBindingIndex != compositeBindingIndex)
+                                break;
+                            ++complexity;
                         }
                     }
 
-                    controlGroupingAndComplexity[i * 2] = (ushort)currentGroup;
+                    controlGroupingAndPriority[ControlGroupingTable.PriorityElementIndex(i)] = (ushort)complexity;
 
-                    ++currentGroup;
+                    // Compute grouping. If already set, skip.
+                    if (controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] == 0)
+                    {
+                        if (!disableControlGrouping)
+                        {
+                            for (var n = 0; n < totalControlCount; ++n)
+                            {
+                                var otherControl = controls[n];
+                                if (control != otherControl)
+                                    continue;
+
+                                controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(n)] = (ushort)currentGroup;
+                            }
+                        }
+
+                        controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(i)] = (ushort)currentGroup;
+
+                        ++currentGroup;
+                    }
                 }
             }
 
@@ -551,7 +611,7 @@ namespace UnityEngine.InputSystem
             // Restore action states.
             for (var actionIndex = 0; actionIndex < totalActionCount; ++actionIndex)
             {
-                ref var oldActionState = ref oldState.actionStates[actionIndex];
+                ref TriggerState oldActionState = ref oldState.actionStates[actionIndex];
                 ref var newActionState = ref actionStates[actionIndex];
 
                 newActionState.lastCanceledInUpdate = oldActionState.lastCanceledInUpdate;
@@ -1027,6 +1087,75 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        internal void OnActionPriorityChanged(InputAction action)
+        {
+            if (!InputSystem.settings.IsShortcutResolutionUsingActionPriority)
+                return;
+
+            if (action == null || action.m_ActionMap == null)
+            {
+                Debug.Assert(action != null, "Action must not be null");
+                Debug.Assert(action?.m_ActionMap != null, "Action must have action map");
+                return;
+            }
+
+            var actionIndex = action.m_ActionIndexInState;
+            if (actionIndex < 0 || actionIndex >= totalActionCount)
+                return;
+
+            var map = action.m_ActionMap;
+            var mapIndex = map.m_MapIndexInState;
+            if (mapIndex < 0 || mapIndex >= totalMapCount)
+                return;
+
+            var clampedPriority = (ushort)InputAction.ClampPriority(action.Priority);
+            var manager = InputSystem.manager;
+            var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
+            var bindingCount = mapIndices[mapIndex].bindingCount;
+            var bindingStatesPtr = memory.bindingStates;
+
+            for (var i = 0; i < bindingCount; ++i)
+            {
+                var bindingIndex = bindingStartIndex + i;
+                var bindingState = &bindingStatesPtr[bindingIndex];
+                if (bindingState->actionIndex != actionIndex || bindingState->isPartOfComposite)
+                    continue;
+
+                var controlCount = bindingState->controlCount;
+                if (controlCount == 0)
+                    continue;
+
+                for (var n = 0; n < controlCount; ++n)
+                {
+                    var controlIndex = bindingState->controlStartIndex + n;
+                    // Must match EnableControls: monitors are keyed by the binding that owns the control (composite part),
+                    // not necessarily the binding entry we are iterating (e.g. composite root).
+                    var bindingIndexForMonitor = controlIndexToBindingIndex[controlIndex];
+                    var prioritySlot = ControlGroupingTable.PriorityElementIndex(controlIndex);
+                    var oldSecondaryForRemoval = controlGroupingAndPriority[prioritySlot];
+
+                    if (!IsControlEnabled(controlIndex))
+                    {
+                        controlGroupingAndPriority[prioritySlot] = clampedPriority;
+                        continue;
+                    }
+
+                    // Remove using the monitor index that was registered (packed with the previous secondary value).
+                    // `action.Priority` is already updated before we get here; `ToCombinedMapAndControlAndBindingIndex`
+                    // reads from `controlGroupingAndPriority`, so we must not overwrite the slot before removal.
+                    var oldMonitorIndex = InputActionStateMonitorIndex.Create(mapIndex, controlIndex, bindingIndexForMonitor,
+                        oldSecondaryForRemoval).Packed;
+                    manager.RemoveStateChangeMonitor(controls[controlIndex], this, oldMonitorIndex);
+
+                    controlGroupingAndPriority[prioritySlot] = clampedPriority;
+
+                    var newMonitorIndex = ToCombinedMapAndControlAndBindingIndex(mapIndex, controlIndex, bindingIndexForMonitor);
+                    manager.AddStateChangeMonitor(controls[controlIndex], this, newMonitorIndex,
+                        controlGroupingAndPriority[ControlGroupingTable.GroupElementIndex(controlIndex)]);
+                }
+            }
+        }
+
         public void DisableAllActions(InputActionMap map)
         {
             Debug.Assert(map != null, "Map must not be null");
@@ -1161,7 +1290,8 @@ namespace UnityEngine.InputSystem
                 var bindingStatePtr = &bindingStates[bindingIndex];
                 if (bindingStatePtr->wantsInitialStateCheck)
                     SetInitialStateCheckPending(bindingStatePtr, true);
-                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex, controlGroupingAndComplexity[controlIndex * 2]);
+                manager.AddStateChangeMonitor(controls[controlIndex], this, mapControlAndBindingIndex,
+                    GetControlMonitorGroupIndex(controlIndex));
 
                 SetControlEnabled(controlIndex, true);
             }
@@ -1374,19 +1504,21 @@ namespace UnityEngine.InputSystem
                 return;
 #endif
 
-            SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
-            ProcessControlStateChange(mapIndex, controlIndex, bindingIndex, time, eventPtr);
+            var monitorIndex = InputActionStateMonitorIndex.FromPacked(mapControlAndBindingIndex);
+            ProcessControlStateChange(monitorIndex.MapIndex, monitorIndex.ControlIndex, monitorIndex.BindingIndex, time,
+                eventPtr);
         }
 
         void IInputStateChangeMonitor.NotifyTimerExpired(InputControl control, double time,
             long mapControlAndBindingIndex, int interactionIndex)
         {
-            SplitUpMapAndControlAndBindingIndex(mapControlAndBindingIndex, out var mapIndex, out var controlIndex, out var bindingIndex);
-            ProcessTimeout(time, mapIndex, controlIndex, bindingIndex, interactionIndex);
+            var monitorIndex = InputActionStateMonitorIndex.FromPacked(mapControlAndBindingIndex);
+            ProcessTimeout(time, monitorIndex.MapIndex, monitorIndex.ControlIndex, monitorIndex.BindingIndex,
+                interactionIndex);
         }
 
         /// <summary>
-        /// Bit pack the mapIndex, controlIndex, bindingIndex and complexity components into a single long monitor index value.
+        /// Bit pack the mapIndex, controlIndex, bindingIndex and monitor sort value into a single long monitor index value.
         /// </summary>
         /// <param name="mapIndex">The mapIndex value to pack.</param>
         /// <param name="controlIndex">The controlIndex value to pack.</param>
@@ -1396,42 +1528,22 @@ namespace UnityEngine.InputSystem
         /// monitors. While we could look up map and binding indices from control indices, keeping
         /// all the information together avoids having to unnecessarily jump around in memory to grab
         /// the various pieces of data.
-        /// The complexity component is implicitly derived and does not need to be passed as an argument.
+        /// The high 16 bits store action priority or composite complexity depending on <see cref="InputSettings.IsShortcutResolutionUsingActionPriority"/>.
         /// </remarks>
         private long ToCombinedMapAndControlAndBindingIndex(int mapIndex, int controlIndex, int bindingIndex)
         {
             // We have limits on the numbers of maps, controls, and bindings we allow in any single
             // action state (see TriggerState.kMaxNumXXX).
-            var complexity = controlGroupingAndComplexity[controlIndex * 2 + 1];
-            var result = (long)controlIndex;
-            result |= (long)bindingIndex << 24;
-            result |= (long)mapIndex << 40;
-            result |= (long)complexity << 48;
-            return result;
+            return InputActionStateMonitorIndex.Create(mapIndex, controlIndex, bindingIndex,
+                GetControlBindingPriority(controlIndex)).Packed;
         }
 
         /// <summary>
-        /// Extract the mapIndex, controlIndex and bindingIndex components from the provided bit packed argument (monitor index).
+        /// Extract the complexity or priority component from the monitor index (high 16 bits).
         /// </summary>
-        /// <param name="mapControlAndBindingIndex">Represents a monitor index, which is a bit packed field containing multiple components.</param>
-        /// <param name="mapIndex">Will hold the extracted mapIndex value after the function completes.</param>
-        /// <param name="controlIndex">Will hold the extracted controlIndex value after the function completes.</param>
-        /// <param name="bindingIndex">Will hold the extracted bindingIndex value after the function completes.</param>
-        private void SplitUpMapAndControlAndBindingIndex(long mapControlAndBindingIndex, out int mapIndex,
-            out int controlIndex, out int bindingIndex)
-        {
-            controlIndex = (int)(mapControlAndBindingIndex & 0x00ffffff);
-            bindingIndex = (int)((mapControlAndBindingIndex >> 24) & 0xffff);
-            mapIndex = (int)((mapControlAndBindingIndex >> 40) & 0xff);
-        }
-
-        /// <summary>
-        /// Extract the 'complexity' component from the provided bit packed argument (monitor index).
-        /// </summary>
-        /// <param name="mapControlAndBindingIndex">Represents a monitor index, which is a bit packed field containing multiple components.</param>
         internal static int GetComplexityFromMonitorIndex(long mapControlAndBindingIndex)
         {
-            return (int)((mapControlAndBindingIndex >> 48) & 0xff);
+            return (int)(((ulong)mapControlAndBindingIndex >> 48) & 0xffff);
         }
 
         /// <summary>
@@ -2524,9 +2636,13 @@ namespace UnityEngine.InputSystem
                 newState.lastCanceledInUpdate = actionState->lastCanceledInUpdate;
 
                 // When we perform an action, we mark the event handled such that FireStateChangeNotifications()
-                // can then reset state monitors in the same group.
-                // NOTE: We don't consume for controls at binding complexity 1. Those we fire in unison.
-                if (controlGroupingAndComplexity[trigger.controlIndex * 2 + 1] > 1 &&
+                // can reset other monitors (priority: strictly lower priority; complexity: same group after sort).
+                var settings = InputSystem.settings;
+                var secondary = GetControlBindingPriority(trigger.controlIndex);
+                var shouldConsumeHandled = settings.IsShortcutResolutionUsingActionPriority
+                    ? secondary > 0
+                    : secondary > 1;
+                if (shouldConsumeHandled &&
                     // we can end up switching to performed state from an interaction with a timeout, at which point
                     // the original event will probably have been removed from memory, so make sure to check
                     // we still have one
@@ -4246,8 +4362,8 @@ namespace UnityEngine.InputSystem
             ////REVIEW: make this an array of shorts rather than ints?
             public int* controlIndexToBindingIndex;
 
-            // Two shorts per control. First one is group number. Second one is complexity count.
-            public ushort* controlGroupingAndComplexity;
+            // Two shorts per control. First one is group number. Second is priority or complexity (see InputActionState.ComputeControlGroupingIfNecessary).
+            public ushort* controlGroupingAndPriority;
             public bool controlGroupingInitialized;
 
             public ActionMapIndices* mapIndices;
@@ -4294,7 +4410,7 @@ namespace UnityEngine.InputSystem
                 controlMagnitudes = (float*)AllocFromBlob(ref ptr, controlCount * sizeof(float));
                 compositeMagnitudes = (float*)AllocFromBlob(ref ptr, compositeCount * sizeof(float));
                 controlIndexToBindingIndex = (int*)AllocFromBlob(ref ptr, controlCount * sizeof(int));
-                controlGroupingAndComplexity = (ushort*)AllocFromBlob(ref ptr, controlCount * sizeof(ushort) * 2);
+                controlGroupingAndPriority = (ushort*)AllocFromBlob(ref ptr, controlCount * sizeof(ushort) * 2);
                 actionBindingIndicesAndCounts = (ushort*)AllocFromBlob(ref ptr, actionCount * sizeof(ushort) * 2);
                 actionBindingIndices = (ushort*)AllocFromBlob(ref ptr, bindingCount * sizeof(ushort));
                 enabledControls = (int*)AllocFromBlob(ref ptr, (controlCount + 31) / 32 * sizeof(int));
@@ -4315,7 +4431,7 @@ namespace UnityEngine.InputSystem
                 controlMagnitudes = null;
                 compositeMagnitudes = null;
                 controlIndexToBindingIndex = null;
-                controlGroupingAndComplexity = null;
+                controlGroupingAndPriority = null;
                 actionBindingIndices = null;
                 actionBindingIndicesAndCounts = null;
 
@@ -4341,7 +4457,7 @@ namespace UnityEngine.InputSystem
                 UnsafeUtility.MemCpy(controlMagnitudes, memory.controlMagnitudes, memory.controlCount * sizeof(float));
                 UnsafeUtility.MemCpy(compositeMagnitudes, memory.compositeMagnitudes, memory.compositeCount * sizeof(float));
                 UnsafeUtility.MemCpy(controlIndexToBindingIndex, memory.controlIndexToBindingIndex, memory.controlCount * sizeof(int));
-                UnsafeUtility.MemCpy(controlGroupingAndComplexity, memory.controlGroupingAndComplexity, memory.controlCount * sizeof(ushort) * 2);
+                UnsafeUtility.MemCpy(controlGroupingAndPriority, memory.controlGroupingAndPriority, memory.controlCount * sizeof(ushort) * 2);
                 UnsafeUtility.MemCpy(actionBindingIndicesAndCounts, memory.actionBindingIndicesAndCounts, memory.actionCount * sizeof(ushort) * 2);
                 UnsafeUtility.MemCpy(actionBindingIndices, memory.actionBindingIndices, memory.bindingCount * sizeof(ushort));
                 UnsafeUtility.MemCpy(enabledControls, memory.enabledControls, (memory.controlCount + 31) / 32 * sizeof(int));
@@ -4552,6 +4668,23 @@ namespace UnityEngine.InputSystem
             }
 
             return numFound;
+        }
+
+        /// <summary>
+        /// Re-resolve bindings for every live action state so control grouping and monitor indices match shortcut settings.
+        /// </summary>
+        internal static void RequestBindingResolutionAfterShortcutSettingsChange()
+        {
+            for (var i = 0; i < s_GlobalState.globalList.length; ++i)
+            {
+                var handle = s_GlobalState.globalList[i];
+                if (!handle.IsAllocated || handle.Target == null)
+                    continue;
+                var state = (InputActionState)handle.Target;
+                if (state.totalMapCount == 0)
+                    continue;
+                state.maps[0].LazyResolveBindings(fullResolve: false);
+            }
         }
 
         ////TODO: when re-resolving, we need to preserve InteractionStates and not just reset them

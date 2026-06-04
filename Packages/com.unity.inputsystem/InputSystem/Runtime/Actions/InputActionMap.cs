@@ -1568,6 +1568,7 @@ namespace UnityEngine.InputSystem
             public string interactions;
             public bool passThrough;
             public bool initialStateCheck;
+            public int priority;
 
             // Bindings can either be on the action itself (in which case the action name
             // for each binding is implied) or listed separately in the action file.
@@ -1597,6 +1598,8 @@ namespace UnityEngine.InputSystem
                         actionType = InputActionType.Button;
                 }
 
+                var clampedPriority = InputAction.ClampPriority(priority);
+
                 return new InputAction(actionName ?? name, actionType)
                 {
                     m_Id = string.IsNullOrEmpty(id) ? null : id,
@@ -1606,6 +1609,7 @@ namespace UnityEngine.InputSystem
                     m_Processors = processors,
                     m_Interactions = interactions,
                     wantsInitialStateCheck = initialStateCheck,
+                    m_Priority = clampedPriority,
                 };
             }
         }
@@ -1620,6 +1624,7 @@ namespace UnityEngine.InputSystem
             public string processors;
             public string interactions;
             public bool initialStateCheck;
+            public int priority;
 
             public static WriteActionJson FromAction(InputAction action)
             {
@@ -1632,6 +1637,7 @@ namespace UnityEngine.InputSystem
                     processors = action.processors,
                     interactions = action.interactions,
                     initialStateCheck = action.wantsInitialStateCheck,
+                    priority = action.m_Priority,
                 };
             }
         }
@@ -2003,7 +2009,11 @@ namespace UnityEngine.InputSystem
             {
                 var actionCount = m_Actions.Length;
                 for (var i = 0; i < actionCount; ++i)
-                    m_Actions[i].m_ActionMap = this;
+                {
+                    var action = m_Actions[i];
+                    action.m_ActionMap = this;
+                    action.m_Priority = InputAction.ClampPriority(action.m_Priority);
+                }
             }
 
             // Make sure we don't retain any cached per-action data when using serialization

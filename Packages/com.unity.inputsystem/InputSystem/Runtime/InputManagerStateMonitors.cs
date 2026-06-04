@@ -5,114 +5,100 @@ using UnityEngine.InputSystem.Utilities;
 
 namespace UnityEngine.InputSystem
 {
-    internal partial class InputManager
+    /// <summary>
+    /// Tracks per-device state change monitors and timeouts for <see cref="InputManager"/>.
+    /// </summary>
+    internal sealed class InputManagerStateMonitors
     {
-        // Indices correspond with those in m_Devices.
-        internal StateChangeMonitorsForDevice[] m_StateChangeMonitors;
-        private InlinedArray<StateChangeMonitorTimeout> m_StateChangeMonitorTimeouts;
+        private readonly Func<int> m_GetDeviceCount;
+        private readonly Func<bool> m_IsProcessingEvents;
+        private readonly IInputRuntime m_Runtime;
+
+        // Indices correspond with those in InputManager's device array.
+        internal StateChangeMonitorsForDevice[] m_MonitorsPerDevice;
+        private InlinedArray<StateChangeMonitorTimeout> m_Timeouts;
+
+        public InputManagerStateMonitors(Func<int> getDeviceCount, Func<bool> isProcessingEvents, IInputRuntime runtime)
+        {
+            m_GetDeviceCount = getDeviceCount ?? throw new ArgumentNullException(nameof(getDeviceCount));
+            m_IsProcessingEvents = isProcessingEvents ?? throw new ArgumentNullException(nameof(isProcessingEvents));
+            m_Runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
+        }
+
+        /// <summary>
+        /// Runtime instance this monitor collection was constructed with. Used to avoid recreating the collection
+        /// when <see cref="InputManager.InstallRuntime"/> is called again with the same runtime (same object identity).
+        /// </summary>
+        internal IInputRuntime CapturedRuntime => m_Runtime;
 
         ////TODO: support combining monitors for bitfields
         public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex, uint groupIndex)
         {
-            if (m_DevicesCount <= 0) return;
+            var devicesCount = m_GetDeviceCount();
+            if (devicesCount <= 0)
+                return;
 
             var device = control.device;
             var deviceIndex = device.m_DeviceIndex;
             Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
 
-            // Allocate/reallocate monitor arrays, if necessary.
-            // We lazy-sync it to array of devices.
-            if (m_StateChangeMonitors == null)
-                m_StateChangeMonitors = new StateChangeMonitorsForDevice[m_DevicesCount];
-            else if (m_StateChangeMonitors.Length <= deviceIndex)
-                Array.Resize(ref m_StateChangeMonitors, m_DevicesCount);
+            if (m_MonitorsPerDevice == null)
+                m_MonitorsPerDevice = new StateChangeMonitorsForDevice[devicesCount];
+            else if (m_MonitorsPerDevice.Length <= deviceIndex)
+                Array.Resize(ref m_MonitorsPerDevice, devicesCount);
 
-            // If we have removed monitors
-            if (!isProcessingEvents && m_StateChangeMonitors[deviceIndex].needToCompactArrays)
-                m_StateChangeMonitors[deviceIndex].CompactArrays();
+            if (!m_IsProcessingEvents() && m_MonitorsPerDevice[deviceIndex].needToCompactArrays)
+                m_MonitorsPerDevice[deviceIndex].CompactArrays();
 
-            // Add record.
-            m_StateChangeMonitors[deviceIndex].Add(control, monitor, monitorIndex, groupIndex);
-        }
-
-        private void RemoveStateChangeMonitors(InputDevice device)
-        {
-            if (m_StateChangeMonitors == null)
-                return;
-
-            var deviceIndex = device.m_DeviceIndex;
-            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
-
-            if (deviceIndex >= m_StateChangeMonitors.Length)
-                return;
-
-            m_StateChangeMonitors[deviceIndex].Clear();
-
-            // Clear timeouts pending on any control on the device.
-            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
-                if (m_StateChangeMonitorTimeouts[i].control?.device == device)
-                    m_StateChangeMonitorTimeouts[i] = default;
+            m_MonitorsPerDevice[deviceIndex].Add(control, monitor, monitorIndex, groupIndex);
         }
 
         public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
         {
-            if (m_StateChangeMonitors == null)
+            if (m_MonitorsPerDevice == null)
                 return;
 
             var device = control.device;
             var deviceIndex = device.m_DeviceIndex;
 
-            // Ignore if device has already been removed.
             if (deviceIndex == InputDevice.kInvalidDeviceIndex)
                 return;
 
-            // Ignore if there are no state monitors set up for the device.
-            if (deviceIndex >= m_StateChangeMonitors.Length)
+            if (deviceIndex >= m_MonitorsPerDevice.Length)
                 return;
 
-            m_StateChangeMonitors[deviceIndex].Remove(monitor, monitorIndex, isProcessingEvents);
+            m_MonitorsPerDevice[deviceIndex].Remove(monitor, monitorIndex, m_IsProcessingEvents());
 
-            // Remove pending timeouts on the monitor.
-            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
-                if (m_StateChangeMonitorTimeouts[i].monitor == monitor &&
-                    m_StateChangeMonitorTimeouts[i].monitorIndex == monitorIndex)
-                    m_StateChangeMonitorTimeouts[i] = default;
+            for (var i = 0; i < m_Timeouts.length; ++i)
+                if (m_Timeouts[i].monitor == monitor && m_Timeouts[i].monitorIndex == monitorIndex)
+                    m_Timeouts[i] = default;
         }
 
         public void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex, int timerIndex)
         {
-            m_StateChangeMonitorTimeouts.Append(
-                new StateChangeMonitorTimeout
-                {
-                    control = control,
-                    time = time,
-                    monitor = monitor,
-                    monitorIndex = monitorIndex,
-                    timerIndex = timerIndex,
-                });
+            m_Timeouts.Append(new StateChangeMonitorTimeout
+            {
+                control = control,
+                time = time,
+                monitor = monitor,
+                monitorIndex = monitorIndex,
+                timerIndex = timerIndex,
+            });
         }
 
         public void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex, int timerIndex)
         {
-            var timeoutCount = m_StateChangeMonitorTimeouts.length;
+            var timeoutCount = m_Timeouts.length;
             for (var i = 0; i < timeoutCount; ++i)
             {
-                ////REVIEW: can we avoid the repeated array lookups without copying the struct out?
-                if (ReferenceEquals(m_StateChangeMonitorTimeouts[i].monitor, monitor)
-                    && m_StateChangeMonitorTimeouts[i].monitorIndex == monitorIndex
-                    && m_StateChangeMonitorTimeouts[i].timerIndex == timerIndex)
+                if (ReferenceEquals(m_Timeouts[i].monitor, monitor)
+                    && m_Timeouts[i].monitorIndex == monitorIndex
+                    && m_Timeouts[i].timerIndex == timerIndex)
                 {
-                    m_StateChangeMonitorTimeouts[i] = default;
+                    m_Timeouts[i] = default;
                     break;
                 }
             }
-        }
-
-        private void SortStateChangeMonitorsIfNecessary(int deviceIndex)
-        {
-            if (m_StateChangeMonitors != null && deviceIndex < m_StateChangeMonitors.Length &&
-                m_StateChangeMonitors[deviceIndex].needToUpdateOrderingOfMonitors)
-                m_StateChangeMonitors[deviceIndex].SortMonitorsByIndex();
         }
 
         public void SignalStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor)
@@ -120,11 +106,14 @@ namespace UnityEngine.InputSystem
             var device = control.device;
             var deviceIndex = device.m_DeviceIndex;
 
-            ref var monitorsForDevice = ref m_StateChangeMonitors[deviceIndex];
+            if (m_MonitorsPerDevice == null || deviceIndex >= m_MonitorsPerDevice.Length)
+                return;
+
+            SortMonitorsForDeviceIfNeeded(deviceIndex);
+
+            ref var monitorsForDevice = ref m_MonitorsPerDevice[deviceIndex];
             for (var i = 0; i < monitorsForDevice.signalled.length; ++i)
             {
-                SortStateChangeMonitorsIfNecessary(i);
-
                 ref var listener = ref monitorsForDevice.listeners[i];
                 if (listener.control == control && listener.monitor == monitor)
                     monitorsForDevice.signalled.SetBit(i);
@@ -134,12 +123,207 @@ namespace UnityEngine.InputSystem
         public unsafe void FireStateChangeNotifications()
         {
             var time = m_Runtime.currentTime;
-            var count = Math.Min(m_StateChangeMonitors.LengthSafe(), m_DevicesCount);
+            var count = Math.Min(m_MonitorsPerDevice.LengthSafe(), m_GetDeviceCount());
             for (var i = 0; i < count; ++i)
                 FireStateChangeNotifications(i, time, null);
         }
 
-        // Record for a timeout installed on a state change monitor.
+        internal void OnDeviceRemoved(InputDevice device)
+        {
+            ClearMonitorsAndTimeoutsForDevice(device);
+
+            var deviceIndex = device.m_DeviceIndex;
+            if (m_MonitorsPerDevice != null && deviceIndex < m_MonitorsPerDevice.LengthSafe())
+            {
+                var count = m_MonitorsPerDevice.Length;
+                ArrayHelpers.EraseAtWithCapacity(m_MonitorsPerDevice, ref count, deviceIndex);
+            }
+        }
+
+        internal void ProcessTimeouts()
+        {
+            if (m_Timeouts.length == 0)
+                return;
+
+            var currentTime = m_Runtime.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
+            var remainingTimeoutCount = 0;
+            for (var i = 0; i < m_Timeouts.length; ++i)
+            {
+                if (m_Timeouts[i].control == null)
+                    continue;
+
+                if (m_Timeouts[i].time <= currentTime)
+                {
+                    var timeout = m_Timeouts[i];
+                    timeout.monitor.NotifyTimerExpired(timeout.control, currentTime, timeout.monitorIndex, timeout.timerIndex);
+                }
+                else
+                {
+                    if (i != remainingTimeoutCount)
+                        m_Timeouts[remainingTimeoutCount] = m_Timeouts[i];
+                    ++remainingTimeoutCount;
+                }
+            }
+
+            m_Timeouts.SetLength(remainingTimeoutCount);
+        }
+
+        internal void SortMonitorsForDeviceIfNeeded(int deviceIndex)
+        {
+            if (m_MonitorsPerDevice != null && deviceIndex < m_MonitorsPerDevice.Length &&
+                m_MonitorsPerDevice[deviceIndex].needToUpdateOrderingOfMonitors)
+                m_MonitorsPerDevice[deviceIndex].SortMonitorsByIndex();
+        }
+
+        internal unsafe bool ProcessStateChange(int deviceIndex, void* newStateFromEvent, void* oldStateOfDevice, uint newStateSizeInBytes, uint newStateOffsetInBytes)
+        {
+            if (m_MonitorsPerDevice == null)
+                return false;
+
+            if (deviceIndex >= m_MonitorsPerDevice.Length)
+                return false;
+
+            var memoryRegions = m_MonitorsPerDevice[deviceIndex].memoryRegions;
+            if (memoryRegions == null)
+                return false;
+
+            var numMonitors = m_MonitorsPerDevice[deviceIndex].count;
+            var signalled = false;
+            var signals = m_MonitorsPerDevice[deviceIndex].signalled;
+            var haveChangedSignalsBitfield = false;
+
+            var newEventMemoryRegion = new MemoryHelpers.BitRegion(newStateOffsetInBytes, 0, newStateSizeInBytes * 8);
+            for (var i = 0; i < numMonitors; ++i)
+            {
+                var memoryRegion = memoryRegions[i];
+
+                if (memoryRegion.sizeInBits == 0)
+                {
+                    var listenerCount = numMonitors;
+                    var memoryRegionCount = numMonitors;
+                    m_MonitorsPerDevice[deviceIndex].listeners.EraseAtWithCapacity(ref listenerCount, i);
+                    memoryRegions.EraseAtWithCapacity(ref memoryRegionCount, i);
+                    signals.SetLength(numMonitors - 1);
+                    haveChangedSignalsBitfield = true;
+                    --numMonitors;
+                    --i;
+                    continue;
+                }
+
+                var overlap = newEventMemoryRegion.Overlap(memoryRegion);
+                if (overlap.isEmpty || MemoryHelpers.Compare(oldStateOfDevice, (byte*)newStateFromEvent - newStateOffsetInBytes, overlap))
+                    continue;
+
+                signals.SetBit(i);
+                haveChangedSignalsBitfield = true;
+                signalled = true;
+            }
+
+            if (haveChangedSignalsBitfield)
+                m_MonitorsPerDevice[deviceIndex].signalled = signals;
+
+            m_MonitorsPerDevice[deviceIndex].needToCompactArrays = false;
+
+            return signalled;
+        }
+
+        internal unsafe void FireStateChangeNotifications(int deviceIndex, double internalTime, InputEvent* eventPtr)
+        {
+            if (m_MonitorsPerDevice == null)
+            {
+                Debug.Assert(false, "State change monitors array is null - has AddStateChangeMonitor been called?");
+                return;
+            }
+
+            if (m_MonitorsPerDevice.Length <= deviceIndex)
+            {
+                Debug.Assert(false, $"deviceIndex {deviceIndex} passed to FireStateChangeNotifications is out of bounds (current length {m_MonitorsPerDevice.Length}).");
+                return;
+            }
+
+            ref var signals = ref m_MonitorsPerDevice[deviceIndex].signalled;
+            if (signals.AnyBitIsSet() && m_MonitorsPerDevice[deviceIndex].listeners == null)
+            {
+                Debug.Assert(false, $"A state change for device {deviceIndex} has been set, but list of listeners is null.");
+                return;
+            }
+
+            ref var listeners = ref m_MonitorsPerDevice[deviceIndex].listeners;
+            var time = internalTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
+
+            var tempEvent = new InputEvent(new FourCC('F', 'A', 'K', 'E'), InputEvent.kBaseEventSize, -1, internalTime);
+            if (eventPtr == null)
+                eventPtr = (InputEvent*)UnsafeUtility.AddressOf(ref tempEvent);
+
+            var previouslyHandled = eventPtr->handled;
+            for (var i = 0; i < signals.length; ++i)
+            {
+                if (!signals.TestBit(i))
+                    continue;
+
+                var listener = listeners[i];
+                try
+                {
+                    listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr, listener.monitorIndex);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError(
+                        $"Exception '{exception.GetType().Name}' thrown from state change monitor '{(listener.monitor?.GetType().Name ?? "null")}' on '{(listener.control?.ToString() ?? "null")}'");
+                    Debug.LogException(exception);
+                }
+
+                if (!previouslyHandled && eventPtr->handled)
+                {
+                    var groupIndex = listeners[i].groupIndex;
+                    if (InputSystem.settings.IsShortcutResolutionUsingActionPriority)
+                    {
+                        var handlerPriority = InputActionStateMonitorIndex.FromPacked(listener.monitorIndex).Priority;
+                        for (var n = i + 1; n < signals.length; ++n)
+                        {
+                            if (listeners[n].groupIndex == groupIndex && listeners[n].monitor == listener.monitor)
+                            {
+                                var candidatePriority = InputActionStateMonitorIndex.FromPacked(listeners[n].monitorIndex).Priority;
+                                if (candidatePriority < handlerPriority)
+                                    signals.ClearBit(n);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (var n = i + 1; n < signals.length; ++n)
+                        {
+                            if (listeners[n].groupIndex == groupIndex && listeners[n].monitor == listener.monitor)
+                                signals.ClearBit(n);
+                        }
+                    }
+                }
+
+                if (eventPtr->handled)
+                    eventPtr->handled = previouslyHandled;
+
+                signals.ClearBit(i);
+            }
+        }
+
+        private void ClearMonitorsAndTimeoutsForDevice(InputDevice device)
+        {
+            if (m_MonitorsPerDevice == null)
+                return;
+
+            var deviceIndex = device.m_DeviceIndex;
+            Debug.Assert(deviceIndex != InputDevice.kInvalidDeviceIndex);
+
+            if (deviceIndex >= m_MonitorsPerDevice.Length)
+                return;
+
+            m_MonitorsPerDevice[deviceIndex].Clear();
+
+            for (var i = 0; i < m_Timeouts.length; ++i)
+                if (m_Timeouts[i].control?.device == device)
+                    m_Timeouts[i] = default;
+        }
+
         private struct StateChangeMonitorTimeout
         {
             public InputControl control;
@@ -149,14 +333,6 @@ namespace UnityEngine.InputSystem
             public int timerIndex;
         }
 
-        // Maps a single control to an action interested in the control. If
-        // multiple actions are interested in the same control, we will end up
-        // processing the control repeatedly but we assume this is the exception
-        // and so optimize for the case where there's only one action going to
-        // a control.
-        //
-        // Split into two structures to keep data needed only when there is an
-        // actual value change out of the data we need for doing the scanning.
         internal struct StateChangeMonitorListener
         {
             public InputControl control;
@@ -177,17 +353,11 @@ namespace UnityEngine.InputSystem
 
             public void Add(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex, uint groupIndex)
             {
-                // NOTE: This method must only *append* to arrays. This way we can safely add data while traversing
-                //       the arrays in FireStateChangeNotifications. Note that appending *may* mean that the arrays
-                //       are switched to larger arrays.
-
-                // Record listener.
                 var listenerCount = signalled.length;
                 ArrayHelpers.AppendWithCapacity(ref listeners, ref listenerCount,
                     new StateChangeMonitorListener
                     { monitor = monitor, monitorIndex = monitorIndex, groupIndex = groupIndex, control = control });
 
-                // Record memory region.
                 ref var controlStateBlock = ref control.m_StateBlock;
                 var memoryRegionCount = signalled.length;
                 ArrayHelpers.AppendWithCapacity(ref memoryRegions, ref memoryRegionCount,
@@ -205,6 +375,7 @@ namespace UnityEngine.InputSystem
                     return;
 
                 for (var i = 0; i < signalled.length; ++i)
+                {
                     if (ReferenceEquals(listeners[i].monitor, monitor) && listeners[i].monitorIndex == monitorIndex)
                     {
                         if (deferRemoval)
@@ -221,12 +392,11 @@ namespace UnityEngine.InputSystem
 
                         break;
                     }
+                }
             }
 
             public void Clear()
             {
-                // We don't actually release memory we've potentially allocated but rather just reset
-                // our count to zero.
                 listeners.Clear(count);
                 signalled.SetLength(0);
 
@@ -237,8 +407,7 @@ namespace UnityEngine.InputSystem
             {
                 for (var i = count - 1; i >= 0; --i)
                 {
-                    var memoryRegion = memoryRegions[i];
-                    if (memoryRegion.sizeInBits != 0)
+                    if (memoryRegions[i].sizeInBits != 0)
                         continue;
 
                     RemoveAt(i);
@@ -258,17 +427,27 @@ namespace UnityEngine.InputSystem
 
             public void SortMonitorsByIndex()
             {
-                // Insertion sort.
+                var useActionPriority = InputSystem.settings.IsShortcutResolutionUsingActionPriority;
                 for (var i = 1; i < signalled.length; ++i)
                 {
                     for (var j = i; j > 0; --j)
                     {
-                        // Sort by complexities only to keep the sort stable
-                        // i.e. don't reverse the order of controls which have the same complexity
-                        var firstComplexity = InputActionState.GetComplexityFromMonitorIndex(listeners[j - 1].monitorIndex);
-                        var secondComplexity = InputActionState.GetComplexityFromMonitorIndex(listeners[j].monitorIndex);
-                        if (firstComplexity >= secondComplexity)
-                            break;
+                        if (useActionPriority)
+                        {
+                            var firstPriority = InputActionStateMonitorIndex.FromPacked(listeners[j - 1].monitorIndex).Priority;
+                            var secondPriority = InputActionStateMonitorIndex.FromPacked(listeners[j].monitorIndex).Priority;
+                            if (firstPriority >= secondPriority)
+                                break;
+                        }
+                        else
+                        {
+                            // Sort by complexities only to keep the sort stable
+                            // i.e. don't reverse the order of controls which have the same complexity
+                            var firstComplexity = InputActionState.GetComplexityFromMonitorIndex(listeners[j - 1].monitorIndex);
+                            var secondComplexity = InputActionState.GetComplexityFromMonitorIndex(listeners[j].monitorIndex);
+                            if (firstComplexity >= secondComplexity)
+                                break;
+                        }
 
                         listeners.SwapElements(j, j - 1);
                         memoryRegions.SwapElements(j, j - 1);
@@ -280,196 +459,6 @@ namespace UnityEngine.InputSystem
 
                 needToUpdateOrderingOfMonitors = false;
             }
-        }
-
-        // NOTE: 'newState' can be a subset of the full state stored at 'oldState'. In this case,
-        //       'newStateOffsetInBytes' must give the offset into the full state and 'newStateSizeInBytes' must
-        //       give the size of memory slice to be updated.
-        private unsafe bool ProcessStateChangeMonitors(int deviceIndex, void* newStateFromEvent, void* oldStateOfDevice, uint newStateSizeInBytes, uint newStateOffsetInBytes)
-        {
-            if (m_StateChangeMonitors == null)
-                return false;
-
-            // We resize the monitor arrays only when someone adds to them so they
-            // may be out of sync with the size of m_Devices.
-            if (deviceIndex >= m_StateChangeMonitors.Length)
-                return false;
-
-            var memoryRegions = m_StateChangeMonitors[deviceIndex].memoryRegions;
-            if (memoryRegions == null)
-                return false; // No one cares about state changes on this device.
-
-            var numMonitors = m_StateChangeMonitors[deviceIndex].count;
-            var signalled = false;
-            var signals = m_StateChangeMonitors[deviceIndex].signalled;
-            var haveChangedSignalsBitfield = false;
-
-            // For every memory region that overlaps what we got in the event, compare memory contents
-            // between the old device state and what's in the event. If the contents different, the
-            // respective state monitor signals.
-            var newEventMemoryRegion = new MemoryHelpers.BitRegion(newStateOffsetInBytes, 0, newStateSizeInBytes * 8);
-            for (var i = 0; i < numMonitors; ++i)
-            {
-                var memoryRegion = memoryRegions[i];
-
-                // Check if the monitor record has been wiped in the meantime. If so, remove it.
-                if (memoryRegion.sizeInBits == 0)
-                {
-                    ////REVIEW: Do we really care? It is nice that it's predictable this way but hardly a hard requirement
-                    // NOTE: We're using EraseAtWithCapacity here rather than EraseAtByMovingTail to preserve
-                    //       order which makes the order of callbacks somewhat more predictable.
-
-                    var listenerCount = numMonitors;
-                    var memoryRegionCount = numMonitors;
-                    m_StateChangeMonitors[deviceIndex].listeners.EraseAtWithCapacity(ref listenerCount, i);
-                    memoryRegions.EraseAtWithCapacity(ref memoryRegionCount, i);
-                    signals.SetLength(numMonitors - 1);
-                    haveChangedSignalsBitfield = true;
-                    --numMonitors;
-                    --i;
-                    continue;
-                }
-
-                var overlap = newEventMemoryRegion.Overlap(memoryRegion);
-                if (overlap.isEmpty || MemoryHelpers.Compare(oldStateOfDevice, (byte*)newStateFromEvent - newStateOffsetInBytes, overlap))
-                    continue;
-
-                signals.SetBit(i);
-                haveChangedSignalsBitfield = true;
-                signalled = true;
-            }
-
-            if (haveChangedSignalsBitfield)
-                m_StateChangeMonitors[deviceIndex].signalled = signals;
-
-            m_StateChangeMonitors[deviceIndex].needToCompactArrays = false;
-
-            return signalled;
-        }
-
-        internal unsafe void FireStateChangeNotifications(int deviceIndex, double internalTime, InputEvent* eventPtr)
-        {
-            if (m_StateChangeMonitors == null)
-            {
-                Debug.Assert(false, "m_StateChangeMonitors is null - has AddStateChangeMonitor been called?");
-                return;
-            }
-            if (m_StateChangeMonitors.Length <= deviceIndex)
-            {
-                Debug.Assert(false, $"deviceIndex {deviceIndex} passed to FireStateChangeNotifications is out of bounds (current length {m_StateChangeMonitors.Length}).");
-                return;
-            }
-
-            // NOTE: This method must be safe for mutating the state change monitor arrays from *within*
-            //       NotifyControlStateChanged()! This includes all monitors for the device being wiped
-            //       completely or arbitrary additions and removals having occurred.
-
-            ref var signals = ref m_StateChangeMonitors[deviceIndex].signalled;
-            if (signals.AnyBitIsSet() && m_StateChangeMonitors[deviceIndex].listeners == null)
-            {
-                Debug.Assert(false, $"A state change for device {deviceIndex} has been set, but list of listeners is null.");
-                return;
-            }
-
-            ref var listeners = ref m_StateChangeMonitors[deviceIndex].listeners;
-            var time = internalTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
-
-            // If we don't have an event, gives us as dummy, invalid instance.
-            // What matters is that InputEventPtr.valid is false for these.
-            var tempEvent = new InputEvent(new FourCC('F', 'A', 'K', 'E'), InputEvent.kBaseEventSize, -1, internalTime);
-            if (eventPtr == null)
-                eventPtr = (InputEvent*)UnsafeUtility.AddressOf(ref tempEvent);
-
-            // Call IStateChangeMonitor.NotifyControlStateChange for every monitor that is in
-            // signalled state.
-            var previouslyHandled = eventPtr->handled;
-            for (var i = 0; i < signals.length; ++i)
-            {
-                if (!signals.TestBit(i))
-                    continue;
-
-                var listener = listeners[i];
-                try
-                {
-                    listener.monitor.NotifyControlStateChanged(listener.control, time, eventPtr,
-                        listener.monitorIndex);
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogError(
-                        $"Exception '{exception.GetType().Name}' thrown from state change monitor '{(listener.monitor?.GetType().Name ?? "null")}' on '{(listener.control?.ToString() ?? "null")}'");
-                    Debug.LogException(exception);
-                }
-
-                // If the monitor signalled that it has processed the state change, reset all signalled
-                // state monitors in the same group. This is what causes "SHIFT+B" to prevent "B" from
-                // also triggering. Note that we skip this if it was already marked handled before notifying
-                // monitors.
-                if (!previouslyHandled && eventPtr->handled)
-                {
-                    var groupIndex = listeners[i].groupIndex;
-                    for (var n = i + 1; n < signals.length; ++n)
-                    {
-                        // NOTE: We restrict the preemption logic here to a single monitor. Otherwise,
-                        //       we will have to require that group indices are stable *between*
-                        //       monitors. Two separate InputActionStates, for example, would have to
-                        //       agree on group indices that valid *between* the two states or we end
-                        //       up preempting unrelated inputs.
-                        //
-                        //       Note that this implies there there is *NO* preemption between singleton
-                        //       InputActions. This isn't intuitive.
-                        if (listeners[n].groupIndex == groupIndex && listeners[n].monitor == listener.monitor)
-                            signals.ClearBit(n);
-                    }
-                }
-
-                // Need to reset it back to false as we may have more signalled state monitors that
-                // aren't in the same group (i.e. have independent inputs).
-                if (eventPtr->handled)
-                    eventPtr->handled = previouslyHandled;
-
-                signals.ClearBit(i);
-            }
-        }
-
-        private void ProcessStateChangeMonitorTimeouts()
-        {
-            if (m_StateChangeMonitorTimeouts.length == 0)
-                return;
-
-            // Go through the list and both trigger expired timers and remove any irrelevant
-            // ones by compacting the array.
-            // NOTE: We do not actually release any memory we may have allocated.
-            var currentTime = m_Runtime.currentTime - InputRuntime.s_CurrentTimeOffsetToRealtimeSinceStartup;
-            var remainingTimeoutCount = 0;
-            for (var i = 0; i < m_StateChangeMonitorTimeouts.length; ++i)
-            {
-                // If we have reset this entry in RemoveStateChangeMonitorTimeouts(),
-                // skip over it and let compaction get rid of it.
-                if (m_StateChangeMonitorTimeouts[i].control == null)
-                    continue;
-
-                var timerExpirationTime = m_StateChangeMonitorTimeouts[i].time;
-                if (timerExpirationTime <= currentTime)
-                {
-                    var timeout = m_StateChangeMonitorTimeouts[i];
-                    timeout.monitor.NotifyTimerExpired(timeout.control,
-                        currentTime, timeout.monitorIndex, timeout.timerIndex);
-
-                    // Compaction will get rid of the entry.
-                }
-                else
-                {
-                    // Rather than repeatedly calling RemoveAt() and thus potentially
-                    // moving the same data over and over again, we compact the array
-                    // on the fly and move entries in the array down as needed.
-                    if (i != remainingTimeoutCount)
-                        m_StateChangeMonitorTimeouts[remainingTimeoutCount] = m_StateChangeMonitorTimeouts[i];
-                    ++remainingTimeoutCount;
-                }
-            }
-
-            m_StateChangeMonitorTimeouts.SetLength(remainingTimeoutCount);
         }
     }
 }

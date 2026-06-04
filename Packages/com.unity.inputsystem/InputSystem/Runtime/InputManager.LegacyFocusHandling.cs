@@ -222,7 +222,7 @@ namespace UnityEngine.InputSystem
                 // Normally, we process action timeouts after first processing all events. If we have no
                 // events, we still need to check timeouts.
                 if (shouldProcessActionTimeouts)
-                    ProcessStateChangeMonitorTimeouts();
+                    m_StateMonitors.ProcessTimeouts();
 
                 if (shouldFlushEventBuffer)
                     eventBuffer.Reset();

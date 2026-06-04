@@ -2965,8 +2965,8 @@ partial class CoreTests
         action.Enable();
 
         Assert.That(InputActionState.s_GlobalState.globalList.length, Is.EqualTo(1));
-        Assert.That(InputSystem.manager.m_StateChangeMonitors.Length, Is.GreaterThan(0));
-        Assert.That(InputSystem.manager.m_StateChangeMonitors[0].count, Is.EqualTo(1));
+        Assert.That(InputSystem.manager.m_StateMonitors.m_MonitorsPerDevice.Length, Is.GreaterThan(0));
+        Assert.That(InputSystem.manager.m_StateMonitors.m_MonitorsPerDevice[0].count, Is.EqualTo(1));
 
         // Exit play mode.
         InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingPlayMode);
@@ -2974,7 +2974,7 @@ partial class CoreTests
 
         Assert.That(InputActionState.s_GlobalState.globalList.length, Is.Zero);
         // Won't get removed, just cleared.
-        Assert.That(InputSystem.manager.m_StateChangeMonitors[0].listeners[0].control, Is.Null);
+        Assert.That(InputSystem.manager.m_StateMonitors.m_MonitorsPerDevice[0].listeners[0].control, Is.Null);
     }
 
     [Test]

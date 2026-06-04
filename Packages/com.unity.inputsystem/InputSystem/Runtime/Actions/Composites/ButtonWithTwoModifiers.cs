@@ -95,7 +95,7 @@ namespace UnityEngine.InputSystem.Composites
         /// and the composite will still trigger. Default is false.
         /// </summary>
         /// <remarks>
-        /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
+        /// By default, if <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled and <see cref="InputSettings.shortcutKeysUseActionPriority"/> is disabled,
         /// <see cref="modifier1"/> and <see cref="modifier2"/> are required to be in pressed state before or at the same
         /// time that <see cref="button"/> goes into pressed state for the composite as a whole to trigger. This means that binding to,
         /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order,  before pressing the <c>B</c> key.
@@ -116,13 +116,13 @@ namespace UnityEngine.InputSystem.Composites
         public enum ModifiersOrder
         {
             /// <summary>
-            /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
+            /// By default, if <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled and <see cref="InputSettings.shortcutKeysUseActionPriority"/> is disabled,
             /// <see cref="modifier1"/> and <see cref="modifier2"/> are required to be in pressed state before or at the same
             /// time that <see cref="button"/> goes into pressed state for the composite as a whole to trigger. This means that binding to,
             /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order, before pressing the <c>B</c> key.
             /// This is the behavior usually expected with keyboard shortcuts.
             ///
-            /// If the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled,
+            /// If <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled or <see cref="InputSettings.shortcutKeysUseActionPriority"/> is enabled,
             /// modifiers can be pressed after the button and the composite will still trigger.
             /// </summary>
             Default = 0,
@@ -146,13 +146,13 @@ namespace UnityEngine.InputSystem.Composites
         /// If set to <c>Ordered</c> or <c>Unordered</c>, the built-in logic to determine if modifiers need to be pressed first is overridden.
         /// </summary>
         /// <remarks>
-        /// By default, if the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled,
+        /// By default, if <see cref="InputSettings.shortcutKeysConsumeInput"/> is enabled and <see cref="InputSettings.shortcutKeysUseActionPriority"/> is disabled,
         /// <see cref="modifier1"/> and <see cref="modifier2"/> are required to be in pressed state before or at the same
         /// time that <see cref="button"/> goes into pressed state for the composite as a whole to trigger. This means that binding to,
         /// for example, <c>Ctrl+Shift+B</c>, the <c>ctrl</c> and <c>shift</c> keys have to be pressed, in any order,  before pressing the <c>B</c> key.
         /// This is the behavior usually expected with keyboard shortcuts.
         ///
-        /// If the setting <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled,
+        /// If <see cref="InputSettings.shortcutKeysConsumeInput"/> is disabled or <see cref="InputSettings.shortcutKeysUseActionPriority"/> is enabled,
         /// modifiers can be pressed after the button and the composite will still trigger.
         ///
         /// This field allows you to explicitly override this default inference.
@@ -211,7 +211,7 @@ namespace UnityEngine.InputSystem.Composites
 #pragma warning restore CS0618
                     modifiersOrder = ModifiersOrder.Unordered;
                 else
-                    modifiersOrder = InputSystem.settings.shortcutKeysConsumeInput ? ModifiersOrder.Ordered : ModifiersOrder.Unordered;
+                    modifiersOrder = InputSystem.settings.IsShortcutComplexityModifierOrderActive ? ModifiersOrder.Ordered : ModifiersOrder.Unordered;
             }
         }
     }

@@ -56,7 +56,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": true
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""Look"",
@@ -65,7 +66,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": true
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""Fire"",
@@ -74,7 +76,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -311,7 +314,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""Submit"",
@@ -320,7 +324,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""Cancel"",
@@ -329,7 +334,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""Point"",
@@ -338,7 +344,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": true
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""Click"",
@@ -347,7 +354,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": true
+                    ""initialStateCheck"": true,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""ScrollWheel"",
@@ -356,7 +364,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Vector2"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""MiddleClick"",
@@ -365,7 +374,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""RightClick"",
@@ -374,7 +384,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""TrackedDevicePosition"",
@@ -383,7 +394,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Vector3"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""TrackedDeviceOrientation"",
@@ -392,7 +404,8 @@ namespace UnityEngine.InputSystem
                     ""expectedControlType"": ""Quaternion"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [

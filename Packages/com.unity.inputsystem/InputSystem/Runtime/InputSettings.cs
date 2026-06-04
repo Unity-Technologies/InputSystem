@@ -679,18 +679,17 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
-        /// Improves shortcut key support by making composite controls consume control input
+        /// Enables complexity-based shortcut resolution: composite bindings consume overlapping input using binding-chain depth (complexity), not per-action priority.
         /// </summary>
         /// <remarks>
-        /// Actions are exclusively triggered and will consume/block other actions sharing the same input.
-        /// E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.
-        /// Please note that enabling this will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls.
-        /// Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first.
-        /// Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls.
-        /// This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered.
-        /// These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys.
-        /// However conflicts would not occur between actions which belong to different Action Assets.
+        /// When enabled and <see cref="shortcutKeysUseActionPriority"/> is disabled, actions can exclusively trigger and consume or block other actions sharing the same input.
+        /// For example, when pressing the 'Shift+B' keys, the associated action can trigger while an action bound only to the 'B' key is prevented from triggering at the same time.
+        /// Resolution uses composite complexity (more parts in the composite are considered first). Fewer-part composites do not win over a triggered higher-complexity binding on overlapping controls.
+        /// This works well for shortcut keys; in other cases results may be undesirable, especially when two composites have the same complexity (order is then non-deterministic).
+        /// Conflicts can occur between actions in different action maps (for example UI navigation on arrow keys versus gameplay on the same keys), but not between different action assets.
+        /// When <see cref="shortcutKeysUseActionPriority"/> is enabled, this setting does not select the resolution strategy; use <see cref="shortcutKeysUseActionPriority"/> for priority-based resolution instead.
         /// </remarks>
+        /// <seealso cref="shortcutKeysUseActionPriority"/>
         public bool shortcutKeysConsumeInput
         {
             get => m_ShortcutKeysConsumeInputs;
@@ -703,6 +702,43 @@ namespace UnityEngine.InputSystem
                 OnChange();
             }
         }
+
+        /// <summary>
+        /// When enabled, shortcut overlap resolution uses each action's <see cref="InputAction.Priority"/> instead of composite complexity.
+        /// </summary>
+        /// <remarks>
+        /// If this is enabled, it takes precedence over <see cref="shortcutKeysConsumeInput"/> for resolution behavior: the system uses priority-based consumption and ordering even when complexity-based consumption is also toggled on.
+        /// Among overlapping actions on the same control, when a higher-priority action reaches <see cref="InputActionPhase.Performed"/>, a <see cref="InputAction.Priority"/> greater than zero can mark the input event as handled so lower-priority actions are suppressed; priority zero does not.
+        /// Serialized priority values on actions are always kept; when this is off, priorities are not applied at runtime and the Priority field is hidden in the Input Actions editor.
+        /// </remarks>
+        /// <seealso cref="shortcutKeysConsumeInput"/>
+        public bool shortcutKeysUseActionPriority
+        {
+            get => m_ShortcutKeysUseActionPriority;
+            set
+            {
+                if (m_ShortcutKeysUseActionPriority == value)
+                    return;
+
+                m_ShortcutKeysUseActionPriority = value;
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// True when overlap resolution should use <see cref="InputAction.Priority"/> (monitor ordering and consumption).
+        /// </summary>
+        internal bool IsShortcutResolutionUsingActionPriority => m_ShortcutKeysUseActionPriority;
+
+        /// <summary>
+        /// True when overlap resolution should use composite binding complexity (develop behavior), not action priority.
+        /// </summary>
+        internal bool IsShortcutResolutionUsingComplexity => m_ShortcutKeysConsumeInputs && !m_ShortcutKeysUseActionPriority;
+
+        /// <summary>
+        /// Modifier composites use ordered evaluation when complexity-based shortcut support is active.
+        /// </summary>
+        internal bool IsShortcutComplexityModifierOrderActive => m_ShortcutKeysConsumeInputs && !m_ShortcutKeysUseActionPriority;
 
         /// <summary>
         /// Enable or disable an internal feature by its name.
@@ -759,6 +795,7 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
         [SerializeField] private bool m_ShortcutKeysConsumeInputs = false; // This is the shortcut support from v1.4. Temporarily moved here as an opt-in feature, while it's issues are investigated.
+        [SerializeField] private bool m_ShortcutKeysUseActionPriority = false;
 
         [NonSerialized] internal HashSet<string> m_FeatureFlags;
 
@@ -1058,6 +1095,7 @@ namespace UnityEngine.InputSystem
                 CompareSets(a.supportedDevices, b.supportedDevices) &&
                 a.disableRedundantEventsMerging == b.disableRedundantEventsMerging &&
                 a.shortcutKeysConsumeInput == b.shortcutKeysConsumeInput &&
+                a.shortcutKeysUseActionPriority == b.shortcutKeysUseActionPriority &&
 
                 CompareFeatureFlag(a, b, InputFeatureNames.kUseOptimizedControls) &&
                 CompareFeatureFlag(a, b, InputFeatureNames.kUseReadValueCaching) &&

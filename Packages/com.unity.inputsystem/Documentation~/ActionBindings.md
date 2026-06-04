@@ -892,6 +892,9 @@ By using the [Pass-Through](xref:input-system-responding#pass-through) action ty
 > [!NOTE]
 > The mechanism described here only applies to actions that are part of the same [`InputActionMap`](xref:UnityEngine.InputSystem.InputActionMap) or [`InputActionAsset`](xref:UnityEngine.InputSystem.InputActionAsset).
 
+> [!NOTE]
+> To use automatic composite complexity as described below, in **Project Settings** > **Input System Package**, enable __Complexity-Based Shortcut Resolution__ ([`InputSettings.shortcutKeysConsumeInput`](xref:UnityEngine.InputSystem.InputSettings.shortcutKeysConsumeInput)) and leave __Action Priority Shortcut Resolution__ ([`InputSettings.shortcutKeysUseActionPriority`](xref:UnityEngine.InputSystem.InputSettings.shortcutKeysUseActionPriority)) disabled. If __Action Priority Shortcut Resolution__ is enabled, overlaps are resolved using each action's [`InputAction.Priority`](xref:UnityEngine.InputSystem.InputAction.Priority) instead. Refer to [Input settings](xref:input-system-settings#improved-shortcut-support) for details.
+
 Inputs that are used in combinations with other inputs may also lead to ambiguities. If, for example, the `b` key on the Keyboard is bound both on its own as well as in combination with the `shift` key, then if you first press `shift` and then `b`, the latter key press would be a valid input for either of the actions.
 
 The way this is handled is that bindings will be processed in the order of decreasing "complexity". This metric is derived automatically from the binding:

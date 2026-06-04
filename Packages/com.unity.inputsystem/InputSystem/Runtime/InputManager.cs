@@ -432,6 +432,24 @@ namespace UnityEngine.InputSystem
 
         public bool isProcessingEvents => m_InputEventStream.isOpen;
 
+        public void AddStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex, uint groupIndex)
+            => m_StateMonitors.AddStateChangeMonitor(control, monitor, monitorIndex, groupIndex);
+
+        public void RemoveStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor, long monitorIndex)
+            => m_StateMonitors.RemoveStateChangeMonitor(control, monitor, monitorIndex);
+
+        public void AddStateChangeMonitorTimeout(InputControl control, IInputStateChangeMonitor monitor, double time, long monitorIndex, int timerIndex)
+            => m_StateMonitors.AddStateChangeMonitorTimeout(control, monitor, time, monitorIndex, timerIndex);
+
+        public void RemoveStateChangeMonitorTimeout(IInputStateChangeMonitor monitor, long monitorIndex, int timerIndex)
+            => m_StateMonitors.RemoveStateChangeMonitorTimeout(monitor, monitorIndex, timerIndex);
+
+        public void SignalStateChangeMonitor(InputControl control, IInputStateChangeMonitor monitor)
+            => m_StateMonitors.SignalStateChangeMonitor(control, monitor);
+
+        public unsafe void FireStateChangeNotifications()
+            => m_StateMonitors.FireStateChangeNotifications();
+
 #if UNITY_EDITOR
         /// <summary>
         /// Callback that can be used to display a warning and draw additional custom Editor UI for bindings.
@@ -1546,17 +1564,11 @@ namespace UnityEngine.InputSystem
                 return;
 
             // Remove state monitors while device index is still valid.
-            RemoveStateChangeMonitors(device);
+            m_StateMonitors.OnDeviceRemoved(device);
 
             // Remove from device array.
             var deviceIndex = device.m_DeviceIndex;
             var deviceId = device.deviceId;
-            if (deviceIndex < m_StateChangeMonitors.LengthSafe())
-            {
-                // m_StateChangeMonitors mirrors layout of m_Devices *but* may be shorter.
-                var count = m_StateChangeMonitors.Length;
-                ArrayHelpers.EraseAtWithCapacity(m_StateChangeMonitors, ref count, deviceIndex);
-            }
             ArrayHelpers.EraseAtWithCapacity(m_Devices, ref m_DevicesCount, deviceIndex);
 
             m_DevicesById.Remove(deviceId);
@@ -2276,10 +2288,15 @@ namespace UnityEngine.InputSystem
                 m_NativeBeforeUpdateHooked = true;
             }
 
-            #if UNITY_ANALYTICS || UNITY_EDITOR
+#if UNITY_ANALYTICS || UNITY_EDITOR
             InputAnalytics.Initialize(this);
             m_Runtime.onShutdown = () => InputAnalytics.OnShutdown(this);
-            #endif
+#endif
+
+            // Recreate only when there is no collection yet or the runtime instance changed. Reusing the same
+            // IInputRuntime (e.g. test Restore()) must keep registered control monitors and pending timeouts.
+            if (m_StateMonitors == null || !ReferenceEquals(m_StateMonitors.CapturedRuntime, m_Runtime))
+                m_StateMonitors = new InputManagerStateMonitors(() => m_DevicesCount, () => isProcessingEvents, m_Runtime);
         }
 
         internal void InstallGlobals()
@@ -2461,8 +2478,12 @@ namespace UnityEngine.InputSystem
         #endif
 
         private IInputRuntime m_Runtime;
+        internal InputManagerStateMonitors m_StateMonitors;
         private InputMetrics m_Metrics;
         private InputSettings m_Settings;
+        private bool m_HaveCachedShortcutResolutionSettings;
+        private bool m_CachedShortcutKeysConsumeInput;
+        private bool m_CachedShortcutKeysUseActionPriority;
 
         // Extract as booleans (from m_Settings) because feature check is in the hot path
 
@@ -3097,6 +3118,15 @@ namespace UnityEngine.InputSystem
             foreach (var device in devices)
                 device.MarkAsStaleRecursively();
 
+            var consume = m_Settings.shortcutKeysConsumeInput;
+            var useActionPriority = m_Settings.shortcutKeysUseActionPriority;
+            if (m_HaveCachedShortcutResolutionSettings &&
+                (m_CachedShortcutKeysConsumeInput != consume || m_CachedShortcutKeysUseActionPriority != useActionPriority))
+                InputActionState.RequestBindingResolutionAfterShortcutSettingsChange();
+            m_CachedShortcutKeysConsumeInput = consume;
+            m_CachedShortcutKeysUseActionPriority = useActionPriority;
+            m_HaveCachedShortcutResolutionSettings = true;
+
             // Let listeners know.
             DelegateHelpers.InvokeCallbacksSafe(ref m_SettingsChangedListeners,
                 k_InputOnSettingsChangeMarker, "InputSystem.onSettingsChange");
@@ -3300,7 +3330,7 @@ namespace UnityEngine.InputSystem
                     // Normally, we process action timeouts after first processing all events. If we have no
                     // events, we still need to check timeouts.
                     if (shouldProcessActionTimeouts)
-                        ProcessStateChangeMonitorTimeouts();
+                        m_StateMonitors.ProcessTimeouts();
 
                     InvokeAfterUpdateCallback(updateType);
                     m_CurrentUpdate = InputUpdateType.None;
@@ -3318,7 +3348,7 @@ namespace UnityEngine.InputSystem
                 ProcessEventBuffer(updateType, ref eventBuffer, currentTime, timesliceEvents, dropStatusEvents);
 
                 if (shouldProcessActionTimeouts)
-                    ProcessStateChangeMonitorTimeouts();
+                    m_StateMonitors.ProcessTimeouts();
 
                 FinalizeUpdate(updateType);
             } // k_InputUpdateProfilerMarker
@@ -4294,7 +4324,7 @@ namespace UnityEngine.InputSystem
 
             // If state monitors need to be re-sorted, do it now.
             // NOTE: This must happen with the monitors in non-signalled state!
-            SortStateChangeMonitorsIfNecessary(deviceIndex);
+            m_StateMonitors.SortMonitorsForDeviceIfNeeded(deviceIndex);
 
             // Before we update state, let change monitors compare the old and the new state.
             // We do this instead of first updating the front buffer and then comparing to the
@@ -4303,7 +4333,7 @@ namespace UnityEngine.InputSystem
             // state, we can have multiple state events in the same frame yet still get reliable
             // change notifications.
             var haveSignalledMonitors =
-                ProcessStateChangeMonitors(deviceIndex, statePtr,
+                m_StateMonitors.ProcessStateChange(deviceIndex, statePtr,
                     deviceBuffer + stateBlockOfDevice.byteOffset,
                     stateSize, stateOffsetInDevice);
 
@@ -4387,7 +4417,7 @@ namespace UnityEngine.InputSystem
             // Now that we've committed the new state to memory, if any of the change
             // monitors fired, let the associated actions know.
             if (haveSignalledMonitors)
-                FireStateChangeNotifications(deviceIndex, internalTime, eventPtr);
+                m_StateMonitors.FireStateChangeNotifications(deviceIndex, internalTime, eventPtr);
 
             return makeDeviceCurrent;
         }
