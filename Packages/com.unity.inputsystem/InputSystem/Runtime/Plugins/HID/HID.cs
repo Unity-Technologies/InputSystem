@@ -871,12 +871,21 @@ namespace UnityEngine.InputSystem.HID
 
                     ////REVIEW: this probably only works with hatswitches that have their null value at logicalMax+1
 
+                    // All four sub-controls overlap the hat itself — they read the same value
+                    // and only differ in the DiscreteButton range parameters above.
+                    // WithByteOffset(0) anchors them to the hat parent's byte (FinalizeControlHierarchy
+                    // adds the parent's byteOffset afterwards). Without it, the layout system
+                    // auto-allocates a fresh byte for each — fine for 4-bit hats (bit-addressing,
+                    // they pack into one byte) but for 8-bit hats each sub-control claims its own
+                    // byte, pushes them past the device's report size, and InputDeviceBuilder's
+                    // bit-range tree builder infinite-loops on the dangling controls. See UUM-143659.
                     builder.AddControl(controlName + "/up")
                         .WithFormat(InputStateBlock.FormatBit)
                         .WithLayout("DiscreteButton")
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1},nullValue={2},wrapAtValue={3}",
                             logicalMax, logicalMin + 1, nullValue.ToString(), logicalMax))
+                        .WithByteOffset(0)
                         .WithBitOffset((uint)element.reportOffsetInBits % 8)
                         .WithSizeInBits((uint)reportSizeInBits);
 
@@ -886,6 +895,7 @@ namespace UnityEngine.InputSystem.HID
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",
                             logicalMin + 1, logicalMin + 3))
+                        .WithByteOffset(0)
                         .WithBitOffset((uint)element.reportOffsetInBits % 8)
                         .WithSizeInBits((uint)reportSizeInBits);
 
@@ -895,6 +905,7 @@ namespace UnityEngine.InputSystem.HID
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",
                             logicalMin + 3, logicalMin + 5))
+                        .WithByteOffset(0)
                         .WithBitOffset((uint)element.reportOffsetInBits % 8)
                         .WithSizeInBits((uint)reportSizeInBits);
 
@@ -904,6 +915,7 @@ namespace UnityEngine.InputSystem.HID
                         .WithParameters(string.Format(CultureInfo.InvariantCulture,
                             "minValue={0},maxValue={1}",
                             logicalMin + 5, logicalMin + 7))
+                        .WithByteOffset(0)
                         .WithBitOffset((uint)element.reportOffsetInBits % 8)
                         .WithSizeInBits((uint)reportSizeInBits);
                 }
