@@ -201,6 +201,7 @@ internal partial class CoreTests
 
         Release(gamepad.buttonSouth);
         Release(gamepad.leftShoulder);
+        InputSystem.Update();
     }
 
     /// <summary>
