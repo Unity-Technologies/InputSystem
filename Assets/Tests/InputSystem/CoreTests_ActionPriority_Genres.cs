@@ -300,6 +300,7 @@ internal partial class CoreTests
             "Team chat should trigger when Alt, Shift, and W are down together.");
 
         Assert.IsFalse(actionMove.IsPressed(), "Move shouldn't be activated!");
+        Assert.IsFalse(actionRunFast.IsPressed(), "Run Fast shouldn't be activated!");
 
         Release(keyboard.leftAltKey);
         Release(keyboard.leftShiftKey);
