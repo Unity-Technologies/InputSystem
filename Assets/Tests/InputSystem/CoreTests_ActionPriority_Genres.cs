@@ -86,7 +86,7 @@ internal partial class CoreTests
     public void Actions_Priority_Genres_RTS_ControlShiftOne_SuppressesLowerTiers()
     {
         EnableActionPriorityShortcutResolution();
-        
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
         using var map = CreateRtsExampleShortcutMap(out var actionOne, out var actionShiftOne, out var actionControlShiftOne);
         map.Enable();
@@ -124,7 +124,7 @@ internal partial class CoreTests
         actionJump.AddBinding("<Gamepad>/buttonSouth");
 
         actionJumpKick = map.AddAction("Jump Kick", InputActionType.Button);
-        
+
         actionJumpKick.AddCompositeBinding("OneModifier")
             .With("modifier", "<Gamepad>/leftShoulder")
             .With("binding", "<Gamepad>/buttonSouth");
@@ -153,7 +153,7 @@ internal partial class CoreTests
         Assert.IsFalse(actionJumpKick.IsPressed(), "Jump Kick should not be active without L1+X.");
 
         Set(gamepad.leftStick, Vector2.zero);
-        InputSystem.Update();        
+        InputSystem.Update();
     }
 
     [Test]
@@ -177,7 +177,7 @@ internal partial class CoreTests
 
         Release(gamepad.buttonSouth);
         Set(gamepad.leftStick, Vector2.zero);
-        InputSystem.Update();        
+        InputSystem.Update();
     }
 
     [Test]
@@ -211,7 +211,6 @@ internal partial class CoreTests
         out InputAction actionRunFast,
         out InputAction actionTeamChat)
     {
-
         var map = new InputActionMap("ShooterExample");
 
         actionMove = map.AddAction("Move", InputActionType.Value);
@@ -305,6 +304,6 @@ internal partial class CoreTests
         Release(keyboard.leftShiftKey);
         Release(keyboard.wKey);
 
-        InputSystem.Update();    
+        InputSystem.Update();
     }
 }
