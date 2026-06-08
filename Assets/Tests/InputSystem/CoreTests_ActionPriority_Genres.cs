@@ -115,7 +115,7 @@ internal partial class CoreTests
         out InputAction actionJump,
         out InputAction actionJumpKick)
     {
-        var map = new InputActionMap("DualshockExample");
+        var map = new InputActionMap("JoystickExample");
 
         actionMove = map.AddAction("Move", InputActionType.Value, expectedControlLayout: "Vector2");
         actionMove.AddBinding("<Gamepad>/leftStick");
@@ -201,5 +201,110 @@ internal partial class CoreTests
 
         Release(gamepad.buttonSouth);
         Release(gamepad.leftShoulder);
+    }
+
+    /// <summary>
+    /// The following section originates from shooter games where move overlaps with a bunch of weapon controls and team interactions.
+    /// </summary>
+    private static InputActionMap CreateShooterExampleShortcutMap(
+        out InputAction actionMove,
+        out InputAction actionRunFast,
+        out InputAction actionTeamChat)
+    {
+
+        var map = new InputActionMap("ShooterExample");
+
+        actionMove = map.AddAction("Move", InputActionType.Value);
+        actionMove.AddCompositeBinding("2DVector")
+            .With("up", "<Keyboard>/w")
+            .With("down", "<Keyboard>/s")
+            .With("left", "<Keyboard>/a")
+            .With("right", "<Keyboard>/d");
+
+        actionRunFast = map.AddAction("Run Fast", InputActionType.Button);
+        actionRunFast.AddCompositeBinding("OneModifier")
+            .With("modifier", "<Keyboard>/shift")
+            .With("binding", "<Keyboard>/w");
+
+        actionTeamChat = map.AddAction("Team chat", InputActionType.Button);
+        actionTeamChat.AddCompositeBinding("TwoModifiers")
+            .With("modifier1", "<Keyboard>/alt")
+            .With("modifier2", "<Keyboard>/shift")
+            .With("binding", "<Keyboard>/w");
+
+        actionTeamChat.Priority = 2;
+
+        return map;
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_Genres_Shooter_Move_Only_Triggers_Move()
+    {
+        EnableActionPriorityShortcutResolution();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        using var map = CreateShooterExampleShortcutMap(out var actionMove, out var actionRunFast, out var actionTeamChat);
+        map.Enable();
+
+        Press(keyboard.wKey);
+        InputSystem.Update();
+
+        Assert.IsTrue(actionMove.IsPressed(), "Move should be activated by W.");
+        Assert.IsFalse(actionRunFast.IsPressed(), "Run Fast should not be activated by W alone.");
+        Assert.IsFalse(actionTeamChat.IsPressed(), "Team chat should not be activated by W alone.");
+
+        Release(keyboard.wKey);
+        InputSystem.Update();
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_Genres_Shooter_ShiftW_Triggers_Move_And_RunFast()
+    {
+        EnableActionPriorityShortcutResolution();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        using var map = CreateShooterExampleShortcutMap(out var actionMove, out var actionRunFast, out var actionTeamChat);
+        map.Enable();
+
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.wKey);
+
+        InputSystem.Update();
+
+        Assert.IsTrue(actionMove.IsPressed(), "Move should still be activated by W.");
+        Assert.IsTrue(actionRunFast.IsPressed(), "Run Fast should be activated by Shift+W.");
+        Assert.IsFalse(actionTeamChat.IsPressed(), "Team chat should not be activated without Alt.");
+
+        Release(keyboard.wKey);
+        Release(keyboard.leftShiftKey);
+        InputSystem.Update();
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_Genres_Shooter_AltShiftW_Only_Triggers_TeamChat()
+    {
+        EnableActionPriorityShortcutResolution();
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        using var map = CreateShooterExampleShortcutMap(out var actionMove, out var actionRunFast, out var actionTeamChat);
+        map.Enable();
+
+        Press(keyboard.leftAltKey);
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.wKey);
+
+        InputSystem.Update();
+
+        Assert.IsTrue(
+            actionTeamChat.IsPressed() || actionTeamChat.IsInProgress(),
+            "Team chat should trigger when Alt, Shift, and W are down together.");
+
+        Assert.IsFalse(actionMove.IsPressed(), "Move shouldn't be activated!");
+
+        Release(keyboard.leftAltKey);
+        Release(keyboard.leftShiftKey);
+        Release(keyboard.wKey);
+
+        InputSystem.Update();    
     }
 }
