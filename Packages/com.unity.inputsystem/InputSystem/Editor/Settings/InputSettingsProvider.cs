@@ -24,7 +24,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static readonly string[] kInputSettingsKeywords =
         {
-            "Input", "Action", "Controls", "Gamepad", "Keyboard", "Mouse", "Touch"
+            "Input", "Action", "Controls", "Gamepad", "Keyboard", "Mouse", "Touch", "Shortcut", "Priority", "Complexity", "Consumption"
         };
 
         public static void Open()
@@ -171,15 +171,29 @@ namespace UnityEngine.InputSystem.Editor
                 EditorGUILayout.LabelField("Improved Shortcut Support", EditorStyles.boldLabel);
                 EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_ShortcutKeysConsumeInputs, m_ShortcutKeysConsumeInputsContent);
-                if (m_ShortcutKeysConsumeInputs.boolValue)
-                    EditorGUILayout.HelpBox("Please note that enabling Improved Shortcut Support will cause actions with composite bindings to consume input and block any other actions which are enabled and sharing the same controls. "
-                        + "Input consumption is performed in priority order, with the action containing the greatest number of bindings checked first. "
-                        + "Therefore actions requiring fewer keypresses will not be triggered if an action using more keypresses is triggered and has overlapping controls. "
-                        + "This works for shortcut keys, however in other cases this might not give the desired result, especially where there are actions with the exact same number of composite controls, in which case it is non-deterministic which action will be triggered. "
-                        + "These conflicts may occur even between actions which belong to different Action Maps e.g. if using an UIInputModule with the Arrow Keys bound to the Navigate Action in the UI Action Map, this would interfere with other Action Maps using those keys. "
-                        + "However conflicts would not occur between actions which belong to different Action Assets. "
-                        + "Since event consumption only occurs for enabled actions, you can resolve unexpected issues by ensuring that only those Actions or Action Maps that are relevant to your game's current context are enabled. Enabling or disabling actions as your game or application moves between different contexts. "
-                        , MessageType.None);
+                EditorGUILayout.PropertyField(m_ShortcutKeysUseActionPriority, m_ShortcutKeysUseActionPriorityContent);
+                if (m_ShortcutKeysUseActionPriority.boolValue && m_ShortcutKeysConsumeInputs.boolValue)
+                {
+                    EditorGUILayout.HelpBox(
+                        "Action priority shortcut resolution is enabled and takes precedence. Complexity-based consumption is also toggled on but will not be used until action priority is turned off.",
+                        MessageType.Info);
+                }
+                else if (m_ShortcutKeysUseActionPriority.boolValue)
+                {
+                    EditorGUILayout.HelpBox(
+                        "When several enabled actions are bound to the same control, the one with the highest Priority is evaluated first and consumes the input, so lower-priority actions don't also trigger from that event. "
+                        + "Set each action's Priority in the Input Actions editor. Priority values stay saved on the asset even when Action Priority Shortcut Resolution is turned off.",
+                        MessageType.None);
+                }
+                else if (m_ShortcutKeysConsumeInputs.boolValue)
+                {
+                    EditorGUILayout.HelpBox(
+                        "Overlapping shortcuts are resolved by composite complexity: an action whose composite has more parts (e.g. Ctrl+Shift+S) wins over one with fewer parts — or a plain binding — on the same control, and consumes the input so the simpler action doesn't also fire. "
+                        + "Two composites of equal complexity have no guaranteed order between them. "
+                        + "Resolution applies across action maps within the same asset (for example UI navigation vs. gameplay on the same keys), but never across separate action assets. "
+                        + "Only enabled actions consume input, so disable maps or actions you don't need in the current context to avoid unexpected behaviour.",
+                        MessageType.None);
+                }
 
                 if (EditorGUI.EndChangeCheck())
                     Apply();
@@ -300,6 +314,7 @@ namespace UnityEngine.InputSystem.Editor
             m_TapRadius = m_SettingsObject.FindProperty("m_TapRadius");
             m_MultiTapDelayTime = m_SettingsObject.FindProperty("m_MultiTapDelayTime");
             m_ShortcutKeysConsumeInputs = m_SettingsObject.FindProperty("m_ShortcutKeysConsumeInputs");
+            m_ShortcutKeysUseActionPriority = m_SettingsObject.FindProperty("m_ShortcutKeysUseActionPriority");
 
             m_UpdateModeContent = new GUIContent("Update Mode", "When should the Input System be updated?");
 #if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
@@ -330,7 +345,8 @@ namespace UnityEngine.InputSystem.Editor
             m_DefaultHoldTimeContent = new GUIContent("Default Hold Time", "Default duration to be used for Hold interactions.");
             m_TapRadiusContent = new GUIContent("Tap Radius", "Maximum distance between two finger taps on a touch screen device allowed for the system to consider this a tap of the same touch (as opposed to a new touch).");
             m_MultiTapDelayTimeContent = new GUIContent("MultiTap Delay Time", "Default delay to be allowed between taps for MultiTap interactions. Also used by by touch devices to count multi taps.");
-            m_ShortcutKeysConsumeInputsContent = new GUIContent("Enable Input Consumption", "Actions are exclusively triggered and will consume/block other actions sharing the same input. E.g. when pressing the 'Shift+B' keys, the associated action would trigger but any action bound to just the 'B' key would be prevented from triggering at the same time.");
+            m_ShortcutKeysConsumeInputsContent = new GUIContent("Complexity Consumption", "When enabled (and action priority resolution is off), composite bindings consume overlapping input using binding-chain depth (complexity), not per-action priority.");
+            m_ShortcutKeysUseActionPriorityContent = new GUIContent("Priority Consumption", "When enabled, overlapping actions are resolved using each action's Priority value. This overrides complexity-based resolution even if it is also enabled.");
 
             // Initialize ReorderableList for list of supported devices.
             var supportedDevicesProperty = m_SettingsObject.FindProperty("m_SupportedDevices");
@@ -442,6 +458,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_TapRadius;
         [NonSerialized] private SerializedProperty m_MultiTapDelayTime;
         [NonSerialized] private SerializedProperty m_ShortcutKeysConsumeInputs;
+        [NonSerialized] private SerializedProperty m_ShortcutKeysUseActionPriority;
 
         [NonSerialized] private ReorderableList m_SupportedDevices;
         [NonSerialized] private string[] m_AvailableInputSettingsAssets;
@@ -468,6 +485,7 @@ namespace UnityEngine.InputSystem.Editor
         private GUIContent m_TapRadiusContent;
         private GUIContent m_MultiTapDelayTimeContent;
         private GUIContent m_ShortcutKeysConsumeInputsContent;
+        private GUIContent m_ShortcutKeysUseActionPriorityContent;
 
         [NonSerialized] private InputSettingsiOSProvider m_iOSProvider;
 
@@ -489,17 +507,36 @@ namespace UnityEngine.InputSystem.Editor
     [CustomEditor(typeof(InputSettings))]
     internal class InputSettingsEditor : UnityEditor.Editor
     {
-        public override void OnInspectorGUI()
+        public override VisualElement CreateInspectorGUI()
         {
-            EditorGUILayout.Space();
+            var root = new VisualElement();
 
-            if (GUILayout.Button("Open Input Settings Window", GUILayout.Height(30)))
-                InputSettingsProvider.Open();
+            var openButton = new Button(() => InputSettingsProvider.Open())
+            {
+                text = "Open Input Settings Window",
+                style = { minHeight = 30, whiteSpace = WhiteSpace.Normal }
+            };
+            root.Add(openButton);
 
-            EditorGUILayout.Space();
+            // UndoRedoCallback is void(), not Action, so an adapter is required.
+            // The variable is shared between the two lambdas so the same instance is removed on unsubscribe.
+            Undo.UndoRedoCallback undoRedoAdapter = null;
+            root.Add(InputAssetEditorUtils.CreateMakeActiveGui(
+                () => InputSystem.settings, target as InputSettings,
+                target.name, "settings", (value) => InputSystem.settings = value,
+                handler =>
+                {
+                    InputSystem.onSettingsChange += handler;
+                    undoRedoAdapter = () => handler();
+                    Undo.undoRedoPerformed += undoRedoAdapter;
+                },
+                handler =>
+                {
+                    InputSystem.onSettingsChange -= handler;
+                    Undo.undoRedoPerformed -= undoRedoAdapter;
+                }));
 
-            InputAssetEditorUtils.DrawMakeActiveGui(InputSystem.settings, target as InputSettings,
-                target.name, "settings", (value) => InputSystem.settings = value);
+            return root;
         }
 
         protected override bool ShouldHideOpenButton()

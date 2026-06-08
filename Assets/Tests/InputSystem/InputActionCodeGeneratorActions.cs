@@ -99,7 +99,8 @@ public partial class @InputActionCodeGeneratorActions: IInputActionCollection2, 
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 },
                 {
                     ""name"": ""action2"",
@@ -108,7 +109,8 @@ public partial class @InputActionCodeGeneratorActions: IInputActionCollection2, 
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """",
-                    ""initialStateCheck"": false
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [

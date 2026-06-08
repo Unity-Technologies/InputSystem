@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.InputSystem.Editor.Lists;
 using UnityEngine.InputSystem.Utilities;
 
@@ -530,6 +531,18 @@ namespace UnityEngine.InputSystem.Editor
                 InputActionSerializationHelpers.SetBindingPartName(bindingProperty.wrappedProperty, partName);
                 state.serializedObject.ApplyModifiedProperties();
                 state.m_Analytics?.RegisterBindingEdit();
+                return state;
+            };
+        }
+
+        public static Command ChangeActionPriority(SerializedInputAction inputAction, int priority)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var priorityProperty = inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Priority));
+                priorityProperty.intValue = InputAction.ClampPriority(priority);
+                state.serializedObject.ApplyModifiedProperties();
+                state.m_Analytics?.RegisterActionEdit();
                 return state;
             };
         }

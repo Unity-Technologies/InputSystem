@@ -415,6 +415,79 @@ internal class HIDTests : CoreTestsFixture
         }
     }
 
+    // Regression test for https://jira.unity3d.com/browse/UUM-143659.
+    //
+    // HID devices whose report descriptor declares a hat switch with Report Size 8
+    // (rather than the standard 4 bits, e.g. ESP32-BLE-Gamepad) caused an
+    // IndexOutOfRangeException inside InputDeviceBuilder.InsertControlBitRangeNode
+    // while constructing the control tree. InputManager caught the exception and
+    // logged "Could not create a device for ...", so the device never showed up.
+    [Test]
+    [Category("Devices")]
+    [Description("Regression test for case UUM-143659")]
+    public void Devices_CanCreateGenericHID_FromGamepadWithEightBitHatSwitch()
+    {
+        // Minimal Gamepad collection that contains a hat switch whose Report Size
+        // is declared as 8 bits (instead of the usual 4). Modelled on the
+        // descriptor reported in UUM-143659 (ESP32-BLE-Gamepad library).
+        var reportDescriptor = new byte[]
+        {
+            0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+            0x09, 0x05,        // Usage (Game Pad)
+            0xA1, 0x01,        // Collection (Application)
+
+            // Two 8-bit axes so the control tree has more than one leaf.
+            0x09, 0x30,        //   Usage (X)
+            0x09, 0x31,        //   Usage (Y)
+            0x15, 0x00,        //   Logical Minimum (0)
+            0x26, 0xFF, 0x00,  //   Logical Maximum (255)
+            0x75, 0x08,        //   Report Size (8)
+            0x95, 0x02,        //   Report Count (2)
+            0x81, 0x02,        //   Input (Data,Var,Abs)
+
+            // Hat switch with the problematic 8-bit Report Size.
+            0xA1, 0x00,        //   Collection (Physical)
+            0x05, 0x01,        //     Usage Page (Generic Desktop Ctrls)
+            0x09, 0x39,        //     Usage (Hat switch)
+            0x15, 0x01,        //     Logical Minimum (1)
+            0x25, 0x08,        //     Logical Maximum (8)
+            0x35, 0x00,        //     Physical Minimum (0)
+            0x46, 0x3B, 0x01,  //     Physical Maximum (315)
+            0x65, 0x12,        //     Unit (SI Rotation, Length: Centimeter)
+            0x75, 0x08,        //     Report Size (8)   <-- bug: 8 instead of 4
+            0x95, 0x01,        //     Report Count (1)
+            0x81, 0x42,        //     Input (Data,Var,Abs,Null State)
+            0xC0,              //   End Collection
+
+            0xC0,              // End Collection
+        };
+
+        var deviceId = runtime.AllocateDeviceId();
+        SetDeviceCommandCallbackToReturnReportDescriptor(deviceId, reportDescriptor);
+
+        runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "TestEightBitHatGamepad",
+                capabilities = new HID.HIDDeviceDescriptor
+                {
+                    vendorId = 0xE502,
+                    productId = 0xBBAB
+                }.ToJson()
+            }.ToJson(), deviceId);
+
+        // Device construction runs through InputDeviceBuilder. Before the fix
+        // this raises IndexOutOfRangeException in InsertControlBitRangeNode,
+        // which InputManager catches and turns into a LogType.Error
+        // ("Could not create a device for ...") — that error fails the test.
+        InputSystem.Update();
+
+        Assert.That(InputSystem.GetDeviceById(deviceId), Is.Not.Null,
+            "Device should be created without throwing IndexOutOfRangeException.");
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_CanCreateGenericHID_FromDeviceWithParsedReportDescriptor()

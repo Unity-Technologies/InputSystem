@@ -1887,4 +1887,23 @@ partial class CoreTests
         ////TODO
         Assert.Fail();
     }
+
+    [Test]
+    [Category("State")]
+    public void State_InputManagerInstallRuntime_WithSameRuntimeInstance_DoesNotReplaceStateMonitors()
+    {
+        InputSystem.AddDevice<Keyboard>();
+        using (var map = new InputActionMap("install_runtime_monitors"))
+        {
+            map.AddAction("a", binding: "<Keyboard>/space");
+            map.Enable();
+
+            var monitors = InputSystem.manager.m_StateMonitors;
+            Assert.That(monitors, Is.Not.Null);
+
+            InputSystem.manager.InstallRuntime(InputSystem.manager.runtime);
+
+            Assert.That(ReferenceEquals(InputSystem.manager.m_StateMonitors, monitors), Is.True);
+        }
+    }
 }

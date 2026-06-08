@@ -1,4 +1,4 @@
-﻿using InputSystem.Cookbook.Recipes;
+using InputSystem.Cookbook.Recipes;
 using System.Text.Json;
 using RecipeEngine.Api.Commands;
 using RecipeEngine.Api.Platforms;
@@ -17,7 +17,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
     readonly string[] PackagesRootPaths = ["Packages"];
 
     private static InputSystemSettings? _instance;
-    
+
     public static readonly string BranchName = "develop";
     public static readonly string InputSystemPackageName = "com.unity.inputsystem";
 
@@ -29,13 +29,13 @@ public class InputSystemSettings : AnnotatedSettingsBase
 
     // Mobile platforms which run build jobs
     public readonly Dictionary<SystemType, Platform> MobileBuildPlatforms = new();
-    
+
     // Mobile platforms which run tests jobs
     public readonly Dictionary<SystemType, Platform> MobileTestPlatforms = new();
 
     // iOS platform with iOS 15 device (iPhone SE 3rd generation) for 6000.3+ editors
     public readonly Platform iOS15Platform;
-    
+
     public readonly string[] AndroidExtraCommands = new[]
     {
         //Establish an ADB connection with the device
@@ -88,7 +88,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
             return _instance;
         }
     }
-    
+
     readonly string mobileConfigFilePath = ".yamato/mobile_config.json";
 
     public InputSystemSettings()
@@ -99,7 +99,7 @@ public class InputSystemSettings : AnnotatedSettingsBase
             wrenchCsProjectPath: "/Tools/CI/InputSystem.Cookbook.csproj",
             useLocalPvpExemptions: true
         );
-        
+
         // Ignore packages listed below in PreviewAPV because they cause instability in the editor
         // We don't want to block our development on fixing those as they are not related to our package.
         // We can remove them from this list once the issues are fixed on their end.
@@ -120,35 +120,50 @@ public class InputSystemSettings : AnnotatedSettingsBase
                 }
             }
         };
-        
+
         InputSystemPackage.CoverageCommands.Enabled = true;
-        
+
         Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
-        
+
         OverridePackagePlatform(InputSystemPackage);
-        
+
+        foreach ((string name, WrenchPackage package) in Wrench.Packages)
+        {
+            Wrench.Packages[name].EditorPlatforms[SystemType.MacOS] = new Platform(new Agent("package-ci/macos-13-arm64:v4", FlavorType.MacDefault, ResourceType.VmOsx, "M1"), SystemType.MacOS);
+        }
+
         ReadMobileConfig();
-        
+
         var oldIOSAgent = MobileTestPlatforms[SystemType.IOS].Agent;
         iOS15Platform = new Platform(new Agent(oldIOSAgent.Image, oldIOSAgent.Flavor, oldIOSAgent.Resource, "SE-Gen3"), SystemType.IOS);
     }
-    
-    // Default FlavorType was changed for Win & Mac in Wrench 2.0.  
+
+    // Default FlavorType was changed for Win & Mac in Wrench 2.0.
     // Overriding this to keep them the same esp. for performance jobs.
+    // Ubuntu2204 is overridden to use a GPU VM to avoid software rendering slowdowns
+    // when running standalone player tests.
     private void OverridePackagePlatform(WrenchPackage package)
     {
         foreach (UnityEditor unityEditor in package.UnityEditors)
         {
-            unityEditor.EditorPlatforms.Items[EditorPlatformType.Win10] 
-                = new EditorPlatform(EditorPlatformType.Win10, 
-                    new Agent("package-ci/win10:v4", FlavorType.BuildLarge, ResourceType.Vm));
-            
-            unityEditor.EditorPlatforms.Items[EditorPlatformType.MacOs13] 
-                = new EditorPlatform(EditorPlatformType.MacOs13, 
+            unityEditor.EditorPlatforms.Items[EditorPlatformType.Win10]
+                = new EditorPlatform(EditorPlatformType.Win10,
+                new Agent("package-ci/win10:v4", FlavorType.BuildLarge, ResourceType.Vm));
+
+            // Unity 6.6 defaults to MacOs13Arm in Wrench 2.12.0 — don't override it back to Intel.
+            if (unityEditor.Version.Version != "6000.6")
+            {
+                unityEditor.EditorPlatforms.Items[EditorPlatformType.MacOs13]
+                    = new EditorPlatform(EditorPlatformType.MacOs13,
                     new Agent("package-ci/macos-13:v4", FlavorType.BuildExtraLarge, ResourceType.VmOsx));
+            }
+
+            unityEditor.EditorPlatforms.Items[EditorPlatformType.Ubuntu2204]
+                = new EditorPlatform(EditorPlatformType.Ubuntu2204,
+                new Agent("package-ci/ubuntu-22.04:v4", FlavorType.BuildLarge, ResourceType.VmGpu));
         }
     }
-    
+
     public WrenchSettings Wrench { get; private set; }
 
     void ReadMobileConfig()
