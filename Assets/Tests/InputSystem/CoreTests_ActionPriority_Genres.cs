@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 
@@ -8,7 +9,7 @@ using UnityEngine.InputSystem.Controls;
 internal partial class CoreTests
 {
     /// <summary>
-    /// Programmatic map matching the RTS example scene: plain <c>1</c>, <c>Shift+1</c>, and <c>Ctrl+Shift+1</c> on the same binding key.
+    /// Here we have some RTS-related actions and tests. This whole thing emerged out of having to implement control groups in RTS games.
     /// </summary>
     private static InputActionMap CreateRtsExampleShortcutMap(
         out InputAction actionOne,
@@ -40,7 +41,8 @@ internal partial class CoreTests
     [Category("Actions Priority")]
     public void Actions_Priority_Genres_RTS_Key1Only_ActivatesPlainOne()
     {
-        EnableComplexityShortcutResolution();
+        EnableActionPriorityShortcutResolution();
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
         using var map = CreateRtsExampleShortcutMap(out var actionOne, out var actionShiftOne, out var actionControlShiftOne);
         map.Enable();
@@ -60,7 +62,8 @@ internal partial class CoreTests
     [Category("Actions Priority")]
     public void Actions_Priority_Genres_RTS_ShiftOne_SuppressesPlainOne()
     {
-        EnableComplexityShortcutResolution();
+        EnableActionPriorityShortcutResolution();
+
         var keyboard = InputSystem.AddDevice<Keyboard>();
         using var map = CreateRtsExampleShortcutMap(out var actionOne, out var actionShiftOne, out var actionControlShiftOne);
         map.Enable();
@@ -82,7 +85,8 @@ internal partial class CoreTests
     [Category("Actions Priority")]
     public void Actions_Priority_Genres_RTS_ControlShiftOne_SuppressesLowerTiers()
     {
-        EnableComplexityShortcutResolution();
+        EnableActionPriorityShortcutResolution();
+        
         var keyboard = InputSystem.AddDevice<Keyboard>();
         using var map = CreateRtsExampleShortcutMap(out var actionOne, out var actionShiftOne, out var actionControlShiftOne);
         map.Enable();
@@ -100,5 +104,102 @@ internal partial class CoreTests
         Release((ButtonControl)keyboard.shiftKey);
         Release((ButtonControl)keyboard.ctrlKey);
         InputSystem.Update();
+    }
+
+    /// <summary>
+    /// The following section emerged from trying input shortcuts with some generic joystick-controlled games, platformer/scroller style.
+    /// In those games, the move action overlaps with a plenty of special abilities.
+    /// </summary>
+    private static InputActionMap CreateGenericJoystickExampleShortcutMap(
+        out InputAction actionMove,
+        out InputAction actionJump,
+        out InputAction actionJumpKick)
+    {
+        var map = new InputActionMap("DualshockExample");
+
+        actionMove = map.AddAction("Move", InputActionType.Value, expectedControlLayout: "Vector2");
+        actionMove.AddBinding("<Gamepad>/leftStick");
+
+        actionJump = map.AddAction("Jump", InputActionType.Button);
+        actionJump.AddBinding("<Gamepad>/buttonSouth");
+
+        actionJumpKick = map.AddAction("Jump Kick", InputActionType.Button);
+        
+        actionJumpKick.AddCompositeBinding("OneModifier")
+            .With("modifier", "<Gamepad>/leftShoulder")
+            .With("binding", "<Gamepad>/buttonSouth");
+
+        actionJumpKick.Priority = 1;
+
+        return map;
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_Genres_GenericJoystick_LeftStick_Activates_JustOneAction()
+    {
+        EnableActionPriorityShortcutResolution();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using var map = CreateGenericJoystickExampleShortcutMap(out var actionMove, out var actionJump, out var actionJumpKick);
+        map.Enable();
+
+        Set(gamepad.leftStick, Vector2.up);
+
+        InputSystem.Update();
+
+        Assert.IsTrue(actionMove.IsPressed(), "Move should be active when the left stick is tilted.");
+        Assert.IsFalse(actionJump.IsPressed(), "Jump should not be active without X (south).");
+        Assert.IsFalse(actionJumpKick.IsPressed(), "Jump Kick should not be active without L1+X.");
+
+        Set(gamepad.leftStick, Vector2.zero);
+        InputSystem.Update();        
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_Genres_GenericJoystick_LeftStickAndX_Triggers_Move_And_Jump()
+    {
+        EnableActionPriorityShortcutResolution();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using var map = CreateGenericJoystickExampleShortcutMap(out var actionMove, out var actionJump, out var actionJumpKick);
+        map.Enable();
+
+        Set(gamepad.leftStick, Vector2.up);
+        Press(gamepad.buttonSouth);
+
+        InputSystem.Update();
+
+        Assert.IsTrue(actionMove.IsPressed(), "Move should still be active while the stick is tilted.");
+        Assert.IsTrue(actionJump.IsPressed(), "Jump should be active when X (south) is pressed.");
+        Assert.IsFalse(actionJumpKick.IsPressed(), "Jump Kick should not be active without L1.");
+
+        Release(gamepad.buttonSouth);
+        Set(gamepad.leftStick, Vector2.zero);
+        InputSystem.Update();        
+    }
+
+    [Test]
+    [Category("Actions Priority")]
+    public void Actions_Priority_Genres_GenericJoystick_L1AndX_Only_Triggers_JumpKick()
+    {
+        EnableActionPriorityShortcutResolution();
+
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        using var map = CreateGenericJoystickExampleShortcutMap(out var actionMove, out var actionJump, out var actionJumpKick);
+        map.Enable();
+
+        Press(gamepad.leftShoulder);
+        Press(gamepad.buttonSouth);
+
+        InputSystem.Update();
+
+        Assert.IsFalse(actionMove.IsPressed(), "Move should not be active when the stick is neutral.");
+        Assert.IsFalse(actionJump.IsPressed(), "Jump should not consume when Jump Kick wins (priority + consume).");
+        Assert.IsTrue(actionJumpKick.IsPressed(), "Jump Kick should be active for L1+X.");
+
+        Release(gamepad.buttonSouth);
+        Release(gamepad.leftShoulder);
     }
 }
