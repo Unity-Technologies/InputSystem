@@ -83,6 +83,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(2)] public byte highFrequencyMotorSpeed;
         [FieldOffset(3)] public byte lowFrequencyMotorSpeed;
         [FieldOffset(38)] public byte validFlag2;
+        [FieldOffset(41)] public byte lightbarSetup;
         [FieldOffset(44)] public byte redColor;
         [FieldOffset(45)] public byte greenColor;
         [FieldOffset(46)] public byte blueColor;
@@ -383,6 +384,9 @@ namespace UnityEngine.InputSystem.DualShock
         protected Color? m_LightBarColor;
         private byte outputSequenceId;
         private bool m_IsBluetooth;
+        private bool m_LedResetSent;
+        private DualSenseHIDOutputReportPayload? m_PendingBtPayload;
+        private int m_PendingBtPayloadDelay;
 
         protected override void FinishSetup()
         {
@@ -404,8 +408,23 @@ namespace UnityEngine.InputSystem.DualShock
                     }
                 }
             }
+            m_LedResetSent = false;
 
             base.FinishSetup();
+        }
+
+        private void SendBluetoothLedReset()
+        {
+            if (m_LedResetSent)
+                return;
+
+            var resetPayload = new DualSenseHIDOutputReportPayload
+            {
+                enableFlags2 = 0x08,
+            };
+            var command = DualSenseHIDBluetoothOutputReport.Create(resetPayload, ++outputSequenceId);
+            ExecuteCommand(ref command);
+            m_LedResetSent = true;
         }
 
         public override void PauseHaptics()
@@ -477,8 +496,25 @@ namespace UnityEngine.InputSystem.DualShock
                 highFrequencyMotorSpeed = (byte)NumberHelpers.NormalizedFloatToUInt(hf, byte.MinValue, byte.MaxValue),
             };
 
+            if (color.HasValue)
+            {
+                payload.enableFlags2 = 0x4;
+                payload.redColor = (byte)NumberHelpers.NormalizedFloatToUInt(color.Value.r, byte.MinValue, byte.MaxValue);
+                payload.greenColor = (byte)NumberHelpers.NormalizedFloatToUInt(color.Value.g, byte.MinValue, byte.MaxValue);
+                payload.blueColor = (byte)NumberHelpers.NormalizedFloatToUInt(color.Value.b, byte.MinValue, byte.MaxValue);
+            }
+
             if (m_IsBluetooth)
             {
+                // LED reset and color must be in separate reports with a multi-frame gap.
+                if (color.HasValue && !m_LedResetSent)
+                {
+                    SendBluetoothLedReset();
+                    m_PendingBtPayload = payload;
+                    m_PendingBtPayloadDelay = 3;
+                    return true;
+                }
+
                 var command = DualSenseHIDBluetoothOutputReport.Create(payload, ++outputSequenceId);
                 return ExecuteCommand(ref command) >= 0;
             }
@@ -606,6 +642,18 @@ namespace UnityEngine.InputSystem.DualShock
 
         public void OnNextUpdate()
         {
+            if (m_PendingBtPayload.HasValue && m_IsBluetooth)
+            {
+                if (m_PendingBtPayloadDelay > 0)
+                {
+                    m_PendingBtPayloadDelay--;
+                    return;
+                }
+
+                var command = DualSenseHIDBluetoothOutputReport.Create(m_PendingBtPayload.Value, ++outputSequenceId);
+                ExecuteCommand(ref command);
+                m_PendingBtPayload = null;
+            }
         }
 
         // filter out three lower bits as jitter noise
