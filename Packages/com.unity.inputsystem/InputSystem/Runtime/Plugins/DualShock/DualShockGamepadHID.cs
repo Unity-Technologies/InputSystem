@@ -82,6 +82,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(1)] public byte enableFlags2;
         [FieldOffset(2)] public byte highFrequencyMotorSpeed;
         [FieldOffset(3)] public byte lowFrequencyMotorSpeed;
+        [FieldOffset(38)] public byte validFlag2;
         [FieldOffset(44)] public byte redColor;
         [FieldOffset(45)] public byte greenColor;
         [FieldOffset(46)] public byte blueColor;
@@ -93,10 +94,6 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         public static FourCC Type => new FourCC('H', 'I', 'D', 'O');
         public FourCC typeStatic => Type;
 
-        // Fixed wire size for report 0x02: 1 byte report ID + 47 byte payload.
-        // The HID descriptor's outputReportSize cannot be used here: DualSense advertises a much larger
-        // max output size (~547 bytes) as the maximum across all vendor-defined feature reports, which
-        // would make the native HID backend write too many bytes and cause the request to be rejected.
         internal const int kReportSize = 48;
         internal const int kSize = InputDeviceCommand.BaseCommandSize + kReportSize;
 
@@ -121,11 +118,8 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         public static FourCC Type => new FourCC('H', 'I', 'D', 'O');
         public FourCC typeStatic => Type;
 
-        // Fixed wire size for report 0x31: 1 byte report ID + 2 byte tag + 47 byte payload + 24 byte
-        // unused fields + 4 byte CRC32. See note on DualSenseHIDUSBOutputReport about why we don't
-        // use hidDescriptor.outputReportSize here.
         internal const int kReportSize = 78;
-        internal const int kCrcInputLength = 74; // Everything before the trailing CRC32.
+        internal const int kCrcInputLength = 74;
         internal const int kSize = InputDeviceCommand.BaseCommandSize + kReportSize;
 
         [FieldOffset(0)] public InputDeviceCommand baseCommand;
@@ -137,8 +131,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
 
         [FieldOffset(InputDeviceCommand.BaseCommandSize + 0)] public unsafe fixed byte rawData[kCrcInputLength];
 
-        // CRC32 seed prepended to the report before the CRC is computed. Matches SDL / Linux PS5 HID driver.
-        // See PS_OUTPUT_CRC32_SEED in SDL's SDL_hidapi_ps5.c and linux/drivers/hid/hid-playstation.c.
+        // CRC32 seed prepended to the report data before computing the checksum.
         private const byte k_OutputCrc32Seed = 0xA2;
 
         public static unsafe DualSenseHIDBluetoothOutputReport Create(DualSenseHIDOutputReportPayload payload, byte outputSequenceId)
@@ -152,8 +145,6 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
                 payload = payload
             };
 
-            // DualSense BT output reports require a trailing CRC32 computed over a one-byte HIDP header (0xA2)
-            // followed by the 74 leading bytes of the report (reportId + tags + payload + unused fields).
             var crc = DualSenseCrc32.Compute(k_OutputCrc32Seed, report.rawData, kCrcInputLength);
             report.crc32 = crc;
 
@@ -163,8 +154,7 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
 
     internal static class DualSenseCrc32
     {
-        // Standard zlib / IEEE 802.3 CRC32: reflected polynomial 0xEDB88320, init 0xFFFFFFFF, xor-out 0xFFFFFFFF.
-        // Matches SDL_crc32 used for DualSense Bluetooth output reports.
+        // Standard zlib / IEEE 802.3 CRC32 (reflected polynomial 0xEDB88320).
         public static unsafe uint Compute(byte seed, byte* data, int length)
         {
             uint crc = 0xFFFFFFFFu;
@@ -393,7 +383,6 @@ namespace UnityEngine.InputSystem.DualShock
         protected Color? m_LightBarColor;
         private byte outputSequenceId;
         private bool m_IsBluetooth;
-        private byte m_LastLoggedReportId;
 
         protected override void FinishSetup()
         {
@@ -401,10 +390,6 @@ namespace UnityEngine.InputSystem.DualShock
             rightTriggerButton = GetChildControl<ButtonControl>("rightTriggerButton");
             playStationButton = GetChildControl<ButtonControl>("systemButton");
 
-            // Infer transport from the HID descriptor: a Bluetooth-paired DualSense advertises an
-            // output report with ID 0x31, a USB-connected one does not. This is more reliable than
-            // looking at the first input report because Windows delivers the device in "simple mode"
-            // until we send a 0x31 output, so inputs initially arrive as reportId=0x01.
             var elements = hidDescriptor.elements;
             if (elements != null)
             {
@@ -419,7 +404,6 @@ namespace UnityEngine.InputSystem.DualShock
                     }
                 }
             }
-            Debug.Log($"[DualSense] FinishSetup: m_IsBluetooth={m_IsBluetooth}, hidDescriptor.outputReportSize={hidDescriptor.outputReportSize}, elementCount={(elements?.Length ?? 0)}");
 
             base.FinishSetup();
         }
@@ -484,38 +468,24 @@ namespace UnityEngine.InputSystem.DualShock
         {
             var lf = lowFrequency.HasValue ? lowFrequency.Value : 0;
             var hf = highFrequency.HasValue ? highFrequency.Value : 0;
-            var c = color.HasValue ? color.Value : Color.black;
 
-            // DualSense differs a bit from DualShock 4 because all effects need to be set at a same time,
-            // otherwise setting just a color would disable motor rumble.
             var payload = new DualSenseHIDOutputReportPayload
             {
                 enableFlags1 = 0x1 | // Enable motor rumble.
                     0x2,             // Disable haptics.
-                enableFlags2 = 0x4,  // Enable LEDs color.
                 lowFrequencyMotorSpeed = (byte)NumberHelpers.NormalizedFloatToUInt(lf, byte.MinValue, byte.MaxValue),
                 highFrequencyMotorSpeed = (byte)NumberHelpers.NormalizedFloatToUInt(hf, byte.MinValue, byte.MaxValue),
-                redColor = (byte)NumberHelpers.NormalizedFloatToUInt(c.r, byte.MinValue, byte.MaxValue),
-                greenColor = (byte)NumberHelpers.NormalizedFloatToUInt(c.g, byte.MinValue, byte.MaxValue),
-                blueColor = (byte)NumberHelpers.NormalizedFloatToUInt(c.b, byte.MinValue, byte.MaxValue)
             };
 
-            // Output report format differs by transport: USB uses report ID 0x02 (48 bytes),
-            // Bluetooth uses report ID 0x31 (78 bytes, including a trailing CRC32). Sending the USB
-            // report over Bluetooth makes the device drop frames and ignore haptics (ISXB-1477).
             if (m_IsBluetooth)
             {
                 var command = DualSenseHIDBluetoothOutputReport.Create(payload, ++outputSequenceId);
-                var result = ExecuteCommand(ref command);
-                Debug.Log($"[DualSense] BT output sent. seq={outputSequenceId}, result={result}");
-                return result >= 0;
+                return ExecuteCommand(ref command) >= 0;
             }
             else
             {
                 var command = DualSenseHIDUSBOutputReport.Create(payload);
-                var result = ExecuteCommand(ref command);
-                Debug.Log($"[DualSense] USB output sent. result={result}");
-                return result >= 0;
+                return ExecuteCommand(ref command) >= 0;
             }
         }
 
@@ -600,18 +570,12 @@ namespace UnityEngine.InputSystem.DualShock
                 return false; // skip unrecognized state events otherwise they will corrupt control states
 
             var genericReport = (DualSenseHIDGenericInputReport*)stateEvent->state;
-            if (genericReport->reportId != m_LastLoggedReportId)
-            {
-                m_LastLoggedReportId = genericReport->reportId;
-                Debug.Log($"[DualSense] PreProcessEvent: reportId=0x{genericReport->reportId:X2}, size={stateEvent->stateSizeInBytes}, m_IsBluetooth(before)={m_IsBluetooth}");
-            }
             if (genericReport->reportId == DualSenseHIDUSBInputReport.ExpectedReportId)
             {
-                // A 78-byte report with reportId=0x01 is the Windows Bluetooth "simple mode" variant:
-                // the BT HID wrapper forces a 78-byte frame but the device has not yet been switched
-                // into enhanced reporting. Only clear m_IsBluetooth for a true USB-sized packet,
-                // otherwise we'd send the wrong output report format and lose haptics.
-                if (stateEvent->stateSizeInBytes != DualSenseHIDMinimalInputReport.ExpectedSize2)
+                // 78-byte frame with reportId=0x01 is Bluetooth "simple mode".
+                if (stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize2)
+                    m_IsBluetooth = true;
+                else
                     m_IsBluetooth = false;
                 if (stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize1 ||
                     stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize2)
