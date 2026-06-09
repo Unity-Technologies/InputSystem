@@ -4,7 +4,7 @@ uid: input-system-controls
 
 # Controls
 
-![](Images/ConceptsOverview.png)
+![A flowchart showing the general workflow of the Input System, with icons representing the different concepts. It starts with the User icon, which then leads into the Input Device and its Controls icon. This then leads into the Action Map and Actions concept. The Input Device and Action Map and Actions icons are collectively grouped under the Binding header. This leads into the final icon representing your action code.](Images/ConceptsOverview.png)
 
 A **control** is a part of a [device](devices.md) that sends values to the Input System when [actuated](control-actuation.md), such as the buttons and sticks on a gamepad, or the keys on a keyboard.
 

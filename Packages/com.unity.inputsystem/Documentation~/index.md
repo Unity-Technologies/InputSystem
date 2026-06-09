@@ -17,5 +17,5 @@ During the installation process for the Input System package, the installer offe
 
 To get started, see the [Installation](Installation.md) and [Workflows](workflows.md) sections. For a demo project, see the [Warriors demo](https://github.com/UnityTechnologies/InputSystem_Warriors) on GitHub.
 
-![](Images/ActionsEditor.png)<br/>
-_The Input Actions Editor, displaying some of the default actions that come pre-configured with the Input System package._
+![Screenshot of the Input Actions Editor window displaying the default Action Maps, Actions, and Action Properties. They are displayed in 3 columns side-by-side in that order.](Images/ActionsEditor.png)<br/>
+*The Input Actions Editor, displaying some of the default actions that come pre-configured with the Input System package.*

@@ -4,7 +4,7 @@ uid: input-system-bindings-intro
 
 # Introduction to bindings
 
-![](Images/ConceptsOverview.png)
+![A flowchart showing the general workflow of the Input System, with icons representing the different concepts. It starts with the User icon, which then leads into the Input Device and its Controls icon. This then leads into the Action Map and Actions concept. The Input Device and Action Map and Actions icons are collectively grouped under the Binding header. This leads into the final icon representing your action code.](Images/ConceptsOverview.png)
 
 A **binding** represents a connection between an [Action](actions.md) and one or more [Controls](controls.md) identified by a [Control path](./control-paths.md). For example, the right trigger of a gamepad (a control) might be bound to an an action named `accelerate`, so that pulling the right trigger causes a car to accelerate in your game.
 
