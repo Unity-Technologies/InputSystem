@@ -23,7 +23,7 @@ For information on how to create and edit Input Actions in the editor, see the [
 * To duplicate an existing Action, either right-click it and select __Duplicate__ from the context menu.
 
 
-If you’d like to delete all the actions so that you can start from an empty configuration, you don’t need to delete the individual actions one-by-one. You can delete the each Action Map, which deletes all the Actions contained in the maps in one go.
+If you’d like to delete all the actions so that you can start from an empty configuration, you don’t need to delete the individual actions one-by-one. You can delete each Action Map, which deletes all the Actions contained in the maps in one go.
 
 You can also delete all action maps, or reset all the actions back to the default values from the **more** (⋮) menu at the top right of the Input Actions section of the settings window, below the Project Settings window search field.
 
