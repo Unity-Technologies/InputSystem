@@ -10,8 +10,10 @@ You can query the [`XInputController.subType`](xref:UnityEngine.InputSystem.XInp
 
 On other platforms, Unity uses derived classes to represent Xbox controllers:
 
-* [`XboxGamepadMacOS`](xref:UnityEngine.InputSystem.XInput.XboxGamepadMacOS): Any Xbox or compatible gamepad connected to macOS via USB using the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller).  
-* [`XboxOneGampadMacOSWireless`](xref:UnityEngine.InputSystem.XInput.XboxOneGampadMacOSWireless): An Xbox One controller connected to macOS via Bluetooth. Only the latest generation of Xbox One controllers supports Bluetooth. These controllers don't require any additional drivers in this scenario.  
+* [`XboxGamepadMacOS`](xref:UnityEngine.InputSystem.XInput.XboxGamepadMacOS): Any Xbox or compatible gamepad connected to a Mac via USB using the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This class is only used when the `360Controller` driver is in use, and as such you shouldn't see it in use on modern versions of macOS - it is provided primarily for legacy reasons, and for scenarios where macOS 10.15 may still be used.
+
+* [`XboxGamepadMacOSNative`](xref:UnityEngine.InputSystem.XInput.XboxGamepadMacOSNative): Any Xbox gamepad connected to a Mac (macOS 11.0 or higher) via USB. On modern macOS versions, you will get this class instead of `XboxGamepadMacOS`.
+
 * [`XboxOneGampadiOS`](xref:UnityEngine.InputSystem.iOS.XboxOneGampadiOS): An Xbox One controller connected to an iOS device via Bluetooth. Requires iOS 13 or higher.
 
 XInput controllers on macOS require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth. macOS natively supports these controllers as [HID devices](hid-specification-introduction.md) without any additional drivers when connected via Bluetooth.
