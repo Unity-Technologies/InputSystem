@@ -4,26 +4,24 @@ uid: input-system-add-processors-bindings-actions
 
 # Add processors to bindings and actions
 
-To add a processor to an [action](actions.md) or [binding](bindings.md) via the Input Actions Editor:
+You can add a processor to an action or binding in the Input Actions Editor.
 
-1. Select the action or binding you want to add processors to. The Properties panel opens in the right pane of the window. 
-1. In the Properties panel, navigate to the **Processors** foldout. Select the **Add (+)** icon on the header to open a list of all available processors that match your control type. 
-1. From the drop-down list, select a processor type. A processor of that type appears in the __Processors__ foldout. 
-1. In the __Processors__ foldout, edit any parameters of the processor.
+## Processors on Bindings
 
-<br/>![An example of the Processors foldout in the Properties panel, displaying processors called Stick Deadzone and Scale Vactor 2](Images/BindingProcessors.png)
+When you create Bindings for your [actions](Actions.md), you can choose to add Processors to the Bindings. These process the values from the controls they bind to, before the system applies them to the Action value. For instance, you might want to invert the `Vector2` values from the controls along the Y-axis before passing these values to the Action that drives the input logic for your application. To do this, you can add an [Invert Vector2](ProcessorTypes.md#invert-vector-2) Processor to your Binding.
 
-To remove a processor, select the **Remove (-)** icon next to it. You can also use the up and down  arrows to change the order of processors. This affects the order in which the system processes values.
+If you're using Actions defined in the [Input Actions Editor](ActionsEditor.md), or in an [Action Asset](ActionAssets.md), you can add any Processor to your Bindings in the Input Action editor:
 
-To add a processor to an action or binding via code, use the following code examples as templates:
+1. Select the Binding you want to add Processors to so that the Binding Properties panel shows up on the right side.
+2. Select the **Add (+)** icon on the __Processors__ foldout to open a list of all available Processors that match your control type.
+3. Choose a Processor type to add a Processor instance of that type. The Processor now appears under the __Processors__ foldout.
+4. (Optional) If the Processor has any parameters, you can edit them in the __Processors__ foldout.
 
-**Actions:**
+![Binding Processors](Images/BindingProcessors.png)
 
-```CSharp
-var action = new InputAction(processors: "invertVector2(invertX=false)");
-```
+To remove a Processor, click the Remove (-) icon next to it. You can also use the up and down arrows to change the order of Processors. This affects the order in which the system processes values.
 
-**Bindings:**
+If you create your Bindings in code, you can add Processors like this:
 
 ```CSharp
 var action = new InputAction();
@@ -31,5 +29,14 @@ action.AddBinding("<Gamepad>/leftStick")
     .WithProcessor("invertVector2(invertX=false)");
 ```
 
->[!NOTE]
->The received value and result value must be of the same type. To convert received input values into different types, see [composite Bindings](composite-bindings.md).
+## Processors on Actions
+
+Processors on Actions work in the same way as Processors on Bindings, but they affect all controls bound to an Action, rather than just the controls from a specific Binding. If there are Processors on both the Binding and the Action, the system processes the ones from the Binding first.
+
+You can add and edit Processors on Actions in the [Input Actions Editor](ActionsEditor.md), or in an  [Action Asset](ActionAssets.md) the [same way](#processors-on-bindings) as you would for Bindings: select an Action to edit, then add one or more Processors in the right window pane.
+
+If you create your Actions in code, you can add Processors like this:
+
+```CSharp
+var action = new InputAction(processors: "invertVector2(invertX=false)");
+```
