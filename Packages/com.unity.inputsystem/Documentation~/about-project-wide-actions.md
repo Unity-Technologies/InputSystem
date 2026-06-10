@@ -20,7 +20,7 @@ Once you have created and assigned project-wide actions, the Input System Packag
 
 ## Using project-wide actions in code
 
-The benefit of assign an Action Asset as the project-wide actions is that you can access the actions directly through the [`InputSystem.actions`](../api/UnityEngine.InputSystem.InputSystem.html) property directly, rather than needing to set up a reference to your Action Asset first.
+The benefit of assign an Action Asset as the project-wide actions is that you can access the actions directly through the [`InputSystem.actions`](xref:UnityEngine.InputSystem.InputSystem) property directly, rather than needing to set up a reference to your Action Asset first.
 
 For example, you can get a reference to an action named "Move" in your project-wide actions using a line of code like this:
 

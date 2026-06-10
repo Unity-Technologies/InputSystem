@@ -21,8 +21,8 @@ A layout has two primary functions:
 * Describe a certain memory layout containing input data.
 * Assign names, structure, and meaning to the Controls operating on the data.
 
-A layout can either be for a Control on a Device (for example, `Stick`), or for a Device itself (that is, anything based on [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html)).
+A layout can either be for a Control on a Device (for example, `Stick`), or for a Device itself (that is, anything based on [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice)).
 
-The Input System only loads layouts when they are needed (usually, when creating a new Device). To manually load a layout, you can use [`InputSystem.LoadLayout`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_LoadLayout_System_String_). This returns an [`InputControlLayout`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.html) instance, which contains the final, fully merged (that is, containing any information inherited from base layouts and/or affected by layout overrides) structure of the layout.
+The Input System only loads layouts when they are needed (usually, when creating a new Device). To manually load a layout, you can use [`InputSystem.LoadLayout`](xref:UnityEngine.InputSystem.InputSystem). This returns an [`InputControlLayout`](xref:UnityEngine.InputSystem.Layouts.InputControlLayout) instance, which contains the final, fully merged (that is, containing any information inherited from base layouts and/or affected by layout overrides) structure of the layout.
 
-You can register new layouts through [`InputSystem.RegisterLayout`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayout_System_String_System_String_System_Nullable_UnityEngine_InputSystem_Layouts_InputDeviceMatcher__).
+You can register new layouts through [`InputSystem.RegisterLayout`](xref:UnityEngine.InputSystem.InputSystem).

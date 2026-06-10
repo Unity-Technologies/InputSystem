@@ -21,9 +21,9 @@ To get a reference to a device, you can either:
 
 ### Get the current device of a specific type
 
-You can get references to any supported device currently connected by using one of the [InputDevice classes](../api/UnityEngine.InputSystem.InputDevice.html) and using the `.current` property to get the currently active device of that type. For example, [`Gamepad.current`](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current) returns the most recently active connected gamepad.
+You can get references to any supported device currently connected by using one of the [InputDevice classes](xref:UnityEngine.InputSystem.InputDevice) and using the `.current` property to get the currently active device of that type. For example, [`Gamepad.current`](xref:UnityEngine.InputSystem.Gamepad) returns the most recently active connected gamepad.
 
-You can browse the available device types from the [InputDevice classes API documentation](../api/UnityEngine.InputSystem.InputDevice.html). 
+You can browse the available device types from the [InputDevice classes API documentation](xref:UnityEngine.InputSystem.InputDevice). 
 - Some types listed are usable directly, such as `Gamepad` or `Joystick`.
 - Some are abstract parent classes that have usable child classes. For example, `Pointer` is not directly usable, but has usable child classes of `Mouse`, `Pen`, and `Touch`.
 - Some usable types also have more specialized child classes. For example `Gamepad` also has child classes such as `AndroidGamepad` as well as other Gampad types.
@@ -39,7 +39,7 @@ Each type of device has its own configuration of [controls](controls.md), define
 
 For example, all Gamepads have a `leftStick` and `rightStick` property, as well as a number of other properties which correspond to each of its controls.
 
-You can browse the API documentation for any given device type to discover the control properties to use. For example, the [Gamepad class properties API documentation](../api/UnityEngine.InputSystem.Gamepad.html#properties).
+You can browse the API documentation for any given device type to discover the control properties to use. For example, the [Gamepad class properties API documentation](xref:UnityEngine.InputSystem.Gamepad).
 
 ## Read the value from the control
 

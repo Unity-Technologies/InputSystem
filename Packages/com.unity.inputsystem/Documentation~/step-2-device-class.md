@@ -4,9 +4,9 @@ uid: input-system-step-2-device-class
 
 # Step 2 The Device class 
 
-Next, you need a class derived from one of the [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) base classes. You can either base your Device directly on [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html), or you can pick a more specific Device type, like [`Gamepad`](../api/UnityEngine.InputSystem.Gamepad.html).
+Next, you need a class derived from one of the [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice) base classes. You can either base your Device directly on [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice), or you can pick a more specific Device type, like [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad).
 
-This example assumes that your Device doesn't fit into any of the existing Device classes, so it derives directly from [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html).
+This example assumes that your Device doesn't fit into any of the existing Device classes, so it derives directly from [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice).
 
 ```CSharp
 // InputControlLayoutAttribute attribute is only necessary if you want

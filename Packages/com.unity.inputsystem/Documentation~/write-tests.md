@@ -4,7 +4,7 @@ uid: input-system-write-tests
 
 # Write tests 
 
-When writing a test, use [`InputSystem.AddDevice<T>()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice__1_System_String_) to add new Devices.
+When writing a test, use [`InputSystem.AddDevice<T>()`](xref:UnityEngine.InputSystem.InputSystem) to add new Devices.
 
 ```CSharp
     [Test]
@@ -26,7 +26,7 @@ When writing a test, use [`InputSystem.AddDevice<T>()`](../api/UnityEngine.Input
     }
 ```
 
-To feed input, the easiest way is to use the [`Press(button)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_Press_UnityEngine_InputSystem_Controls_ButtonControl_System_Double_System_Double_System_Boolean_), [`Release(button)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_Release_UnityEngine_InputSystem_Controls_ButtonControl_System_Double_System_Double_System_Boolean_), [`PressAndRelease(button)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_PressAndRelease_UnityEngine_InputSystem_Controls_ButtonControl_System_Double_System_Double_System_Boolean_), `Set(control,value)`, and [`Trigger(action)`](../api/UnityEngine.InputSystem.InputTestFixture.html#UnityEngine_InputSystem_InputTestFixture_Trigger_UnityEngine_InputSystem_InputAction_) helper methods provided by [`InputTestFixture`](../api/UnityEngine.InputSystem.InputTestFixture.html).
+To feed input, the easiest way is to use the [`Press(button)`](xref:UnityEngine.InputSystem.InputTestFixture), [`Release(button)`](xref:UnityEngine.InputSystem.InputTestFixture), [`PressAndRelease(button)`](xref:UnityEngine.InputSystem.InputTestFixture), `Set(control,value)`, and [`Trigger(action)`](xref:UnityEngine.InputSystem.InputTestFixture) helper methods provided by [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture).
 
 ```CSharp
     [Test]

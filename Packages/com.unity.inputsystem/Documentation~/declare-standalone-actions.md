@@ -4,7 +4,7 @@ uid: input-system-declare-standalone-actions
 
 # Declare stand-alone actions
 
-As an alternative workflow, you can declare individual [Input Action](../api/UnityEngine.InputSystem.InputAction.html) and [Input Action Maps](../api/UnityEngine.InputSystem.InputActionMap.html) as fields directly inside `MonoBehaviour` components.
+As an alternative workflow, you can declare individual [Input Action](xref:UnityEngine.InputSystem.InputAction) and [Input Action Maps](xref:UnityEngine.InputSystem.InputActionMap) as fields directly inside `MonoBehaviour` components.
 
 ```CSharp
 using UnityEngine;

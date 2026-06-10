@@ -50,8 +50,8 @@ The following table explains the use of each field:
 |-----|-----------|-------|
 |`<layoutName>`|Requires the control at the current level to be based on the given layout. The actual layout of the control may be the same or a layout *based* on the given layout.|`<Gamepad>/buttonSouth`|
 |`{usageName}`|Works differently for controls and Devices.<br><br>When used on a Device (the first component of a path), it requires the device to have the given usage. Refer to [Device usages](device-usages.md) for more details.<br><br>For looking up a control, the usage field is currently restricted to the path component immediately following the Device (the second component in the path). It finds the control on the Device that has the given usage. The control can be anywhere in the control hierarchy of the Device.|Device:<br><br>`<XRController>{LeftHand}/trigger`<br><br>Control:<br><br>`<Gamepad>/{Submit}`|
-|`controlName`|Requires the control at the current level to have the given name. Takes both "proper" names ([`InputControl.name`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_name)) and aliases ([`InputControl.aliases`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_aliases)) into account.<br><br>This field can also be a wildcard (`*`) to match any name.|`MyGamepad/buttonSouth`<br><br>`*/{PrimaryAction}` (match `PrimaryAction` usage on Devices with any name)|
-|`#(displayName)`|Requires the control at the current level to have the given display name (i.e. [`InputControl.displayName`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_displayName)). The display name may contain whitespace and symbols.|`<Keyboard>/#(a)` (matches the key that generates the "a" character, if any, according to the current keyboard layout).<br><br>`<Gamepad>/#(Cross)`|
+|`controlName`|Requires the control at the current level to have the given name. Takes both "proper" names ([`InputControl.name`](xref:UnityEngine.InputSystem.InputControl)) and aliases ([`InputControl.aliases`](xref:UnityEngine.InputSystem.InputControl)) into account.<br><br>This field can also be a wildcard (`*`) to match any name.|`MyGamepad/buttonSouth`<br><br>`*/{PrimaryAction}` (match `PrimaryAction` usage on Devices with any name)|
+|`#(displayName)`|Requires the control at the current level to have the given display name (i.e. [`InputControl.displayName`](xref:UnityEngine.InputSystem.InputControl)). The display name may contain whitespace and symbols.|`<Keyboard>/#(a)` (matches the key that generates the "a" character, if any, according to the current keyboard layout).<br><br>`<Gamepad>/#(Cross)`|
 
 ### Wildcard characters
 
@@ -60,9 +60,9 @@ If you enter a control path as text, you can use the wildcard asterisk character
 
 ## Access from code
 
-You can access the literal path of a given control via its [`InputControl.path`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_path) property.
+You can access the literal path of a given control via its [`InputControl.path`](xref:UnityEngine.InputSystem.InputControl) property.
 
-If needed, you can manually parse a control path into its components using the [`InputControlPath.Parse(path)`](../api/UnityEngine.InputSystem.InputControlPath.html#UnityEngine_InputSystem_InputControlPath_Parse_System_String_) API.
+If needed, you can manually parse a control path into its components using the [`InputControlPath.Parse(path)`](xref:UnityEngine.InputSystem.InputControlPath) API.
 
 ```CSharp
 var parsed = InputControlPath.Parse("<XRController>{LeftHand}/trigger").ToArray();
@@ -75,7 +75,7 @@ Debug.Log(parsed[1].layout); // Prints null.
 Debug.Log(parsed[1].name); // Prints "trigger".
 ```
 
-You can use control paths to directly reference controls, or to let the Input System search for Controls among all devices using [`InputSystem.FindControls`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_FindControls_System_String_).
+You can use control paths to directly reference controls, or to let the Input System search for Controls among all devices using [`InputSystem.FindControls`](xref:UnityEngine.InputSystem.InputSystem).
 
 ```CSharp
 var gamepad = Gamepad.all[0];

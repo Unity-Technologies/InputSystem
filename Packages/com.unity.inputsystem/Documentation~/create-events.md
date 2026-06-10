@@ -8,7 +8,7 @@ Anyone can create and queue new input events against any existing Device. Queuei
 
 >__Note__: Unity allocates limited memory to events that come from background threads. If background threads produce too many events, queueing an event from a thread blocks the thread until the main thread flushes out the background event queue.
 
-Note that queuing an event doesn't immediately consume the event. Event processing happens on the next update (depending on [`InputSettings.updateMode`](update-mode.md), it is triggered either manually via [`InputSystem.Update`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_Update), or automatically as part of the Player loop).
+Note that queuing an event doesn't immediately consume the event. Event processing happens on the next update (depending on [`InputSettings.updateMode`](update-mode.md), it is triggered either manually via [`InputSystem.Update`](xref:UnityEngine.InputSystem.InputSystem), or automatically as part of the Player loop).
 
 ## Sending state events
 
@@ -22,7 +22,7 @@ InputSystem.QueueStateEvent(Mouse.current, new MouseState { position = new Vecto
 InputSystem.QueueStateEvent(Keyboard.current, new KeyboardState(Key.LeftCtrl, Key.A));
 ```
 
-`Touchscreen` is somewhat special in that it expects its input to be in [`TouchState`](../api/UnityEngine.InputSystem.LowLevel.TouchState.html) format.
+`Touchscreen` is somewhat special in that it expects its input to be in [`TouchState`](xref:UnityEngine.InputSystem.LowLevel.TouchState) format.
 
 ```CSharp
 // Start touch.
@@ -38,9 +38,9 @@ InputSystem.QueueStateEvent(Touchscreen.current,
     new TouchState { touchId = 1, phase = TouchPhase.Ended, position = new Vector2(123, 234) });
 ```
 
->__IMPORTANT:__ [Touch IDs](../api/UnityEngine.InputSystem.Controls.TouchControl.html#UnityEngine_InputSystem_Controls_TouchControl_touchId) cannot be 0! A valid touch must have a non-zero touch ID. Concurrent touches must each have a unique ID. After a touch has ended, its ID can be reused &ndash; although it is recommended to not do so.
+>__IMPORTANT:__ [Touch IDs](xref:UnityEngine.InputSystem.Controls.TouchControl) cannot be 0! A valid touch must have a non-zero touch ID. Concurrent touches must each have a unique ID. After a touch has ended, its ID can be reused &ndash; although it is recommended to not do so.
 
-If the exact format of the state used by a given Device is not known, the easiest way to send input to it is to simply create a [`StateEvent`](../api/UnityEngine.InputSystem.LowLevel.StateEvent.html) from the Device itself:
+If the exact format of the state used by a given Device is not known, the easiest way to send input to it is to simply create a [`StateEvent`](xref:UnityEngine.InputSystem.LowLevel.StateEvent) from the Device itself:
 
 ```CSharp
 // `StateEvent.From` creates a temporary buffer in unmanaged memory that holds

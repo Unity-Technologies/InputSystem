@@ -14,7 +14,7 @@ To create a custom processor:
 
 ## Add a processor class and method
 
-**1.** Add a class derived from [`InputProcessor<TValue>`](../api/UnityEngine.InputSystem.InputProcessor-1.html), and implement the [`Process`](../api/UnityEngine.InputSystem.InputProcessor-1.html#UnityEngine_InputSystem_InputProcessor_1_Process__0_UnityEngine_InputSystem_InputControl_) method:
+**1.** Add a class derived from [`InputProcessor<TValue>`](xref:UnityEngine.InputSystem.InputProcessor-1), and implement the [`Process`](xref:UnityEngine.InputSystem.InputProcessor-1) method:
 
 ```CSharp
 public class MyValueShiftProcessor : InputProcessor<float>
@@ -34,7 +34,7 @@ public class MyValueShiftProcessor : InputProcessor<float>
 
 ## Register the new processor to the Input System
 
-Register the new processor to the Input System. Call [`InputSystem.RegisterProcessor`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterProcessor__1_System_String_) in your initialization code. You can do this locally within the Processor class:
+Register the new processor to the Input System. Call [`InputSystem.RegisterProcessor`](xref:UnityEngine.InputSystem.InputSystem) in your initialization code. You can do this locally within the Processor class:
 
 ```CSharp
 #if UNITY_EDITOR
@@ -67,7 +67,7 @@ var action = new InputAction(processors: "myvalueshift(valueShift=2.3)");
 
 ## Customize the Editor UI
 
-To customize the UI for editing your Processor, create a custom [`InputParameterEditor`](../api/UnityEngine.InputSystem.Editor.InputParameterEditor-1.html) class for it:
+To customize the UI for editing your Processor, create a custom [`InputParameterEditor`](xref:UnityEngine.InputSystem.Editor.InputParameterEditor-1) class for it:
 
 ```CSharp
 // No registration is necessary for an InputParameterEditor.

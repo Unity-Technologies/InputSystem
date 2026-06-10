@@ -16,7 +16,7 @@ Because control paths can refer to specific devices, or more broadly to a device
 
 ## What happens during resolution
 
-During binding resolution, the action automatically calls [`InputSystem.FindControls<>()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_FindControls__1_System_String_UnityEngine_InputSystem_InputControlList___0___) (filtering for devices assigned to the InputActionMap, if there are any) for the Binding path of each of the Action's bindings. This creates a list of resolved Controls that are now bound to the Action.
+During binding resolution, the action automatically calls [`InputSystem.FindControls<>()`](xref:UnityEngine.InputSystem.InputSystem) (filtering for devices assigned to the InputActionMap, if there are any) for the Binding path of each of the Action's bindings. This creates a list of resolved Controls that are now bound to the Action.
 
 Note that a single [binding control path](control-paths.md) can match multiple Controls. For example:
 
@@ -28,7 +28,7 @@ Note that a single [binding control path](control-paths.md) can match multiple C
 
 If there are multiple bindings on the same action that all reference the same control(s), the control will effectively feed into the action multiple times. This is to allow, for example, a single control to produce different input on the same action by virtue of being bound in a different fashion ([composites](./composite-bindings.md), [processors](./add-processors-bindings-actions.md), [interactions](Interactions.md), etc). However, regardless of how many times a control is bound on any given action, it will only appear once in the action's [array of `controls`](xref:UnityEngine.InputSystem.InputAction.controls).
 
-To query the Controls that an Action resolves to, you can use [`InputAction.controls`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_controls). You can also run this query if the Action is disabled.
+To query the Controls that an Action resolves to, you can use [`InputAction.controls`](xref:UnityEngine.InputSystem.InputAction). You can also run this query if the Action is disabled.
 
 To be notified when binding resolution happens, you can listen to [`InputSystem.onActionChange`](xref:UnityEngine.InputSystem.InputSystem.onActionChange) which triggers [`InputActionChange.BoundControlsAboutToChange`](xref:UnityEngine.InputSystem.InputActionChange.BoundControlsAboutToChange) before modifying Control lists and triggers [`InputActionChange.BoundControlsChanged`](xref:UnityEngine.InputSystem.InputActionChange.BoundControlsChanged) after having updated them.
 
@@ -36,7 +36,7 @@ To be notified when binding resolution happens, you can listen to [`InputSystem.
 
 In certain situations, the controls bound to an action have to be updated more than once. For example, if a new device is plugged in and becomes usable with an action, the action may now pick up input from additional controls. Also, if bindings are added, removed, or modified, control lists will need to be updated.
 
-This updating of controls usually happens transparently in the background. However, when an action is [enabled](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_enabled) and especially when it is [in progress](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_IsInProgress_), there may be a noticeable effect on the Action.
+This updating of controls usually happens transparently in the background. However, when an action is [enabled](xref:UnityEngine.InputSystem.InputAction) and especially when it is [in progress](xref:UnityEngine.InputSystem.InputAction), there may be a noticeable effect on the Action.
 
 Adding or removing a device &ndash; either [globally](xref:UnityEngine.InputSystem.InputSystem.devices) or to/from the [device list](xref:UnityEngine.InputSystem.InputActionAsset.devices) of an Action &ndash; will remain transparent __except__ if an Action is in progress and it is the device of its [active Control](xref:UnityEngine.InputSystem.InputAction.activeControl) that is being removed. In this case, the Action will automatically be [cancelled](xref:UnityEngine.InputSystem.InputAction.canceled).
 

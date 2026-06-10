@@ -41,6 +41,6 @@ public struct MyDeviceState : IInputStateTypeInfo
 }
 ```
 
-The Input System's layout mechanism uses [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html) annotations to add Controls to the layout of your Device. For details, see the [layout system](layouts.md) documentation.
+The Input System's layout mechanism uses [`InputControlAttribute`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute) annotations to add Controls to the layout of your Device. For details, see the [layout system](layouts.md) documentation.
 
-With the state struct in place, you now have a way to send input data to the Input System and store it there. The next thing you need is an [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) that uses your custom state struct and represents your custom Device.
+With the state struct in place, you now have a way to send input data to the Input System and store it there. The next thing you need is an [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice) that uses your custom state struct and represents your custom Device.

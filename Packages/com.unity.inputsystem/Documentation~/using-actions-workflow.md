@@ -100,7 +100,7 @@ public class Example : MonoBehaviour
 > Aavoid using `FindAction` in your `Update()` loop, because it performs a string-based lookup which could impact performance. This is why the Action references in the example above are found during the Start() function, and stored in variables after finding them.
 
 > [!NOTE]
-> The [InputSystem.actions](../api/UnityEngine.InputSystem.InputSystem.html) API refers specifically to the Action Asset assigned as the [project-wide actions](ProjectWideActions.md). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you want to access.
+> The [InputSystem.actions](xref:UnityEngine.InputSystem.InputSystem) API refers specifically to the Action Asset assigned as the [project-wide actions](ProjectWideActions.md). Most projects only require one Action Asset, but if you are using more than one Action Asset, you must create a reference using the type InputActionAsset to the asset you want to access.
 
 ## Pros and Cons
 

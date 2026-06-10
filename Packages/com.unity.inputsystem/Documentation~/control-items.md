@@ -15,27 +15,27 @@ Each layout is comprised of zero or more Control items. Each item either describ
     public int buttons;
 ```
 
-The following table details the properties that a Control item can have. These can be set as properties on [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html), as properties on the Control in JSON, or through methods on [`InputControlLayout.Builder.ControlBuilder`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.Builder.ControlBuilder.html).
+The following table details the properties that a Control item can have. These can be set as properties on [`InputControlAttribute`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute), as properties on the Control in JSON, or through methods on [`InputControlLayout.Builder.ControlBuilder`](xref:UnityEngine.InputSystem.Layouts.InputControlLayout.Builder.ControlBuilder).
 
 |Property|Description|
 |--------|-----------|
-|[`name`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_name)|Name of the Control.<br>By default, this is the name of the field/property that [`InputControlAttribute`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html) is applied to.|
-|[`displayName`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_displayName)|Display name of the Control (for use in UI strings).|
-|[`shortDisplayName`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_shortDisplayName)|Short display name of the Control (for use in UI strings).|
-|[`layout`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_layout)|Layout to use for the Control.|
-|[`variants`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_variants)|Variants of the Control.|
-|[`aliases`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_aliases)|Aliases for the Control. These are alternative names the Control can be referred by.|
-|[`usages`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_usages)|[Usages](controls.md#control-usages) of the Control.|
-|[`offset`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_offset)|The byte offset at which the state for the Control is found.|
-|[`bit`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_bit)|The bit offset at which the state of the Control is found within its byte.|
-|[`sizeInBits`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_sizeInBits)|The total size of the Control's state, in bits.|
-|[`arraySize`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_arraySize)|If this is set to a non-zero value, the system will create an array of Controls of this size.|
-|[`parameters`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_parameters)|Any parameters to be passed to the Control. The system will apply these to any fields the Control type might have, such as [`AxisControl.scaleFactor`](../api/UnityEngine.InputSystem.Controls.AxisControl.html#UnityEngine_InputSystem_Controls_AxisControl_scaleFactor).|
-|[`processors`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_processors)|[Processors](processors.md) to apply to the Control.|
-|[`noisy`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_noisy)|Whether the Control is to be considered [noisy](controls.md#noisy-controls).|
-|[`synthetic`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_synthetic)|Whether the Control is to be considered [synthetic](controls.md#synthetic-controls).|
-|[`defaultState`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_defaultState)|Default initial value of the state __memory__ Control.|
-|[`useStateFrom`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_useStateFrom)|For [synthetic](controls.md#synthetic-controls) Controls, used to synthesize Control state.|
-|[`minValue`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_minValue)|The minimum value the Control can report. Used for evaluating [Control magnitude](controls.md#control-actuation).|
-|[`maxValue`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_maxValue)|The maximum value the Control can report. Used for evaluating [Control magnitude](controls.md#control-actuation).|
-|[`dontReset`](../api/UnityEngine.InputSystem.Layouts.InputControlAttribute.html#UnityEngine_InputSystem_Layouts_InputControlAttribute_dontReset)|When a device ["soft" reset](reset-device.md) is performed, the state of this control will not be reset. This is useful for controls such as pointer positions which should not go to `(0,0)` on a reset. When a "hard" reset is performed, the control will still be reset to its default value.|
+|[`name`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|Name of the Control.<br>By default, this is the name of the field/property that [`InputControlAttribute`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute) is applied to.|
+|[`displayName`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|Display name of the Control (for use in UI strings).|
+|[`shortDisplayName`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|Short display name of the Control (for use in UI strings).|
+|[`layout`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|Layout to use for the Control.|
+|[`variants`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|Variants of the Control.|
+|[`aliases`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|Aliases for the Control. These are alternative names the Control can be referred by.|
+|[`usages`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|[Usages](controls.md#control-usages) of the Control.|
+|[`offset`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|The byte offset at which the state for the Control is found.|
+|[`bit`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|The bit offset at which the state of the Control is found within its byte.|
+|[`sizeInBits`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|The total size of the Control's state, in bits.|
+|[`arraySize`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|If this is set to a non-zero value, the system will create an array of Controls of this size.|
+|[`parameters`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|Any parameters to be passed to the Control. The system will apply these to any fields the Control type might have, such as [`AxisControl.scaleFactor`](xref:UnityEngine.InputSystem.Controls.AxisControl).|
+|[`processors`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|[Processors](processors.md) to apply to the Control.|
+|[`noisy`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|Whether the Control is to be considered [noisy](controls.md#noisy-controls).|
+|[`synthetic`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|Whether the Control is to be considered [synthetic](controls.md#synthetic-controls).|
+|[`defaultState`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|Default initial value of the state __memory__ Control.|
+|[`useStateFrom`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|For [synthetic](controls.md#synthetic-controls) Controls, used to synthesize Control state.|
+|[`minValue`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|The minimum value the Control can report. Used for evaluating [Control magnitude](controls.md#control-actuation).|
+|[`maxValue`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|The maximum value the Control can report. Used for evaluating [Control magnitude](controls.md#control-actuation).|
+|[`dontReset`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute)|When a device ["soft" reset](reset-device.md) is performed, the state of this control will not be reset. This is useful for controls such as pointer positions which should not go to `(0,0)` on a reset. When a "hard" reset is performed, the control will still be reset to its default value.|

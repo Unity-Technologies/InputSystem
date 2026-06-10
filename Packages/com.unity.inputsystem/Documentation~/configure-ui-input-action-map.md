@@ -23,7 +23,7 @@ You can modify, add, or remove bindings to the named actions in the UI action ma
 * The names of the actions it contains
 * Their respective **Action Types**.
 
-To see the specific actions and types that the [UI Input Module](../api/UnityEngine.InputSystem.UI.InputSystemUIInputModule.html) class expects, refer to the [UI action map reference](ui-action-map-reference).
+To see the specific actions and types that the [UI Input Module](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule) class expects, refer to the [UI action map reference](ui-action-map-reference).
 
 ## Reset the UI action map
 

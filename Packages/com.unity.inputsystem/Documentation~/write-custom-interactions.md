@@ -8,7 +8,7 @@ You can write a custom Interaction and use it the same way you use built-in Inte
 
 To write a custom Interaction:
 
-**1.** Add a class that implements the [`IInputInteraction`](../api/UnityEngine.InputSystem.IInputInteraction.html) interface. For example:
+**1.** Add a class that implements the [`IInputInteraction`](xref:UnityEngine.InputSystem.IInputInteraction) interface. For example:
 
 ```CSharp
 // Interaction which performs when you quickly move an

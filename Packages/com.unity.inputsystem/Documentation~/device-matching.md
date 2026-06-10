@@ -4,9 +4,9 @@ uid: input-system-device-matching
 
 # Device matching 
 
-[`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html) instances handle matching an [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) to a registered layout. Each matcher loosely functions as a kind of regular expression. Each field in the description can be independently matched with either a plain string or regular expression. Matching is not case-sensitive. For a matcher to apply, all of its individual expressions have to match.
+[`InputDeviceMatcher`](xref:UnityEngine.InputSystem.Layouts.InputDeviceMatcher) instances handle matching an [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription) to a registered layout. Each matcher loosely functions as a kind of regular expression. Each field in the description can be independently matched with either a plain string or regular expression. Matching is not case-sensitive. For a matcher to apply, all of its individual expressions have to match.
 
-To matchers to any layout, call [`InputSystem.RegisterLayoutMatcher`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_RegisterLayoutMatcher_System_String_UnityEngine_InputSystem_Layouts_InputDeviceMatcher_). You can also supply them when you register a layout.
+To matchers to any layout, call [`InputSystem.RegisterLayoutMatcher`](xref:UnityEngine.InputSystem.InputSystem). You can also supply them when you register a layout.
 
 ```CSharp
 // Register a new layout and supply a matcher for it.
@@ -23,8 +23,8 @@ InputSystem.RegisterLayoutMatcher<MyDevice>(
 
 ```
 
-If multiple matchers are matching the same [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html), the Input System chooses the matcher that has the larger number of properties to match against.
+If multiple matchers are matching the same [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription), the Input System chooses the matcher that has the larger number of properties to match against.
 
 ## Hijacking the matching process
 
-You can overrule the internal matching process from outside to select a different layout for a Device than the system would normally choose. This also makes it possible to quickly build new layouts. To do this, add a custom handler to the  [`InputSystem.onFindControlLayoutForDevice`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onFindLayoutForDevice) event. If your handler returns a non-null layout string, then the Input System uses this layout.
+You can overrule the internal matching process from outside to select a different layout for a Device than the system would normally choose. This also makes it possible to quickly build new layouts. To do this, add a custom handler to the  [`InputSystem.onFindControlLayoutForDevice`](xref:UnityEngine.InputSystem.InputSystem) event. If your handler returns a non-null layout string, then the Input System uses this layout.

@@ -26,11 +26,11 @@ If a different bound control is actuated more, that control becomes the control 
 
 ## Multiple concurrent controls
 
-For a **Button** or **Value** [action type](./configure-action-type.md), there can only be one control at any time that is "driving" the action. This control is considered the [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl).
+For a **Button** or **Value** [action type](./configure-action-type.md), there can only be one control at any time that is "driving" the action. This control is considered the [`activeControl`](xref:UnityEngine.InputSystem.InputAction).
 
-When an action is bound to multiple controls, the active control at any point is the one with the greatest level of ["actuation"](./control-actuation.md) (the one with the largest value returned from [`EvaluateMagnitude`](../api/UnityEngine.InputSystem.InputControl.html#UnityEngine_InputSystem_InputControl_EvaluateMagnitude_)). If a different control exceeds the actuation level of the current active control, it becomes the active control.
+When an action is bound to multiple controls, the active control at any point is the one with the greatest level of ["actuation"](./control-actuation.md) (the one with the largest value returned from [`EvaluateMagnitude`](xref:UnityEngine.InputSystem.InputControl)). If a different control exceeds the actuation level of the current active control, it becomes the active control.
 
-For [composite bindings](./composite-bindings.md), magnitudes of the composite as a whole rather than for individual controls are tracked. However, [`activeControl`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_activeControl) will still track individual Controls from the composite.
+For [composite bindings](./composite-bindings.md), magnitudes of the composite as a whole rather than for individual controls are tracked. However, [`activeControl`](xref:UnityEngine.InputSystem.InputAction) will still track individual Controls from the composite.
 
 ## Multiple input sequences (such as keyboard shortcuts)
 

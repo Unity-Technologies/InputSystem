@@ -6,11 +6,11 @@ uid: input-system-built-in-interactions
 
 The Input System package comes with a set of built-in Interactions, which you can use on Actions and Bindings:
 
-* [`PressInteraction`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html)
-* [`HoldInteraction`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html)
-* [`TapInteraction`](../api/UnityEngine.InputSystem.Interactions.TapInteraction.html)
-* [`SlowTapInteraction`](../api/UnityEngine.InputSystem.Interactions.SlowTapInteraction.html)
-* [`MultiTapInteraction`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html)
+* [`PressInteraction`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)
+* [`HoldInteraction`](xref:UnityEngine.InputSystem.Interactions.HoldInteraction)
+* [`TapInteraction`](xref:UnityEngine.InputSystem.Interactions.TapInteraction)
+* [`SlowTapInteraction`](xref:UnityEngine.InputSystem.Interactions.SlowTapInteraction)
+* [`MultiTapInteraction`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)
 
 Each built-in Interaction has its own parameters, and responds differently to Interaction callbacks.
 
@@ -21,31 +21,31 @@ If an Action or Binding has no Interaction set, the system uses its [default Int
 
 ## Press
 
-You can use a [`PressInteraction`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html) to explicitly force button-like interactions. Use the [`behavior`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html#UnityEngine_InputSystem_Interactions_PressInteraction_behavior) parameter to select if the Interaction should trigger on button press, release, or both.
+You can use a [`PressInteraction`](xref:UnityEngine.InputSystem.Interactions.PressInteraction) to explicitly force button-like interactions. Use the [`behavior`](xref:UnityEngine.InputSystem.Interactions.PressInteraction) parameter to select if the Interaction should trigger on button press, release, or both.
 
 |__Parameters__|Type|Default value|
 |---|---|---|
-|[`pressPoint`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html#UnityEngine_InputSystem_Interactions_PressInteraction_pressPoint)|`float`|[`InputSettings.defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint)|
-|[`behavior`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html#UnityEngine_InputSystem_Interactions_PressInteraction_behavior)|[`PressBehavior`](../api/UnityEngine.InputSystem.Interactions.PressBehavior.html)|`PressOnly`| 
+|[`pressPoint`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|`float`|[`InputSettings.defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings)|
+|[`behavior`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|[`PressBehavior`](xref:UnityEngine.InputSystem.Interactions.PressBehavior)|`PressOnly`| 
 
 
-|__Callbacks__/[`behavior`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html#UnityEngine_InputSystem_Interactions_PressInteraction_behavior)|`PressOnly`|`ReleaseOnly`|`PressAndRelease`|
+|__Callbacks__/[`behavior`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|`PressOnly`|`ReleaseOnly`|`PressAndRelease`|
 |---|-----------|-------------|-----------------|
-|[`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started)|Control magnitude crosses [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html#UnityEngine_InputSystem_Interactions_PressInteraction_pressPoint)|Control magnitude crosses [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html#UnityEngine_InputSystem_Interactions_PressInteraction_pressPoint)|Control magnitude crosses [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html#UnityEngine_InputSystem_Interactions_PressInteraction_pressPoint)|
-|[`performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed)|Control magnitude crosses [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html#UnityEngine_InputSystem_Interactions_PressInteraction_pressPoint)|Control magnitude goes back below [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html#UnityEngine_InputSystem_Interactions_PressInteraction_pressPoint)|- Control magnitude crosses [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html#UnityEngine_InputSystem_Interactions_PressInteraction_pressPoint)<br>or<br>- Control magnitude goes back below [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.PressInteraction.html#UnityEngine_InputSystem_Interactions_PressInteraction_pressPoint)|
-|[`canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled)|not used|not used|not used|
+|[`started`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude crosses [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|Control magnitude crosses [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|Control magnitude crosses [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|
+|[`performed`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude crosses [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|Control magnitude goes back below [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|- Control magnitude crosses [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)<br>or<br>- Control magnitude goes back below [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|
+|[`canceled`](xref:UnityEngine.InputSystem.InputAction)|not used|not used|not used|
 
 ## Hold
 
-A [`HoldInteraction`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html) requires the user to hold a Control for [`duration`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_duration) seconds before the Input System triggers the Action.
+A [`HoldInteraction`](xref:UnityEngine.InputSystem.Interactions.HoldInteraction) requires the user to hold a Control for [`duration`](xref:UnityEngine.InputSystem.Interactions.HoldInteraction) seconds before the Input System triggers the Action.
 
 |__Parameters__|Type|Default value|
 |---|---|---|
-|[`duration`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_duration)|`float`|[`InputSettings.defaultHoldTime`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultHoldTime)|
-|[`pressPoint`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_pressPoint)|`float`|[`InputSettings.defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint)|
+|[`duration`](xref:UnityEngine.InputSystem.Interactions.HoldInteraction)|`float`|[`InputSettings.defaultHoldTime`](xref:UnityEngine.InputSystem.InputSettings)|
+|[`pressPoint`](xref:UnityEngine.InputSystem.Interactions.HoldInteraction)|`float`|[`InputSettings.defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings)|
 
 
-To display UI feedback when a button starts being held, use the [`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started) callback.
+To display UI feedback when a button starts being held, use the [`started`](xref:UnityEngine.InputSystem.InputAction) callback.
 
 ```C#
 
@@ -57,53 +57,53 @@ To display UI feedback when a button starts being held, use the [`started`](../a
 
 |__Callbacks__||
 |---|---|
-|[`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started)|Control magnitude crosses [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_pressPoint).|
-|[`performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed)|Control magnitude held above [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_pressPoint) for >= [`duration`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_duration).|
-|[`canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled)|Control magnitude goes back below [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_pressPoint) before [`duration`](../api/UnityEngine.InputSystem.Interactions.HoldInteraction.html#UnityEngine_InputSystem_Interactions_HoldInteraction_duration) (that is, the button was not held long enough).|
+|[`started`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude crosses [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.HoldInteraction).|
+|[`performed`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude held above [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.HoldInteraction) for >= [`duration`](xref:UnityEngine.InputSystem.Interactions.HoldInteraction).|
+|[`canceled`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude goes back below [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.HoldInteraction) before [`duration`](xref:UnityEngine.InputSystem.Interactions.HoldInteraction) (that is, the button was not held long enough).|
 
 ## Tap
 
-A [`TapInteraction`](../api/UnityEngine.InputSystem.Interactions.TapInteraction.html) requires the user to press and release a Control within [`duration`](../api/UnityEngine.InputSystem.Interactions.TapInteraction.html#UnityEngine_InputSystem_Interactions_TapInteraction_duration) seconds to trigger the Action.
+A [`TapInteraction`](xref:UnityEngine.InputSystem.Interactions.TapInteraction) requires the user to press and release a Control within [`duration`](xref:UnityEngine.InputSystem.Interactions.TapInteraction) seconds to trigger the Action.
 
 |__Parameters__|Type|Default value|
 |---|---|---|
-|[`duration`](../api/UnityEngine.InputSystem.Interactions.TapInteraction.html#UnityEngine_InputSystem_Interactions_TapInteraction_duration)|`float`|[`InputSettings.defaultTapTime`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultTapTime)|
-|[`pressPoint`](../api/UnityEngine.InputSystem.Interactions.TapInteraction.html#UnityEngine_InputSystem_Interactions_TapInteraction_pressPoint)|`float`|[`InputSettings.defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint)|
+|[`duration`](xref:UnityEngine.InputSystem.Interactions.TapInteraction)|`float`|[`InputSettings.defaultTapTime`](xref:UnityEngine.InputSystem.InputSettings)|
+|[`pressPoint`](xref:UnityEngine.InputSystem.Interactions.TapInteraction)|`float`|[`InputSettings.defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings)|
 
 |__Callbacks__||
 |---|---|
-|[`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started)|Control magnitude crosses [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.TapInteraction.html#UnityEngine_InputSystem_Interactions_TapInteraction_pressPoint).|
-|[`performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed)|Control magnitude goes back below [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.TapInteraction.html#UnityEngine_InputSystem_Interactions_TapInteraction_pressPoint) before [`duration`](../api/UnityEngine.InputSystem.Interactions.TapInteraction.html#UnityEngine_InputSystem_Interactions_TapInteraction_duration).|
-|[`canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled)|Control magnitude held above [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.TapInteraction.html#UnityEngine_InputSystem_Interactions_TapInteraction_pressPoint) for >= [`duration`](../api/UnityEngine.InputSystem.Interactions.TapInteraction.html#UnityEngine_InputSystem_Interactions_TapInteraction_duration) (that is, the tap was too slow).|
+|[`started`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude crosses [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.TapInteraction).|
+|[`performed`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude goes back below [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.TapInteraction) before [`duration`](xref:UnityEngine.InputSystem.Interactions.TapInteraction).|
+|[`canceled`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude held above [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.TapInteraction) for >= [`duration`](xref:UnityEngine.InputSystem.Interactions.TapInteraction) (that is, the tap was too slow).|
 
 ## SlowTap
 
-A [`SlowTapInteraction`](../api/UnityEngine.InputSystem.Interactions.SlowTapInteraction.html) requires the user to press and hold a Control for a minimum duration of [`duration`](../api/UnityEngine.InputSystem.Interactions.SlowTapInteraction.html#UnityEngine_InputSystem_Interactions_SlowTapInteraction_duration) seconds, and then release it, to trigger the Action.
+A [`SlowTapInteraction`](xref:UnityEngine.InputSystem.Interactions.SlowTapInteraction) requires the user to press and hold a Control for a minimum duration of [`duration`](xref:UnityEngine.InputSystem.Interactions.SlowTapInteraction) seconds, and then release it, to trigger the Action.
 
 |__Parameters__|Type|Default value|
 |---|---|---|
-|[`duration`](../api/UnityEngine.InputSystem.Interactions.SlowTapInteraction.html#UnityEngine_InputSystem_Interactions_SlowTapInteraction_duration)|`float`|[`InputSettings.defaultSlowTapTime`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultSlowTapTime)|
-|[`pressPoint`](../api/UnityEngine.InputSystem.Interactions.SlowTapInteraction.html#UnityEngine_InputSystem_Interactions_SlowTapInteraction_pressPoint)|`float`|[`InputSettings.defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint)|
+|[`duration`](xref:UnityEngine.InputSystem.Interactions.SlowTapInteraction)|`float`|[`InputSettings.defaultSlowTapTime`](xref:UnityEngine.InputSystem.InputSettings)|
+|[`pressPoint`](xref:UnityEngine.InputSystem.Interactions.SlowTapInteraction)|`float`|[`InputSettings.defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings)|
 
 |__Callbacks__||
 |---|---|
-|[`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started)|Control magnitude crosses [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.SlowTapInteraction.html#UnityEngine_InputSystem_Interactions_SlowTapInteraction_pressPoint).|
-|[`performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed)|Control magnitude goes back below [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.SlowTapInteraction.html#UnityEngine_InputSystem_Interactions_SlowTapInteraction_pressPoint) after [`duration`](../api/UnityEngine.InputSystem.Interactions.SlowTapInteraction.html#UnityEngine_InputSystem_Interactions_SlowTapInteraction_duration).|
-|[`canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled)|Control magnitude goes back below [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.SlowTapInteraction.html#UnityEngine_InputSystem_Interactions_SlowTapInteraction_pressPoint) before [`duration`](../api/UnityEngine.InputSystem.Interactions.SlowTapInteraction.html#UnityEngine_InputSystem_Interactions_SlowTapInteraction_duration) (that is, the tap was too fast).|
+|[`started`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude crosses [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.SlowTapInteraction).|
+|[`performed`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude goes back below [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.SlowTapInteraction) after [`duration`](xref:UnityEngine.InputSystem.Interactions.SlowTapInteraction).|
+|[`canceled`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude goes back below [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.SlowTapInteraction) before [`duration`](xref:UnityEngine.InputSystem.Interactions.SlowTapInteraction) (that is, the tap was too fast).|
 
 ## MultiTap
 
-A [`MultiTapInteraction`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html) requires the user to press and release a Control within [`tapTime`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_tapTime) seconds [`tapCount`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_tapCount) times, with no more then [`tapDelay`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_tapDelay) seconds passing between taps, for the Interaction to trigger. You can use this to detect double-click or multi-click gestures.
+A [`MultiTapInteraction`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) requires the user to press and release a Control within [`tapTime`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) seconds [`tapCount`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) times, with no more then [`tapDelay`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) seconds passing between taps, for the Interaction to trigger. You can use this to detect double-click or multi-click gestures.
 
 |__Parameters__|Type|Default value|
 |---|---|---|
-|[`tapTime`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_tapTime)|`float`|[`InputSettings.defaultTapTime`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultTapTime)|
-|[`tapDelay`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_tapDelay)|`float`|2 * [`tapTime`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_tapTime)|
-|[`tapCount`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_tapCount)|`int`|2|
-|[`pressPoint`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_pressPoint)|`float`|[`InputSettings.defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint)|
+|[`tapTime`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)|`float`|[`InputSettings.defaultTapTime`](xref:UnityEngine.InputSystem.InputSettings)|
+|[`tapDelay`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)|`float`|2 * [`tapTime`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)|
+|[`tapCount`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)|`int`|2|
+|[`pressPoint`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)|`float`|[`InputSettings.defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings)|
 
 |__Callbacks__||
 |---|---|
-|[`started`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_started)|Control magnitude crosses [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_pressPoint).|
-|[`performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed)|Control magnitude went back below [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_pressPoint) and back up above it repeatedly for [`tapCount`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_tapCount) times.|
-|[`canceled`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_canceled)|- After going back below [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_pressPoint), Control magnitude did not go back above [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_pressPoint) within [`tapDelay`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_tapDelay) time (that is, taps were spaced out too far apart).<br>or<br>- After going back above [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_pressPoint), Control magnitude did not go back below [`pressPoint`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_pressPoint) within [`tapTime`](../api/UnityEngine.InputSystem.Interactions.MultiTapInteraction.html#UnityEngine_InputSystem_Interactions_MultiTapInteraction_tapTime) time (that is, taps were too long).|
+|[`started`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude crosses [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction).|
+|[`performed`](xref:UnityEngine.InputSystem.InputAction)|Control magnitude went back below [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) and back up above it repeatedly for [`tapCount`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) times.|
+|[`canceled`](xref:UnityEngine.InputSystem.InputAction)|- After going back below [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction), Control magnitude did not go back above [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) within [`tapDelay`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) time (that is, taps were spaced out too far apart).<br>or<br>- After going back above [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction), Control magnitude did not go back below [`pressPoint`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) within [`tapTime`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) time (that is, taps were too long).|

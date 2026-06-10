@@ -14,13 +14,13 @@ A collection of frequently asked questions, and where to find their answers in t
 
 How do I...?
 
-- [check if a specific key or button was pressed this frame?](../api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame)
+- [check if a specific key or button was pressed this frame?](xref:UnityEngine.InputSystem.Controls.ButtonControl)
 
-- [check if any key or button was pressed](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onAnyButtonPress)
+- [check if any key or button was pressed](xref:UnityEngine.InputSystem.InputSystem)
 
-- [find all connected gamepads?](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_all)
+- [find all connected gamepads?](xref:UnityEngine.InputSystem.Gamepad)
 
-- [find the gamepad that the player is currently using?](../api/UnityEngine.InputSystem.Gamepad.html#UnityEngine_InputSystem_Gamepad_current)
+- [find the gamepad that the player is currently using?](xref:UnityEngine.InputSystem.Gamepad)
 
 - [know when a new device was plugged in?](monitor-devices.md)
 
@@ -33,21 +33,21 @@ Use the same techniques shown for the "Jump" action in the [Workflows section](w
 
 - [use a "positive" and a "negative" button to drive an axis?](configure-bindings-from-code.md#1d-axis)
 
-- [create a UI to rebind input in my game?](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html)
+- [create a UI to rebind input in my game?](xref:UnityEngine.InputSystem.InputActionRebindingExtensions)
 
-- [set up an Action to specifically target the left-hand XR controller?](../api/UnityEngine.InputSystem.XR.XRController.html#UnityEngine_InputSystem_XR_XRController_leftHand)
+- [set up an Action to specifically target the left-hand XR controller?](xref:UnityEngine.InputSystem.XR.XRController)
 
-- [make my left-hand XR controller my right-hand one?](../api/UnityEngine.InputSystem.XR.XRController.html#UnityEngine_InputSystem_XR_XRController_leftHand)
+- [make my left-hand XR controller my right-hand one?](xref:UnityEngine.InputSystem.XR.XRController)
 
 - [get all current touches from the touchscreen?](devices-touch.md#reading-all-touches)
 
-- [deal with my gamepad data arriving in a format different from `GamepadState`?](../api/UnityEngine.InputSystem.LowLevel.GamepadState.html)
+- [deal with my gamepad data arriving in a format different from `GamepadState`?](xref:UnityEngine.InputSystem.LowLevel.GamepadState)
 
 - [force the Input System to use my own layout when the native backend discovers a specific Device?](native-devices.md)
 
 - [add deadzoning to my gamepad sticks?](query-gamepads.md#add-a-deadzone-to-a-gamepad)
 
-- [give my head tracking an extra update before rendering?](../api/UnityEngine.InputSystem.XR.XRHMD.html)
+- [give my head tracking an extra update before rendering?](xref:UnityEngine.InputSystem.XR.XRHMD)
 
 - [record events flowing through the system?](debugging.md#other-tips)
 

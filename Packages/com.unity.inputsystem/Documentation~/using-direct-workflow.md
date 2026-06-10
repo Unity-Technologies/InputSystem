@@ -38,7 +38,7 @@ public class MyPlayerScript : MonoBehaviour
 }
 ```
 
-The example above reads values directly from  the right trigger, and the left stick, of the currently connected [gamepad](devices-gamepads.md). It does not use the input system’s "Action" class, and instead the conceptual actions in your game or app, such as "move" and "use", are implicitly defined by what your code does in response to the input. You can use the same approach for other Device types such as the [keyboard](../api/UnityEngine.InputSystem.Keyboard.html) or [mouse](../api/UnityEngine.InputSystem.Mouse.html).
+The example above reads values directly from  the right trigger, and the left stick, of the currently connected [gamepad](devices-gamepads.md). It does not use the input system’s "Action" class, and instead the conceptual actions in your game or app, such as "move" and "use", are implicitly defined by what your code does in response to the input. You can use the same approach for other Device types such as the [keyboard](xref:UnityEngine.InputSystem.Keyboard) or [mouse](xref:UnityEngine.InputSystem.Mouse).
 
 ## Pros and Cons
 

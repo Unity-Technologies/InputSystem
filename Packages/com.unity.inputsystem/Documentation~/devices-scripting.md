@@ -4,7 +4,7 @@ uid: input-system-devices-scripting
 
 # Devices (scripting)
 
-This section explains how to work with [`InputDevice`](../api/UnityEngine.InputSystem.InputDevice.html) instances from script. 
+This section explains how to work with [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice) instances from script. 
 
 If you only need to get a device reference and read control values, refer to [Read devices directly](read-devices-directly.md). For hardware support by platform, refer to [Supported devices reference](supported-devices-reference.md).
 

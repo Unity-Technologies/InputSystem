@@ -4,7 +4,7 @@ uid: input-system-save-load-rebinds
 
 # Save and load rebinds 
 
-You can serialize override properties of [Bindings](../api/UnityEngine.InputSystem.InputBinding.html) by serializing them as JSON strings and restoring them from these. Use [`SaveBindingOverridesAsJson`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_SaveBindingOverridesAsJson_UnityEngine_InputSystem_IInputActionCollection2_) to create these strings and [`LoadBindingOverridesFromJson`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_LoadBindingOverridesFromJson_UnityEngine_InputSystem_IInputActionCollection2_System_String_System_Boolean_) to restore overrides from them.
+You can serialize override properties of [Bindings](xref:UnityEngine.InputSystem.InputBinding) by serializing them as JSON strings and restoring them from these. Use [`SaveBindingOverridesAsJson`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions) to create these strings and [`LoadBindingOverridesFromJson`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions) to restore overrides from them.
 
 ```CSharp
 // Store player rebinds in PlayerPrefs.

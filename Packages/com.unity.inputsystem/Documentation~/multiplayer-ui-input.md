@@ -6,7 +6,7 @@ uid: input-system-multiplayer-ui-input
 
 Give each local player their own UI on a shared screen, with separate navigation and selection per controller or device.
 
-The Input System uses a [Multiplayer Event System](../api/UnityEngine.InputSystem.UI.MultiplayerEventSystem.html) so multiple [UI Input Module](using-ui-input-module.md) instances can run at once—one per player. Start with the introduction, then configure components and Player Root hierarchy for your scene.
+The Input System uses a [Multiplayer Event System](xref:UnityEngine.InputSystem.UI.MultiplayerEventSystem) so multiple [UI Input Module](using-ui-input-module.md) instances can run at once—one per player. Start with the introduction, then configure components and Player Root hierarchy for your scene.
 
 | **Topic** | **Description** |
 | :--- | :--- |

@@ -12,23 +12,23 @@ Each Binding has the following properties:
 
 |Property|Description|
 |--------|-----------|
-|[`path`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_path)|[Control path](controls.md#control-paths) that identifies the control(s) from which the Action should receive input.<br><br>Example: `"<Gamepad>/leftStick"`|
-|[`overridePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_overridePath)|[Control path](controls.md#control-paths) that overrides `path`. Unlike `path`, `overridePath` is not persistent, so you can use it to non-destructively override the path on a Binding. If it is set to something other than null, it takes effect and overrides `path`.  To get the path which is currently in effect (that is, either `path` or `overridePath`), you can query the [`effectivePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_effectivePath) property.|
-|[`action`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_action)|The name or ID of the Action that the Binding should trigger. Note that this can be null or empty (for instance, for  [composites](#composite-bindings)). Not case-sensitive.<br><br>Example: `"fire"`|
-|[`groups`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_groups)|A semicolon-separated list of Binding groups that the Binding belongs to. Can be null or empty. Binding groups can be anything, but are mostly used for [Control Schemes](#control-schemes). Not case-sensitive.<br><br>Example: `"Keyboard&Mouse;Gamepad"`|
-|[`interactions`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_interactions)|A semicolon-separated list of [Interactions](Interactions.md) to apply to input on this Binding. Note that Unity appends Interactions applied to the [Action](actions.md) itself (if any) to this list. Not case-sensitive.<br><br>Example: `"slowTap;hold(duration=0.75)"`|
-|[`processors`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_processors)|A semicolon-separated list of [Processors](processors.md) to apply to input on this Binding. Note that Unity appends Processors applied to the [Action](actions.md) itself (if any) to this list. Not case-sensitive.<br><br>Processors on Bindings apply in addition to Processors on Controls that are providing values. For example, if you put a `stickDeadzone` Processor on a Binding and then bind it to `<Gamepad>/leftStick`, you get deadzones applied twice: once from the deadzone Processor sitting on the `leftStick` Control, and once from the Binding.<br><br>Example: `"invert;axisDeadzone(min=0.1,max=0.95)"`|
-|[`id`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_id)|Unique ID of the Binding. You can use it to identify the Binding when storing Binding overrides in user settings, for example.|
-|[`name`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_name)|Optional name of the Binding. Identifies part names inside [Composites](#composite-bindings).<br><br>Example: `"Positive"`|
-|[`isComposite`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_isComposite)|Whether the Binding acts as a [Composite](#composite-bindings).|
-|[`isPartOfComposite`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_isPartOfComposite)|Whether the Binding is part of a [Composite](#composite-bindings).|
+|[`path`](xref:UnityEngine.InputSystem.InputBinding)|[Control path](controls.md#control-paths) that identifies the control(s) from which the Action should receive input.<br><br>Example: `"<Gamepad>/leftStick"`|
+|[`overridePath`](xref:UnityEngine.InputSystem.InputBinding)|[Control path](controls.md#control-paths) that overrides `path`. Unlike `path`, `overridePath` is not persistent, so you can use it to non-destructively override the path on a Binding. If it is set to something other than null, it takes effect and overrides `path`.  To get the path which is currently in effect (that is, either `path` or `overridePath`), you can query the [`effectivePath`](xref:UnityEngine.InputSystem.InputBinding) property.|
+|[`action`](xref:UnityEngine.InputSystem.InputBinding)|The name or ID of the Action that the Binding should trigger. Note that this can be null or empty (for instance, for  [composites](#composite-bindings)). Not case-sensitive.<br><br>Example: `"fire"`|
+|[`groups`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of Binding groups that the Binding belongs to. Can be null or empty. Binding groups can be anything, but are mostly used for [Control Schemes](#control-schemes). Not case-sensitive.<br><br>Example: `"Keyboard&Mouse;Gamepad"`|
+|[`interactions`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of [Interactions](Interactions.md) to apply to input on this Binding. Note that Unity appends Interactions applied to the [Action](actions.md) itself (if any) to this list. Not case-sensitive.<br><br>Example: `"slowTap;hold(duration=0.75)"`|
+|[`processors`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of [Processors](processors.md) to apply to input on this Binding. Note that Unity appends Processors applied to the [Action](actions.md) itself (if any) to this list. Not case-sensitive.<br><br>Processors on Bindings apply in addition to Processors on Controls that are providing values. For example, if you put a `stickDeadzone` Processor on a Binding and then bind it to `<Gamepad>/leftStick`, you get deadzones applied twice: once from the deadzone Processor sitting on the `leftStick` Control, and once from the Binding.<br><br>Example: `"invert;axisDeadzone(min=0.1,max=0.95)"`|
+|[`id`](xref:UnityEngine.InputSystem.InputBinding)|Unique ID of the Binding. You can use it to identify the Binding when storing Binding overrides in user settings, for example.|
+|[`name`](xref:UnityEngine.InputSystem.InputBinding)|Optional name of the Binding. Identifies part names inside [Composites](#composite-bindings).<br><br>Example: `"Positive"`|
+|[`isComposite`](xref:UnityEngine.InputSystem.InputBinding)|Whether the Binding acts as a [Composite](#composite-bindings).|
+|[`isPartOfComposite`](xref:UnityEngine.InputSystem.InputBinding)|Whether the Binding is part of a [Composite](#composite-bindings).|
 
-To query the Bindings to a particular Action, you can use [`InputAction.bindings`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_bindings). To query a flat list of Bindings for all Actions in an Action Map, you can use [`InputActionMap.bindings`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_bindings).
+To query the Bindings to a particular Action, you can use [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction). To query a flat list of Bindings for all Actions in an Action Map, you can use [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap).
 
 
 ## Erasing Bindings
 
-You can erase a binding by calling [`Erase`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax.html#UnityEngine_InputSystem_InputActionSetupExtensions_BindingSyntax_Erase_) on the [binding accessor](../api/UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax.html).
+You can erase a binding by calling [`Erase`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax) on the [binding accessor](xref:UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax).
 
 ```CSharp
 // Erase first binding on "fire" action.
@@ -47,7 +47,7 @@ playerInput.actions.FindActionMap("gameplay").ChangeBinding(0).Erase();
 
 ## Adding Bindings
 
-New bindings can be added to an Action using [`AddBinding`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.html#UnityEngine_InputSystem_InputActionSetupExtensions_AddBinding_UnityEngine_InputSystem_InputAction_System_String_System_String_System_String_System_String_) or [`AddCompositeBinding`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.html#UnityEngine_InputSystem_InputActionSetupExtensions_AddCompositeBinding_UnityEngine_InputSystem_InputAction_System_String_System_String_System_String_).
+New bindings can be added to an Action using [`AddBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) or [`AddCompositeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions).
 
 ```CSharp
 // Add a binding for the left mouse button to the "fire" action.
@@ -72,7 +72,7 @@ A Binding may, either through itself or through its associated Action, lead to [
 var action = new InputAction(interactions: "hold(duration=4)");
 ```
 
-You can query the current value of any such parameter using the [`GetParameterValue`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_GetParameterValue_UnityEngine_InputSystem_InputAction_System_String_UnityEngine_InputSystem_InputBinding_) API.
+You can query the current value of any such parameter using the [`GetParameterValue`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions) API.
 
 ```CSharp
 // This returns a PrimitiveValue?. It will be null if the
@@ -99,9 +99,9 @@ Alternatively, you can use an expression parameter to encapsulate both the type 
 action.GetParameterValue((TapInteraction x) => x.duration);
 ```
 
-To alter the current value of a parameter, you can use what is referred to as a "parameter override". You can apply these at the level of an individual [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html), or at the level of an entire [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html), or even at the level of an entire [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html). Such overrides are stored internally and applied automatically even on bindings added later.
+To alter the current value of a parameter, you can use what is referred to as a "parameter override". You can apply these at the level of an individual [`InputAction`](xref:UnityEngine.InputSystem.InputAction), or at the level of an entire [`InputActionMap`](xref:UnityEngine.InputSystem.InputActionMap), or even at the level of an entire [`InputActionAsset`](xref:UnityEngine.InputSystem.InputActionAsset). Such overrides are stored internally and applied automatically even on bindings added later.
 
-To add an override, use the [`ApplyParameterOverride`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_ApplyParameterOverride_UnityEngine_InputSystem_InputAction_System_String_UnityEngine_InputSystem_Utilities_PrimitiveValue_UnityEngine_InputSystem_InputBinding_) API or any of its overloads.
+To add an override, use the [`ApplyParameterOverride`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions) API or any of its overloads.
 
 ```CSharp
 // Set the "duration" parameter on all bindings of the action to 4.
@@ -174,7 +174,7 @@ look.ApplyParameterOverride("scaleVector2:y", 0.5f, new InputBinding("<Mouse>/de
 
 ## Composite Bindings
 
-To create composites in code, you can use the [`AddCompositeBinding`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.html#UnityEngine_InputSystem_InputActionSetupExtensions_AddCompositeBinding_UnityEngine_InputSystem_InputAction_System_String_System_String_System_String_) syntax.
+To create composites in code, you can use the [`AddCompositeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) syntax.
 
 ```CSharp
 myAction.AddCompositeBinding("Axis")
@@ -182,7 +182,7 @@ myAction.AddCompositeBinding("Axis")
     .With("Negative", "<Gamepad>/leftTrigger");
 ```
 
-Each Composite consists of one Binding that has [`InputBinding.isComposite`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_isComposite) set to true, followed by one or more Bindings that have [`InputBinding.isPartOfComposite`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_isPartOfComposite) set to true. In other words, several consecutive entries in [`InputActionMap.bindings`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_bindings) or [`InputAction.bindings`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_bindings) together form a Composite.
+Each Composite consists of one Binding that has [`InputBinding.isComposite`](xref:UnityEngine.InputSystem.InputBinding) set to true, followed by one or more Bindings that have [`InputBinding.isPartOfComposite`](xref:UnityEngine.InputSystem.InputBinding) set to true. In other words, several consecutive entries in [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap) or [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction) together form a Composite.
 
 Note that each composite part can be bound arbitrary many times.
 
@@ -205,7 +205,7 @@ There are currently five Composite types that come with the system out of the bo
 
 ### 1D axis
 
-A Composite made of two buttons: one that pulls a 1D axis in its negative direction, and another that pulls it in its positive direction. Implemented in the [`AxisComposite`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html) class. The result is a `float`.
+A Composite made of two buttons: one that pulls a 1D axis in its negative direction, and another that pulls it in its positive direction. Implemented in the [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite) class. The result is a `float`.
 
 ```CSharp
 myAction.AddCompositeBinding("1DAxis") // Or just "Axis"
@@ -217,20 +217,20 @@ The axis Composite has two part bindings.
 
 |Part|Type|Description|
 |----|----|-----------|
-|[`positive`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html#UnityEngine_InputSystem_Composites_AxisComposite_positive)|`Button`|Controls pulling in the positive direction (towards [`maxValue`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html#UnityEngine_InputSystem_Composites_AxisComposite_maxValue)).|
-|[`negative`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html#UnityEngine_InputSystem_Composites_AxisComposite_negative)|`Button`|Controls pulling in the negative direction, (towards [`minValue`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html#UnityEngine_InputSystem_Composites_AxisComposite_minValue)).|
+|[`positive`](xref:UnityEngine.InputSystem.Composites.AxisComposite)|`Button`|Controls pulling in the positive direction (towards [`maxValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite)).|
+|[`negative`](xref:UnityEngine.InputSystem.Composites.AxisComposite)|`Button`|Controls pulling in the negative direction, (towards [`minValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite)).|
 
 You can set the following parameters on an axis Composite:
 
 |Parameter|Description|
 |---------|-----------|
-|[`whichSideWins`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html#UnityEngine_InputSystem_Composites_AxisComposite_whichSideWins)|What happens if both [`positive`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html#UnityEngine_InputSystem_Composites_AxisComposite_positive) and [`negative`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html#UnityEngine_InputSystem_Composites_AxisComposite_negative) are actuated. See table below.|
-|[`minValue`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html#UnityEngine_InputSystem_Composites_AxisComposite_minValue)|The value returned if the [`negative`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html#UnityEngine_InputSystem_Composites_AxisComposite_negative) side is actuated. Default is -1.|
-|[`maxValue`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html#UnityEngine_InputSystem_Composites_AxisComposite_maxValue)|The value returned if the [`positive`](../api/UnityEngine.InputSystem.Composites.AxisComposite.html#UnityEngine_InputSystem_Composites_AxisComposite_positive) side is actuated. Default is 1.|
+|[`whichSideWins`](xref:UnityEngine.InputSystem.Composites.AxisComposite)|What happens if both [`positive`](xref:UnityEngine.InputSystem.Composites.AxisComposite) and [`negative`](xref:UnityEngine.InputSystem.Composites.AxisComposite) are actuated. See table below.|
+|[`minValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite)|The value returned if the [`negative`](xref:UnityEngine.InputSystem.Composites.AxisComposite) side is actuated. Default is -1.|
+|[`maxValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite)|The value returned if the [`positive`](xref:UnityEngine.InputSystem.Composites.AxisComposite) side is actuated. Default is 1.|
 
 If Controls from both the `positive` and the `negative` side are actuated, then the resulting value of the axis Composite depends on the `whichSideWin` parameter setting.
 
-|[`WhichSideWins`](../api/UnityEngine.InputSystem.Composites.AxisComposite.WhichSideWins.html)|Description|
+|[`WhichSideWins`](xref:UnityEngine.InputSystem.Composites.AxisComposite.WhichSideWins)|Description|
 |---------------|-----------|
 |(0) `Neither`|Neither side has precedence. The Composite returns the midpoint between `minValue` and `maxValue` as a result. At their default settings, this is 0.<br><br>This is the default value for this setting.|
 |(1) `Positive`|The positive side has precedence and the Composite returns `maxValue`.|
@@ -240,7 +240,7 @@ If Controls from both the `positive` and the `negative` side are actuated, then 
 
 ### 2D vector
 
-A Composite that represents a 4-way button setup like the D-pad on gamepads. Each button represents a cardinal direction. Implemented in the [`Vector2Composite`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html) class. The result is a `Vector2`.
+A Composite that represents a 4-way button setup like the D-pad on gamepads. Each button represents a cardinal direction. Implemented in the [`Vector2Composite`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) class. The result is a `Vector2`.
 
 This Composite is most useful for representing up-down-left-right controls, such as WASD keyboard input.
 
@@ -263,22 +263,22 @@ The 2D vector Composite has four part Bindings.
 
 |Part|Type|Description|
 |----|----|-----------|
-|[`up`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_up)|`Button`|Controls representing `(0,1)` (+Y).|
-|[`down`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_down)|`Button`|Controls representing `(0,-1)` (-Y).|
-|[`left`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_left)|`Button`|Controls representing `(-1,0)` (-X).|
-|[`right`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_right)|`Button`|Controls representing `(1,0)` (+X).|
+|[`up`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|`Button`|Controls representing `(0,1)` (+Y).|
+|[`down`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|`Button`|Controls representing `(0,-1)` (-Y).|
+|[`left`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|`Button`|Controls representing `(-1,0)` (-X).|
+|[`right`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|`Button`|Controls representing `(1,0)` (+X).|
 
 In addition, you can set the following parameters on a 2D vector Composite:
 
 |Parameter|Description|
 |---------|-----------|
-|[`mode`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_mode)|Whether to treat the inputs as digital or as analog controls.<br><br>If this is set to [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_DigitalNormalized), inputs are treated as buttons (off if below [`defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint) and on if equal to or greater). Each input is 0 or 1 depending on whether the button is pressed or not. The vector resulting from the up/down/left/right parts is normalized. The result is a diamond-shaped 2D input range.<br><br>If this is set to [`Mode.Digital`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_Digital), the behavior is essentially the same as [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_DigitalNormalized) except that the resulting vector is not normalized.<br><br>Finally, if this is set to [`Mode.Analog`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_Analog), inputs are treated as analog (i.e. full floating-point values) and, other than [`down`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_down) and [`left`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.html#UnityEngine_InputSystem_Composites_Vector2Composite_left) being inverted, values will be passed through as is.<br><br>The default is [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector2Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector2Composite_Mode_DigitalNormalized).|
+|[`mode`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|Whether to treat the inputs as digital or as analog controls.<br><br>If this is set to [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), inputs are treated as buttons (off if below [`defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings) and on if equal to or greater). Each input is 0 or 1 depending on whether the button is pressed or not. The vector resulting from the up/down/left/right parts is normalized. The result is a diamond-shaped 2D input range.<br><br>If this is set to [`Mode.Digital`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), the behavior is essentially the same as [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode) except that the resulting vector is not normalized.<br><br>Finally, if this is set to [`Mode.Analog`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), inputs are treated as analog (i.e. full floating-point values) and, other than [`down`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) and [`left`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) being inverted, values will be passed through as is.<br><br>The default is [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode).|
 
 >__Note__: There is no support yet for interpolating between the up/down/left/right over time.
 
 ### 3D vector
 
-A Composite that represents a 6-way button where two combinations each control one axis of a 3D vector. Implemented in the [`Vector3Composite`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html) class. The result is a `Vector3`.
+A Composite that represents a 6-way button where two combinations each control one axis of a 3D vector. Implemented in the [`Vector3Composite`](xref:UnityEngine.InputSystem.Composites.Vector3Composite) class. The result is a `Vector3`.
 
 ```CSharp
 myAction.AddCompositeBinding("3DVector")
@@ -299,24 +299,24 @@ The 3D vector Composite has four part Bindings.
 
 |Part|Type|Description|
 |----|----|-----------|
-|[`up`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_up)|`Button`|Controls representing `(0,1,0)` (+Y).|
-|[`down`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_down)|`Button`|Controls representing `(0,-1,0)` (-Y).|
-|[`left`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_left)|`Button`|Controls representing `(-1,0,0)` (-X).|
-|[`right`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_right)|`Button`|Controls representing `(1,0,0)` (+X).|
-|[`forward`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_forward)|`Button`|Controls representing `(0,0,1)` (+Z).|
-|[`backward`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_backward)|`Button`|Controls representing `(0,0,-1)` (-Z).|
+|[`up`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(0,1,0)` (+Y).|
+|[`down`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(0,-1,0)` (-Y).|
+|[`left`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(-1,0,0)` (-X).|
+|[`right`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(1,0,0)` (+X).|
+|[`forward`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(0,0,1)` (+Z).|
+|[`backward`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(0,0,-1)` (-Z).|
 
 In addition, you can set the following parameters on a 3D vector Composite:
 
 |Parameter|Description|
 |---------|-----------|
-|[`mode`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_mode)|Whether to treat the inputs as digital or as analog controls.<br><br>If this is set to [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector3Composite_Mode_DigitalNormalized), inputs are treated as buttons (off if below [`defaultButtonPressPoint`](../api/UnityEngine.InputSystem.InputSettings.html#UnityEngine_InputSystem_InputSettings_defaultButtonPressPoint) and on if equal to or greater). Each input is 0 or 1 depending on whether the button is pressed or not. The vector resulting from the up/down/left/right/forward/backward parts is normalized.<br><br>If this is set to [`Mode.Digital`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector3Composite_Mode_Digital), the behavior is essentially the same as [`Mode.DigitalNormalized`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector3Composite_Mode_DigitalNormalized) except that the resulting vector is not normalized.<br><br>Finally, if this is set to [`Mode.Analog`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector3Composite_Mode_Analog), inputs are treated as analog (that is, full floating-point values) and, other than [`down`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_down), [`left`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_left), and [`backward`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.html#UnityEngine_InputSystem_Composites_Vector3Composite_backward) being inverted, values will be passed through as they are.<br><br>The default is [`Analog`](../api/UnityEngine.InputSystem.Composites.Vector3Composite.Mode.html#UnityEngine_InputSystem_Composites_Vector3Composite_Mode_Analog).|
+|[`mode`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|Whether to treat the inputs as digital or as analog controls.<br><br>If this is set to [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.Mode), inputs are treated as buttons (off if below [`defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings) and on if equal to or greater). Each input is 0 or 1 depending on whether the button is pressed or not. The vector resulting from the up/down/left/right/forward/backward parts is normalized.<br><br>If this is set to [`Mode.Digital`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.Mode), the behavior is essentially the same as [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.Mode) except that the resulting vector is not normalized.<br><br>Finally, if this is set to [`Mode.Analog`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.Mode), inputs are treated as analog (that is, full floating-point values) and, other than [`down`](xref:UnityEngine.InputSystem.Composites.Vector3Composite), [`left`](xref:UnityEngine.InputSystem.Composites.Vector3Composite), and [`backward`](xref:UnityEngine.InputSystem.Composites.Vector3Composite) being inverted, values will be passed through as they are.<br><br>The default is [`Analog`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.Mode).|
 
 ### One Modifier
 
-A Composite that requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+1". Implemented in the [`OneModifierComposite`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+A Composite that requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+1". Implemented in the [`OneModifierComposite`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 
-The result is a value of the same type as the controls bound to the [`binding`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html#UnityEngine_InputSystem_Composites_OneModifierComposite_binding) part.
+The result is a value of the same type as the controls bound to the [`binding`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite) part.
 
 ```CSharp
 // Add binding for "CTRL+1".
@@ -335,16 +335,16 @@ The button with one modifier Composite has two part Bindings.
 
 |Part|Type|Description|
 |----|----|-----------|
-|[`modifier`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html#UnityEngine_InputSystem_Composites_OneModifierComposite_modifier)|`Button`|Modifier that has to be held for `binding` to come through. If the user holds any of the buttons bound to the `modifier` at the same time as the button that triggers the action, the Composite assumes the value of the `modifier` Binding. If the user does not press any button bound to the `modifier`, the Composite remains at default value.|
-|[`binding`](../api/UnityEngine.InputSystem.Composites.OneModifierComposite.html#UnityEngine_InputSystem_Composites_OneModifierComposite_binding)|Any|The control(s) whose value the Composite assumes while the user holds down the `modifier` button.|
+|[`modifier`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite)|`Button`|Modifier that has to be held for `binding` to come through. If the user holds any of the buttons bound to the `modifier` at the same time as the button that triggers the action, the Composite assumes the value of the `modifier` Binding. If the user does not press any button bound to the `modifier`, the Composite remains at default value.|
+|[`binding`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite)|Any|The control(s) whose value the Composite assumes while the user holds down the `modifier` button.|
 
 This Composite has no parameters.
 
 ### Two Modifiers
 
-A Composite that requires the user to hold down two "modifier" buttons in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+CTRL+1". Implemented in the [`TwoModifiersComposite`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+A Composite that requires the user to hold down two "modifier" buttons in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+CTRL+1". Implemented in the [`TwoModifiersComposite`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 
-The result is a value of the same type as the controls bound to the [`binding`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html#UnityEngine_InputSystem_Composites_TwoModifiersComposite_binding) part.
+The result is a value of the same type as the controls bound to the [`binding`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite) part.
 
 ```CSharp
 myAction.AddCompositeBinding("TwoModifiers")
@@ -359,9 +359,9 @@ The button with two modifiers Composite has three part Bindings.
 
 |Part|Type|Description|
 |----|----|-----------|
-|[`modifier1`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html#UnityEngine_InputSystem_Composites_TwoModifiersComposite_modifier1)|`Button`|The first modifier the user must hold alongside `modifier2`, for `binding` to come through. If the user does not press any button bound to the `modifier1`, the Composite remains at default value.|
-|[`modifier2`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html#UnityEngine_InputSystem_Composites_TwoModifiersComposite_modifier2)|`Button`|The second modifier the user must hold alongside `modifier1`, for `binding` to come through. If the user does not press any button bound to the `modifier2`, the Composite remains at default value.|
-|[`binding`](../api/UnityEngine.InputSystem.Composites.TwoModifiersComposite.html#UnityEngine_InputSystem_Composites_TwoModifiersComposite_binding)|Any|The control(s) whose value the Composite assumes while the user presses both `modifier1` and `modifier2` at the same time.|
+|[`modifier1`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite)|`Button`|The first modifier the user must hold alongside `modifier2`, for `binding` to come through. If the user does not press any button bound to the `modifier1`, the Composite remains at default value.|
+|[`modifier2`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite)|`Button`|The second modifier the user must hold alongside `modifier1`, for `binding` to come through. If the user does not press any button bound to the `modifier2`, the Composite remains at default value.|
+|[`binding`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite)|Any|The control(s) whose value the Composite assumes while the user presses both `modifier1` and `modifier2` at the same time.|
 
 This Composite has no parameters.
 
@@ -369,7 +369,7 @@ This Composite has no parameters.
 
 You can define new types of Composites, and register them with the API. Unity treats these the same as predefined types, which the Input System internally defines and registers in the same way.
 
-To define a new type of Composite, create a class based on [`InputBindingComposite<TValue>`](../api/UnityEngine.InputSystem.InputBindingComposite-1.html).
+To define a new type of Composite, create a class based on [`InputBindingComposite<TValue>`](xref:UnityEngine.InputSystem.InputBindingComposite-1).
 
 > __IMPORTANT__: Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on Bindings, see [interactions](write-custom-interactions.md).
 
@@ -449,7 +449,7 @@ The Composite should now appear in the editor UI when you add a Binding, and you
         .With("secondpart", "<Gamepad>/buttonNorth");
 ```
 
-To define a custom parameter editor for the Composite, you can derive from  [`InputParameterEditor<TObject>`](../api/UnityEngine.InputSystem.Editor.InputParameterEditor-1.html).
+To define a custom parameter editor for the Composite, you can derive from  [`InputParameterEditor<TObject>`](xref:UnityEngine.InputSystem.Editor.InputParameterEditor-1).
 
 ```CSharp
 #if UNITY_EDITOR
@@ -467,7 +467,7 @@ public class CustomParameterEditor : InputParameterEditor<CustomComposite>
 
 ## Changing Bindings
 
-In general, you can change existing bindings via the [`InputActionSetupExtensions.ChangeBinding`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.html#UnityEngine_InputSystem_InputActionSetupExtensions_ChangeBinding_UnityEngine_InputSystem_InputAction_System_Int32_) method. This returns an accessor that can be used to modify the properties of the targeted [`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html). Note that most of the write operations of the accessor are destructive. For non-destructive changes to bindings, see [Applying Overrides](#applying-overrides).
+In general, you can change existing bindings via the [`InputActionSetupExtensions.ChangeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) method. This returns an accessor that can be used to modify the properties of the targeted [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding). Note that most of the write operations of the accessor are destructive. For non-destructive changes to bindings, see [Applying Overrides](#applying-overrides).
 
 ```CSharp
 // Get write access to the second binding of the 'fire' action.
@@ -479,7 +479,7 @@ var accessor = playerInput.actions['fire'].ChangeBinding(1);
 accessor = playerInput.actions.FindActionMap("gameplay").ChangeBinding(2);
 ```
 
-You can use the resulting accessor to modify properties through methods such as [`WithPath`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax.html#UnityEngine_InputSystem_InputActionSetupExtensions_BindingSyntax_WithPath_) or [`WithProcessors`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax.html#UnityEngine_InputSystem_InputActionSetupExtensions_BindingSyntax_WithProcessors_).
+You can use the resulting accessor to modify properties through methods such as [`WithPath`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax) or [`WithProcessors`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax).
 
 ```CSharp
 playerInput.actions["fire"].ChangeBinding(1)
@@ -487,7 +487,7 @@ playerInput.actions["fire"].ChangeBinding(1)
     .WithPath("<Keyboard>/space");
 ```
 
-You can also use the accessor to iterate through bindings using [`PreviousBinding`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax.html#UnityEngine_InputSystem_InputActionSetupExtensions_BindingSyntax_PreviousBinding_) and [`NextBinding`](../api/UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax.html#UnityEngine_InputSystem_InputActionSetupExtensions_BindingSyntax_NextBinding_).
+You can also use the accessor to iterate through bindings using [`PreviousBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax) and [`NextBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax).
 
 ```CSharp
 // Move accessor to previous binding.
@@ -497,7 +497,7 @@ accessor = accessor.PreviousBinding();
 accessor = accessor.NextBinding();
 ```
 
-If the given binding is a [composite](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_isComposite), you can address it by its name rather than by index.
+If the given binding is a [composite](xref:UnityEngine.InputSystem.InputBinding), you can address it by its name rather than by index.
 
 ```CSharp
 // Change the 2DVector composite of the "move" action.
@@ -515,32 +515,32 @@ playerInput.actions["move"].ChangeBinding("WASD")
 Control schemes allow you to group types of bindings together according to their control type, so that you can enable or disable groups of bindings. For example, you might want to enable all keyboard and mouse bindings if the user presses a keyboard button or moves the mouse.
 
 
-Unity stores these on the [`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html) class as a semicolon-separated string in the  [`InputBinding.groups`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_groups) property, and you can use them for any arbitrary grouping of bindings. To enable different sets of binding groups for an [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html) or [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html), you can use the [`InputActionMap.bindingMask`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_bindingMask)/[`InputActionAsset.bindingMask`](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_bindingMask) property. The Input System uses this to implement the concept of grouping Bindings into different  [`InputControlSchemes`](../api/UnityEngine.InputSystem.InputControlScheme.html).
+Unity stores these on the [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding) class as a semicolon-separated string in the  [`InputBinding.groups`](xref:UnityEngine.InputSystem.InputBinding) property, and you can use them for any arbitrary grouping of bindings. To enable different sets of binding groups for an [`InputActionMap`](xref:UnityEngine.InputSystem.InputActionMap) or [`InputActionAsset`](xref:UnityEngine.InputSystem.InputActionAsset), you can use the [`InputActionMap.bindingMask`](xref:UnityEngine.InputSystem.InputActionMap)/[`InputActionAsset.bindingMask`](xref:UnityEngine.InputSystem.InputActionAsset) property. The Input System uses this to implement the concept of grouping Bindings into different  [`InputControlSchemes`](xref:UnityEngine.InputSystem.InputControlScheme).
 
-Control Schemes use Binding groups to map Bindings in an [`InputActionMap`](../api/UnityEngine.InputSystem.InputActionMap.html) or [`InputActionAsset`](../api/UnityEngine.InputSystem.InputActionAsset.html) to different types of Devices. The [`PlayerInput`](player-input-component.md) class uses these to enable a matching Control Scheme for a new [user](user-management.md) joining the game, based on the Device they are playing on.
+Control Schemes use Binding groups to map Bindings in an [`InputActionMap`](xref:UnityEngine.InputSystem.InputActionMap) or [`InputActionAsset`](xref:UnityEngine.InputSystem.InputActionAsset) to different types of Devices. The [`PlayerInput`](player-input-component.md) class uses these to enable a matching Control Scheme for a new [user](user-management.md) joining the game, based on the Device they are playing on.
 
 
 
 ### Apply binding overrides
 
-You can override aspects of any Binding at run-time non-destructively. Specific properties of [`InputBinding`](../api/UnityEngine.InputSystem.InputBinding.html) have an `override` variant that, if set, will take precedent over the property that they shadow.  All `override` properties are of type `String`.
+You can override aspects of any Binding at run-time non-destructively. Specific properties of [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding) have an `override` variant that, if set, will take precedent over the property that they shadow.  All `override` properties are of type `String`.
 
 |Property|Override|Description|
 |--------|--------|-----------|
-|[`path`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_path)|[`overridePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_overridePath)|Replaces the [Control path](./controls.md#control-paths) that determines which Control(s) are referenced in the binding. If [`overridePath`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_overridePath) is set to an empty string, the binding is effectively disabled.<br><br>Example: `"<Gamepad>/leftStick"`|
-|[`processors`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_processors)|[`overrideProcessors`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_overrideProcessors)|Replaces the [processors](processors.md) applied to the binding.<br><br>Example: `"invert,normalize(min=0,max=10)"`|
-|[`interactions`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_interactions)|[`overrideInteractions`](../api/UnityEngine.InputSystem.InputBinding.html#UnityEngine_InputSystem_InputBinding_overrideInteractions)|Replaces the [interactions](Interactions.md) applied to the binding.<br><br>Example: `"tap(duration=0.5)"`|
+|[`path`](xref:UnityEngine.InputSystem.InputBinding)|[`overridePath`](xref:UnityEngine.InputSystem.InputBinding)|Replaces the [Control path](./controls.md#control-paths) that determines which Control(s) are referenced in the binding. If [`overridePath`](xref:UnityEngine.InputSystem.InputBinding) is set to an empty string, the binding is effectively disabled.<br><br>Example: `"<Gamepad>/leftStick"`|
+|[`processors`](xref:UnityEngine.InputSystem.InputBinding)|[`overrideProcessors`](xref:UnityEngine.InputSystem.InputBinding)|Replaces the [processors](processors.md) applied to the binding.<br><br>Example: `"invert,normalize(min=0,max=10)"`|
+|[`interactions`](xref:UnityEngine.InputSystem.InputBinding)|[`overrideInteractions`](xref:UnityEngine.InputSystem.InputBinding)|Replaces the [interactions](Interactions.md) applied to the binding.<br><br>Example: `"tap(duration=0.5)"`|
 
->NOTE: The `override` property values will not be saved along with the Actions (for example, when calling [`InputActionAsset.ToJson()`](../api/UnityEngine.InputSystem.InputActionAsset.html#UnityEngine_InputSystem_InputActionAsset_ToJson)). See [Saving and loading rebinds](#saving-and-loading-rebinds) for details about how to persist user rebinds.
+>NOTE: The `override` property values will not be saved along with the Actions (for example, when calling [`InputActionAsset.ToJson()`](xref:UnityEngine.InputSystem.InputActionAsset)). See [Saving and loading rebinds](#saving-and-loading-rebinds) for details about how to persist user rebinds.
 
-To set the various `override` properties, you can use the [`ApplyBindingOverride`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_ApplyBindingOverride_UnityEngine_InputSystem_InputAction_UnityEngine_InputSystem_InputBinding_) APIs.
+To set the various `override` properties, you can use the [`ApplyBindingOverride`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions) APIs.
 
 ```CSharp
 // Rebind the "fire" action to the left trigger on the gamepad.
 playerInput.actions["fire"].ApplyBindingOverride("<Gamepad>/leftTrigger");
 ```
 
-In most cases, it is best to locate specific bindings using APIs such as [`GetBindingIndexForControl`](../api/UnityEngine.InputSystem.InputActionRebindingExtensions.html#UnityEngine_InputSystem_InputActionRebindingExtensions_GetBindingIndexForControl_) and to then apply the override to that specific binding.
+In most cases, it is best to locate specific bindings using APIs such as [`GetBindingIndexForControl`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions) and to then apply the override to that specific binding.
 
 ```CSharp
 // Find the "Jump" binding for the space key.

@@ -52,7 +52,7 @@ However, the following script invokes the handler in both cases:
 XR ([tracked-type input](supported-ui-input-types-tracked.md)) is not yet supported in combination with UI Toolkit. This means that you cannot use devices such as VR controllers to operate interfaces created with UI Toolkit.
 
 ### UI Toolkit raycasting
-UI Toolkit handles raycasting internally. No separate raycaster component is necessary. This means that UI Toolkit does not support [TrackedDeviceRaycaster](../api/UnityEngine.InputSystem.UI.TrackedDeviceRaycaster.html).
+UI Toolkit handles raycasting internally. No separate raycaster component is necessary. This means that UI Toolkit does not support [TrackedDeviceRaycaster](xref:UnityEngine.InputSystem.UI.TrackedDeviceRaycaster).
 
 ## Unity UI (uGUI) compatibility
 [**Unity UI**](https://docs.unity3d.com/Packages/com.unity.ugui@latest), also known as "uGUI", is a GameObject and Component-based UI solution).

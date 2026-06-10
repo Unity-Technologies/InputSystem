@@ -4,7 +4,7 @@ uid: input-system-monitor-devices
 
 # Monitor devices 
 
-To be notified when new Devices are added or existing Devices are removed, use [`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange).
+To be notified when new Devices are added or existing Devices are removed, use [`InputSystem.onDeviceChange`](xref:UnityEngine.InputSystem.InputSystem).
 
 ```CSharp
 InputSystem.onDeviceChange +=
@@ -31,4 +31,4 @@ InputSystem.onDeviceChange +=
     }
 ```
 
-[`InputSystem.onDeviceChange`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onDeviceChange) delivers notifications for other device-related changes as well. See the [`InputDeviceChange` enum](../api/UnityEngine.InputSystem.InputDeviceChange.html) for more information.
+[`InputSystem.onDeviceChange`](xref:UnityEngine.InputSystem.InputSystem) delivers notifications for other device-related changes as well. See the [`InputDeviceChange` enum](xref:UnityEngine.InputSystem.InputDeviceChange) for more information.

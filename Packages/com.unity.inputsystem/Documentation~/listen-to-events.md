@@ -4,7 +4,7 @@ uid: input-system-listen-to-events
 
 # Listen to events 
 
-If you want to do any monitoring or processing on incoming events yourself, subscribe to the [`InputSystem.onEvent`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_onEvent) callback.
+If you want to do any monitoring or processing on incoming events yourself, subscribe to the [`InputSystem.onEvent`](xref:UnityEngine.InputSystem.InputSystem) callback.
 
 ```CSharp
 InputSystem.onEvent +=
@@ -24,7 +24,7 @@ InputSystem.onEvent
     .CallOnce(ctrl => Debug.Log($"Button {ctrl} pressed"));
 ```
 
-To enumerate the controls that have value changes in an event, you can use [`InputControlExtensions.EnumerateChangedControls`](../api/UnityEngine.InputSystem.InputControlExtensions.html#UnityEngine_InputSystem_InputControlExtensions_EnumerateChangedControls_UnityEngine_InputSystem_LowLevel_InputEventPtr_UnityEngine_InputSystem_InputDevice_System_Single_).
+To enumerate the controls that have value changes in an event, you can use [`InputControlExtensions.EnumerateChangedControls`](xref:UnityEngine.InputSystem.InputControlExtensions).
 
 ```CSharp
 InputSystem.onEvent
@@ -35,4 +35,4 @@ InputSystem.onEvent
     });
 ```
 
-This is significantly more efficient than manually iterating over [`InputDevice.allControls`](../api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_allControls) and reading out the value of each control from the event.
+This is significantly more efficient than manually iterating over [`InputDevice.allControls`](xref:UnityEngine.InputSystem.InputDevice) and reading out the value of each control from the event.

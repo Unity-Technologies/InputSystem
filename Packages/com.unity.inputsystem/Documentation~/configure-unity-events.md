@@ -8,11 +8,11 @@ You can use the following properties to configure `PlayerInput`:
 
 |Property|Description|
 |--------|-----------|
-|[`Actions`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_actions)|The set of [Input Actions](actions.md) associated with the player. Typically you would set this to Project-Wide Actions, however you can assign an [ActionAsset](action-assets.md) reference here). To receive input, each player must have an associated set of Actions. See documentation on [Actions](#actions) for details.|
-|[`Default Control Scheme`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_defaultControlScheme)|Which [Control Scheme](control-schemes.md) (from what is defined in [`Actions`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_actions)) to enable by default.|
-|[`Default Action Map`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_defaultActionMap)|Which [Action Map](actions.md) in [`Actions`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_actions) to enable by default. If set to `None`, then the player starts with no Actions being enabled.|
-|[`Camera`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_camera)|The individual camera associated with the player. This is only required when employing [split-screen](player-input-manager-component.md#split-screen) setups and has no effect otherwise.|
-|[`Behavior`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_notificationBehavior)|How the `PlayerInput` component notifies game code about things that happen with the player. See documentation on [notification behaviors](#notification-behaviors).|
+|[`Actions`](xref:UnityEngine.InputSystem.PlayerInput)|The set of [Input Actions](actions.md) associated with the player. Typically you would set this to Project-Wide Actions, however you can assign an [ActionAsset](action-assets.md) reference here). To receive input, each player must have an associated set of Actions. See documentation on [Actions](#actions) for details.|
+|[`Default Control Scheme`](xref:UnityEngine.InputSystem.PlayerInput)|Which [Control Scheme](control-schemes.md) (from what is defined in [`Actions`](xref:UnityEngine.InputSystem.PlayerInput)) to enable by default.|
+|[`Default Action Map`](xref:UnityEngine.InputSystem.PlayerInput)|Which [Action Map](actions.md) in [`Actions`](xref:UnityEngine.InputSystem.PlayerInput) to enable by default. If set to `None`, then the player starts with no Actions being enabled.|
+|[`Camera`](xref:UnityEngine.InputSystem.PlayerInput)|The individual camera associated with the player. This is only required when employing [split-screen](player-input-manager-component.md#split-screen) setups and has no effect otherwise.|
+|[`Behavior`](xref:UnityEngine.InputSystem.PlayerInput)|How the `PlayerInput` component notifies game code about things that happen with the player. See documentation on [notification behaviors](#notification-behaviors).|
 
 ## Actions
 
@@ -43,11 +43,11 @@ public class MyPlayerScript : MonoBehaviour
 
 ```
 
-When first enabled, the Player Input component enables all Actions from the the [`Default Action Map`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_defaultActionMap). If no default Action Map exists, the Player Input component does not enable any Actions. To manually enable Actions, you can call [`Enable`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_Enable) and [`Disable`](../api/UnityEngine.InputSystem.InputActionMap.html#UnityEngine_InputSystem_InputActionMap_Disable) on the Action Maps or Actions, like you would do [without `PlayerInput`](actions.md). To check which Action Map is currently enabled, or to switch to a different one, use the  [`PlayerInput.currentActionMap`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_currentActionMap) property. To switch Action Maps with an Action Map name, you can also call [`PlayerInput.SwitchCurrentActionMap`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_SwitchCurrentActionMap_System_String_).
+When first enabled, the Player Input component enables all Actions from the the [`Default Action Map`](xref:UnityEngine.InputSystem.PlayerInput). If no default Action Map exists, the Player Input component does not enable any Actions. To manually enable Actions, you can call [`Enable`](xref:UnityEngine.InputSystem.InputActionMap) and [`Disable`](xref:UnityEngine.InputSystem.InputActionMap) on the Action Maps or Actions, like you would do [without `PlayerInput`](actions.md). To check which Action Map is currently enabled, or to switch to a different one, use the  [`PlayerInput.currentActionMap`](xref:UnityEngine.InputSystem.PlayerInput) property. To switch Action Maps with an Action Map name, you can also call [`PlayerInput.SwitchCurrentActionMap`](xref:UnityEngine.InputSystem.PlayerInput).
 
-To disable a player's input, call [`PlayerInput.DeactivateInput`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_DeactivateInput). To re-enable it, call [`PlayerInput.ActivateInput`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_ActivateInput). The latter enables the default Action Map, if it exists.
+To disable a player's input, call [`PlayerInput.DeactivateInput`](xref:UnityEngine.InputSystem.PlayerInput). To re-enable it, call [`PlayerInput.ActivateInput`](xref:UnityEngine.InputSystem.PlayerInput). The latter enables the default Action Map, if it exists.
 
-When `PlayerInput` is disabled, it automatically disables the currently active Action Map ([`PlayerInput.currentActionMap`](../api/UnityEngine.InputSystem.PlayerInput.html#UnityEngine_InputSystem_PlayerInput_currentActionMap)) and disassociate any Devices paired to the player.
+When `PlayerInput` is disabled, it automatically disables the currently active Action Map ([`PlayerInput.currentActionMap`](xref:UnityEngine.InputSystem.PlayerInput)) and disassociate any Devices paired to the player.
 
 See the [notification behaviors](#notification-behaviors) section below for how to be notified when player triggers an Action.
 
@@ -83,7 +83,7 @@ The component must be on the same `GameObject` if you are using `Send Messages`,
 
 ## When using **Invoke Unity Events**
 
-When the [notification behavior](#notification-behaviors) of `PlayerInput` is set to `Invoke Unity Events`, each Action has to be routed to a target method. The methods have the same format as the [`started`, `performed`, and `canceled` callbacks](respond-to-input.md#action-callbacks) on [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html).
+When the [notification behavior](#notification-behaviors) of `PlayerInput` is set to `Invoke Unity Events`, each Action has to be routed to a target method. The methods have the same format as the [`started`, `performed`, and `canceled` callbacks](respond-to-input.md#action-callbacks) on [`InputAction`](xref:UnityEngine.InputSystem.InputAction).
 
 ```CSharp
 public class MyPlayerScript : MonoBehaviour

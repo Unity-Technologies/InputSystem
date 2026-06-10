@@ -15,7 +15,7 @@ Unity processes UI input through the same mechanisms as the input for the rest o
 
 ## Strategies for avoiding ambiguity
 
-Ambiguities can appear between, for example, code that responds to [`UI.Button.onClick`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.UI.Button.html#UnityEngine_UI_Button_onClick) and code that responds to [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) for an action bound to `<Mouse>/leftButton`.
+Ambiguities can appear between, for example, code that responds to [`UI.Button.onClick`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.UI.Button.html#UnityEngine_UI_Button_onClick) and code that responds to [`InputAction.performed`](xref:UnityEngine.InputSystem.InputAction) for an action bound to `<Mouse>/leftButton`.
 
 Whether such ambiguities exist depends on how you implement the UI and the UI input. The following UI implementation strategies are examples of how you can avoid these ambiguities:
 
@@ -34,7 +34,7 @@ If all pointer input is handled via UI events, no ambiguities arise as the UI wi
 The easiest way to resolve such ambiguities is to respond to in-game actions by [polling](respond-to-input.md#polling-actions) from inside [`MonoBehaviour.Update`](https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html) methods and using [`EventSystem.IsPointerOverGameObject`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.EventSystems.EventSystem.html?q=ispointerovergameobject#UnityEngine_EventSystems_EventSystem_IsPointerOverGameObject) to find out whether the pointer is over UI or not. Another way is to use [`EventSystem.RaycastAll`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.EventSystems.EventSystem.html?q=ispointerovergameobj#UnityEngine_EventSystems_EventSystem_RaycastAll_UnityEngine_EventSystems_PointerEventData_System_Collections_Generic_List_UnityEngine_EventSystems_RaycastResult__) to determine if the pointer is currently over UI.
 
 >[!NOTE]
->Calling [`EventSystem.IsPointerOverGameObject`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.EventSystems.EventSystem.html?q=ispointerovergameobject#UnityEngine_EventSystems_EventSystem_IsPointerOverGameObject) from within [`InputAction`](../api/UnityEngine.InputSystem.InputAction.html) callbacks such as [`InputAction.performed`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_performed) lead to a warning. The UI updates separately after input processing, so UI state corresponds to that of the last frame/update while input is being processed.
+>Calling [`EventSystem.IsPointerOverGameObject`](https://docs.unity3d.com/Packages/com.unity.ugui@1.0/api/UnityEngine.EventSystems.EventSystem.html?q=ispointerovergameobject#UnityEngine_EventSystems_EventSystem_IsPointerOverGameObject) from within [`InputAction`](xref:UnityEngine.InputSystem.InputAction) callbacks such as [`InputAction.performed`](xref:UnityEngine.InputSystem.InputAction) lead to a warning. The UI updates separately after input processing, so UI state corresponds to that of the last frame/update while input is being processed.
 
 ## Handling navigation input ambiguities
 

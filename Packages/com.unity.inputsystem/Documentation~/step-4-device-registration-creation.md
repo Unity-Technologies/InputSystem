@@ -37,7 +37,7 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 
 This registers the Device type with the system and makes it available in the Control picker. However, you still need a way to add an instance of the Device when it is connected.
 
-In theory, you could call [`InputSystem.AddDevice<MyDevice>()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice__1_System_String_) somewhere, but in a real-world setup you likely have to correlate the Input Devices you create with their identities in the third-party API.
+In theory, you could call [`InputSystem.AddDevice<MyDevice>()`](xref:UnityEngine.InputSystem.InputSystem) somewhere, but in a real-world setup you likely have to correlate the Input Devices you create with their identities in the third-party API.
 
 It might be tempting to do something like this:
 
@@ -51,7 +51,7 @@ public class MyDevice : InputDevice, IInputUpdateCallbackReceiver
 }
 ```
 
-and then set that on the Device after calling [`AddDevice<MyDevice>`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_AddDevice__1_System_String_). However, this doesn't work as expected in the Editor, because the Input System requires Devices to be created solely from their [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) in combination with the chosen layout (and layout variant). In addition, the system supports a fixed set of mutable per-device properties such as device usages (that is, [`InputSystem.SetDeviceUsage()`](../api/UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_SetDeviceUsage_UnityEngine_InputSystem_InputDevice_System_String_) and related methods). This allows the system to easily recreate Devices after domain reloads in the Editor, as well as to create replicas of remote Devices when connecting to a Player. To comply with this requirement, you must cast that information provided by the third-party API into an [`InputDeviceDescription`](../api/UnityEngine.InputSystem.Layouts.InputDeviceDescription.html) and then use an [`InputDeviceMatcher`](../api/UnityEngine.InputSystem.Layouts.InputDeviceMatcher.html) to match the description to our custom `MyDevice` layout.
+and then set that on the Device after calling [`AddDevice<MyDevice>`](xref:UnityEngine.InputSystem.InputSystem). However, this doesn't work as expected in the Editor, because the Input System requires Devices to be created solely from their [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription) in combination with the chosen layout (and layout variant). In addition, the system supports a fixed set of mutable per-device properties such as device usages (that is, [`InputSystem.SetDeviceUsage()`](xref:UnityEngine.InputSystem.InputSystem) and related methods). This allows the system to easily recreate Devices after domain reloads in the Editor, as well as to create replicas of remote Devices when connecting to a Player. To comply with this requirement, you must cast that information provided by the third-party API into an [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription) and then use an [`InputDeviceMatcher`](xref:UnityEngine.InputSystem.Layouts.InputDeviceMatcher) to match the description to our custom `MyDevice` layout.
 
 This example assumes that the third-party API has two callbacks, like this:
 

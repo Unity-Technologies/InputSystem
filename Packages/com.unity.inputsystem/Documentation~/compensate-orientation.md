@@ -14,8 +14,8 @@ If this setting is enabled, rotation values reported by [sensors](devices-sensor
 |[`ScreenOrientation.LandscapeRight`](https://docs.unity3d.com/ScriptReference/ScreenOrientation.html)|Values rotate by 270 degrees.|
 
 This setting affects the following sensors:
-* [`Gyroscope`](../api/UnityEngine.InputSystem.Gyroscope.html)
-* [`GravitySensor`](../api/UnityEngine.InputSystem.GravitySensor.html)
-* [`AttitudeSensor`](../api/UnityEngine.InputSystem.AttitudeSensor.html)
-* [`Accelerometer`](../api/UnityEngine.InputSystem.Accelerometer.html)
-* [`LinearAccelerationSensor`](../api/UnityEngine.InputSystem.LinearAccelerationSensor.html)
+* [`Gyroscope`](xref:UnityEngine.InputSystem.Gyroscope)
+* [`GravitySensor`](xref:UnityEngine.InputSystem.GravitySensor)
+* [`AttitudeSensor`](xref:UnityEngine.InputSystem.AttitudeSensor)
+* [`Accelerometer`](xref:UnityEngine.InputSystem.Accelerometer)
+* [`LinearAccelerationSensor`](xref:UnityEngine.InputSystem.LinearAccelerationSensor)

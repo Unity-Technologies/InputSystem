@@ -10,7 +10,7 @@ Poll input in `Update` and use those values to control your game in `Update`. If
 
 ![image alt text](./Images/TimingInputsPerFrame.png)
 
-Also use `Update` to poll for discrete on/off state changes using API such as [`WasPressedThisFrame`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame_) and **WasReleasedThisFrame**.
+Also use `Update` to poll for discrete on/off state changes using API such as [`WasPressedThisFrame`](xref:UnityEngine.InputSystem.InputAction) and **WasReleasedThisFrame**.
 
 > [!NOTE]
 > The input system doesn't detect multiple discrete on/off events that happen in a single frame when you use the poll driven approach. Multiple discrete on/off events might happen if your game is running at a low frame rate and a user repeatedly presses a button very rapidly, or if the user is using a type of game controller with a rapid "auto fire" mode. The polling technique also can't detect the order of multiple buttons were pressed on the same frame. Use event-driven input if you require this information.

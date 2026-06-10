@@ -6,7 +6,7 @@ uid: input-system-layout-builder
 
 Finally, the Input System can also build layouts on the fly in code. This is useful for Device interfaces such as [HID](hid-specification.md) that supply descriptive information for each Device.
 
-To build layouts dynamically in code, you can use the [`InputControlLayout.Builder`](../api/UnityEngine.InputSystem.Layouts.InputControlLayout.Builder.html) API.
+To build layouts dynamically in code, you can use the [`InputControlLayout.Builder`](xref:UnityEngine.InputSystem.Layouts.InputControlLayout.Builder) API.
 
 Here's the same layout from the previous examples constructed programmatically:
 

@@ -14,7 +14,7 @@ The code required to poll an action depends on the [action type](action-type-ref
 
 To poll an action whose type is **Value** or **Pass-through**, use:
 
-- [`ReadValue<>()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_ReadValue__1)
+- [`ReadValue<>()`](xref:UnityEngine.InputSystem.InputAction)
 
 You must use the corresponding type that matches the action's [control type's](action-and-control-types.md) value. For example, `ReadValue<Vector2>()` for a 2D axis.
 
@@ -22,9 +22,9 @@ You must use the corresponding type that matches the action's [control type's](a
 
 To poll an action whose type is **Button**, use:
 
-- [`IsPressed()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame) 
-- [`WasPressedThisFrame()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPressedThisFrame) 
-- [`WasReleasedThisFrame()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasReleasedThisFrame)
+- [`IsPressed()`](xref:UnityEngine.InputSystem.InputAction) 
+- [`WasPressedThisFrame()`](xref:UnityEngine.InputSystem.InputAction) 
+- [`WasReleasedThisFrame()`](xref:UnityEngine.InputSystem.InputAction)
 
 Buttons have no applicable value other than whether they are pressed or released.
 
@@ -32,9 +32,9 @@ Buttons have no applicable value other than whether they are pressed or released
 
 Actions have [interaction phases](introduction-interactions.md) which can be either `Waiting`, `Started`, `Performed` or `Canceled`. The interaction phase changes depending on the action's [interaction type](built-in-interactions.md), if one is assigned, or the [default interaction](default-interactions.md) otherwise. You can poll an action's interaction phase using the following methods:
 
-- [`phase`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_phase)
-- [`WasPerformedThisFrame()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPerformedThisFrame)
-- [`WasCompletedThisFrame()`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasCompletedThisFrame)
+- [`phase`](xref:UnityEngine.InputSystem.InputAction)
+- [`WasPerformedThisFrame()`](xref:UnityEngine.InputSystem.InputAction)
+- [`WasCompletedThisFrame()`](xref:UnityEngine.InputSystem.InputAction)
 
 ## Examples
 

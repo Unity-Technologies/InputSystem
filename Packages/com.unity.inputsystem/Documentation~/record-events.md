@@ -6,7 +6,7 @@ uid: input-system-record-events
 
 >NOTE: To download a sample project which contains a reusable MonoBehaviour called `InputRecorder`, which can capture and replay input from arbitrary devices, open the Package Manager, select the Input System Package, and choose the sample project "Input Recorder" to download.
 
-You can use the [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) class to record input events for later processing:
+You can use the [`InputEventTrace`](xref:UnityEngine.InputSystem.LowLevel.InputEventTrace) class to record input events for later processing:
 
 ```CSharp
 var trace = new InputEventTrace(); // Can also give device ID to only
@@ -48,7 +48,7 @@ trace.WriteTo("mytrace.inputtrace.");
 var loadedTrace = InputEventTrace.LoadFrom("mytrace.inputtrace");
 ```
 
-You can replay captured traces directly from [`InputEventTrace`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html) instances using the [`Replay`](../api/UnityEngine.InputSystem.LowLevel.InputEventTrace.html#UnityEngine_InputSystem_LowLevel_InputEventTrace_Replay_) method.
+You can replay captured traces directly from [`InputEventTrace`](xref:UnityEngine.InputSystem.LowLevel.InputEventTrace) instances using the [`Replay`](xref:UnityEngine.InputSystem.LowLevel.InputEventTrace) method.
 
 ```CSharp
 // The Replay method returns a ReplayController that can be used to

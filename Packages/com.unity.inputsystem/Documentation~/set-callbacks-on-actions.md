@@ -35,7 +35,7 @@ Every Action has a set of distinct phases it can go through in response to recei
 |`Performed`|An Interaction with the Action has been completed.|
 |`Canceled`|An Interaction with the Action has been canceled.|
 
-You can read the current phase of an action using [`InputAction.phase`](../api/UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_phase).
+You can read the current phase of an action using [`InputAction.phase`](xref:UnityEngine.InputSystem.InputAction).
 
 The `Started`, `Performed`, and `Canceled` phases each have a callback associated with them:
 
@@ -47,7 +47,7 @@ jumpAction.performed += context => /* Action was performed */;
 jumpAction.canceled += context => /* Action was canceled */;
 ```
 
-Each callback receives an [`InputAction.CallbackContext`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html) structure, which holds context information that you can use to query the current state of the Action and to read out values from Controls that triggered the Action ([`InputAction.CallbackContext.ReadValue`](../api/UnityEngine.InputSystem.InputAction.CallbackContext.html#UnityEngine_InputSystem_InputAction_CallbackContext_ReadValue__1)).
+Each callback receives an [`InputAction.CallbackContext`](xref:UnityEngine.InputSystem.InputAction.CallbackContext) structure, which holds context information that you can use to query the current state of the Action and to read out values from Controls that triggered the Action ([`InputAction.CallbackContext.ReadValue`](xref:UnityEngine.InputSystem.InputAction.CallbackContext)).
 
 The contents of the callback context structure are only valid during the callback. In particular, it's not safe to store the received context and later access its properties from outside the callback.
 
