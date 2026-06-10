@@ -19,6 +19,7 @@ Action-based input refers to reading pre-configured named axes, buttons, or othe
 __Note:__ In some cases for named axes and buttons, the new Input System requires slightly more code than the old Input Manager, but this results in better performance. This is because in the new Input System, the logic is separated into two parts: the first is to find and store a reference to the action (usually done once, for example in your `Start` method), and the second is to read the action (usually done every frame, for example in your `Update` method). In contrast, the old Input Manager used a string-based API to "find" and "read" the value at the same time, because it was not possible to store a reference to a button or axis. This results in worse performance, because the axis or button is looked up each time the value is read.
 
 To find and store references to actions, which can be axes or buttons use [`FindAction`](xref:UnityEngine.InputSystem.InputActionAsset). For example:
+
 ```
  // A 2D axis action named "Move"
 InputAction moveAction = InputSystem.actions.FindAction("Move");

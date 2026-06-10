@@ -28,21 +28,23 @@ Processors can have parameters which can be booleans, integers, or floating-poin
     "invert,normalize(min=0,max=10)"
 ``` 
 
-## Choose the right ProcessorCollapse commentComment on line R29jfreire-unity commented on Jun 12, 2025 jfreire-unityon Jun 12, 2025CollaboratorMore actionsGreat section 👏ReactWrite a replyResolve comment
+## Choose the right ProcessorCollapse comment
 
 The following sections contain a brief explanation and various example scenarios for the different Processor types. Note that there are additional cases where Processors may apply; the scenarios described here illustrate only some of them. In some situations, it might be useful to combine multiple Processors to achieve a specific goal.
 Refer to the [Processor Types](ProcessorTypes.md) for a comprehensive list and information on how to write your own custom Processors.
 
 ### Invert
 
-The [Invert Processor](ProcessorTypes.md#invert) inverts input values of any type (e.g. float, Vector2, or Vector3) by multiplying them by -1. This results in effects such as reversing player navigation, for example, the left arrow would be interpreted as a right arrow, and vice versa.
+The [Invert Processor](ProcessorTypes.md#invert) inverts input values of any type (e.g. float, Vector2, or Vector3) by multiplying them by `-1`. This results in effects such as reversing player navigation, for example, the left arrow would be interpreted as a right arrow, and vice versa.
 
 #### Example: Ship navigation
 
 To use an axis control to mimic a ship's rudder, inverting the input produces the desired effect. Pulling left steers the ship right, and vice versa.
 
 ![This picture shows a ship in a neutral position](./Images/Processors-Ship-Neutral.png)
+
 ![This picture shows a ship rotated to the left while the On-Screen control stick was moved to the right](./Images/Processors-Ship-Left.png)
+
 ![This picture shows a ship rotated to the right while the On-Screen control stick was moved to the left](./Images/Processors-Ship-Right.png)
 
 You can achieve this by using an Invert Processor on the Action or the Binding. In this scenario, the Processor is applied to the Binding. Note that inversion is enabled for the X axis but not for the Y axis. Inverting the Y axis would cause the ship to move backward when the joystick is pulled upward. The following image shows the setup in the Action Asset Editor.
@@ -81,6 +83,7 @@ Normalized input is particularly useful in scenarios where the specific magnitud
 To ensure the player always moves at a constant speed where the input simply triggers the action and controls the direction, the Normalize Processor is a suitable choice. This is achieved by retrieving the input vector while ignoring its magnitude and focusing solely on its direction.
 
 ![A player moves forward while the on-screen control stick is slightly pushed up.](./Images/Processors-Normalize-Slow.png)
+
 ![A player moves forward while the on-screen control stick is moved all the way up](./Images/Processors-Normalize-Fast.png)
 
 In the images shown above, the player moves forward at a constant speed, regardless of how far the joystick is pushed upward.
@@ -97,7 +100,7 @@ To apply the Processor, add it to the Binding, as shown in the image below.
 The [Scale Processor](ProcessorTypes.md#scale) multiplies the input value by a given factor X. This applies to float values as well as vectors, where each axis is multiplied by the corresponding factor specified for that axis.
 This allows you to assign weight to input values, which can, for example, make a particular type of control easier to use.
 
-#### Example: Horizontally aligned CameraCollapse commentComment on line R97jfreire-unity commented on Jun 12, 2025 jfreire-unityon Jun 12, 2025CollaboratorMore actionsI don't think it makes sense to add now but I feel it can be mentioned. This example would be a great shout out to another package users might not be aware of, such as Cinemachine!ReactWrite a replyResolve comment
+#### Example: Horizontally aligned CameraCollapse comment
 
 To make the look-around movement smoother and improve ease of use, it may be helpful to reduce the vertical rotation and scale the input values for horizontal rotation. For in-game landscapes that are primarily horizontally aligned, this is a useful feature to prevent the camera from rotating vertically too quickly or in unintended ways.
 To apply this effect to all bindings, you can add the Processor to the Action itself (Look in this scenario). The following image shows the setup using the Starter Assets example:
@@ -107,6 +110,7 @@ To apply this effect to all bindings, you can add the Processor to the Action it
 There are two Bindings attached to the Action. The input value ranges of the two bindings are very different. To mitigate this difference, it helps to use a Scale Processor on each of the Bindings. See how the Scale Processor normalizes the input data values for a joystick and a pointer (e.g., a mouse) in the images below.
 
 ![An example of a Scale Vector 2 Processor setup in the Input Action Asset Editor](./Images/Processors-Scale-Look-Pointer.png)
+
 ![An example of a Scale Vector 2 Processor setup in the Input Action Asset Editor](./Images/Processors-Scale-Look-Stick.png)
 
 > [!NOTE]
