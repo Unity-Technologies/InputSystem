@@ -1,3 +1,6 @@
+---
+uid: timing-mixed-scenarios
+---
 # Mixed timing scenarios with fixed and dynamic input
 
 There are some situations where you might set the Update Mode **process in Dynamic Update** even when using input code in `FixedUpdate`, to minimize input latency, as described in the [previous section](./timing-optimize-fixed-update.md).

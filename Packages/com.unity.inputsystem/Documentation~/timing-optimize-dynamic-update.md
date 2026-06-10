@@ -1,3 +1,6 @@
+---
+uid: timing-optimize-dynamic-update
+---
 # Optimize for dynamic update (non-physics) scenarios
 
 If you're not working with the physics system or using `FixedUpdate`, always set the input system to process input in sync with the frame rate and `Update()` calls. This is the default setting, but to check or set this, go to  **Project Settings** \> **Input System Package** \> **Input Settings**, and set **Update Mode** to **Process Events in Dynamic Update**.

@@ -1,3 +1,6 @@
+---
+uid: timing-input-events-queue
+---
 # The input events queue
 
 The Input System receives information from hardware input devices as a stream of events. These events represent either system events received from the input device, or snapshots in time based on frequent samples from the device.

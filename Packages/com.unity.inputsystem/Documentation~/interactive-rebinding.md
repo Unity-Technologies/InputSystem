@@ -1,4 +1,6 @@
-
+---
+uid: input-system-interactive-rebinding
+---
 ## Interactive rebinding
 
 >__Note:__ To download a sample project which demonstrates how to set up a rebinding user interface with Input System APIs, open the Package Manager, select the Input System Package, and choose the sample project "Rebinding UI" to download.

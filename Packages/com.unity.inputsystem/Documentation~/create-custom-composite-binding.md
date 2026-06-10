@@ -1,4 +1,6 @@
-
+---
+uid: input-system-create-custom-composite-binding
+---
 # Create custom composite bindings
 
 You can define new types of Composites, and register them with the API. Unity treats these the same as predefined types, which the Input System internally defines and registers in the same way.

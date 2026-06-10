@@ -1,3 +1,6 @@
+---
+uid: input-system-multiplayer-event-system-component
+---
 ## Multiplayer Event System component reference
 
 Use the Multiplayer Event System component to configure input for a specific user in a multiplayer application.
