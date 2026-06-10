@@ -281,6 +281,21 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         public void OnFocusChanged(bool focus)
         {
             m_InputEventPartialProvider.OnFocusChanged(focus);
+
+            if (!focus)
+            {
+                // Replace state structs with default instances rather than calling Reset(),
+                // because Reset() preserves ClickCount (used for double-tap tracking within a
+                // session) but on focus loss we want a completely clean slate — stale ClickCount
+                // causes the first tap after Alt+Tab to be misidentified as a double/triple tap.
+                m_MouseState = default;
+                m_TouchState = default;
+                m_PenState = default;
+                m_SeenTouchEvents = false;
+                m_SeenPenEvents = false;
+                m_ResetSeenEventsOnUpdate = false;
+                m_Events.Clear();
+            }
         }
 
         public bool RequestCurrentState(Event.Type type)
