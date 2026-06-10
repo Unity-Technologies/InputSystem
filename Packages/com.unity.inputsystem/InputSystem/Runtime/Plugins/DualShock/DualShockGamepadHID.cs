@@ -82,8 +82,6 @@ namespace UnityEngine.InputSystem.DualShock.LowLevel
         [FieldOffset(1)] public byte enableFlags2;
         [FieldOffset(2)] public byte highFrequencyMotorSpeed;
         [FieldOffset(3)] public byte lowFrequencyMotorSpeed;
-        [FieldOffset(38)] public byte validFlag2;
-        [FieldOffset(41)] public byte lightbarSetup;
         [FieldOffset(44)] public byte redColor;
         [FieldOffset(45)] public byte greenColor;
         [FieldOffset(46)] public byte blueColor;
@@ -388,6 +386,10 @@ namespace UnityEngine.InputSystem.DualShock
         private DualSenseHIDOutputReportPayload? m_PendingBtPayload;
         private int m_PendingBtPayloadDelay;
 
+        // The Bluetooth LED reset and the color report must be sent as separate reports. 
+        // A delay between them is also required to let the firmware process the reset first.
+        private const int k_BluetoothLedResetDelayFrames = 3;
+
         protected override void FinishSetup()
         {
             leftTriggerButton = GetChildControl<ButtonControl>("leftTriggerButton");
@@ -420,7 +422,7 @@ namespace UnityEngine.InputSystem.DualShock
 
             var resetPayload = new DualSenseHIDOutputReportPayload
             {
-                enableFlags2 = 0x08,
+                enableFlags2 = 0x08, // Release firmware control of the light bar so the app can drive it.
             };
             var command = DualSenseHIDBluetoothOutputReport.Create(resetPayload, ++outputSequenceId);
             ExecuteCommand(ref command);
@@ -506,23 +508,22 @@ namespace UnityEngine.InputSystem.DualShock
 
             if (m_IsBluetooth)
             {
-                // LED reset and color must be in separate reports with a multi-frame gap.
+                // The light bar reset and color must be sent as separate reports, so defer the
+                // color payload and let OnNextUpdate send it once the reset has taken effect.
                 if (color.HasValue && !m_LedResetSent)
                 {
                     SendBluetoothLedReset();
                     m_PendingBtPayload = payload;
-                    m_PendingBtPayloadDelay = 3;
+                    m_PendingBtPayloadDelay = k_BluetoothLedResetDelayFrames;
                     return true;
                 }
 
-                var command = DualSenseHIDBluetoothOutputReport.Create(payload, ++outputSequenceId);
-                return ExecuteCommand(ref command) >= 0;
+                var btCommand = DualSenseHIDBluetoothOutputReport.Create(payload, ++outputSequenceId);
+                return ExecuteCommand(ref btCommand) >= 0;
             }
-            else
-            {
-                var command = DualSenseHIDUSBOutputReport.Create(payload);
-                return ExecuteCommand(ref command) >= 0;
-            }
+
+            var command = DualSenseHIDUSBOutputReport.Create(payload);
+            return ExecuteCommand(ref command) >= 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -608,11 +609,8 @@ namespace UnityEngine.InputSystem.DualShock
             var genericReport = (DualSenseHIDGenericInputReport*)stateEvent->state;
             if (genericReport->reportId == DualSenseHIDUSBInputReport.ExpectedReportId)
             {
-                // 78-byte frame with reportId=0x01 is Bluetooth "simple mode".
-                if (stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize2)
-                    m_IsBluetooth = true;
-                else
-                    m_IsBluetooth = false;
+                // A 78-byte frame with reportId=0x01 is Bluetooth "simple mode".
+                m_IsBluetooth = stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize2;
                 if (stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize1 ||
                     stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize2)
                 {
