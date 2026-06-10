@@ -23,8 +23,8 @@ Because the API comes with a certain overhead due to having to record touches as
     
 ```
 
->[!NOTE]
->You don't need to enable `EnhancedTouchSupport` if you're using the [`Touchscreen`](xref:UnityEngine.InputSystem.Touchscreen) class. You only need to call `EnhancedTouchSupport.Enable` if you want to use the `EnhancedTouch.Touch`] API.
+> [!NOTE]
+> You don't need to enable `EnhancedTouchSupport` if you're using the [`Touchscreen`](xref:UnityEngine.InputSystem.Touchscreen) class. You only need to call `EnhancedTouchSupport.Enable` if you want to use the `EnhancedTouch.Touch`] API.
 
 ## Read all touches
 

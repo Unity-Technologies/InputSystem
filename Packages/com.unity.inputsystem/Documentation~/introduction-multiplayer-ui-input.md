@@ -8,7 +8,7 @@ The Input System can handle multiple separate UI instances on the screen control
 
 To implement multiplayer UI, the Input System uses the Multiplayer Event System.
 
-![MultiplayerEventSystem](Images/MultiplayerEventSystem.png)
+![The Multiplayer Event System component appears without any GameObjects connected.](Images/MultiplayerEventSystem.png)
 
 You can have multiple Multiplayer Event Systems active in the Scene at the same time. This means you can have multiple players, each with their own [UI Input Module](using-ui-input-module.md) and Multiplayer Event System components, and each player can have their own set of actions driving their own UI instance. 
 

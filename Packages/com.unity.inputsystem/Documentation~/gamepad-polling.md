@@ -15,5 +15,5 @@ InputSystem.pollingFrequency = 120;
 
 Increased frequency should lead to an increased number of events on the respective devices. The timestamps provided on the events should follow the spacing dictated by the polling frequency. The asynchronous background polling depends on the operating system's thread scheduling and can vary.
 
->[!NOTE] 
->On Windows (XInput controllers only), Universal Windows Platform (UWP), and Switch, Unity polls gamepads explicitly rather than deliver updates as events.  
+> [!NOTE] 
+> On Windows (XInput controllers only), Universal Windows Platform (UWP), and Switch, Unity polls gamepads explicitly rather than deliver updates as events.  

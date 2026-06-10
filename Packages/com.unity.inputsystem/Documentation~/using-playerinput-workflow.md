@@ -3,7 +3,7 @@ uid: input-system-workflow-player-input
 ---
 # Workflow Overview - Actions and the PlayerInput Component
 
-<img src="Images/Workflow-PlayerInput.png">
+![The Input Device and Actions icons under the Binding header lead into the PlayerInput Component and from there into the icon representing your action code.](Images/Workflow-PlayerInput.png)
 
 The highest level of abstraction provided by the Input System is when you use [Actions](actions.md) and the **Player Input component** together.
 

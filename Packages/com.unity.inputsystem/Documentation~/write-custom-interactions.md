@@ -4,11 +4,9 @@ uid: input-system-custom-interactions
 
 # Write custom interactions
 
-You can write a custom Interaction and use it the same way you use built-in Interactions. 
+You can also write a custom Interaction to use in your project. You can use custom Interactions in the UI and code the same way you use built-in Interactions.
 
-To write a custom Interaction:
-
-**1.** Add a class that implements the [`IInputInteraction`](xref:UnityEngine.InputSystem.IInputInteraction) interface. For example:
+Add a class implementing the [`IInputInteraction`](xref:UnityEngine.InputSystem.IInputInteraction) interface, like this:
 
 ```CSharp
 // Interaction which performs when you quickly move an
@@ -52,15 +50,15 @@ public class MyExampleInteraction : IInputInteraction
 }
 ```
 
-**2.** Add your Interaction to the Input System. Call the following method in your initialization code:
+Register your interaction with the Input System in your initialization code:
 
 ```CSharp
 InputSystem.RegisterInteraction<MyExampleInteraction>();
 ```
 
-Your new Interaction is now available in the [Input Action Asset Editor window](action-assets.md).
+Your new Interaction is now available in the [Input Action Asset Editor window](xref:input-system-action-assets).
 
-Alternatively, you can add it this way:
+You can also add it in code using this call:
 
 ```CSharp
 var Action = new InputAction(Interactions: "MyExample(duration=0.5)");

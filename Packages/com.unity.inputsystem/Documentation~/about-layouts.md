@@ -13,11 +13,7 @@ A layout describes a memory format for input, and the Input Controls to build in
 
 The Input System ships with a large set of layouts for common Control types and common Devices. For other Device types, the system automatically generates layouts based on the Device description that the Device's interface reports.
 
-You can browse the set of currently understood layouts from the Input Debugger.
-
-![Layouts in Debugger](Images/LayoutsInDebugger.png)
-
-A layout has two primary functions:
+Open the Input Debugger to browse the set of currently available layouts. A layout has two primary functions:
 
 * Describe a certain memory layout containing input data.
 * Assign names, structure, and meaning to the Controls operating on the data.

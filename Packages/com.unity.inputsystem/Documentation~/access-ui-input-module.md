@@ -10,8 +10,8 @@ You must add the UI Input Module to a GameObject in your scene, so that the UI c
 
 1. Create a new empty GameObject
 2. Click [**Add Component**](https://docs.unity3d.com/Manual/UsingComponents.html) in the Inspector
-3. In the search field displayed, type `Input System UI Input Module`
+3. In the search field displayed, type `input system ui`.
 4. Select **Input System UI Input Module** to add it to the GameObject.
 
 
-![InputSystemUIInputModule](Images/InputSystemUIInputModuleAdd.png)
+![The Add Component search bar displays 'input system ui' to highlight the 'Input System UI Input Module' component.](Images/InputSystemUIInputModuleAdd.png)

@@ -4,17 +4,21 @@ uid: input-system-create-precompiled-layout
 
 # Create a precompiled layout 
 
-The first step in setting up a precompiled layout is to generate it. To do so, open the [Input Debugger](debugging.md), navigate to the layout you want to precompile within the **Layouts** branch, right-click it, and select **Generate Precompiled Layout**.
+The first step in setting up a precompiled layout is to generate it.
 
-![Generate Precompiled Layout](./Images/GeneratePrecompiledLayout.png)
+To generate a layout:
 
-Unity will ask you where to store the generated code. Pick a directory in your project, enter a file name, and click **Save**.
+1. Open the [Input Debugger](xref:input-system-debugging).
+2. Navigate to the layout you want to precompile within the **Layouts** branch and right-click it.
+3. Select **Generate Precompiled Layout**.
 
- Once generated, you can register the precompiled layout with the Input System using [`InputSystem.RegisterPrecompiledLayout`](xref:UnityEngine.InputSystem.InputSystem). The method expects a string argument containing metadata for the precompiled layout. This string is automatically emitted as a `const` inside the generated class.
+    Unity will ask you where to store the generated code. Pick a directory in your project, enter a file name, and click **Save**.
 
- ```CSharp
- InputSystem.RegisterPrecompiledLayout<MyPrecompiledDevice>(MyPrecompiledDevice.metadata);
- ```
+Once generated, you can register the precompiled layout with the Input System using [`InputSystem.RegisterPrecompiledLayout`](xref:UnityEngine.InputSystem.InputSystem.RegisterPrecompiledLayout``1(System.String)). The method expects a string argument containing metadata for the precompiled layout. This string is automatically emitted as a `const` inside the generated class.
+
+```CSharp
+InputSystem.RegisterPrecompiledLayout<MyPrecompiledDevice>(MyPrecompiledDevice.metadata);
+```
 
 > [!Important]
 > It is very important that this method is called with all relevant layout registrations being in the same state as at the time the layout was precompiled. There is no internal check whether the precompiled layout will still generate an identical result to the non-precompiled version.

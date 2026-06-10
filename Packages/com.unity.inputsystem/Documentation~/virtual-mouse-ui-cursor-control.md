@@ -8,8 +8,8 @@ Drive uGUI pointer input from gamepads and joysticks with a simulated mouse devi
 
 The [Virtual Mouse](xref:UnityEngine.InputSystem.UI.VirtualMouseInput) component feeds a virtual [Mouse](xref:UnityEngine.InputSystem.Mouse) device that the [UI Input Module](using-ui-input-module.md) uses for point-and-click UI. Start with the introduction, then configure the pointer and actions in your scene.
 
->[!NOTE]
->The Virtual Mouse component is only compatible with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) (uGUI) system, and not UI Toolkit or IMGUI.
+> [!NOTE]
+> The Virtual Mouse component is only compatible with the [Unity UI](https://docs.unity3d.com/Manual/com.unity.ugui.html) (uGUI) system, and not UI Toolkit or IMGUI.
 
 | **Topic** | **Description** |
 | :--- | :--- |

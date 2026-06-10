@@ -29,8 +29,8 @@ public class MyValueShiftProcessor : InputProcessor<float>
 }
 ```
 
->[!IMPORTANT] 
->Processors must be __stateless__, because they are not part of the [input state](control-state.md) that the Input System keeps. For this reason, you can't store local states in a processor if the processor changes based on the input value.
+> [!IMPORTANT] 
+> Processors must be __stateless__, because they are not part of the [input state](control-state.md) that the Input System keeps. For this reason, you can't store local states in a processor if the processor changes based on the input value.
 
 ## Register the new processor to the Input System
 

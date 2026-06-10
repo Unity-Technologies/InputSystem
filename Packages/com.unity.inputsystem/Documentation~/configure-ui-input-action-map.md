@@ -27,8 +27,8 @@ To see the specific actions and types that the [UI Input Module](xref:UnityEngin
 
 ## Reset the UI action map
 
->[!IMPORTANT]
->These instructions reset both the UI action map and the Player action map to their default bindings.
+> !IMPORTANT]
+> These instructions reset both the UI action map and the Player action map to their default bindings.
 
 To reset the UI action map to its default bindings:
 

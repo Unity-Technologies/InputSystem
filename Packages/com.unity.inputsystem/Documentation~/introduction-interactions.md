@@ -12,7 +12,7 @@ When you apply an interaction to an action, it overrides the default interaction
 
 Interactions trigger responses on Actions. You can place them on individual Bindings, or on Actions, in which case they apply to every Binding on the Action. At runtime, when a particular interaction completes, this triggers the Action.
 
-![Interaction Properties](Images/InteractionProperties.png)
+![The Binding Path displays the buttonSouth [Gamepad] value set on the Interaction Properties window.](Images/InteractionProperties.png)
 
 ## How interactions work
 

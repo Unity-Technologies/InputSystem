@@ -3,7 +3,7 @@ uid: input-system-workflow-direct
 ---
 # Workflow Overview - Directly Reading Device States
 
-<img src="Images/Workflow-Direct.png" height="200px">
+![The Input Device icon leads directly into the icon representing your action code.](Images/Workflow-Direct.png)
 
 This is the simplest and most direct input workflow, but the least flexible. It bypasses the [Input Actions editor](actions-editor.md), so you do not benefit from all the features come with [Actions](actions.md).
 

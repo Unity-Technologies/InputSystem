@@ -17,10 +17,10 @@ If you have not yet created and assigned the default [project-wide actions](abou
 
 Once you have created and assigned the default project-wide actions, the Actions Editor is displayed:
 
-![image alt text](./Images/ProjectSettingsInputActionsSimpleShot.png)
+![The Input Actions Editor in the Project Settings window](./Images/ProjectSettingsInputActionsSimpleShot.png)
 *The Input Actions editor in the Project Settings window*
 
-The [Input Actions editor](actions-editor.md) provides a way to define and manage Actions which relate to what you want users to be able to do in your game or app. It also allows you to create bindings between your Actions and one or more types of control on various devices, such as a stick on a gamepad, a key on a keyboard, or a button on an XR controller.
+The [Input Actions Editor](actions-editor.md) provides a way to define and manage Actions which relate to what you want users to be able to do in your game or app. It also allows you to create bindings between your Actions and one or more types of control on various devices, such as a stick on a gamepad, a key on a keyboard, or a button on an XR controller.
 
 Actions and Bindings allows you to separate the conceptual actions that you want in your game or app from the specific devices and controls that a player has to use to perform the actions, which can make your code simpler and more flexible. This is in contrast to [directly reading device states](using-direct-workflow.md) in your code, which can suit simple projects, but can become unwieldy and inflexible for more complex projects.
 

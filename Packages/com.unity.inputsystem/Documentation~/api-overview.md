@@ -19,7 +19,7 @@ using UnityEngine.InputSystem;
 |API name|Description|
 |-----|-----------|
 |[`InputSystem.actions`](xref:UnityEngine.InputSystem.InputSystem)|A reference to the set of actions assigned as the [project-wide Actions](./about-project-wide-actions.md).|
-|[`InputAction`](xref:UnityEngine.InputSystem.InputAction)|The class which represents an action. You can use a reference to an action to read the current value of the controls that it is bound to, or to trigger callbacks in response to input. This class corresponds to an entry in the **Actions**"** column of the [Input Actions editor](actions-editor.md).|
+|[`InputAction`](xref:UnityEngine.InputSystem.InputAction)|The class which represents an action. You can use a reference to an action to read the current value of the controls that it is bound to, or to trigger callbacks in response to input. This class corresponds to an entry in the **Actions** column of the [Input Actions editor](actions-editor.md).|
 |[`InputActionMap`](xref:UnityEngine.InputSystem.InputActionMap)|The class which represents an [action map](create-edit-delete-action-maps.md). The API equivalent to an entry in the "Action Maps" column of the [Input Actions editor](actions-editor.md).|
 |[`InputBinding`](xref:UnityEngine.InputSystem.InputBinding)|The relationship between an action and the specific device controls for which it receives input. For more information about Bindings and how to use them, see [bindings](bindings.md).|
 

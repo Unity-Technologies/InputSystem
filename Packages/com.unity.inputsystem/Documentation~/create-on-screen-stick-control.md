@@ -10,7 +10,7 @@ To create an on-screen stick:
 2. Add the [`OnScreenStick`](xref:UnityEngine.InputSystem.OnScreen.OnScreenStick) component to it.
 3. Set the [`controlPath`](xref:UnityEngine.InputSystem.OnScreen.OnScreenControl) to refer to a [`Vector2Control`](xref:UnityEngine.InputSystem.Controls.Vector2Control) (for example, `<Gamepad>/leftStick`). The type of device referenced by the control path determines the type of virtual device created by the component.
 
-![OnScreenStick](Images/OnScreenStick.png)
+![The OnScreenStick component displays `50` as the Movement Range value and `leftStick [Gamepad]` as the Control Path value.](Images/OnScreenStick.png)
 
 The [`OnScreenStick`](xref:UnityEngine.InputSystem.OnScreen.OnScreenStick) component requires the target control to be a `Vector2` control. [`OnScreenStick`](xref:UnityEngine.InputSystem.OnScreen.OnScreenStick) starts the movement of the stick control when it receives a pointer-down (`IPointerDownHandler.OnPointerDown`) event, and stops it when it receives a pointer-up (`IPointerUpHandler.OnPointerUp`) event.
 

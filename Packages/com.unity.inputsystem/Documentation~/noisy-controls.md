@@ -16,6 +16,7 @@ If a control is marked as noisy:
 
 - When the application loses focus and Devices are [reset](reset-device.md) as a result, the state of noisy control will be preserved as is. This ensures that sensor readings will remain at their last value rather than being reset to default values.
 
->**Note**: If any control on a device is noisy, the device itself is flagged as noisy.
+> [!NOTE]
+> If any control on a device is noisy, the device itself is flagged as noisy.
 
 In addition to the [`input state`](xref:UnityEngine.InputSystem.InputControl) and the [`default state`](xref:UnityEngine.InputSystem.InputControl) that the Input System keeps for all Devices currently present, it also maintains a [`noise mask`](xref:UnityEngine.InputSystem.InputControl) in which only bits for state that is __not__ noise are set. You can use this to efficiently mask out noise in input.

@@ -8,7 +8,7 @@ When you create Bindings for your [Actions](actions.md), you can choose to add I
 
 To apply Interactions to all Bindings on an Action, refer to [Apply Interactions to Actions](apply-interactions-actions.md).
 
-## Apply Interactions to Bindings via the Editor
+## Apply Interactions to Bindings in the Editor
 
 If you're using [project-wide actions](actions-editor.md), or [Input Action Assets](action-assets.md), you can add any Interaction to your Bindings via the Input Action editor. 
 
@@ -21,7 +21,7 @@ If you're using [project-wide actions](actions-editor.md), or [Input Action Asse
 
 To remove an Interaction, select the minus (-) button next to it. To change the [order of Interactions](introduction-interactions.md#multiple-interactions-on-a-binding), select the up and down arrows.
 
-## Apply Interactions to Bindings via code
+## Apply Interactions to Bindings in code
 
 To add Interactions to Bindings that you created in code, you can use the following code sample as a template:
 
