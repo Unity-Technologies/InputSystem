@@ -12,6 +12,10 @@ namespace UnityEngine.InputSystem.DualShock
         /// </summary>
         /// <param name="color">Color to use for the light bar. Alpha component is ignored. Also,
         /// RBG values are clamped into [0..1] range.</param>
+        /// <remarks>
+        /// The light bar color persists on the controller hardware after the
+        /// application exits and is not automatically restored to the default color.
+        /// </remarks>
         void SetLightBarColor(Color color);
     }
 }
