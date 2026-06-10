@@ -10,7 +10,8 @@ This setting is only relevant when "Run In Background" is enabled in the [Player
 
 In the Editor, "Run In Background" is considered to always be enabled as the player loop is kept running regardless of whether a Game View is focused or not. Also, in development players on desktop platforms, the setting is force-enabled during the build process.
 
->__Note__: In the editor, `Background Behavior` is further influenced by [`Play Mode Input Behavior`](#play-mode-input-behavior). See [Background and Focus Change Behavior](device-background-focus-changes.md) for a detailed breakdown. In particular, which devices are considered as [`canRunInBackground`](xref:UnityEngine.InputSystem.InputDevice) partly depends on the [`Play Mode Input Behavior`](#play-mode-input-behavior) setting.
+> [!NOTE]
+> In the editor, `Background Behavior` is further influenced by [`Play Mode Input Behavior`](#play-mode-input-behavior). See [Background and Focus Change Behavior](device-background-focus-changes.md) for a detailed breakdown. In particular, which devices are considered as [`canRunInBackground`](xref:UnityEngine.InputSystem.InputDevice) partly depends on the [`Play Mode Input Behavior`](#play-mode-input-behavior) setting.
 
 |Setting|Description|
 |----|-----------|

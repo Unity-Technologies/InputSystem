@@ -236,7 +236,8 @@ If Controls from both the `positive` and the `negative` side are actuated, then 
 |(1) `Positive`|The positive side has precedence and the Composite returns `maxValue`.|
 |(2) `Negative`|The negative side has precedence and the Composite returns `minValue`.|
 
->__Note__: There is no support yet for interpolating between the positive and negative over time.
+> [!NOTE]
+> There is no support yet for interpolating between the positive and negative over time.
 
 ### 2D vector
 
@@ -274,7 +275,8 @@ In addition, you can set the following parameters on a 2D vector Composite:
 |---------|-----------|
 |[`mode`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|Whether to treat the inputs as digital or as analog controls.<br><br>If this is set to [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), inputs are treated as buttons (off if below [`defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings) and on if equal to or greater). Each input is 0 or 1 depending on whether the button is pressed or not. The vector resulting from the up/down/left/right parts is normalized. The result is a diamond-shaped 2D input range.<br><br>If this is set to [`Mode.Digital`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), the behavior is essentially the same as [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode) except that the resulting vector is not normalized.<br><br>Finally, if this is set to [`Mode.Analog`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), inputs are treated as analog (i.e. full floating-point values) and, other than [`down`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) and [`left`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) being inverted, values will be passed through as is.<br><br>The default is [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode).|
 
->__Note__: There is no support yet for interpolating between the up/down/left/right over time.
+> [!NOTE]
+> There is no support yet for interpolating between the up/down/left/right over time.
 
 ### 3D vector
 
@@ -371,7 +373,8 @@ You can define new types of Composites, and register them with the API. Unity tr
 
 To define a new type of Composite, create a class based on [`InputBindingComposite<TValue>`](xref:UnityEngine.InputSystem.InputBindingComposite-1).
 
-> __IMPORTANT__: Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on Bindings, see [interactions](write-custom-interactions.md).
+> [!Important]
+> Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on Bindings, see [interactions](write-custom-interactions.md).
 
 ```CSharp
 // Use InputBindingComposite<TValue> as a base class for a composite that returns

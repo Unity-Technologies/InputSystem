@@ -18,4 +18,5 @@ There are scripting symbols defined which allow you to use conditional compilati
 #endif
 ```
 
-> **Note:** It is possible to have both systems enabled at the same time, in which case both sets of code in the example above above will be active.
+> [!NOTE]
+> It is possible to have both systems enabled at the same time, in which case both sets of code in the example above above will be active.

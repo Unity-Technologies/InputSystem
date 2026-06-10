@@ -16,7 +16,8 @@ When using [`UpdateMode.ProcessEventsInFixedUpdate`](xref:UnityEngine.InputSyste
 
 The other exception are [`BeforeRender`](xref:UnityEngine.InputSystem.LowLevel.InputUpdateType) updates. These updates are run after fixed or dynamic updates but before rendering and used used exclusively to update devices such as VR headsets that need the most up-to-date tracking data. Other input is not consumed from such updates and these updates are only enabled if such devices are actually present. `BeforeRender` updates are not considered separate frames as far as input is concerned.
 
->__Note__: Manually calling [`InputSystem.Update`](xref:UnityEngine.InputSystem.InputSystem) is strongly advised against except within tests employing [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) or when explicitly setting the system to [manual update mode](xref:UnityEngine.InputSystem.InputSettings.UpdateMode).
+> [!NOTE]
+> Manually calling [`InputSystem.Update`](xref:UnityEngine.InputSystem.InputSystem) is strongly advised against except within tests employing [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) or when explicitly setting the system to [manual update mode](xref:UnityEngine.InputSystem.InputSettings.UpdateMode).
 
 Methods such as [`InputAction.WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction) and [`InputAction.WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction) operate implicitly based on the [`InputSystem.Update`] cadence described above. Meaning, that they refer to the state as per the __last__ fixed/dynamic/manual update happened.
 

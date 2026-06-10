@@ -8,7 +8,8 @@ Input Action Assets allow you to **generate a C# class** from your action defini
 
 This removes the need to manually look up Actions and Action Maps using their names, and also provides an easy way to set up callbacks.
 
-> **Note**: This is an alternative workflow to [project-wide actions](./about-project-wide-actions.md), and provides a different way to access the actions defined in your action asset.
+> [!NOTE]
+> This is an alternative workflow to [project-wide actions](./about-project-wide-actions.md), and provides a different way to access the actions defined in your action asset.
 
 
 To enable type-safe C# API generation:
@@ -66,4 +67,5 @@ public class MyPlayerScript : MonoBehaviour, IGameplayActions
 }
 ```
 
->__Note__: To regenerate the .cs file, right-click the .inputactions asset in the Project Browser and choose "Reimport".
+> [!NOTE]
+> To regenerate the .cs file, right-click the .inputactions asset in the Project Browser and choose "Reimport".

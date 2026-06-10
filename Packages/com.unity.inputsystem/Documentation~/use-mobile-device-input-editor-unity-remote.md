@@ -8,9 +8,11 @@ The Unity Remote is an app available for iOS and Android which allows using a mo
 
 If you would like to try out the Unity Remote app, you can [install](Installation.md#installing-samples) the "Unity Remote" sample that is provided with the Input System package.
 
->__Note__: Joysticks/gamepads are not yet supported over the Unity Remote. No joystick/gamepad input from the mobile device will come through in the editor.
+> [!NOTE]
+> Joysticks/gamepads are not yet supported over the Unity Remote. No joystick/gamepad input from the mobile device will come through in the editor.
 
->__Note__: This requires Unity 2021.2.18 or later.
+> [!NOTE]
+> This requires Unity 2021.2.18 or later.
 
 When in play mode in the Editor and connected to the Unity Remote app, you will see a number of Devices have been added with the [`InputDevice.remote`](xref:UnityEngine.InputSystem.InputDevice) flag set to true:
 

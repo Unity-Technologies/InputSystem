@@ -6,7 +6,8 @@ uid: input-system-trace-actions
 
 You can trace Actions to generate a log of all activity that happened on a particular set of Actions. To do so, use [`InputActionTrace`](xref:UnityEngine.InputSystem.Utilities.InputActionTrace). This behaves in a similar way to [`InputEventTrace`](xref:UnityEngine.InputSystem.LowLevel.InputEventTrace) for events.
 
->__Note__: `InputActionTrace` allocates unmanaged memory and needs to be disposed of so that it doesn't create memory leaks.
+> [!NOTE]
+> `InputActionTrace` allocates unmanaged memory and needs to be disposed of so that it doesn't create memory leaks.
 
 ```CSharp
 var trace = new InputActionTrace();

@@ -7,7 +7,8 @@ You can use on-screen Controls to simulate Input Devices with UI widgets that th
 
 There are currently two Control types implemented out of the box: [buttons](#on-screen-buttons) and [sticks](#on-screen-sticks). You can implement custom Controls by extending the base [`OnScreenControl`](xref:UnityEngine.InputSystem.OnScreen.OnScreenControl) class (see documentation on [writing custom on screen Controls](#writing-custom-on-screen-controls) to learn more).
 
->__Note__: On-screen Controls don't have a predefined visual representation. It's up to you to set up the visual aspect of a Control (for example, by adding a sprite or UI component to the GameObject). On-screen Controls take care of the interaction logic and of setting up and generating input from interactions.
+> [!NOTE]
+> On-screen Controls don't have a predefined visual representation. It's up to you to set up the visual aspect of a Control (for example, by adding a sprite or UI component to the GameObject). On-screen Controls take care of the interaction logic and of setting up and generating input from interactions.
 
 Each on-screen Control uses a [Control path](controls.md#control-paths) to reference the Control that it should report input as. For example, the following on-screen button reports input as the right shoulder button of a gamepad:
 
@@ -17,7 +18,8 @@ The collection of on-screen Controls present in a Scene forms one or more [Input
 
 To query the Control (and, implicitly, the Device) that an on-screen Control feeds into, you can use the [`OnScreenControl.control`](xref:UnityEngine.InputSystem.OnScreen.OnScreenControl) property.
 
->__Note__: This design allows you to use on-screen Controls to create input for arbitrary Input Devices, in addition to joysticks and gamepads.
+> [!NOTE]
+> This design allows you to use on-screen Controls to create input for arbitrary Input Devices, in addition to joysticks and gamepads.
 
 ## On-screen buttons
 

@@ -34,7 +34,8 @@ For [composite bindings](./composite-bindings.md), magnitudes of the composite a
 
 ## Multiple input sequences (such as keyboard shortcuts)
 
->__Note__: The mechanism described here only applies to Actions that are part of the same [action map](./input-actions-editor-window-reference.md#action-maps-panel-reference) or [action assets](./action-assets.md).
+> [!NOTE]
+> The mechanism described here only applies to Actions that are part of the same [action map](./input-actions-editor-window-reference.md#action-maps-panel-reference) or [action assets](./action-assets.md).
 
 Inputs used in combinations with other inputs can also lead to ambiguities. If, for example, the **B** key on the Keyboard is bound both on its own as well as in combination with the **Shift** key, then if you first press **Shift** and then **B**, the latter key press would be a valid input for either of the Actions.
 

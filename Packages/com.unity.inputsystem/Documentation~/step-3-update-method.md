@@ -12,7 +12,8 @@ InputSystem.AddDevice<MyDevice>();
 
 However, this Device doesn't receive input yet, because you haven't added any code that generates input. To do that, you can use [`InputSystem.QueueStateEvent`](xref:UnityEngine.InputSystem.InputSystem) or [`InputSystem.QueueDeltaStateEvent`](xref:UnityEngine.InputSystem.InputSystem) from anywhere, including from a thread. The following example uses [`IInputUpdateCallbackReceiver`](xref:UnityEngine.InputSystem.LowLevel.IInputUpdateCallbackReceiver), which, when implemented by any [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice), adds an [`OnUpdate()`](xref:UnityEngine.InputSystem.LowLevel.IInputUpdateCallbackReceiver) method that automatically gets called during [`InputSystem.onBeforeUpdate`](xref:UnityEngine.InputSystem.InputSystem) and provides input events to the current input update.
 
->__Note__: If you already have a place where input for your device becomes available, you can skip this step and queue input events from there instead of using [`IInputUpdateCallbackReceiver`](xref:UnityEngine.InputSystem.LowLevel.IInputUpdateCallbackReceiver).
+> [!NOTE]
+> If you already have a place where input for your device becomes available, you can skip this step and queue input events from there instead of using [`IInputUpdateCallbackReceiver`](xref:UnityEngine.InputSystem.LowLevel.IInputUpdateCallbackReceiver).
 
 ```CSharp
 public class MyDevice : InputDevice, IInputUpdateCallbackReceiver

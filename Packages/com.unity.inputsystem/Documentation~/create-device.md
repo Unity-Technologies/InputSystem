@@ -6,7 +6,8 @@ uid: input-system-create-device
 
 Once the system has chosen a [layout](layouts.md) for a device, it instantiates an [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice) and populates it with [`InputControls`](xref:UnityEngine.InputSystem.InputControl) as the layout dictates. This process is internal and happens automatically.
 
->__Note__: You can't create valid [`InputDevices`](xref:UnityEngine.InputSystem.InputDevice) and [`InputControls`](xref:UnityEngine.InputSystem.InputControl) by manually instantiating them with `new`. To guide the creation process, you must use [layouts](layouts.md).
+> [!NOTE]
+> You can't create valid [`InputDevices`](xref:UnityEngine.InputSystem.InputDevice) and [`InputControls`](xref:UnityEngine.InputSystem.InputControl) by manually instantiating them with `new`. To guide the creation process, you must use [layouts](layouts.md).
 
 After the Input System assembles the [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice), it calls [`FinishSetup`](xref:UnityEngine.InputSystem.InputControl) on each control of the device and on the device itself. Use this to finalize the setup of the Controls.
 

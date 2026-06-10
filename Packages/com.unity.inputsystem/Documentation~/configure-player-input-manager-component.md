@@ -4,7 +4,7 @@ uid: input-system-configure-player-input-manager
 
 # Configure the Player Input Manager component
 
-![PlayerInputManager](Images/PlayerInputManager.png)
+![On the PlayerInputManager component, the Notification Behavior value displays Send Messages, the Join Behavior value displays Join Players When Button Is Pressed, and the Joining Enabled By Default value is checked.](Images/PlayerInputManager.png)
 
 |Property|Description|
 |--------|-----------|

@@ -29,7 +29,8 @@ You can also delete all action maps, or reset all the actions back to the defaul
 
 ![The Input Actions **more** menu as displayed in the Project Settings window](images/InputActionsSettingsMoreMenu.png)
 
-> **Note:** this **more** (⋮) menu is only available when the Actions Editor is viewed within the Project Settings window. It isn't available when the Actions Editor is open in a separate window.
+> [!NOTE]
+> This **more** (⋮) menu is only available when the Actions Editor is viewed within the Project Settings window. It isn't available when the Actions Editor is open in a separate window.
 
 
 ## Other ways to create Actions

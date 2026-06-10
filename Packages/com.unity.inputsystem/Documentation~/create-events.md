@@ -6,7 +6,8 @@ uid: input-system-create-events
 
 Anyone can create and queue new input events against any existing Device. Queueing an input event is thread-safe, which means that event generation can happen in background threads.
 
->__Note__: Unity allocates limited memory to events that come from background threads. If background threads produce too many events, queueing an event from a thread blocks the thread until the main thread flushes out the background event queue.
+> [!NOTE]
+> Unity allocates limited memory to events that come from background threads. If background threads produce too many events, queueing an event from a thread blocks the thread until the main thread flushes out the background event queue.
 
 Note that queuing an event doesn't immediately consume the event. Event processing happens on the next update (depending on [`InputSettings.updateMode`](update-mode.md), it is triggered either manually via [`InputSystem.Update`](xref:UnityEngine.InputSystem.InputSystem), or automatically as part of the Player loop).
 

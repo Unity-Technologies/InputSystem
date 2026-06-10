@@ -16,7 +16,8 @@ Unity will ask you where to store the generated code. Pick a directory in your p
  InputSystem.RegisterPrecompiledLayout<MyPrecompiledDevice>(MyPrecompiledDevice.metadata);
  ```
 
->__IMPORTANT__: It is very important that this method is called with all relevant layout registrations being in the same state as at the time the layout was precompiled. There is no internal check whether the precompiled layout will still generate an identical result to the non-precompiled version.
+> [!Important]
+> It is very important that this method is called with all relevant layout registrations being in the same state as at the time the layout was precompiled. There is no internal check whether the precompiled layout will still generate an identical result to the non-precompiled version.
 
 Once registered, a precompiled layout is automatically used whenever the layout that the precompiled layout is based on is instantiated.
 

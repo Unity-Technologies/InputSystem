@@ -6,13 +6,13 @@ uid: input-system-configure-unity-events
 
 You can use the following properties to configure `PlayerInput`:
 
-|Property|Description|
-|--------|-----------|
-|[`Actions`](xref:UnityEngine.InputSystem.PlayerInput)|The set of [Input Actions](actions.md) associated with the player. Typically you would set this to Project-Wide Actions, however you can assign an [ActionAsset](action-assets.md) reference here). To receive input, each player must have an associated set of Actions. See documentation on [Actions](#actions) for details.|
-|[`Default Control Scheme`](xref:UnityEngine.InputSystem.PlayerInput)|Which [Control Scheme](control-schemes.md) (from what is defined in [`Actions`](xref:UnityEngine.InputSystem.PlayerInput)) to enable by default.|
-|[`Default Action Map`](xref:UnityEngine.InputSystem.PlayerInput)|Which [Action Map](actions.md) in [`Actions`](xref:UnityEngine.InputSystem.PlayerInput) to enable by default. If set to `None`, then the player starts with no Actions being enabled.|
-|[`Camera`](xref:UnityEngine.InputSystem.PlayerInput)|The individual camera associated with the player. This is only required when employing [split-screen](player-input-manager-component.md#split-screen) setups and has no effect otherwise.|
-|[`Behavior`](xref:UnityEngine.InputSystem.PlayerInput)|How the `PlayerInput` component notifies game code about things that happen with the player. See documentation on [notification behaviors](#notification-behaviors).|
+| Component (UI) property | Description | Matching property |
+| -- | -- | -- |
+| **Actions** | The set of [Input Actions](xref:input-system-actions) associated with the player. Typically you would set this to Project-Wide Actions, however you can also assign an [ActionAsset](xref:input-system-action-assets) reference instead. To receive input, each player must have an associated set of [Actions](#actions). | [`actions`](xref:UnityEngine.InputSystem.PlayerInput.actions) |
+| **Default Scheme** | The [Control Scheme](xref:input-system-action-bindings#control-schemes) to enable by default, as defined in the [`PlayerInput.actions`](xref:UnityEngine.InputSystem.PlayerInput.actions) property. | [`defaultControlScheme`](xref:UnityEngine.InputSystem.PlayerInput.defaultControlScheme) |
+| **Default Map** | The [Action Map](xref:input-system-actions#scripting-access) in the [`PlayerInput.actions`](xref:UnityEngine.InputSystem.PlayerInput.actions) property to enable by default. If set to `None`, then the player starts with no Actions being enabled. | [`defaultActionMap`](xref:UnityEngine.InputSystem.PlayerInput.defaultActionMap) |
+| **Camera** | The individual camera associated with the player. This is only required when employing [split-screen](xref:input-system-player-input-manager#split-screen) setups and has no effect otherwise. | [`camera`](xref:UnityEngine.InputSystem.PlayerInput.camera) |
+| **Behavior** | How the `PlayerInput` component [notifies](#notification-behaviors) game code about input actions and other input-related events happening to the player or that the player initiates. | [`notificationBehavior`](xref:UnityEngine.InputSystem.PlayerInput.notificationBehavior) |
 
 ## Actions
 

@@ -13,7 +13,8 @@ If you don't yet have an Action Asset assigned as project-wide in your project, 
 ![Screenshot of the Project Settings window, with Input System Package selected. Its settings are displayed on the right of the window. The Project-wide Actions field is empty, and an information box explaining you can assign an Action Asset as project-wide by selecting it in this field or creating it in this window is shown. A button to automatically create and assign the default project-wide Action Asset is displayed under the information box.](./Images/InputSettingsNoProjectWideAsset.png)</br>
 *The Input System Package Project Settings with no project-wide actions assigned displays a button to create and assign a default project-wide Action Asset*
 
-> **Note:** If you already have an Action Asset assigned, this button is not displayed, and instead the Actions Editor is displayed, allowing you to edit the currently assigned project-wide actions.
+> [!NOTE]
+> If you already have an Action Asset assigned, this button is not displayed, and instead the Actions Editor is displayed, allowing you to edit the currently assigned project-wide actions.
 
 Click  **"Create a new project-wide Action Asset"**.
 

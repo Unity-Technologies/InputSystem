@@ -105,4 +105,5 @@ Alternatively, you can use code to feed arbitrary input events into the system, 
     }
 ```
 
->__Note__: For reference, you can find the tests for the Input System itself in its [GitHub repository](https://github.com/Unity-Technologies/InputSystem/tree/stable/Assets/Tests/InputSystem).
+> [!NOTE]
+> For reference, you can find the tests for the Input System itself in its [GitHub repository](https://github.com/Unity-Technologies/InputSystem/tree/stable/Assets/Tests/InputSystem).

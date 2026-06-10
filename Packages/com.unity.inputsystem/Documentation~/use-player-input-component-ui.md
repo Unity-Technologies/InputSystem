@@ -12,7 +12,7 @@ Once you've completed this setup, when the `PlayerInput` component configures th
 
 If you use [`MultiplayerEventSystem`](ui-input.md#multiplayer-uis) components to dispatch UI events, you can also use this setup to simultaneously have multiple UI instances on the screen, each controlled by a separate player.
 
->**Notes**:
+> [!NOTE]
 > - As a general rule, if you are using the PlayerInput workflow, you should read input through callbacks as described above, however if you need to access the input actions asset directly while using the PlayerInput component, you should access the [PlayerInput component's copy of the actions](xref:UnityEngine.InputSystem.PlayerInput), not `InputSystem.actions`. This is because the PlayerInput component performs device filtering to automatically assign devices to multiple players, so each instance has its own copy of the actions filtered for each player. If you bypass this by reading `InputSystem.actions` directly, the automatic device assignment won't work.
 >
 > - This component is built on top of the public Input System API. As such, they don't do anything that you can't program yourself. They are meant primarily as an easy, out-of-the-box setup that eliminates much of the need for custom scripting.

@@ -12,7 +12,8 @@ To narrow the options that the Editor UI presents to you, and to avoid creating 
 
 If __Supported Devices__ is empty, no restrictions apply, which means that the Input System adds any Device that Unity recognizes and processes input for it. However, if __Support Devices__ contains one or more entries, the Input System only adds Devices that are of one of the listed types.
 
->__Note__: When the __Support Devices__ list changes, the system removes or re-adds Devices as needed. The system always keeps information about what Devices are available for potential, which means that no Device is permanently lost as long as it stays connected.
+> [!NOTE]
+> When the __Support Devices__ list changes, the system removes or re-adds Devices as needed. The system always keeps information about what Devices are available for potential, which means that no Device is permanently lost as long as it stays connected.
 
 To add Devices to the list, click the Add (+) icon and choose a Device from the menu that appears.
 
@@ -24,4 +25,5 @@ To force the Editor to add all locally available Devices, even if they're not in
 
 ![Add Devices Not Listed In Supported Devices](Images/AddDevicesNotListedInSupportedDevices.png)
 
->__Note__: This setting is stored as a user setting, not a project setting. This means other users who open the project in their own Editor do not share the setting.
+> [!NOTE]
+> This setting is stored as a user setting, not a project setting. This means other users who open the project in their own Editor do not share the setting.

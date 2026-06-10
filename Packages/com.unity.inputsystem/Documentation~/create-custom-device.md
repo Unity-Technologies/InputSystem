@@ -4,7 +4,8 @@ uid: input-system-create-custom-device
 
 # Create a custom device 
 
->__Note__: This example deals only with Devices that have fixed layouts (that is, you know the specific model or models that you want to implement). This is different from an interface such as HID, where Devices can describe themselves through the interface and take on a wide variety of forms. A fixed Device layout can't cover self-describing Devices, so you need to use a [layout builder](layouts.md#generated-layouts) to build Device layouts from information you obtain at runtime.
+> [!NOTE]
+> This example deals only with Devices that have fixed layouts (that is, you know the specific model or models that you want to implement). This is different from an interface such as HID, where Devices can describe themselves through the interface and take on a wide variety of forms. A fixed Device layout can't cover self-describing Devices, so you need to use a [layout builder](layouts.md#generated-layouts) to build Device layouts from information you obtain at runtime.
 
 There are two main situations in which you might need to create a custom Device:
 
