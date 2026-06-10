@@ -284,13 +284,32 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             if (!focus)
             {
-                // Replace state structs with default instances rather than calling Reset(),
-                // because Reset() preserves ClickCount (used for double-tap tracking within a
-                // session) but on focus loss we want a completely clean slate — stale ClickCount
-                // causes the first tap after Alt+Tab to be misidentified as a double/triple tap.
+                // Preserve the last known cursor/pen positions before resetting.
+                // Mouse and pen positions are needed so that a click-to-refocus
+                // (where the pointer hasn't moved and OnPointerPerformed won't fire)
+                // still dispatches to the correct screen location via OnClickPerformed.
+                // Touch positions are NOT preserved — every new touch always arrives
+                // with a fresh position from OnPointerPerformed.
+                var mouseLastValid   = m_MouseState.LastPositionValid;
+                var mouseLastPos     = m_MouseState.LastPosition;
+                var mouseLastDisplay = m_MouseState.LastDisplayIndex;
+
+                var penLastValid     = m_PenState.LastPositionValid;
+                var penLastPos       = m_PenState.LastPosition;
+                var penLastDisplay   = m_PenState.LastDisplayIndex;
+
+                // Use default assignment rather than Reset() because Reset() intentionally
+                // preserves ClickCount for within-session double-tap tracking.
+                // After a focus loss that ClickCount is stale and must be zeroed.
                 m_MouseState = default;
                 m_TouchState = default;
                 m_PenState = default;
+
+                if (mouseLastValid)
+                    m_MouseState.OnMove(m_CurrentTime, mouseLastPos, mouseLastDisplay);
+                if (penLastValid)
+                    m_PenState.OnMove(m_CurrentTime, penLastPos, penLastDisplay);
+
                 m_SeenTouchEvents = false;
                 m_SeenPenEvents = false;
                 m_ResetSeenEventsOnUpdate = false;
