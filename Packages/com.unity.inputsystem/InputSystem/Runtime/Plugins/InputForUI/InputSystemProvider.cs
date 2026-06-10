@@ -313,6 +313,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 m_SeenTouchEvents = false;
                 m_SeenPenEvents = false;
                 m_ResetSeenEventsOnUpdate = false;
+                m_RepeatHelper.Reset();
                 m_Events.Clear();
             }
         }
