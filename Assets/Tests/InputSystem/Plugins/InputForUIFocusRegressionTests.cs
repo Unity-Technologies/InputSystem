@@ -116,7 +116,11 @@ public class InputForUIFocusRegressionTests : InputTestFixture
         ScheduleFocusChangedEvent(applicationHasFocus: true);
         currentTime += 0.5f;
 
+#if UNITY_EDITOR
+        // InputUpdateType.Editor is only valid inside the editor; in a player build
+        // the focus events are processed through the Dynamic update path.
         InputSystem.Update(InputUpdateType.Editor);
+#endif
         InputSystem.Update(InputUpdateType.Dynamic);
         EventProvider.NotifyUpdate();
 
