@@ -76,8 +76,8 @@ public class InputForUIFocusRegressionTests : InputTestFixture
     // and correctly produces clickCount == 1.
     [Test]
     [Description("Verifies that m_TouchState is reset on focus loss so that the first " +
-                 "touch press after an Alt+Tab cycle generates a clean ButtonPressed event " +
-                 "rather than one with stale (stuck-pressed) button state.")]
+        "touch press after an Alt+Tab cycle generates a clean ButtonPressed event " +
+        "rather than one with stale (stuck-pressed) button state.")]
     public void AfterAltTab_FirstTouchPress_GeneratesCleanButtonPressedEvent()
     {
         InputSystem.settings.backgroundBehavior =
@@ -95,11 +95,11 @@ public class InputForUIFocusRegressionTests : InputTestFixture
 
         // Confirm the tap was recorded so we know the provider is wired up.
         Assert.That(m_RecordedEvents.Count >= 1 &&
-                    m_RecordedEvents[0] is
-                    {
-                        type: Event.Type.PointerEvent,
-                        asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Touch }
-                    }, "Pre-condition failed: expected initial ButtonPressed from Touch");
+            m_RecordedEvents[0] is
+            {
+                type: Event.Type.PointerEvent,
+                asPointerEvent: { type: PointerEvent.Type.ButtonPressed, eventSource: EventSource.Touch }
+            }, "Pre-condition failed: expected initial ButtonPressed from Touch");
 
         m_RecordedEvents.Clear();
 
