@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 s_Instance = GetWindow<InputDebuggerWindow>();
                 s_Instance.Show();
-                s_Instance.titleContent = new GUIContent("Input Debug");
+                s_Instance.titleContent = new GUIContent("Input Debugger");
             }
             else
             {
