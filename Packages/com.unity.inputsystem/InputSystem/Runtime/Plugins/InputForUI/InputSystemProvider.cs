@@ -310,8 +310,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 if (penLastValid)
                     m_PenState.OnMove(m_CurrentTime, penLastPos, penLastDisplay);
 
-                m_SeenTouchEvents = false;
-                m_SeenPenEvents = false;
+                ResetSeenEvents();
                 m_ResetSeenEventsOnUpdate = false;
                 m_RepeatHelper.Reset();
                 m_Events.Clear();
