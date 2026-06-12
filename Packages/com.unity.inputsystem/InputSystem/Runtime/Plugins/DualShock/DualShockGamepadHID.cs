@@ -7,6 +7,7 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.DualShock.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using HIDReportType = UnityEngine.InputSystem.HID.HID.HIDReportType;
 
 ////TODO: figure out sensor formats and add support for acceleration, angularVelocity, and orientation (also add to base layout then)
 
@@ -380,15 +381,35 @@ namespace UnityEngine.InputSystem.DualShock
         private float? m_LowFrequencyMotorSpeed;
         private float? m_HighFrequenceyMotorSpeed;
         protected Color? m_LightBarColor;
-        private byte outputSequenceId;
+        private byte m_OutputSequenceId;
         private bool m_IsBluetooth;
-        private bool m_LedResetSent;
-        private DualSenseHIDOutputReportPayload? m_PendingBtPayload;
-        private int m_PendingBtPayloadDelay;
 
-        // The Bluetooth LED reset and the color report must be sent as separate reports. 
-        // A delay between them is also required to let the firmware process the reset first.
-        private const int k_BluetoothLedResetDelayFrames = 3;
+        // Over Bluetooth the firmware drives the light bar during (and shortly after) the connection
+        // animation. The app takes over by sending a one-time reset report, but only once the animation
+        // has finished: a reset sent during it wedges the firmware until the app is restarted.
+        private enum BluetoothLedState
+        {
+            FirmwareControlled, // initial; light bar driven by firmware, reset not sent
+            WaitingToSend,      // a color was requested; waiting out the animation, then reset -> color
+            AppControlled       // color sent; app owns the light bar
+        }
+        private BluetoothLedState m_BtLedState;
+        private bool m_LedResetSent;
+        private int m_LedResetGapFrames;
+
+        // Event time (seconds) of the first and most recent Bluetooth report. The elapsed time between
+        // them gates the LED reset; timing it from detection lets the wait overlap with app start-up.
+        private double m_BtConnectTime = -1.0;
+        private double m_LastBtEventTime;
+
+        // Wait this long after the controller is first seen before releasing firmware control of the
+        // light bar, to let the Bluetooth connection animation finish. The animation runs for under
+        // 5 seconds; 6 leaves a safety margin.
+        private const double k_BluetoothLedAnimationSeconds = 6.0;
+
+        // The reset and the color must be separate reports, with a short gap for the firmware to
+        // process the reset before the color is applied.
+        private const int k_BluetoothLedResetGapFrames = 3;
 
         protected override void FinishSetup()
         {
@@ -402,7 +423,7 @@ namespace UnityEngine.InputSystem.DualShock
                 for (var i = 0; i < elements.Length; i++)
                 {
                     var element = elements[i];
-                    if (element.reportType == UnityEngine.InputSystem.HID.HID.HIDReportType.Output &&
+                    if (element.reportType == HIDReportType.Output &&
                         element.reportId == DualSenseHIDBluetoothInputReport.ExpectedReportId)
                     {
                         m_IsBluetooth = true;
@@ -411,8 +432,17 @@ namespace UnityEngine.InputSystem.DualShock
                 }
             }
             m_LedResetSent = false;
+            m_BtLedState = BluetoothLedState.FirmwareControlled;
+            m_BtConnectTime = -1.0;
 
             base.FinishSetup();
+        }
+
+        private void UpdateBluetoothClock(double eventTime)
+        {
+            if (m_BtConnectTime < 0.0)
+                m_BtConnectTime = eventTime;
+            m_LastBtEventTime = eventTime;
         }
 
         private void SendBluetoothLedReset()
@@ -424,7 +454,7 @@ namespace UnityEngine.InputSystem.DualShock
             {
                 enableFlags2 = 0x08, // Release firmware control of the light bar so the app can drive it.
             };
-            var command = DualSenseHIDBluetoothOutputReport.Create(resetPayload, ++outputSequenceId);
+            var command = DualSenseHIDBluetoothOutputReport.Create(resetPayload, ++m_OutputSequenceId);
             ExecuteCommand(ref command);
             m_LedResetSent = true;
         }
@@ -487,9 +517,40 @@ namespace UnityEngine.InputSystem.DualShock
         /// for the respective documentation regarding setting rumble and light bar color.</remarks>
         public bool SetMotorSpeedsAndLightBarColor(float? lowFrequency, float? highFrequency, Color? color)
         {
-            var lf = lowFrequency.HasValue ? lowFrequency.Value : 0;
-            var hf = highFrequency.HasValue ? highFrequency.Value : 0;
+            var payload = BuildOutputPayload(lowFrequency, highFrequency, color);
 
+            if (!m_IsBluetooth)
+            {
+                var command = DualSenseHIDUSBOutputReport.Create(payload);
+                return ExecuteCommand(ref command) >= 0;
+            }
+
+            // Bluetooth: the light bar can only be driven once firmware control has been released, and
+            // that reset is gated on the connection-animation window (see OnNextUpdate). Until the light
+            // bar is app-controlled, remember the latest requested color and send only rumble inline so
+            // rumble stays responsive while the LED waits. Overwriting keeps the latest color and avoids
+            // out-of-order or double sends if more requests arrive before the reset completes.
+            if (color.HasValue && m_BtLedState != BluetoothLedState.AppControlled)
+            {
+                m_LightBarColor = color;
+                m_BtLedState = BluetoothLedState.WaitingToSend;
+
+                var rumbleOnly = BuildOutputPayload(lowFrequency, highFrequency, null);
+                var rumbleCommand = DualSenseHIDBluetoothOutputReport.Create(rumbleOnly, ++m_OutputSequenceId);
+                return ExecuteCommand(ref rumbleCommand) >= 0;
+            }
+
+            var btCommand = DualSenseHIDBluetoothOutputReport.Create(payload, ++m_OutputSequenceId);
+            return ExecuteCommand(ref btCommand) >= 0;
+        }
+
+        private static DualSenseHIDOutputReportPayload BuildOutputPayload(float? lowFrequency, float? highFrequency, Color? color)
+        {
+            var lf = lowFrequency ?? 0f;
+            var hf = highFrequency ?? 0f;
+
+            // All effects must be set in a single report. Sending just a color with the rumble
+            // flags cleared would disable rumble, so the rumble flags are always included here.
             var payload = new DualSenseHIDOutputReportPayload
             {
                 enableFlags1 = 0x1 | // Enable motor rumble.
@@ -500,30 +561,13 @@ namespace UnityEngine.InputSystem.DualShock
 
             if (color.HasValue)
             {
-                payload.enableFlags2 = 0x4;
+                payload.enableFlags2 = 0x4; // Enable LED color.
                 payload.redColor = (byte)NumberHelpers.NormalizedFloatToUInt(color.Value.r, byte.MinValue, byte.MaxValue);
                 payload.greenColor = (byte)NumberHelpers.NormalizedFloatToUInt(color.Value.g, byte.MinValue, byte.MaxValue);
                 payload.blueColor = (byte)NumberHelpers.NormalizedFloatToUInt(color.Value.b, byte.MinValue, byte.MaxValue);
             }
 
-            if (m_IsBluetooth)
-            {
-                // The light bar reset and color must be sent as separate reports, so defer the
-                // color payload and let OnNextUpdate send it once the reset has taken effect.
-                if (color.HasValue && !m_LedResetSent)
-                {
-                    SendBluetoothLedReset();
-                    m_PendingBtPayload = payload;
-                    m_PendingBtPayloadDelay = k_BluetoothLedResetDelayFrames;
-                    return true;
-                }
-
-                var btCommand = DualSenseHIDBluetoothOutputReport.Create(payload, ++outputSequenceId);
-                return ExecuteCommand(ref btCommand) >= 0;
-            }
-
-            var command = DualSenseHIDUSBOutputReport.Create(payload);
-            return ExecuteCommand(ref command) >= 0;
+            return payload;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -611,6 +655,8 @@ namespace UnityEngine.InputSystem.DualShock
             {
                 // A 78-byte frame with reportId=0x01 is Bluetooth "simple mode".
                 m_IsBluetooth = stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize2;
+                if (m_IsBluetooth)
+                    UpdateBluetoothClock(eventPtr.time);
                 if (stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize1 ||
                     stateEvent->stateSizeInBytes == DualSenseHIDMinimalInputReport.ExpectedSize2)
                 {
@@ -629,6 +675,7 @@ namespace UnityEngine.InputSystem.DualShock
             else if (genericReport->reportId == DualSenseHIDBluetoothInputReport.ExpectedReportId)
             {
                 m_IsBluetooth = true;
+                UpdateBluetoothClock(eventPtr.time);
                 var data = ((DualSenseHIDBluetoothInputReport*)stateEvent->state)->ToHIDInputReport();
                 *((DualSenseHIDInputReport*)stateEvent->state) = data;
                 stateEvent->stateFormat = DualSenseHIDInputReport.Format;
@@ -640,18 +687,31 @@ namespace UnityEngine.InputSystem.DualShock
 
         public void OnNextUpdate()
         {
-            if (m_PendingBtPayload.HasValue && m_IsBluetooth)
-            {
-                if (m_PendingBtPayloadDelay > 0)
-                {
-                    m_PendingBtPayloadDelay--;
-                    return;
-                }
+            if (!m_IsBluetooth || m_BtLedState != BluetoothLedState.WaitingToSend)
+                return;
 
-                var command = DualSenseHIDBluetoothOutputReport.Create(m_PendingBtPayload.Value, ++outputSequenceId);
-                ExecuteCommand(ref command);
-                m_PendingBtPayload = null;
+            // Wait out the connection animation (timed from when the controller was first seen) before
+            // releasing firmware control: a reset sent during the animation wedges the firmware.
+            if (m_BtConnectTime < 0.0 || (m_LastBtEventTime - m_BtConnectTime) < k_BluetoothLedAnimationSeconds)
+                return;
+
+            if (!m_LedResetSent)
+            {
+                SendBluetoothLedReset();
+                m_LedResetGapFrames = k_BluetoothLedResetGapFrames;
+                return;
             }
+
+            if (m_LedResetGapFrames > 0)
+            {
+                m_LedResetGapFrames--;
+                return;
+            }
+
+            var payload = BuildOutputPayload(m_LowFrequencyMotorSpeed, m_HighFrequenceyMotorSpeed, m_LightBarColor);
+            var command = DualSenseHIDBluetoothOutputReport.Create(payload, ++m_OutputSequenceId);
+            ExecuteCommand(ref command);
+            m_BtLedState = BluetoothLedState.AppControlled;
         }
 
         // filter out three lower bits as jitter noise
