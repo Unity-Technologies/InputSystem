@@ -312,7 +312,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
                 ResetSeenEvents();
                 m_ResetSeenEventsOnUpdate = false;
-                m_RepeatHelper.Reset();
                 m_Events.Clear();
             }
         }
