@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed input devices being lost (no keyboard, mouse, gamepad, etc.) after upgrading the package while the Editor is open (related to the recent fast enter playmode change). [ISX-2569]
 - Fixed `InputSystemProvider` disabling project-wide actions on shutdown when UI Toolkit destroys its objects mid-play. The provider now scopes its lifecycle to the UI action map only and does not disable project-wide actions [UUM-134130](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-134130)
 - Fixed `InputActionRebindingExtensions.GetBindingDisplayString(InputAction, InputBinding, ...)` returning an empty string for composite bindings when the binding mask filters by group [UUM-141423](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141423)
 - Fixed `InputEventPtr.handled` not preventing actions from triggering when switching devices. The default event handled policy has been changed from `SuppressStateUpdates` (now deprecated) to `SuppressActionEventNotifications`, which keeps device state synchronized while suppressing action callbacks for handled events. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)

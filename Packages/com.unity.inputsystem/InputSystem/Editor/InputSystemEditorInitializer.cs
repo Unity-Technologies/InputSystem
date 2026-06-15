@@ -162,6 +162,36 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             var existingStateManagers = Resources.FindObjectsOfTypeAll<InputSystemStateManager>();
+
+            // Upgrade migration: package versions up to and including 1.18 stored this state in a
+            // ScriptableObject named InputSystemObject. That instance survives the domain reload
+            // triggered by a package upgrade, but the renamed InputSystemStateManager type won't match
+            // it. Adopt the surviving legacy instance's state into a new state manager so connected
+            // devices (and other state) are preserved across the upgrade instead of being lost - native
+            // only re-reports devices once per editor process, so there is no in-process recovery
+            // otherwise. See ISX-2569.
+            if (globalReset && (existingStateManagers == null || existingStateManagers.Length == 0))
+            {
+                var legacyObjects = Resources.FindObjectsOfTypeAll<InputSystemObject>();
+                if (legacyObjects != null && legacyObjects.Length > 0)
+                {
+                    var legacy = legacyObjects[0];
+                    var migrated = ScriptableObject.CreateInstance<InputSystemStateManager>();
+                    migrated.hideFlags = HideFlags.HideAndDontSave;
+                    migrated.systemState = legacy.systemState;
+                    migrated.newInputBackendsCheckedAsEnabled = legacy.newInputBackendsCheckedAsEnabled;
+                    migrated.settings = legacy.settings;
+                    migrated.exitEditModeTime = legacy.exitEditModeTime;
+                    migrated.enterPlayModeTime = legacy.enterPlayModeTime;
+
+                    // The legacy instances are no longer needed; get rid of them so we don't migrate twice.
+                    for (var i = 0; i < legacyObjects.Length; ++i)
+                        Object.DestroyImmediate(legacyObjects[i]);
+
+                    existingStateManagers = new[] { migrated };
+                }
+            }
+
             if (existingStateManagers != null && existingStateManagers.Length > 0)
             {
                 if (globalReset)
