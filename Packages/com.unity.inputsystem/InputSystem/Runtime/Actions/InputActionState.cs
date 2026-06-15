@@ -4565,6 +4565,9 @@ namespace UnityEngine.InputSystem
 
                 map.m_State = this;
                 map.m_MapIndexInState = mapIndex;
+                
+                if (map.m_Asset != null && map.m_Asset.m_SharedStateForAllMaps == null)
+                    map.m_Asset.m_SharedStateForAllMaps = this;
 
                 var indices = mapIndices[mapIndex];
                 var mapActions = map.m_Actions;
