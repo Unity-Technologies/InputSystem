@@ -77,7 +77,22 @@ namespace UnityEngine.InputSystem.Editor
         {
             var interactionsOrProcessorsList = NameAndParameters.ParseMultiple(m_ListProperty.stringValue).ToList();
             interactionsOrProcessorsList[index] = new NameAndParameters { name = interactionsOrProcessorsList[index].name, parameters = listView.GetParameters() };
-            m_ListProperty.stringValue = NameAndParameters.ToSerializableString(interactionsOrProcessorsList);
+            var newValue = NameAndParameters.ToSerializableString(interactionsOrProcessorsList);
+
+            // onChange also fires on a plain blur with no edit, leaving the serialized string unchanged. Bail before
+            // arming the ignore flag below: ApplyModifiedProperties would be a no-op that never fires the
+            // TrackSerializedObjectValue callback, so the flag would stay armed and wrongly swallow the next real rebuild.
+            if (m_ListProperty.stringValue == newValue)
+                return;
+
+            m_ListProperty.stringValue = newValue;
+
+            // This is a value-only edit of an existing interaction/processor: the parameter fields are already
+            // showing the new value. A full UI rebuild here would tear down and recreate the field the user is
+            // moving focus into, forcing a second click (UUM-144339). Suppress the rebuild that committing the
+            // value would otherwise trigger via StateContainer's TrackSerializedObjectValue callback. Structural
+            // edits (add/move/delete) intentionally do not call this and still rebuild.
+            stateContainer.IgnoreNextSerializedObjectChange();
             m_ListProperty.serializedObject.ApplyModifiedProperties();
         }
 

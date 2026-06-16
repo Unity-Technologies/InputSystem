@@ -22,6 +22,12 @@ namespace UnityEngine.InputSystem.Editor
         private InputActionsEditorState m_State;
         public readonly string assetGUID;
 
+        // When set, the next change detected by the TrackSerializedObjectValue callback below does not rebuild
+        // the editor UI. Used to commit value-only edits (e.g. an interaction/processor parameter) without
+        // tearing down and recreating the field the user is interacting with (UUM-144339). It is a one-shot:
+        // the very next change notification consumes it, so unrelated changes still rebuild as normal.
+        private bool m_IgnoreNextSerializedObjectChange;
+
         public StateContainer(InputActionsEditorState initialState, string assetGUID)
         {
             m_State = initialState;
@@ -52,6 +58,15 @@ namespace UnityEngine.InputSystem.Editor
             });
         }
 
+        // Request that the editor UI is not rebuilt in response to the next change of the tracked serialized
+        // object. Call this immediately before committing a value-only edit (ApplyModifiedProperties) that must
+        // not tear down the VisualElement the user is interacting with. The request is consumed by the next
+        // change notification, so any subsequent change still rebuilds normally.
+        public void IgnoreNextSerializedObjectChange()
+        {
+            m_IgnoreNextSerializedObjectChange = true;
+        }
+
         public void Initialize(VisualElement rootVisualElement)
         {
             // We need to use a root element for the TrackSerializedObjectValue that is destroyed with the view.
@@ -62,6 +77,14 @@ namespace UnityEngine.InputSystem.Editor
             m_RootVisualElement.Unbind();
             m_RootVisualElement.TrackSerializedObjectValue(m_State.serializedObject, so =>
             {
+                // A value-only edit asked us not to rebuild the UI for this change (see
+                // IgnoreNextSerializedObjectChange). Consume the request and skip the rebuild.
+                if (m_IgnoreNextSerializedObjectChange)
+                {
+                    m_IgnoreNextSerializedObjectChange = false;
+                    return;
+                }
+
                 StateChanged?.Invoke(m_State, UIRebuildMode.Rebuild);
             });
             StateChanged?.Invoke(m_State, UIRebuildMode.Rebuild);
