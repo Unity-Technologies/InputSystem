@@ -4,7 +4,7 @@ uid: input-system-polling-gamepad
 
 # Gamepad polling
 
-You can control polling frequency manually. The default polling frequency is 60 Hz. Use [`InputSystem.pollingFrequency`](xref:UnityEngine.InputSystem.InputSystem.pollingFrequency) to get or set the frequency.
+The platform sets the default polling frequency to provide a good user experience for the devices supported on the platform. This frequency is guaranteed to be at least 60 Hz. You can override the polling frequency suggested by the target platform by explicitly setting [`InputSystem.pollingFrequency`](xref:UnityEngine.InputSystem.InputSystem.pollingFrequency) at runtime.
 
 ```c#
 
