@@ -10,7 +10,7 @@ If you want to access the history of value changes on a control (for example, in
 ```CSharp
 // Create history that records Vector2 control value changes.
 // NOTE: You can also pass controls directly or use paths that match multiple
-//       controls (e.g. "<Gamepad>/<Button>").
+//       controls (For example, "<Gamepad>/<Button>").
 // NOTE: The unconstrained InputStateHistory class can record changes on controls
 //        of different value types.
 var history = new InputStateHistory<Vector2>("<Touchscreen>/primaryTouch/position");

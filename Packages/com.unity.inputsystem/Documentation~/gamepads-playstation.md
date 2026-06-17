@@ -9,7 +9,7 @@ The Input System implements PlayStation gamepads as different derived types of t
 * [`DualShock3GamepadHID`](xref:UnityEngine.InputSystem.DualShock.DualShock3GamepadHID): A DualShock 3 controller connected to a desktop computer using the [HID interface](hid-specification-introduction.md). Currently only supported on macOS. Doesn't support [rumble](gamepad-haptics.md).  
 * [`DualShock4GamepadHID`](xref:UnityEngine.InputSystem.DualShock.DualShock4GamepadHID): A DualShock 4 controller connected to a desktop computer using the [HID interface](hid-specification-introduction.md). Supported on macOS, Windows, UWP, and Linux.  
 * [`DualSenseGamepadHID`](xref:UnityEngine.InputSystem.DualShock.DualSenseGamepadHID): A DualSense controller connected to a desktop computer using the [HID interface](hid-specification-introduction.md). Supported on macOS, Windows.  
-* [`DualShock4GampadiOS`](xref:UnityEngine.InputSystem.iOS.DualShock4GampadiOS): A DualShock 4 controller connected to an iOS Device via Bluetooth. Requires iOS 13 or higher.  
+* [`DualShock4GampadiOS`](xref:UnityEngine.InputSystem.iOS.DualShock4GampadiOS): A DualShock 4 controller connected to an iOS Device with Bluetooth. Requires iOS 13 or higher.  
 * [`SetLightBarColor(Color)`](xref:UnityEngine.InputSystem.DualShock.DualShockGamepad.SetLightBarColor(UnityEngine.Color)): Used to set the color of the light bar on the controller.
 
 Unity supports PlayStation controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) or [`Joystick`](xref:UnityEngine.InputSystem.Joystick) devices, and doesn't support rumble or any other DualShock-specific functionality.

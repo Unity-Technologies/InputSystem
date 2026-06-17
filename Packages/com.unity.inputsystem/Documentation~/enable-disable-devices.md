@@ -8,7 +8,7 @@ When a Device is added, the Input System sends it an initial [`QueryEnabledState
 
 When disabled, no events other than removal ([`DeviceRemoveEvent`](xref:UnityEngine.InputSystem.LowLevel.DeviceRemoveEvent)) and configuration change ([`DeviceConfigurationEvent`](xref:UnityEngine.InputSystem.LowLevel.DeviceConfigurationEvent)) events are processed for a Device, even if they are sent.
 
-A Device can be manually disabled and re-enabled via [`InputSystem.DisableDevice`](xref:UnityEngine.InputSystem.InputSystem) and [`InputSystem.EnableDevice`](xref:UnityEngine.InputSystem.InputSystem) respectively.
+A Device can be manually disabled and re-enabled with [`InputSystem.DisableDevice`](xref:UnityEngine.InputSystem.InputSystem) and [`InputSystem.EnableDevice`](xref:UnityEngine.InputSystem.InputSystem) respectively.
 
 Note that [sensors](devices-sensors.md) start in a disabled state by default, and you need to enable them in order for them to generate events.
 

@@ -30,6 +30,6 @@ These Devices can be used just like local Devices. They will receive input from 
 
 The [`Accelerometer`](xref:UnityEngine.InputSystem.Accelerometer) device will automatically be enabled and will not need you to call [`InputSystem.EnableDevice`](xref:UnityEngine.InputSystem.InputSystem) explicitly. Setting the sampling frequency on the accelerometer from the Unity Remote using [`Sensor.samplingFrequency`](xref:UnityEngine.InputSystem.Sensor) has no effect.
 
-The remaining sensors listed above will need to be explicitly enabled via [`InputSystem.EnableDevice`](xref:UnityEngine.InputSystem.InputSystem) just like local sensors. Setting the sampling frequency on these sensors from the Unity Remote using [`Sensor.samplingFrequency`](xref:UnityEngine.InputSystem.Sensor) will be relayed to the device but note that setting the frequency on one of them will set it for all of them.
+The remaining sensors listed above will need to be explicitly enabled with [`InputSystem.EnableDevice`](xref:UnityEngine.InputSystem.InputSystem) just like local sensors. Setting the sampling frequency on these sensors from the Unity Remote using [`Sensor.samplingFrequency`](xref:UnityEngine.InputSystem.Sensor) will be relayed to the device but note that setting the frequency on one of them will set it for all of them.
 
 Touch coordinates from the device will be translated to the screen coordinates of the Game View inside the Editor.

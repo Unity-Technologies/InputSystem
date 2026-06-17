@@ -4,9 +4,9 @@ uid: input-system-hid-intro
 
 # Human Interface Device specification introduction
 
-Human Interface Device (HID) is a [specification](https://www.usb.org/hid) to describe peripheral user input devices connected to computers via USB or Bluetooth. HID is commonly used to implement devices such as gamepads, joysticks, or racing wheels.
+Human Interface Device (HID) is a [specification](https://www.usb.org/hid) to describe peripheral user input devices connected to computers with USB or Bluetooth. HID is commonly used to implement devices such as gamepads, joysticks, or racing wheels.
 
-The Input System directly supports HID (connected via both USB and Bluetooth) on Windows, macOS, and the Universal Windows Platform (UWP). The system might support HID on other platforms, but not deliver input through HID-specific APIs. For example, on Linux, the system supports gamepad and joystick HIDs through SDL, but doesn't support other HIDs.
+The Input System directly supports HID (connected with both USB and Bluetooth) on Windows, macOS, and the Universal Windows Platform (UWP). The system might support HID on other platforms, but not deliver input through HID-specific APIs. For example, on Linux, the system supports gamepad and joystick HIDs through SDL, but doesn't support other HIDs.
 
 The Input System handles HIDs in one of the following ways:
 

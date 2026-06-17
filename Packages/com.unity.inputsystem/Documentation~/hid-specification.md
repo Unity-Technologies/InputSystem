@@ -4,7 +4,7 @@ uid: input-system-hid
 
 # Human Interface Device specification
 
-Human Interface Device (HID) is a specification that describes peripheral user input devices connected to computers via USB or Bluetooth. HID is commonly used to implement devices such as gamepads, joysticks, or racing wheels.
+Human Interface Device (HID) is a specification that describes peripheral user input devices connected to computers with USB or Bluetooth. HID is commonly used to implement devices such as gamepads, joysticks, or racing wheels.
 
 | **Topic**                       | **Description**                  |
 | :------------------------------ | :------------------------------- |

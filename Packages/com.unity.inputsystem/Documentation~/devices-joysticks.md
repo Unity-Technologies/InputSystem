@@ -9,4 +9,4 @@ To better support specific joysticks devices, you can also [provide your own cus
 
 ## Controls
 
-The Input System supports generic HID Input devices which are recognized as joysticks via the [`Joystick`](xref:UnityEngine.InputSystem.Joystick) class. Joystick devices can have any number of controls as reported by the Device's HID descriptor.
+The Input System supports generic HID Input devices which are recognized as joysticks with the [`Joystick`](xref:UnityEngine.InputSystem.Joystick) class. Joystick devices can have any number of controls as reported by the Device's HID descriptor.

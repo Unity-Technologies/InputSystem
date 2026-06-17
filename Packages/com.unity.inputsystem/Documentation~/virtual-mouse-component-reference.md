@@ -12,7 +12,7 @@ Use the **Cursor** properties to configure a virtual software cursor, and define
 
 |**Property**|**Description**|
 |--------|-----------|
-|**Cursor Mode**| Determine whether the virtual mouse should always use the cursor that it defines via the **Cursor Graphic** and **Cursor Transform** values, or whether it should use hardware cursors instead if it detects them. The options are: <br/>- **Software Cursor**: Use only the cursor that this Virtual Mouse component creates.  <br/>- **Hardware Cursor If Available**: Use a hardware cursor if the Input System detects a `Mouse` device. If it does not detect a `Mouse` device, the virtual mouse uses the software cursor as a fallback.  |
+|**Cursor Mode**| Determine whether the virtual mouse should always use the cursor that it defines with the **Cursor Graphic** and **Cursor Transform** values, or whether it should use hardware cursors instead if it detects them. The options are: <br/>- **Software Cursor**: Use only the cursor that this Virtual Mouse component creates.  <br/>- **Hardware Cursor If Available**: Use a hardware cursor if the Input System detects a `Mouse` device. If it does not detect a `Mouse` device, the virtual mouse uses the software cursor as a fallback.  |
 |**Cursor Graphic**| Select a UI graphic element for the software cursor's appearance. <br/><br/>The virtual mouse only uses this graphic for the software cursor, and not for hardware cursors. |
 |**Cursor Transform**| Set the starting transform for the software cursor. Moving the cursor updates the anchored position of the transform. <br/><br/>The virtual mouse only uses this transform for the software cursor, and not for hardware cursors. |
 

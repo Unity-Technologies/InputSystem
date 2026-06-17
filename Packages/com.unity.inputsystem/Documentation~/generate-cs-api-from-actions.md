@@ -4,7 +4,7 @@ uid: input-system-api-from-actions
 
 # Generate C# API from actions
 
-Input Action Assets allow you to **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. 
+Input action assets allow you to **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. 
 
 This removes the need to manually look up Actions and action maps using their names, and also provides an easy way to set up callbacks.
 

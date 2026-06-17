@@ -107,7 +107,7 @@ To apply this effect to all bindings, you can add the Processor to the Action it
 
 ![An example of a Scale Vector 2 Processor setup in the Input Action Asset Editor](./Images/Processors-Scale-Look.png)
 
-There are two bindings attached to the Action. The input value ranges of the two bindings are very different. To mitigate this difference, it helps to use a Scale Processor on each of the bindings. See how the Scale Processor normalizes the input data values for a joystick and a pointer (e.g., a mouse) in the images below.
+There are two bindings attached to the Action. The input value ranges of the two bindings are very different. To mitigate this difference, it helps to use a Scale Processor on each of the bindings. See how the Scale Processor normalizes the input data values for a joystick and a pointer (For example, a mouse) in the images below.
 
 ![An example of a Scale Vector 2 Processor setup in the Input Action Asset Editor](./Images/Processors-Scale-Look-Pointer.png)
 
@@ -128,7 +128,7 @@ The specified minimum value can filter out small movements or noise from the con
 
 #### Example: Accessibility enhancement
 
-You may want to use the Deadzone Processor to improve accessibility for physically challenging input gestures, such as very small movements on an input device. The sensitivity can be configurable through a game menu, for example. To filter out input events from tiny movements on a joystick (e.g., for trembling hands), here’s how you can modify the right stick binding of a gamepad to ignore input events for small input values:
+You may want to use the Deadzone Processor to improve accessibility for physically challenging input gestures, such as very small movements on an input device. The sensitivity can be configurable through a game menu, for example. To filter out input events from tiny movements on a joystick (For example, for trembling hands), here’s how you can modify the right stick binding of a gamepad to ignore input events for small input values:
 
 ![An example of a Stick Deadzone Processor setup in the Input Action Asset Editor](./Images/Processors-Deadzone-Editor.png)
 

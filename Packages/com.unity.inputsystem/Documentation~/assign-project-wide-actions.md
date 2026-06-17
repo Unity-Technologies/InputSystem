@@ -9,8 +9,8 @@ To assign an existing Actions Asset as project-wide, do one of the following:
 1. Go to **Edit** > **Project Settings** > **Input System Package**
 2. Drag the asset from your Project window into the **Project-wide Actions** field.
 
-![Screenshot of the Project Settings window, with Input System Package selected. Its settings are displayed on the right of the window. The Project-wide Actions field is empty, and an information box explaining you can assign an Action Asset as project-wide by selecting it in this field or creating it in this window is shown. A button to automatically create and assign the default project-wide Action Asset is displayed under the information box](./Images/InputSettingsNoProjectWideAsset.png)</br>
-*The Input System Package Project Settings with no project-wide actions assigned displays a button to create and assign a default project-wide Action Asset*
+![Screenshot of the Project Settings window, with Input System Package selected. Its settings are displayed on the right of the window. The Project-wide Actions field is empty, and an information box explaining you can assign an action asset as project-wide by selecting it in this field or creating it in this window is shown. A button to automatically create and assign the default project-wide action asset is displayed under the information box](./Images/InputSettingsNoProjectWideAsset.png)</br>
+*The Input System Package Project Settings with no project-wide actions assigned displays a button to create and assign a default project-wide action asset*
 
 or:
 

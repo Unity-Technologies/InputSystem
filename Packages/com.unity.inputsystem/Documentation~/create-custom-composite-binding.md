@@ -38,7 +38,7 @@ public class CustomComposite : InputBindingComposite<float>
 
     // Any public field that is not annotated with InputControlAttribute is considered
     // a parameter of the composite. This can be set graphically in the UI and also
-    // in the data (e.g. "custom(floatParameter=2.0)").
+    // in the data (For example, "custom(floatParameter=2.0)").
     public float floatParameter;
     public bool boolParameter;
 

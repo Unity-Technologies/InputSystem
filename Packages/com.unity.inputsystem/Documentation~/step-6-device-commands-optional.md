@@ -6,7 +6,7 @@ uid: input-system-step-6-optional
 
 A final, but optional, step is to add support for Device commands. A "device command" is that opposite of input. In other words, it consists of data traveling __to__ the input device, which might also return data as part of the operation (much like a function call). You can use this to communicate with the backend of the device in order to query configuration, or to initiate effects such as haptics. At the moment there isn't a proper interface available for this, however there are still some scenarios that can be solved with the current interfaces.
 
-E.g. the following shows, when implementing a non-hardware-backed device (simulated device), how to simulate hardware reporting that the device can be run in the background and supports sync commands. This is useful to prevent the device from cancelling Actions when application focus is lost and restored. For more information, refer to [Device syncs](#device-syncs)
+The following examples shows, when implementing a non-hardware-backed device (simulated device), how to simulate hardware reporting that the device can be run in the background and supports sync commands. This is useful to prevent the device from cancelling Actions when application focus is lost and restored. For more information, refer to [Device syncs](#device-syncs)
 
 ```CSharp
 public class MyDevice : InputDevice, IInputCallbackReceiver

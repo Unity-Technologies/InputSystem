@@ -4,7 +4,7 @@ uid: input-system-remove-device
 
 # Remove a device 
 
-When a Device is disconnected, it is removed from the system. A notification appears for [`InputDeviceChange.Removed`](xref:UnityEngine.InputSystem.InputDeviceChange) (sent via [`InputSystem.onDeviceChange`](xref:UnityEngine.InputSystem.InputSystem)) and the Devices are removed from the [`devices`](xref:UnityEngine.InputSystem.InputSystem) list. The system also calls [`InputDevice.OnRemoved`](xref:UnityEngine.InputSystem.InputDevice).
+When a Device is disconnected, it is removed from the system. A notification appears for [`InputDeviceChange.Removed`](xref:UnityEngine.InputSystem.InputDeviceChange) (sent with [`InputSystem.onDeviceChange`](xref:UnityEngine.InputSystem.InputSystem)) and the Devices are removed from the [`devices`](xref:UnityEngine.InputSystem.InputSystem) list. The system also calls [`InputDevice.OnRemoved`](xref:UnityEngine.InputSystem.InputDevice).
 
 The [`InputDevice.added`](xref:UnityEngine.InputSystem.InputDevice) flag is reset to false in the process.
 

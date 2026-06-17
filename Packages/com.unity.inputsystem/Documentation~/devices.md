@@ -16,7 +16,7 @@ Learn about supported input devices and their unique features in this section.
 | **[Joysticks](devices-joysticks.md)** | Configure devices that have at least one input stick and one button. |
 | **[Gamepads](devices-gamepads.md)** | Configure devices that have a D-pad and four face buttons. |
 | **[Sensors](devices-sensors.md)** | Configure devices that measure environmental input. |
-| **[Human Interface Device specification](hid-specification.md)** | Use the Human Interface Device specification to implement peripheral user input devices connected to computers via USB or Bluetooth. |
+| **[Human Interface Device specification](hid-specification.md)** | Use the Human Interface Device specification to implement peripheral user input devices connected to computers with USB or Bluetooth. |
 | **[Supported devices reference](supported-devices-reference.md)** | Explore platform support for each compatible device. |
 | **[Devices (scripting)](devices-scripting.md)** | Learn how to manage devices in code. |
 | **[Custom devices](custom-devices.md)** | Create events and custom devices. |

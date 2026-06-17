@@ -18,4 +18,4 @@ The Input package identifies and recognizes the following types of input devices
     * [Xbox gamepads](gamepads-xbox.md)  
 * [Sensors](devices-sensors.md): Devices which have sensors that measure environmental characteristics such as acceleration, or orientation.
 
-Additionally, the Input Package uses the [Human Interface Device (HID)](hid-specification.md) specification to create layouts for controls that connect via USB or Bluetooth connection. 
+Additionally, the Input Package uses the [Human Interface Device (HID)](hid-specification.md) specification to create layouts for controls that connect with USB or Bluetooth connection. 

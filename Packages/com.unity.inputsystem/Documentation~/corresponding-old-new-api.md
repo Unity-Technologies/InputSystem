@@ -12,11 +12,12 @@ All of the new Input System package APIs listed below are in the `UnityEngine.In
 Action-based input refers to reading pre-configured named axes, buttons, or other controls. ([Read more about Action-based input](./using-actions-workflow.md))
 
 - In the old Input Manager, these are defined in the **Axes** list, in the **Input Manager** section of the **Project Settings** window. _(Below, left)_
-- In the new Input System, these are defined in the [Actions Editor](actions-editor.md), which can be found in the **Input System Package** section of the **Project Settings** window, or by opening an [Action Asset](action-assets.md). _(Below, right)_
+- In the new Input System, these are defined in the [Actions Editor](actions-editor.md), which can be found in the **Input System Package** section of the **Project Settings** window, or by opening an [action asset](action-assets.md). _(Below, right)_
 
-![](Images/InputManagerVsInputActions.png)</br>_On the left, the old Input Manager Axes Configuration window, in Project settings. On the right, the new Input System's [Actions Editor](actions-editor.md)._
+![On the left, the old Input Manager Axes Configuration window, in Project settings. On the right, the new Input System's Actions Editor](Images/InputManagerVsInputActions.png)</br>_On the left, the old Input Manager Axes Configuration window, in Project settings. On the right, the new Input System's Actions Editor._
 
-__Note:__ In some cases for named axes and buttons, the new Input System requires slightly more code than the old Input Manager, but this results in better performance. This is because in the new Input System, the logic is separated into two parts: the first is to find and store a reference to the action (usually done once, for example in your `Start` method), and the second is to read the action (usually done every frame, for example in your `Update` method). In contrast, the old Input Manager used a string-based API to "find" and "read" the value at the same time, because it was not possible to store a reference to a button or axis. This results in worse performance, because the axis or button is looked up each time the value is read.
+> [!NOTE]
+> In some cases for named axes and buttons, the new Input System requires slightly more code than the old Input Manager, but this results in better performance. This is because in the new Input System, the logic is separated into two parts: the first is to find and store a reference to the action (usually done once, for example in your `Start` method), and the second is to read the action (usually done every frame, for example in your `Update` method). In contrast, the old Input Manager used a string-based API to "find" and "read" the value at the same time, because it was not possible to store a reference to a button or axis. This results in worse performance, because the axis or button is looked up each time the value is read.
 
 To find and store references to actions, which can be axes or buttons use [`FindAction`](xref:UnityEngine.InputSystem.InputActionAsset). For example:
 

@@ -17,7 +17,7 @@ To configure the Virtual Mouse component with the Unity UI system:
 > [!NOTE]
 > Do not set up gamepads and joysticks for [navigation input](supported-ui-input-types-navigation.md) while using the Virtual Mouse component. If, for example, the Virtual Mouse component is configured to receive input from gamepads, and `Move`, `Submit`, and `Cancel` on the UI Input Module are also linked to the gamepad, then the UI receives input from the gamepad on two channels, and triggers the input twice.
 
-## Control the virtual mouse via the Input System
+## Control the virtual mouse with the Input System
 
 To configure the input to drive the virtual mouse, do one of the following:
 

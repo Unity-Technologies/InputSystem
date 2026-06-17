@@ -16,7 +16,7 @@ The PlayerInput component also helps with local multi-player scenarios. You can 
 
 ![image alt text](./Images/PlayerInputWithGameplayEvents.png)
 
-In the above example image, you can see the PlayerInput component set up to map the "move", "jump" actions to `OnMove` and `OnJump` methods in a script, via Unity Events.
+In the above example image, you can see the PlayerInput component set up to map the "move", "jump" actions to `OnMove` and `OnJump` methods in a script, with Unity Events.
 
 This is an example of the script which would provide an implementation of these methods
 

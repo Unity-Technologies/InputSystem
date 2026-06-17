@@ -276,7 +276,7 @@ In addition, you can set these parameters on a 2D Vector Composite:
 
 |Parameter|Description|
 |---------|-----------|
-|[`mode`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|Whether to treat the inputs as digital or as analog controls.<br><br>If this is set to [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), inputs are treated as buttons (off if below [`defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings) and on if equal to or greater). Each input is 0 or 1 depending on whether the button is pressed or not. The vector resulting from the up/down/left/right parts is normalized. The result is a diamond-shaped 2D input range.<br><br>If this is set to [`Mode.Digital`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), the behavior is essentially the same as [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode) except that the resulting vector is not normalized.<br><br>Finally, if this is set to [`Mode.Analog`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), inputs are treated as analog (i.e. full floating-point values) and, other than [`down`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) and [`left`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) being inverted, values will be passed through as is.<br><br>The default is [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode).|
+|[`mode`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|Whether to treat the inputs as digital or as analog controls.<br><br>If this is set to [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), inputs are treated as buttons (off if below [`defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings) and on if equal to or greater). Each input is 0 or 1 depending on whether the button is pressed or not. The vector resulting from the up/down/left/right parts is normalized. The result is a diamond-shaped 2D input range.<br><br>If this is set to [`Mode.Digital`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), the behavior is essentially the same as [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode) except that the resulting vector is not normalized.<br><br>Finally, if this is set to [`Mode.Analog`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode), inputs are treated as analog (That is, full floating-point values) and, other than [`down`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) and [`left`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) being inverted, values will be passed through as is.<br><br>The default is [`Mode.DigitalNormalized`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.Mode).|
 
 > [!NOTE]
 > There is no support yet for interpolating between the up/down/left/right over time.
@@ -407,7 +407,7 @@ public class CustomComposite : InputBindingComposite<float>
 
     // Any public field that is not annotated with InputControlAttribute is considered
     // a parameter of the composite. This can be set graphically in the UI and also
-    // in the data (e.g. "custom(floatParameter=2.0)").
+    // in the data (For example, "custom(floatParameter=2.0)").
     public float floatParameter;
     public bool boolParameter;
 
@@ -473,7 +473,7 @@ public class CustomParameterEditor : InputParameterEditor<CustomComposite>
 
 ## Changing bindings
 
-In general, you can change existing bindings via the [`InputActionSetupExtensions.ChangeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) method. This returns an accessor that can be used to modify the properties of the targeted [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding). Note that most of the write operations of the accessor are destructive. For non-destructive changes to bindings, refer to [Applying Overrides](#applying-overrides).
+In general, you can change existing bindings with the [`InputActionSetupExtensions.ChangeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) method. This returns an accessor that can be used to modify the properties of the targeted [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding). Note that most of the write operations of the accessor are destructive. For non-destructive changes to bindings, refer to [Applying Overrides](#applying-overrides).
 
 ```CSharp
 // Get write access to the second binding of the 'fire' action.

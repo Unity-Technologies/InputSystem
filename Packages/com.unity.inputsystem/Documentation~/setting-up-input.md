@@ -11,7 +11,7 @@ Use actions, action assets, and the Input Actions Editor to define what input me
 | **Topic** | **Description** |
 | :--- | :--- |
 | **[Actions](actions.md)** | Separate input purpose from device controls and connect them with bindings. |
-| **[Input action assets](action-assets.md)** | Store actions, bindings, action maps, and control schemes in Input Action assets. |
+| **[Input action assets](action-assets.md)** | Store actions, bindings, action maps, and control schemes in Input action assets. |
 | **[Create action maps](create-edit-delete-action-maps.md)** | Group actions for different input scenarios such as gameplay and UI. |
 | **[Create, edit, and delete actions](create-edit-delete-actions.md)** | Create and manage actions in the Input Actions Editor. |
 | **[Configure actions](configure-actions.md)** | Set up action types, bindings, controls, schemes, interactions, and processors. |
