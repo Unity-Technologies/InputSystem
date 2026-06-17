@@ -21,7 +21,7 @@ When the Input System automatically creates a layout for an HID, it always repor
 
 The auto-generated layouts represent a best effort on the part of the Input System. The way HIDs describe themselves in accordance with the HID standard varies, so generated layouts might lead to controls that don't work as expected. For example, while the layout builder can identify hat switches and D-pads, it can often only make guesses as to which direction represents which. The same goes for individual buttons, which generally aren't assigned any meaning in HID.
 
-To resolve the situation of HIDs not working as expected, you can add a custom layout, which bypasses auto-generation altogether. See [Creating a custom device layout](http://localhost:57437/com.unity.inputsystem@1.12/manual/HID.html#creating-a-custom-device-layout) for details.
+To resolve the situation of HIDs not working as expected, you can add a custom layout, which bypasses auto-generation altogether. Refer to [Creating a custom device layout](http://localhost:57437/com.unity.inputsystem@1.12/manual/HID.html#creating-a-custom-device-layout) for details.
 
 ## HID in the Unity Editor
 

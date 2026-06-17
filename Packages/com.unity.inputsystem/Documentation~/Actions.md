@@ -7,14 +7,12 @@ uid: input-system-actions
 
 For example, the purpose of an input in a game might be to make the player's character move. The device control associated with that action might be the left gamepad stick.
 
-The association between an Action and the device controls which perform that input is a **binding**, and you can set up bindings in the [Input Actions editor](actions-editor.md). When you use Actions in your code, you do not need to refer to specific devices because the binding defines which device's controls are used to perform the action.
-
-To use actions in your code, you must use the [Input Actions editor](actions-editor.md) to configure the mapping between the Action and one or more device controls. For example in this screenshot, the "Move" action is displayed, showing its bindings the left gamepad stick, and the keyboard's arrow keys.
+To associate an action with one or more device controls, you set up input bindings in the [Input Actions Editor](actions-editor.md). Then you can refer to those actions in your code, instead of the specific devices. The input bindings define which device's controls are used to perform the action. For example this screenshot shows the "Move" action's bindings to the left gamepad stick and the keyboard's arrow keys.
 
 ![The Actions panel of the Input Actions Editor in Project Settings](Images/ActionsBinding.png)<br/>
 *The Actions panel of the Input Actions Editor in Project Settings*
 
-You can then get a reference to this action in your code, and check its value, or attach a callback method to be notified when it is performed. See the [Actions Workflow page](using-actions-workflow.md) for a simple example script demonstrating this.
+When you get a reference to an action in your code, you can use it to check its value, or attach a callback method to be notified when it is performed. For a simple example script demonstrating this, refer to [Workflow Overview - Actions](using-actions-workflow.md).
 
 Actions also make it simpler to create a system that lets your players [customize their bindings at runtime](rebind-action-runtime.md), which is a common requirement for games.
 

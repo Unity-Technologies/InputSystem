@@ -4,7 +4,7 @@ uid: input-system-configure-input-from-json
 
 # Configure input from JSON
 
-You can load Actions as JSON in the form of a set of Action Maps or as a full [`InputActionAsset`](xref:UnityEngine.InputSystem.InputActionAsset). This also works at runtime in the Player.
+You can load actions as JSON in the form of a set of action maps or as a full [`InputActionAsset`](xref:UnityEngine.InputSystem.InputActionAsset). This also works at runtime in the Player.
 
 ```CSharp
 // Load a set of action maps from JSON.

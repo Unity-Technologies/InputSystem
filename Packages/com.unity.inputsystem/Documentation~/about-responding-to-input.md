@@ -25,9 +25,9 @@ Once you have your actions set up, you can implement responses to those actions.
 
 There are two main techniques you can use to respond to actions in your project. These are to either use **polling** or an **event-driven** approach.
 
-- The **polling** approach refers to the technique of repeatedly checking the current state of your actions. Typically you do this in the `Update()` method of a `MonoBehaviour` script. See [polling actions](polling-actions.md) for further information.
+- The **polling** approach refers to the technique of repeatedly checking the current state of your actions. Typically you do this in the `Update()` method of a `MonoBehaviour` script. Refer to [polling actions](polling-actions.md) for further information.
 
-- The **event-driven** approach involves creating your own methods in code that are automatically called when an action is performed. See [Set callbacks on actions](set-callbacks-on-actions.md) for further information.
+- The **event-driven** approach involves creating your own methods in code that are automatically called when an action is performed. Refer to [Set callbacks on actions](set-callbacks-on-actions.md) for further information.
 
 For most common scenarios, especially action games where the user's input has a continuous centralized effect on an in-game character, **polling** is usually simpler and easier to implement. For other situations where input is less continuous, or directed to many different areas in your scene, an event-driven approach might be more appropriate.
 
@@ -35,5 +35,5 @@ For most common scenarios, especially action games where the user's input has a 
 
 The Input System also allows you to read device states directly, which bypasses many of the features such as actions and bindings. This workflow is suitable for fast prototyping, or single fixed platform scenarios, but is a less flexible workflow because it bypasses some useful Input System features.
 
-See [Read devices directly](read-devices-directly.md) for further information about this workflow.
+Refer to [Read devices directly](read-devices-directly.md) for further information about this workflow.
 

@@ -5,7 +5,7 @@ uid: input-system-edit-actions
 
 The simplest way to create, edit, or delete actions is to use the [Input Actions editor](actions-editor.md) in the Project Settings window. This is the primary recommended workflow and suitable for most scenarios.
 
-However there are many other ways to work with actions which might suit less common scenarios. For example, by [loading actions from JSON data](configure-input-from-json.md), or [creating actions entirely in code](configure-input-directly-from-code.md).
+However, there are many other ways to work with actions which might suit less common scenarios. For example, by [loading actions from JSON data](configure-input-from-json.md), or [creating actions entirely in code](configure-input-directly-from-code.md).
 
 ## Create Actions using the Action editor
 
@@ -35,13 +35,11 @@ You can also delete all action maps, or reset all the actions back to the defaul
 
 ## Other ways to create Actions
 
-The simplest way to create actions is to use the [Input Actions editor](actions-editor.md) to configure a set of actions in an asset, as described above. However, because the Input System package API is open and flexible, you can create actions using alternative techniques. These alternatives might be more suitable if you want to customize your project beyond the standard workflow.
-
-See:
+The Input System package API supports less common scenarios. To customize your project beyond the standard workflow, you can use these alternative techniques to create actions:
 
 - [Stand-alone actions](declare-standalone-actions.md)
 - [Loading actions from JSON](configure-input-from-json.md)
-- [Creating actions in code](./configure-input-from-code.md)
+- [Creating actions in code](configure-input-from-code.md)
 
 
 

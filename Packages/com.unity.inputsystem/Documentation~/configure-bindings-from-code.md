@@ -377,7 +377,7 @@ You can define new types of Composites, and register them with the API. Unity tr
 To define a new type of Composite, create a class based on [`InputBindingComposite<TValue>`](xref:UnityEngine.InputSystem.InputBindingComposite`1).
 
 > [!IMPORTANT]
-> Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on bindings, see [interactions](xref:input-system-interactions#writing-custom-interactions).
+> Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on bindings, refer to [interactions](xref:input-system-interactions#writing-custom-interactions).
 
 ```CSharp
 // Use InputBindingComposite<TValue> as a base class for a composite that returns
@@ -473,7 +473,7 @@ public class CustomParameterEditor : InputParameterEditor<CustomComposite>
 
 ## Changing Bindings
 
-In general, you can change existing bindings via the [`InputActionSetupExtensions.ChangeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) method. This returns an accessor that can be used to modify the properties of the targeted [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding). Note that most of the write operations of the accessor are destructive. For non-destructive changes to bindings, see [Applying Overrides](#applying-overrides).
+In general, you can change existing bindings via the [`InputActionSetupExtensions.ChangeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) method. This returns an accessor that can be used to modify the properties of the targeted [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding). Note that most of the write operations of the accessor are destructive. For non-destructive changes to bindings, refer to [Applying Overrides](#applying-overrides).
 
 ```CSharp
 // Get write access to the second binding of the 'fire' action.
@@ -537,7 +537,7 @@ You can override aspects of any Binding at run-time non-destructively. Specific 
 |[`processors`](xref:UnityEngine.InputSystem.InputBinding)|[`overrideProcessors`](xref:UnityEngine.InputSystem.InputBinding)|Replaces the [processors](processors.md) applied to the binding.<br><br>Example: `"invert,normalize(min=0,max=10)"`|
 |[`interactions`](xref:UnityEngine.InputSystem.InputBinding)|[`overrideInteractions`](xref:UnityEngine.InputSystem.InputBinding)|Replaces the [interactions](Interactions.md) applied to the binding.<br><br>Example: `"tap(duration=0.5)"`|
 
->NOTE: The `override` property values will not be saved along with the Actions (for example, when calling [`InputActionAsset.ToJson()`](xref:UnityEngine.InputSystem.InputActionAsset)). See [Saving and loading rebinds](#saving-and-loading-rebinds) for details about how to persist user rebinds.
+>NOTE: The `override` property values will not be saved along with the Actions (for example, when calling [`InputActionAsset.ToJson()`](xref:UnityEngine.InputSystem.InputActionAsset)). Refer to [Saving and loading rebinds](#saving-and-loading-rebinds) for details about how to persist user rebinds.
 
 To set the various `override` properties, you can use the [`ApplyBindingOverride`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions) APIs.
 

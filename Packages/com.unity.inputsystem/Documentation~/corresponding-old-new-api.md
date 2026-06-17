@@ -62,7 +62,7 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 [`Input.anyKeyDown`](https://docs.unity3d.com/ScriptReference/Input-anyKeyDown.html)|Use [`Keyboard.current.anyKey.wasUpdatedThisFrame`](xref:UnityEngine.InputSystem.Keyboard)
 [`Input.compositionCursorPos`](https://docs.unity3d.com/ScriptReference/Input-compositionCursorPos.html)|Use [`Keyboard.current.SetIMECursorPosition(myPosition)`](xref:UnityEngine.InputSystem.Keyboard)
 [`Input.compositionString`](https://docs.unity3d.com/ScriptReference/Input-compositionString.html)|Subscribe to the [`Keyboard.onIMECompositionChange`](xref:UnityEngine.InputSystem.Keyboard).
-[`Input.imeCompositionMode`](https://docs.unity3d.com/ScriptReference/Input-imeCompositionMode.html)|Use: [`Keyboard.current.SetIMEEnabled(true)`](xref:UnityEngine.InputSystem.Keyboard)<br/>Also see: [Keyboard text input documentation](read-keyboard-text-input.md#working-with-input-from-input-method-editors).
+[`Input.imeCompositionMode`](https://docs.unity3d.com/ScriptReference/Input-imeCompositionMode.html)|Use: [`Keyboard.current.SetIMEEnabled(true)`](xref:UnityEngine.InputSystem.Keyboard)<br/>Refer to [Keyboard text input documentation](read-keyboard-text-input.md#working-with-input-from-input-method-editors).
 [`Input.imeIsSelected`](https://docs.unity3d.com/ScriptReference/Input-imeIsSelected.html)|Use: [`Keyboard.current.imeSelected`](xref:UnityEngine.InputSystem.Keyboard)
 [`Input.inputString`](https://docs.unity3d.com/ScriptReference/Input-inputString.html)|Subscribe to the [`Keyboard.onTextInput`](xref:UnityEngine.InputSystem.Keyboard) event:<br/>`Keyboard.current.onTextInput += character => /* ... */;`
 

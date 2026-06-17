@@ -71,6 +71,7 @@
   * [Configure input from code](configure-input-from-code.md)
     * [Declare stand alone actions](declare-standalone-actions.md)
     * [Configure input from JSON](configure-input-from-json.md)
+    * [Create actions in code](create-actions-in-code.md)
     * [Configure Bindings from code](configure-bindings-from-code.md)
 * [Responding to input](respond-to-input.md)
   * [About responding to input](about-responding-to-input.md)

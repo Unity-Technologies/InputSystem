@@ -13,4 +13,4 @@ uid: input-system-default-value-properties
 |Default Slow Tap Time|Default duration for [SlowTap](built-in-interactions.md#tap) Interactions.|
 |Default Hold Time|Default duration for [Hold](built-in-interactions.md#hold) Interactions.|
 |Tap Radius|Maximum distance between two finger taps on a touchscreen Device for the system to consider this a tap of the same touch (as opposed to a new touch).|
-|Multi Tap Delay Time|Default delay between taps for [MultiTap](built-in-interactions.md#multitap) Interactions. Also used by touchscreen Devices to count multi-taps (See [`TouchControl.tapCount`](xref:UnityEngine.InputSystem.Controls.TouchControl)).|
+|Multi Tap Delay Time|Default delay between taps for [MultiTap](built-in-interactions.md#multitap) Interactions. Also used by touchscreen Devices to count multi-taps (Refer to [`TouchControl.tapCount`](xref:UnityEngine.InputSystem.Controls.TouchControl)).|
