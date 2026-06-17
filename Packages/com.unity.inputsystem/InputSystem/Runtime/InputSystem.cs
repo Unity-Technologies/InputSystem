@@ -3535,15 +3535,31 @@ namespace UnityEngine.InputSystem
             var projectWideActions = s_Manager?.actions;
             if (projectWideActions != null)
             {
-                foreach (var map in projectWideActions.actionMaps)
-                {
-                    map.m_State = null;
-                    map.m_MapIndexInState = InputActionState.kInvalidIndex;
-                    map.m_EnabledActionsCount = 0;
-                }
-                projectWideActions.m_SharedStateForAllMaps = null;
+                DisconnectActionMaps(projectWideActions);
                 s_Manager.actions = null;
             }
+
+            // Also disconnect the configured project-wide asset even if manager.actions is null.
+            // RelinkRestoredStates() restores m_EnabledActionsCount on maps after Restore(). If a
+            // subsequent test's manager.actions is null (e.g. a previous OneTimeTearDown cleared it),
+            // TestHook_DisableActions would be a no-op and those maps would keep m_State set and
+            // m_EnabledActionsCount == m_Actions.Length. InputActionMap.Enable() would then
+            // early-return thinking all actions are already enabled, but the state is not in
+            // s_GlobalState (which was cleared by SaveAndResetState()). See IN-107889.
+            var configuredActions = InputManager.s_GetProjectWideActions?.Invoke();
+            if (configuredActions != null && configuredActions != projectWideActions)
+                DisconnectActionMaps(configuredActions);
+        }
+
+        private static void DisconnectActionMaps(InputActionAsset asset)
+        {
+            foreach (var map in asset.actionMaps)
+            {
+                map.m_State = null;
+                map.m_MapIndexInState = InputActionState.kInvalidIndex;
+                map.m_EnabledActionsCount = 0;
+            }
+            asset.m_SharedStateForAllMaps = null;
         }
 
         internal static void TestHook_EnableActions()
