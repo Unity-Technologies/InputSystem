@@ -39,7 +39,8 @@ InputSystem.QueueStateEvent(Touchscreen.current,
     new TouchState { touchId = 1, phase = TouchPhase.Ended, position = new Vector2(123, 234) });
 ```
 
->__IMPORTANT:__ [Touch IDs](xref:UnityEngine.InputSystem.Controls.TouchControl) cannot be 0! A valid touch must have a non-zero touch ID. Concurrent touches must each have a unique ID. After a touch has ended, its ID can be reused &ndash; although it is recommended to not do so.
+> [!IMPORTANT]
+> [Touch IDs](xref:UnityEngine.InputSystem.Controls.TouchControl) cannot be 0! A valid touch must have a non-zero touch ID. Concurrent touches must each have a unique ID. After a touch has ended, its ID can be reused &ndash; although it is recommended to not do so.
 
 If the exact format of the state used by a given Device is not known, the easiest way to send input to it is to simply create a [`StateEvent`](xref:UnityEngine.InputSystem.LowLevel.StateEvent) from the Device itself:
 

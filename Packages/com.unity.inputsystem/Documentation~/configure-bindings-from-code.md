@@ -300,7 +300,7 @@ myAction.AddCompositeBinding("3DVector(mode=2)")
     .With("Right", "<Gamepad>/leftStick/right");
 ```
 
-The 3D vector Composite has four Part Bindings.
+The 3D vector Composite has six Part Bindings.
 
 |Part Binding|Type|Description|
 |----|----|-----------|

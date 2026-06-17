@@ -20,7 +20,7 @@ Once generated, you can register the precompiled layout with the Input System us
 InputSystem.RegisterPrecompiledLayout<MyPrecompiledDevice>(MyPrecompiledDevice.metadata);
 ```
 
-> [!Important]
+> [!IMPORTANT] 
 > It is very important that this method is called with all relevant layout registrations being in the same state as at the time the layout was precompiled. There is no internal check whether the precompiled layout will still generate an identical result to the non-precompiled version.
 
 Once registered, a precompiled layout is automatically used whenever the layout that the precompiled layout is based on is instantiated.

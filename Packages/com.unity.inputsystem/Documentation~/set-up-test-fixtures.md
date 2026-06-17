@@ -40,7 +40,8 @@ class MyTests : InputTestFixture
 }
 ```
 
->__IMPORTANT:__ If you do this, do __not__ add a `[SetUp]` or `[TearDown]` method. Doing so will cause the methods in [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) to not be called, thus leading to the test fixture not properly initializing or shutting down. Instead, override the `Setup` and/or `TearDown` method inherited from `InputTestFixture`.
+> [!IMPORTANT] 
+> If you do this, do __not__ add a `[SetUp]` or `[TearDown]` method. Doing so will cause the methods in [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) to not be called, thus leading to the test fixture not properly initializing or shutting down. Instead, override the `Setup` and/or `TearDown` method inherited from `InputTestFixture`.
 
 Alternatively, you can instantiate it in your fixture:
 

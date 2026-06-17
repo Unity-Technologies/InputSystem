@@ -4,7 +4,7 @@ uid: input-system-existing-project-wide
 
 # Assign an existing action asset as project-wide
 
-To assign an existing Actions Asset as project-wide, do one of the following:
+To assign an existing actions asset as project-wide, do one of the following:
 
 1. Go to **Edit** > **Project Settings** > **Input System Package**
 2. Drag the asset from your Project window into the **Project-wide Actions** field.
