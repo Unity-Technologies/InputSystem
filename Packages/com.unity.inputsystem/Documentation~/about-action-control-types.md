@@ -6,7 +6,7 @@ uid: input-system-about-action-control-types
 
 Each action has an **action type** and a **control type**. These settings are displayed in the [Action Properties panel](./action-properties-panel-reference.md) when you select an action in the [Actions Editor window](./actions-editor.md).
 
-![The Action Properties panel in the Actions Editor Window](Images/ActionProperties.png)
+![The Action Properties panel of the Input Actions Editor displays the Action, Interactions, and Processors groups expanded.](Images/ActionProperties.png)
 
 When you configure an action, you can select an action type and control type that best represents what your action is for, and how you want it to be activated by the [controls](./controls.md) it is [bound](./bindings.md) to.
 

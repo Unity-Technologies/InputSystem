@@ -41,5 +41,5 @@ You can assign multiple Bindings to the same part, and duplicate, cut, copy and 
 
 By duplicating bindings and then editing the new duplicates, you can bind multiple contrls to the same composite part. For example, to create a single 2D composite which receives input from the WSAD keys and the arrow keys on a keyboard.
 
-![Duplicated Part Bindings](./Images/DuplicatedPartBindings.png)<br/>
+![The Keyboard setting under Move on the Actions panel displays duplicated part bindings.](./Images/DuplicatedPartBindings.png)<br/>
 *A composite 2D vector binding with duplicated parts, allowing multiple keyboard keys to activate the same part of the composite.*

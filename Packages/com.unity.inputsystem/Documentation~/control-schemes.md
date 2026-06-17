@@ -6,7 +6,7 @@ uid: input-system-control-schemes
 
 Input Action Assets can have multiple [Control Schemes](control-schemes.md), which let you enable or disable different sets of Bindings for your Actions for different types of Devices.
 
-![Control Scheme Properties](Images/ControlSchemeProperties.png)
+![Gamepad appears as the Scheme Name value on the Add Control Scheme window.](Images/ControlSchemeProperties.png)
 
 To see the Control Schemes in the Input Action Asset editor window, open the Control Scheme drop-down list in the top left of the window. This menu lets you add or remove Control Schemes to your Actions Asset. If the Actions Asset contains any Control Schemes, you can select a Control Scheme, and then the window only shows bindings that are associated with that Scheme. If you select a binding, you can now pick the Control Schemes for which this binding should be active in the __Properties__ view to the left of the window.
 

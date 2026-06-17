@@ -32,7 +32,7 @@ To select the control path for a binding from a list of available controls:
 
    2. Select the control you want from the list.
 
-![Control Picker](Images/InputControlPicker.png)
+![The Binding Properties panel displays the control picker window available from the Path dropdown menu.](Images/InputControlPicker.png)
 
 Unity filters this list by the Action's [`Control Type`](control-types-reference.md) property. For example, if the Control type is `Vector2`, you can only select a Control that generates two-dimensional values, like a stick.
 
