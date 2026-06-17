@@ -22,7 +22,7 @@ Once you have created and assigned the default project-wide actions, the Actions
 
 The [Input Actions Editor](actions-editor.md) provides a way to define and manage Actions which relate to what you want users to be able to do in your game or app. It also allows you to create bindings between your Actions and one or more types of control on various devices, such as a stick on a gamepad, a key on a keyboard, or a button on an XR controller.
 
-Actions and Bindings allows you to separate the conceptual actions that you want in your game or app from the specific devices and controls that a player has to use to perform the actions, which can make your code simpler and more flexible. This is in contrast to [directly reading device states](using-direct-workflow.md) in your code, which can suit simple projects, but can become unwieldy and inflexible for more complex projects.
+Actions and bindings allows you to separate the conceptual actions that you want in your game or app from the specific devices and controls that a player has to use to perform the actions, which can make your code simpler and more flexible. This is in contrast to [directly reading device states](using-direct-workflow.md) in your code, which can suit simple projects, but can become unwieldy and inflexible for more complex projects.
 
 ### The default Actions
 
@@ -106,6 +106,6 @@ public class Example : MonoBehaviour
 
 This is the recommended workflow with the Input System Package, providing a flexible but simple solution suitable for most projects.
 
-You benefit from the Action-based features such as Action Maps, Bindings, and the ability to configure them in the Actions Editor. You can also implement [user rebinding at runtime](rebind-action-runtime.md).
+You benefit from the action-based features such as action maps, bindings, and the ability to configure them in the Actions Editor. You can also implement [user rebinding at runtime](rebind-action-runtime.md).
 
 This workflow alone doesn't provide built-in support for local multiplayer scenarios with multiple devices, so if you are producing a local multiplayer game you might want to consider using the [Actions and the PlayerInput Component](using-playerinput-workflow.md) workflow.

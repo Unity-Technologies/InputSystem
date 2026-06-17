@@ -9,20 +9,20 @@ Each `InputBinding` has the following properties:
 |Property|Description|
 |--------|-----------|
 |[`path`](xref:UnityEngine.InputSystem.InputBinding)|[Control path](controls.md#control-paths) that identifies the control(s) from which the Action should receive input.<br><br>Example: `"<Gamepad>/leftStick"`|
-|[`overridePath`](xref:UnityEngine.InputSystem.InputBinding)|[Control path](controls.md#control-paths) that overrides `path`. Unlike `path`, `overridePath` is not persistent, so you can use it to non-destructively override the path on a Binding. If it is set to something other than null, it takes effect and overrides `path`.  To get the path which is currently in effect (that is, either `path` or `overridePath`), you can query the [`effectivePath`](xref:UnityEngine.InputSystem.InputBinding) property.|
-|[`action`](xref:UnityEngine.InputSystem.InputBinding)|The name or ID of the Action that the Binding should trigger. Note that this can be null or empty (for instance, for  [composites](#composite-bindings)). Not case-sensitive.<br><br>Example: `"fire"`|
-|[`groups`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of Binding groups that the Binding belongs to. Can be null or empty. Binding groups can be anything, but are mostly used for [Control Schemes](#control-schemes). Not case-sensitive.<br><br>Example: `"Keyboard&Mouse;Gamepad"`|
-|[`interactions`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of [Interactions](Interactions.md) to apply to input on this Binding. Note that Unity appends Interactions applied to the [Action](actions.md) itself (if any) to this list. Not case-sensitive.<br><br>Example: `"slowTap;hold(duration=0.75)"`|
-|[`processors`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of [Processors](processors.md) to apply to input on this Binding. Note that Unity appends Processors applied to the [Action](actions.md) itself (if any) to this list. Not case-sensitive.<br><br>Processors on Bindings apply in addition to Processors on Controls that are providing values. For example, if you put a `stickDeadzone` Processor on a Binding and then bind it to `<Gamepad>/leftStick`, you get deadzones applied twice: once from the deadzone Processor sitting on the `leftStick` Control, and once from the Binding.<br><br>Example: `"invert;axisDeadzone(min=0.1,max=0.95)"`|
-|[`id`](xref:UnityEngine.InputSystem.InputBinding)|Unique ID of the Binding. You can use it to identify the Binding when storing Binding overrides in user settings, for example.|
-|[`name`](xref:UnityEngine.InputSystem.InputBinding)|Optional name of the Binding. Identifies part names inside [Composites](#composite-bindings).<br><br>Example: `"Positive"`|
-|[`isComposite`](xref:UnityEngine.InputSystem.InputBinding)|Whether the Binding acts as a [Composite](#composite-bindings).|
-|[`isPartOfComposite`](xref:UnityEngine.InputSystem.InputBinding)|Whether the Binding is part of a [Composite](#composite-bindings).|
+|[`overridePath`](xref:UnityEngine.InputSystem.InputBinding)|[Control path](controls.md#control-paths) that overrides `path`. Unlike `path`, `overridePath` is not persistent, so you can use it to non-destructively override the path on a binding. If it is set to something other than null, it takes effect and overrides `path`.  To get the path which is currently in effect (that is, either `path` or `overridePath`), you can query the [`effectivePath`](xref:UnityEngine.InputSystem.InputBinding) property.|
+|[`action`](xref:UnityEngine.InputSystem.InputBinding)|The name or ID of the action that the binding should trigger. Note that this can be null or empty (for instance, for  [composites](#composite-bindings)). Not case-sensitive.<br><br>Example: `"fire"`|
+|[`groups`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of binding groups that the binding belongs to. Can be null or empty. Binding groups can be anything, but are mostly used for [Control Schemes](#control-schemes). Not case-sensitive.<br><br>Example: `"Keyboard&Mouse;Gamepad"`|
+|[`interactions`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of [Interactions](Interactions.md) to apply to input on this binding. Note that Unity appends Interactions applied to the [Action](actions.md) itself (if any) to this list. Not case-sensitive.<br><br>Example: `"slowTap;hold(duration=0.75)"`|
+|[`processors`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of [Processors](processors.md) to apply to input on this binding. Note that Unity appends Processors applied to the [Action](actions.md) itself (if any) to this list. Not case-sensitive.<br><br>Processors on bindings apply in addition to Processors on Controls that are providing values. For example, if you put a `stickDeadzone` Processor on a binding and then bind it to `<Gamepad>/leftStick`, you get deadzones applied twice: once from the deadzone Processor sitting on the `leftStick` Control, and once from the binding.<br><br>Example: `"invert;axisDeadzone(min=0.1,max=0.95)"`|
+|[`id`](xref:UnityEngine.InputSystem.InputBinding)|Unique ID of the binding. You can use it to identify the binding when storing binding overrides in user settings, for example.|
+|[`name`](xref:UnityEngine.InputSystem.InputBinding)|Optional name of the binding. Identifies part names inside [Composites](#composite-bindings).<br><br>Example: `"Positive"`|
+|[`isComposite`](xref:UnityEngine.InputSystem.InputBinding)|Whether the binding acts as a [Composite](#composite-bindings).|
+|[`isPartOfComposite`](xref:UnityEngine.InputSystem.InputBinding)|Whether the binding is part of a [Composite](#composite-bindings).|
 
 To query a flat list of bindings for all actions in an action map, use [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap.bindings).
 
 
-## Erasing Bindings
+## Erasing bindings
 
 You can erase a binding by calling [`Erase`](xref:UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax) on the [binding accessor](xref:UnityEngine.InputSystem.InputActionSetupExtensions.BindingSyntax).
 
@@ -41,7 +41,7 @@ playerInput.actions["move"].ChangeCompositeBinding("WASD").Erase();
 playerInput.actions.FindActionMap("gameplay").ChangeBinding(0).Erase();
 ```
 
-## Adding Bindings
+## Adding bindings
 
 New bindings can be added to an Action using [`AddBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) or [`AddCompositeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions).
 
@@ -60,7 +60,7 @@ playerInput.actions["move"]
 
 ## Setting parameters
 
-A Binding may, either through itself or through its associated Action, lead to [processor](processors.md), [interaction](Interactions.md), and/or [composite](#composite-bindings) objects being created. These objects can have parameters you can configure through in the [Binding properties view](actions-editor.md#bindings) of the Action editor or through the API. This configuration will give parameters their default value.
+A binding might, either through itself or through its associated action, lead to [processor](processors.md), [interaction](Interactions.md), and/or [composite](#composite-bindings) objects being created. These objects can have parameters you can configure through in the [Binding properties view](actions-editor.md#bindings) of the Action editor or through the API. This configuration will give parameters their default value.
 
 ```CSharp
 // Create an action with a "Hold" interaction on it.
@@ -168,7 +168,7 @@ look.ApplyParameterOverride("scaleVector2:y", 0.5f, new InputBinding("<Mouse>/de
 
 >NOTE: Parameter overrides are *not* persisted along with an asset.
 
-## Composite Bindings
+## Composite bindings
 
 To create composites in code, use the [`AddCompositeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) method.
 
@@ -340,7 +340,7 @@ The button with one Modifier Composite has two Part Bindings.
 
 |Part Binding|Type|Description|
 |----|----|-----------|
-|[`modifier`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite.modifier)|`Button`|Modifier that has to be held for `binding` to come through. If the user holds any of the buttons bound to the `modifier` at the same time as the button that triggers the action, the Composite assumes the value of the `modifier` Binding. If the user does not press any button bound to the `modifier`, the Composite remains at default value.|
+|[`modifier`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite.modifier)|`Button`|Modifier that has to be held for `binding` to come through. If the user holds any of the buttons bound to the `modifier` at the same time as the button that triggers the action, the Composite assumes the value of the `modifier` binding. If the user does not press any button bound to the `modifier`, the Composite remains at default value.|
 |[`binding`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite.binding)|Any|The control(s) whose value the Composite assumes while the user holds down the `modifier` button.|
 
 This Composite has no parameters.
@@ -447,7 +447,7 @@ public class CustomComposite : InputBindingComposite<float>
 }
 ```
 
-The Composite should now appear in the editor UI when you add a Binding, and you can now use it in scripts.
+The Composite should now appear in the editor UI when you add a binding, and you can now use it in scripts.
 
 ```CSharp
     myAction.AddCompositeBinding("custom(floatParameter=2.0)")
@@ -471,7 +471,7 @@ public class CustomParameterEditor : InputParameterEditor<CustomComposite>
 ```
 
 
-## Changing Bindings
+## Changing bindings
 
 In general, you can change existing bindings via the [`InputActionSetupExtensions.ChangeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) method. This returns an accessor that can be used to modify the properties of the targeted [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding). Note that most of the write operations of the accessor are destructive. For non-destructive changes to bindings, refer to [Applying Overrides](#applying-overrides).
 
@@ -521,15 +521,15 @@ playerInput.actions["move"].ChangeBinding("WASD")
 Control schemes allow you to group types of bindings together according to their control type, so that you can enable or disable groups of bindings. For example, you might want to enable all keyboard and mouse bindings if the user presses a keyboard button or moves the mouse.
 
 
-Unity stores these on the [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding) class as a semicolon-separated string in the  [`InputBinding.groups`](xref:UnityEngine.InputSystem.InputBinding) property, and you can use them for any arbitrary grouping of bindings. To enable different sets of binding groups for an [`InputActionMap`](xref:UnityEngine.InputSystem.InputActionMap) or [`InputActionAsset`](xref:UnityEngine.InputSystem.InputActionAsset), you can use the [`InputActionMap.bindingMask`](xref:UnityEngine.InputSystem.InputActionMap)/[`InputActionAsset.bindingMask`](xref:UnityEngine.InputSystem.InputActionAsset) property. The Input System uses this to implement the concept of grouping Bindings into different  [`InputControlSchemes`](xref:UnityEngine.InputSystem.InputControlScheme).
+Unity stores these on the [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding) class as a semicolon-separated string in the  [`InputBinding.groups`](xref:UnityEngine.InputSystem.InputBinding) property, and you can use them for any arbitrary grouping of bindings. To enable different sets of binding groups for an [`InputActionMap`](xref:UnityEngine.InputSystem.InputActionMap) or [`InputActionAsset`](xref:UnityEngine.InputSystem.InputActionAsset), you can use the [`InputActionMap.bindingMask`](xref:UnityEngine.InputSystem.InputActionMap)/[`InputActionAsset.bindingMask`](xref:UnityEngine.InputSystem.InputActionAsset) property. The Input System uses this to implement the concept of grouping bindings into different  [`InputControlSchemes`](xref:UnityEngine.InputSystem.InputControlScheme).
 
-Control Schemes use Binding groups to map Bindings in an [`InputActionMap`](xref:UnityEngine.InputSystem.InputActionMap) or [`InputActionAsset`](xref:UnityEngine.InputSystem.InputActionAsset) to different types of Devices. The [`PlayerInput`](player-input-component.md) class uses these to enable a matching Control Scheme for a new [user](user-management.md) joining the game, based on the Device they are playing on.
+Control Schemes use binding groups to map bindings in an [`InputActionMap`](xref:UnityEngine.InputSystem.InputActionMap) or [`InputActionAsset`](xref:UnityEngine.InputSystem.InputActionAsset) to different types of Devices. The [`PlayerInput`](player-input-component.md) class uses these to enable a matching Control Scheme for a new [user](user-management.md) joining the game, based on the Device they are playing on.
 
 
 
 ### Apply binding overrides
 
-You can override aspects of any Binding at run-time non-destructively. Specific properties of [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding) have an `override` variant that, if set, will take precedent over the property that they shadow.  All `override` properties are of type `String`.
+You can override aspects of any binding at run-time non-destructively. Specific properties of [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding) have an `override` variant that, if set, will take precedent over the property that they shadow.  All `override` properties are of type `String`.
 
 |Property|Override|Description|
 |--------|--------|-----------|

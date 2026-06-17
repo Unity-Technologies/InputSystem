@@ -9,4 +9,4 @@ The Input System provides a set of default Interactions for each Action type, an
 |Topic|Description|
 |-----|-----------|
 | [**Default interactions**](default-interactions.md) | Use the default Interaction configuration for Value-type Actions, Button-type Actions, and PassThrough-type Actions. |
-| [**Built-in interactions**](built-in-interactions.md) | Use the Input System's built-in Interactions for Actions and Bindings. |
+| [**Built-in interactions**](built-in-interactions.md) | Use the Input System's built-in Interactions for actions and bindings. |

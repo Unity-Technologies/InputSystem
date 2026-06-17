@@ -32,7 +32,7 @@ Changing a composite binding's type will change which parts it has, and any conf
 
 ## Add or remove extra parts of the composite
 
-You can assign multiple Bindings to the same part, and duplicate, cut, copy and paste individual part bindings. To do this:
+You can assign multiple bindings to the same part, and duplicate, cut, copy and paste individual part bindings. To do this:
 
 1. In the Actions panel, select the Action whose composite binding you want to edit.
 2. Expand the Action's hierarchy as necessary to display the composite binding and its parts.

@@ -4,7 +4,7 @@ uid: input-system-built-in-interactions
 
 # Built-in interactions
 
-The Input System package comes with a set of built-in Interactions, which you can use on Actions and Bindings:
+The Input System package comes with a set of built-in interactions, which you can use on actions and bindings:
 
 * [`PressInteraction`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)
 * [`HoldInteraction`](xref:UnityEngine.InputSystem.Interactions.HoldInteraction)
@@ -17,7 +17,7 @@ Each built-in Interaction has its own parameters, and responds differently to In
 > [!NOTE]
 > The built-in Interactions operate on Control actuation and don't use Control values directly. The Input System evaluates the `pressPoint` parameters against the magnitude of the Control actuation. This means you can use these Interactions on any Control which has a magnitude, such as sticks, and not just on buttons.
 
-If an Action or Binding has no Interaction set, the system uses its [default Interaction](default-interactions.md).
+If an action or binding has no interaction set, the system uses its [default Interaction](default-interactions.md).
 
 ## Press
 

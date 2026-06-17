@@ -50,9 +50,9 @@ Instead of browsing the tree to find the Control you want, if you have the devic
 
 ### Enter the path directly by typing text
 
-You can choose to manually type the Binding path as text instead of using the Control picker. To do this:
+You can choose to manually type the binding path as text instead of using the Control picker. To do this:
 
-1. Select the __T__ button next to the Control path popup. This changes the **path** field from a popup menu to a text field, where you can enter any Binding string.
+1. Select the __T__ button next to the Control path popup. This changes the **path** field from a popup menu to a text field, where you can enter any binding string.
 2. Type the control path's binding string into the text field. 
 
 Refer to [control paths format](./control-paths.md#format) for more details about valid syntax for this field. 

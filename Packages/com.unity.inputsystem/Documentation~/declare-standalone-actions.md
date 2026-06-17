@@ -25,12 +25,12 @@ When you define serialized `InputAction` fields in a `MonoBehaviour` component t
 
 This interface allows you to set up the bindings for those actions. For example:
 
-* To add or remove Actions or Bindings, click the Add (+) or Remove (-) icon in the header.
-* To edit Bindings, double-click them.
-* To edit Actions, double-click them in an Action Map, or click the gear icon on individual Action properties.
+* To add or remove actions or bindings, click the Add (+) or Remove (-) icon in the header.
+* To edit bindings, double-click them.
+* To edit actions, double-click them in an action map, or click the gear icon on individual action properties.
 * You can also right-click entries to bring up a context menu, and you can drag them. Hold the Alt key and drag an entry to duplicate it.
 * To duplicate an entry, hold the Alt key while dragging it.
 
-Unlike the project-wide actions in the **Project Settings** window, you must manually enable and disable Actions and Action Maps that are embedded in MonoBehaviour components.
+Unlike the project-wide actions in the **Project Settings** window, you must manually enable and disable Actions and action maps that are embedded in MonoBehaviour components.
 
 When you use this workflow, the serialized action configurations are stored with the parent GameObject as part of the scene, instead of being serialized with an action asset. This can be useful if you want to bundle the control bindings and behavior together in a single MonoBehaviour or prefab, so it can be distributed together. However, this can also make it harder to organize your full set of control bindings if they are distributed across multiple prefabs or scenes.

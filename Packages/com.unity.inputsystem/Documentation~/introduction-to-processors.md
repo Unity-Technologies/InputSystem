@@ -7,7 +7,7 @@ uid: input-system-intro-processors
 An Input Processor takes a value and returns a processed result for it. The received value and result value must be of the same type. For example, you can use a [clamp](#clamp) Processor to clamp values from a control to a certain range.
 
 > [!NOTE]
-> To convert received input values into different types, refer to [composite Bindings](ActionBindings.md#composite-bindings).
+> To convert received input values into different types, refer to [Composite Bindings](ActionBindings.md#composite-bindings).
 
 ## Using Processors
 
@@ -35,7 +35,7 @@ Refer to the [Processor Types](ProcessorTypes.md) for a comprehensive list and i
 
 ### Invert
 
-The [Invert Processor](ProcessorTypes.md#invert) inverts input values of any type (e.g. float, Vector2, or Vector3) by multiplying them by `-1`. This results in effects such as reversing player navigation, for example, the left arrow would be interpreted as a right arrow, and vice versa.
+The [Invert Processor](ProcessorTypes.md#invert) inverts input values of any type (for example, float, Vector2, or Vector3) by multiplying them by `-1`. This results in effects such as reversing player navigation, for example, the left arrow would be interpreted as a right arrow, and vice versa.
 
 #### Example: Ship navigation
 
@@ -47,7 +47,7 @@ To use an axis control to mimic a ship's rudder, inverting the input produces th
 
 ![This picture shows a ship rotated to the right while the On-Screen control stick was moved to the left](./Images/Processors-Ship-Right.png)
 
-You can achieve this by using an Invert Processor on the Action or the Binding. In this scenario, the Processor is applied to the Binding. Note that inversion is enabled for the X axis but not for the Y axis. Inverting the Y axis would cause the ship to move backward when the joystick is pulled upward. The following image shows the setup in the Action Asset Editor.
+You can achieve this by using an Invert Processor on the Action or the binding. In this scenario, the Processor is applied to the binding. Note that inversion is enabled for the X axis but not for the Y axis. Inverting the Y axis would cause the ship to move backward when the joystick is pulled upward. The following image shows the setup in the Action Asset Editor.
 
 ![This picture shows the setup of a Invert Vector 2 Processor in the Input Action Asset Editor](./Images/Processors-Invert-Editor.png)
 
@@ -88,7 +88,7 @@ To ensure the player always moves at a constant speed where the input simply tri
 
 In the images shown above, the player moves forward at a constant speed, regardless of how far the joystick is pushed upward.
 
-To apply the Processor, add it to the Binding, as shown in the image below.
+To apply the Processor, add it to the binding, as shown in the image below.
 
 ![An example of a Normalize Vector 2 Processor setup in the Input Action Asset Editor](./Images/Processors-NormalizeAsset.png)
 
@@ -107,7 +107,7 @@ To apply this effect to all bindings, you can add the Processor to the Action it
 
 ![An example of a Scale Vector 2 Processor setup in the Input Action Asset Editor](./Images/Processors-Scale-Look.png)
 
-There are two Bindings attached to the Action. The input value ranges of the two bindings are very different. To mitigate this difference, it helps to use a Scale Processor on each of the Bindings. See how the Scale Processor normalizes the input data values for a joystick and a pointer (e.g., a mouse) in the images below.
+There are two bindings attached to the Action. The input value ranges of the two bindings are very different. To mitigate this difference, it helps to use a Scale Processor on each of the bindings. See how the Scale Processor normalizes the input data values for a joystick and a pointer (e.g., a mouse) in the images below.
 
 ![An example of a Scale Vector 2 Processor setup in the Input Action Asset Editor](./Images/Processors-Scale-Look-Pointer.png)
 
@@ -118,11 +118,12 @@ There are two Bindings attached to the Action. The input value ranges of the two
 
 #### Example: Custom mouse sensitivity
 
-You can use a Scale processor to adjust mouse sensitivity through a game settings menu. To support custom X and Y speed settings, apply the processor to a Binding limited to a Pointer device.
+You can use a Scale processor to adjust mouse sensitivity through a game settings menu. To support custom X and Y speed settings, apply the processor to a binding limited to a Pointer device.
 
 ### Deadzone
 
 To filter noise from controls that are rarely in a default state, constantly send input values, or seldom report the maximum value, a [Deadzone Processor](ProcessorTypes.md#axis-deadzone) might be the right choice.
+
 The specified minimum value can filter out small movements or noise from the control, while the maximum value can mitigate the difference between the control's maximum value and the reported maximum values.
 
 #### Example: Accessibility enhancement
@@ -148,4 +149,4 @@ In the following image, you can see how a Clamp Processor can be used to restric
 ![An example of a Clamp Processor setup in the Input Action Asset Editor](./Images/Processors-Clamp-Editor.png)
 
 > [!NOTE]
-> The Bindings can contain input values with very different ranges. In that case, a Scale Processor on the Bindings can help preprocess the values before clamping them (Processors on Actions are applied after Processors on Bindings).
+> The bindings can contain input values with very different ranges. In that case, a Scale Processor on the bindings can help preprocess the values before clamping them (Processors on Actions are applied after Processors on bindings).

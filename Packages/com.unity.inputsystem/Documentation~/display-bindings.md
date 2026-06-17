@@ -4,7 +4,7 @@ uid: input-system-display-bindings
 
 # Display bindings
 
-It can be useful for the user to know what an Action is currently bound to (taking any potentially active rebindings into account) while rebinding UIs, and for on-screen hints while the app is running. You can use [`InputBinding.effectivePath`](xref:UnityEngine.InputSystem.InputBinding) to get the currently active path for a Binding (which returns [`overridePath`](xref:UnityEngine.InputSystem.InputBinding) if set, or otherwise returns [`path`](xref:UnityEngine.InputSystem.InputBinding)).
+It can be useful for the user to know what an Action is currently bound to (taking any potentially active rebindings into account) while rebinding UIs, and for on-screen hints while the app is running. You can use [`InputBinding.effectivePath`](xref:UnityEngine.InputSystem.InputBinding) to get the currently active path for a binding (which returns [`overridePath`](xref:UnityEngine.InputSystem.InputBinding) if set, or otherwise returns [`path`](xref:UnityEngine.InputSystem.InputBinding)).
 
 The easiest way to retrieve a display string for an action is to call [`InputActionRebindingExtensions.GetBindingDisplayString`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions) which is an extension method for [`InputAction`](xref:UnityEngine.InputSystem.InputAction).
 

@@ -12,9 +12,9 @@ The Input Actions Editor is divided into three panels:
 
 |Name|Description|
 |-|-|
-|**(A) Action Maps**|Displays the list of currently defined Action Maps. Each Action Map is a collection of actions that you can enable or disable together as a group.|
-|**(B) Actions**|Displays all the actions defined in the currently selected Action Map, and the bindings associated with each action.|
-|**(C) Properties**|Displays the properties of the currently selected Action or Binding from the **Actions** panel. The title of this panel changes depending on whether you have an Action or a Binding selected in the Actions panel.|
+|**(A) Action Maps**|Displays the list of currently defined action maps. Each action map is a collection of actions that you can enable or disable together as a group.|
+|**(B) Actions**|Displays all the actions defined in the currently selected action map, and the bindings associated with each action.|
+|**(C) Properties**|Displays the properties of the currently selected action or binding from the **Actions** panel. The title of this panel changes depending on whether you have an action or a binding selected in the Actions panel.|
 
 ## Action Maps panel reference
 |Button|Description|

@@ -27,13 +27,13 @@ You can use this window to view the Actions to find out their names, value types
 [Read more about using the Input Action Settings Window.](actions-editor.md)
 
 
-## The default Action Maps and Actions
+## The default action maps and Actions
 
-Action Maps allow you to organize Actions into groups which represent specific situations where a set of actions make sense together.
+Action maps allow you to organize Actions into groups which represent specific situations where a set of actions make sense together.
 
-The Input System's default configuration comes with two Action Maps: "Player" and "UI". These each contain default actions that are typically useful for gameplay and user interface interactions respectively.
+The Input System's default configuration comes with two action maps: "Player" and "UI". These each contain default actions that are typically useful for gameplay and user interface interactions respectively.
 
-The "Player" Action Map defines several game-related actions such as "Move", "Look", "Jump" and "Attack" actions. The "UI" action map defines several user-interface-related actions such as "Navigate", "Submit" and "Cancel".
+The "Player" action map defines several game-related actions such as "Move", "Look", "Jump" and "Attack" actions. The "UI" action map defines several user-interface-related actions such as "Navigate", "Submit" and "Cancel".
 
  Each default action has bindings to several different types of Control. For example:
 
@@ -94,4 +94,4 @@ These actions named "Move" and "Jump" in this script work straight away with no 
 > [!NOTE]
 > - Different types of Action have different value types, and so have different methods to access their value, which is why you see `.ReadValue<Vector2>()` used to read a 2D axis, and `.IsPressed()` to read a button state, in the example above.
 > 
-> - If you create more than one Action with same name in different Action Maps, you must specify the Action Map and the Action Name separated by a `/` character when using FindAction. For example: `InputSystem.actions.FindAction("Player/Move")`
+> - If you create more than one Action with same name in different action maps, you must specify the Action Map and the Action Name separated by a `/` character when using FindAction. For example: `InputSystem.actions.FindAction("Player/Move")`

@@ -8,7 +8,7 @@ You can define new types of Composites, and register them with the API. Unity tr
 To define a new type of Composite, create a class based on [`InputBindingComposite<TValue>`](xref:UnityEngine.InputSystem.InputBindingComposite-1).
 
 > [!Important]
-> Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on Bindings, refer to [interactions](write-custom-interactions.md).
+> Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on bindings, refer to [interactions](write-custom-interactions.md).
 
 ```CSharp
 // Use InputBindingComposite<TValue> as a base class for a composite that returns
@@ -78,7 +78,7 @@ public class CustomComposite : InputBindingComposite<float>
 }
 ```
 
-The Composite should now appear in the editor UI when you add a Binding, and you can now use it in scripts.
+The Composite should now appear in the editor UI when you add a binding, and you can now use it in scripts.
 
 ```CSharp
     myAction.AddCompositeBinding("custom(floatParameter=2.0)")

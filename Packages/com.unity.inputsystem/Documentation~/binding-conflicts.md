@@ -39,14 +39,14 @@ For [composite bindings](./composite-bindings.md), magnitudes of the composite a
 
 Inputs used in combinations with other inputs can also lead to ambiguities. If, for example, the **B** key on the Keyboard is bound both on its own as well as in combination with the **Shift** key, then if you first press **Shift** and then **B**, the latter key press would be a valid input for either of the Actions.
 
-The way the Input System handles this, is that Bindings are processed in the order of decreasing complexity. This metric is derived automatically from the Binding:
+The way the Input System handles this, is that bindings are processed in the order of decreasing complexity. This metric is derived automatically from the binding:
 
 * A binding that is *not* part of a [composite](composite-bindings.md) is assigned a complexity of 1.
 * A binding that *is* part of a [composite](composite-bindings.md) is assigned a complexity equal to the number of part bindings in the composite.
 
-In our example, this means that a **one-modifier composite** binding to **Shift** + **B** has a higher complexity than a Binding to  **B** and gets processed first.
+In our example, this means that a **one-modifier composite** binding to **Shift** + **B** has a higher complexity than a binding to  **B** and gets processed first.
 
-Additionally, if the [Input Consumption](input-settings.md) setting is enabled, the first Binding that results in the Action changing [phase](./set-callbacks-on-actions.md) will consume the input. This results in other Bindings to the same input not being processed. This means in our example, when the **Shift** + **B** binding consumes the **B** input, the Binding to **B** is skipped.
+Additionally, if the [Input Consumption](input-settings.md) setting is enabled, the first binding that results in the Action changing [phase](./set-callbacks-on-actions.md) will consume the input. This results in other bindings to the same input not being processed. This means in our example, when the **Shift** + **B** binding consumes the **B** input, the binding to **B** is skipped.
 
 
 ## Disabling Conflict Resolution

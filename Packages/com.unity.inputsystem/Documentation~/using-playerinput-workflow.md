@@ -58,7 +58,7 @@ public class ExampleScript : MonoBehaviour
 
 ## Pros and Cons
 
-This workflow has pros and cons when compared to using [Actions without a PlayerInput component](using-actions-workflow.md). Because it builds on the use of Actions, it comes with all the benefits provided by them, such as Action Maps, Bindings, and the ability to configure them in the Actions Editor. You can also implement [user rebinding at run time](rebind-action-runtime.md).
+This workflow has pros and cons when compared to using [Actions without a PlayerInput component](using-actions-workflow.md). Because it builds on the use of Actions, it comes with all the benefits provided by them, such as action maps, bindings, and the ability to configure them in the Actions Editor. You can also implement [user rebinding at run time](rebind-action-runtime.md).
 
 This workflow also allows you to set up callbacks in the Editor using an interface in the Inspector, which can sometimes reduce code complexity but can also make debugging more difficult, because the connections between your actions and code are not themselves defined in your code.
 

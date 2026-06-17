@@ -6,7 +6,7 @@ uid: input-system-api-from-actions
 
 Input Action Assets allow you to **generate a C# class** from your action definitions, which allow you to refer to your actions in a type-safe manner from code. 
 
-This removes the need to manually look up Actions and Action Maps using their names, and also provides an easy way to set up callbacks.
+This removes the need to manually look up Actions and action maps using their names, and also provides an easy way to set up callbacks.
 
 > [!NOTE]
 > This is an alternative workflow to [project-wide actions](./about-project-wide-actions.md), and provides a different way to access the actions defined in your action asset.

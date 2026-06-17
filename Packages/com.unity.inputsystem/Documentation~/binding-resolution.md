@@ -16,7 +16,7 @@ Because control paths can refer to specific devices, or more broadly to a device
 
 ## What happens during resolution
 
-During binding resolution, the action automatically calls [`InputSystem.FindControls<>()`](xref:UnityEngine.InputSystem.InputSystem) (filtering for devices assigned to the InputActionMap, if there are any) for the Binding path of each of the Action's bindings. This creates a list of resolved Controls that are now bound to the Action.
+During binding resolution, the action automatically calls [`InputSystem.FindControls<>()`](xref:UnityEngine.InputSystem.InputSystem) (filtering for devices assigned to the InputActionMap, if there are any) for the binding path of each of the Action's bindings. This creates a list of resolved Controls that are now bound to the Action.
 
 Note that a single [binding control path](control-paths.md) can match multiple Controls. For example:
 
@@ -24,7 +24,7 @@ Note that a single [binding control path](control-paths.md) can match multiple C
 
 * An abstract device path such as `<Gamepad>/buttonEast` matches the right action button on any connected gamepad. If you have a PlayStation controller and an [Xbox controller](devices-gamepads.md#xbox-controllers) connected, it resolves to the "Circle" button on the PlayStation controller, and to the "B" button on the Xbox controller.
 
-* A Binding path can also contain wildcards, such as `<Gamepad>/button*`. This matches any control on any gamepad with a name starting with "button", which matches all the four action buttons on any connected gamepad. A different example: `*/{Submit}` matches any control tagged with the "Submit" [usage](controls.md#control-usages) on any device.
+* A binding path can also contain wildcards, such as `<Gamepad>/button*`. This matches any control on any gamepad with a name starting with "button", which matches all the four action buttons on any connected gamepad. A different example: `*/{Submit}` matches any control tagged with the "Submit" [usage](controls.md#control-usages) on any device.
 
 If there are multiple bindings on the same action that all reference the same control(s), the control will effectively feed into the action multiple times. This is to allow, for example, a single control to produce different input on the same action by virtue of being bound in a different fashion ([composites](./composite-bindings.md), [processors](./add-processors-bindings-actions.md), [interactions](Interactions.md), etc). However, regardless of how many times a control is bound on any given action, it will only appear once in the action's [array of `controls`](xref:UnityEngine.InputSystem.InputAction.controls).
 
@@ -40,4 +40,4 @@ This updating of controls usually happens transparently in the background. Howev
 
 Adding or removing a device &ndash; either [globally](xref:UnityEngine.InputSystem.InputSystem.devices) or to/from the [device list](xref:UnityEngine.InputSystem.InputActionAsset.devices) of an Action &ndash; will remain transparent __except__ if an Action is in progress and it is the device of its [active Control](xref:UnityEngine.InputSystem.InputAction.activeControl) that is being removed. In this case, the Action will automatically be [cancelled](xref:UnityEngine.InputSystem.InputAction.canceled).
 
-Modifying the [binding mask](xref:UnityEngine.InputSystem.InputActionAsset.bindingMask) or modifying any of the Bindings (such as through [rebinding](./interactive-rebinding.md) or by adding or removing bindings) will, however, lead to all enabled actions being temporarily disabled and then re-enabled and resumed.
+Modifying the [binding mask](xref:UnityEngine.InputSystem.InputActionAsset.bindingMask) or modifying any of the bindings (such as through [rebinding](./interactive-rebinding.md) or by adding or removing bindings) will, however, lead to all enabled actions being temporarily disabled and then re-enabled and resumed.

@@ -4,11 +4,11 @@ uid: input-system-apply-interactions-actions
 
 # Apply interactions to actions
 
-Applying Interactions directly to an Action is equivalent to applying them to all Bindings for the Action. You can use this instead of manually adding the same Interaction(s) to multiple Bindings.
+Applying Interactions directly to an Action is equivalent to applying them to all bindings for the Action. You can use this instead of manually adding the same Interaction(s) to multiple bindings.
 
-To apply Interactions to individual Bindings, refer to [Apply Interactions to Bindings](apply-interactions-bindings.md).
+To apply Interactions to individual bindings, refer to [Apply Interactions to bindings](apply-interactions-bindings.md).
 
-If you apply Interactions to both an Action and its Bindings, then the effect is the same as if the Action's Interactions are on the list of Interactions on each of the Bindings. This means that the Input System applies the Binding's Interactions first, and then the Action's Interactions.
+If you apply Interactions to both an Action and its bindings, then the effect is the same as if the Action's Interactions are on the list of Interactions on each of the bindings. This means that the Input System applies the binding's Interactions first, and then the Action's Interactions.
 
 ## Apply Interactions to Actions in the Editor
 

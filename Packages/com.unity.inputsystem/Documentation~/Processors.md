@@ -19,4 +19,4 @@ Use an input processor to apply processing to input values and return the result
 - [Bindings](bindings.md)
 - [Interactions](Interactions.md)
 - [Configure actions](configure-actions.md)
-- [Configure Bindings from code](configure-bindings-from-code.md)
+- [Configure bs from code](configure-bindings-from-code.md)

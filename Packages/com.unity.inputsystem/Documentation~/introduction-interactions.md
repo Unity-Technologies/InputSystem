@@ -10,7 +10,7 @@ An action with no explicit interaction applied behaves according the [default in
 
 When you apply an interaction to an action, it overrides the default interaction behavior and changes how the action is performed. This allows you, for example, to implement a [hold](built-in-interactions.md#hold) interaction that requires a control to be held for a minimum amount of time, or a [multi-tap](built-in-interactions.md#multitap) interaction that requires the control to be quickly tapped multiple times to perform the action.
 
-Interactions trigger responses on Actions. You can place them on individual Bindings, or on Actions, in which case they apply to every Binding on the Action. At runtime, when a particular interaction completes, this triggers the Action.
+Interactions trigger responses on actions. You can place them on individual bindings, or on actions, in which case they apply to every binding on the action. At runtime, when a particular interaction completes, this triggers the action.
 
 ![The Binding Path displays the buttonSouth [Gamepad] value set on the Interaction Properties window.](Images/InteractionProperties.png)
 
@@ -77,11 +77,11 @@ public class ExampleScript : MonoBehaviour
 
 ## Multiple Controls on an Action
 
-If you have multiple Controls bound to a Binding or an Action which has an Interaction, then the Input System first applies the [Control conflict resolution](binding-conflicts.md) logic to get a single value for the Action, which it then feeds to the Interaction logic. Any of the bound Controls can perform the Interaction.
+If you have multiple Controls bound to a binding or an Action which has an Interaction, then the Input System first applies the [Control conflict resolution](binding-conflicts.md) logic to get a single value for the Action, which it then feeds to the Interaction logic. Any of the bound Controls can perform the Interaction.
 
-## Multiple Interactions on a Binding
+## Multiple Interactions on a binding
 
-If multiple Interactions are present on a single Binding or Action, then the Input System checks the Interactions in the order they are present on the Binding. The code example above illustrates this example. The Binding on the `fireAction` Action has two Interactions: `WithInteractions("tap;slowTap")`. The [tap](built-in-interactions.md#tap) Interaction gets a first chance at interpreting the input from the Action. If the button is pressed, the Action calls the `Started` callback on the tap Interaction. If the user keeps holding the button, the tap Interaction times out, and the Action calls the [`Canceled`](xref:UnityEngine.InputSystem.InputAction) callback for the tap Interaction and starts processing the [slow tap](built-in-interactions.md#slowtap) Interaction (which now receives a `Started` callback).
+If multiple Interactions are present on a single binding or Action, then the Input System checks the Interactions in the order they are present on the binding. The code example above illustrates this example. The binding on the `fireAction` Action has two Interactions: `WithInteractions("tap;slowTap")`. The [tap](built-in-interactions.md#tap) Interaction gets a first chance at interpreting the input from the Action. If the button is pressed, the Action calls the `Started` callback on the tap Interaction. If the user keeps holding the button, the tap Interaction times out, and the Action calls the [`Canceled`](xref:UnityEngine.InputSystem.InputAction) callback for the tap Interaction and starts processing the [slow tap](built-in-interactions.md#slowtap) Interaction (which now receives a `Started` callback).
 
 At any one time, only one Interaction can be "driving" the action (that is, it gets to determine the action's current [`phase`](xref:UnityEngine.InputSystem.InputAction)). If an Interaction higher up in the stack cancels, Interactions lower down in the stack can take over.
 

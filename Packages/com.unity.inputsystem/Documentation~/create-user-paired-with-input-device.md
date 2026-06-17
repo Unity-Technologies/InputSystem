@@ -18,4 +18,4 @@ if (scheme != null)
     user.ActivateControlScheme(scheme);
 ```
 
-When you activate a Control Scheme, the Input System automatically switches the active Binding mask for the user's Actions to that Control Scheme.
+When you activate a Control Scheme, the Input System automatically switches the active binding mask for the user's Actions to that Control Scheme.
