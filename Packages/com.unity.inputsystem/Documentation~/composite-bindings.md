@@ -4,9 +4,11 @@ uid: input-system-composite-bindings
 
 # Composite Bindings
 
-Sometimes, you might want to have several Controls act in unison to mimic a different type of Control. The most common example of this is using the W, A, S, and D keys on the keyboard to form a 2D vector Control equivalent to mouse deltas or gamepad sticks. Another example is to use two keys to form a 1D axis equivalent to a mouse scroll axis.
+You might want to have several controls act in unison to mimic a different type of control. The most common example of this is using the W, A, S, and D keys on the keyboard to form a 2D vector control equivalent to mouse deltas or gamepad sticks. Another example is to use two keys to form a 1D axis equivalent to a mouse scroll axis.
 
-Composite Bindings, made up of multiple **sub-bindings** solve this problem. Composites themselves don't bind directly to Controls; instead, they take values from their **sub-bindings** that do, and then synthesize input from those values together into a single virtual control binding.
+This is difficult to implement with normal bindings. You can bind a  [`ButtonControl`](xref:UnityEngine.InputSystem.Controls.ButtonControl) to an action expecting a `Vector2`, but doing so results in an exception at runtime when the Input System tries to read a `Vector2` from a control that can deliver only a `float`.
+
+Composite bindings (that is, bindings that are made up of other bindings) solve this problem. Composites themselves don't bind directly to controls; instead, they source values from other bindings that do, and then synthesize input on the fly from those values.
 
 To create a composite binding, select the appropriate [composite type](binding-types.md) for your action while [adding a binding in the actions editor](./add-duplicate-delete-binding.md). The types of composite bindings available are as follows:
 

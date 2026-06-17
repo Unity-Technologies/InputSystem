@@ -11,7 +11,7 @@ The association between an Action and the device controls which perform that inp
 
 To use actions in your code, you must use the [Input Actions editor](actions-editor.md) to configure the mapping between the Action and one or more device controls. For example in this screenshot, the "Move" action is displayed, showing its bindings the left gamepad stick, and the keyboard's arrow keys.
 
-![Actions Bindings](Images/ActionsBinding.png)<br/>
+![The Actions panel of the Input Actions Editor in Project Settings](Images/ActionsBinding.png)<br/>
 *The Actions panel of the Input Actions Editor in Project Settings*
 
 You can then get a reference to this action in your code, and check its value, or attach a callback method to be notified when it is performed. See the [Actions Workflow page](using-actions-workflow.md) for a simple example script demonstrating this.

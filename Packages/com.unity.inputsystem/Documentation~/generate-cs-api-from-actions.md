@@ -28,8 +28,11 @@ Once applied, the Input System creates a C# script containing API that matches t
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-// IGameplayActions is an interface generated from the "gameplay" action map.
-// Your interface name will match the name you chose for your action map.
+// IGameplayActions is an interface generated from the newly added "gameplay"
+// action map, triggered by the "Generate Interfaces" checkbox. Note that if
+// you change the default values for the action map, the name of the interface
+// will be different.
+
 public class MyPlayerScript : MonoBehaviour, IGameplayActions
 {
     // MyPlayerControls is the C# class that Unity generated.
@@ -42,8 +45,8 @@ public class MyPlayerScript : MonoBehaviour, IGameplayActions
         if (controls == null)
         {
             controls = new MyPlayerControls();
-            // Tell the "gameplay" action map that we want to get told about
-            // when actions get triggered.
+            // Tell the "gameplay" action map that we want to be
+            // notified when actions get triggered.
             controls.gameplay.SetCallbacks(this);
         }
         controls.gameplay.Enable();
@@ -68,4 +71,4 @@ public class MyPlayerScript : MonoBehaviour, IGameplayActions
 ```
 
 > [!NOTE]
-> To regenerate the .cs file, right-click the .inputactions asset in the Project Browser and choose "Reimport".
+> To regenerate the .cs file, right-click the .inputactions asset in the Project Browser and select **Reimpor**.

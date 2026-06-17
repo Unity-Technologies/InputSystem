@@ -4,11 +4,7 @@ uid: input-system-bindings-from-code
 
 # Configure bindings from code
 
-
-[//]: # (TODO: Most of these examples should be moved to API docs and this page should provide an overview linking to those API pages.)
-
-
-Each Binding has the following properties:
+Each `InputBinding` has the following properties:
 
 |Property|Description|
 |--------|-----------|
@@ -23,7 +19,7 @@ Each Binding has the following properties:
 |[`isComposite`](xref:UnityEngine.InputSystem.InputBinding)|Whether the Binding acts as a [Composite](#composite-bindings).|
 |[`isPartOfComposite`](xref:UnityEngine.InputSystem.InputBinding)|Whether the Binding is part of a [Composite](#composite-bindings).|
 
-To query the Bindings to a particular Action, you can use [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction). To query a flat list of Bindings for all Actions in an Action Map, you can use [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap).
+To query a flat list of bindings for all actions in an action map, use [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap.bindings).
 
 
 ## Erasing Bindings
@@ -174,7 +170,7 @@ look.ApplyParameterOverride("scaleVector2:y", 0.5f, new InputBinding("<Mouse>/de
 
 ## Composite Bindings
 
-To create composites in code, you can use the [`AddCompositeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) syntax.
+To create composites in code, use the [`AddCompositeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) method.
 
 ```CSharp
 myAction.AddCompositeBinding("Axis")
@@ -182,7 +178,7 @@ myAction.AddCompositeBinding("Axis")
     .With("Negative", "<Gamepad>/leftTrigger");
 ```
 
-Each Composite consists of one Binding that has [`InputBinding.isComposite`](xref:UnityEngine.InputSystem.InputBinding) set to true, followed by one or more Bindings that have [`InputBinding.isPartOfComposite`](xref:UnityEngine.InputSystem.InputBinding) set to true. In other words, several consecutive entries in [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap) or [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction) together form a Composite.
+Each composite consists of one binding that has [`InputBinding.isComposite`](xref:UnityEngine.InputSystem.InputBinding) set to true, followed by one or more bindings that have [`InputBinding.isPartOfComposite`](xref:UnityEngine.InputSystem.InputBinding) set to true. In other words, several consecutive entries in [`InputActionMap.bindings`](xref:UnityEngine.InputSystem.InputActionMap) or [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction) together form a composite.
 
 Note that each composite part can be bound arbitrary many times.
 
@@ -201,11 +197,18 @@ Composites can have parameters, just like [Interactions](Interactions.md) and [P
 myAction.AddCompositeBinding("Axis(whichSideWins=1)");
 ```
 
-There are currently five Composite types that come with the system out of the box: [1D-Axis](#1d-axis), [2D-Vector](#2d-vector), [3D-Vector](#3d-vector), [One Modifier](#one-modifier) and [Two Modifiers](#two-modifiers). Additionally, you can [add your own](#writing-custom-composites) types of Composites.
+There are currently five Composite types that come with the system out of the box: 
+
+- [1D-Axis](#1d-axis): two buttons that pull a 1D axis in the negative and positive direction.
+- [2D-Vector](#2d-vector): represents a 4-way button setup where each button represents a cardinal direction, for example a WASD keyboard input (up-down-left-right controls).
+- [3D-Vector](#3d-vector): represents a 6-way button where two combinations each control one axis of a 3D Vector.
+- [One Modifier](#one-modifier): requires the user to hold down a "modifier" button in addition to another control, for example, "SHIFT+1".
+- [Two Modifiers](#two-modifiers): requires the user to hold down two "modifier" buttons in addition to another control, for example, "SHIFT+CTRL+1".
+
 
 ### 1D axis
 
-A Composite made of two buttons: one that pulls a 1D axis in its negative direction, and another that pulls it in its positive direction. Implemented in the [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite) class. The result is a `float`.
+The 1D Axis Composite is made of two buttons: one that pulls a 1D axis in its negative direction, and another that pulls it in its positive direction, using the [`AxisComposite`](xref:UnityEngine.InputSystem.Composites.AxisComposite) class to compute a `float`.
 
 ```CSharp
 myAction.AddCompositeBinding("1DAxis") // Or just "Axis"
@@ -213,12 +216,12 @@ myAction.AddCompositeBinding("1DAxis") // Or just "Axis"
     .With("Negative", "<Gamepad>/leftTrigger");
 ```
 
-The axis Composite has two part bindings.
+The axis Composite has two Part Bindings.
 
-|Part|Type|Description|
+|Part Binding|Type|Description|
 |----|----|-----------|
-|[`positive`](xref:UnityEngine.InputSystem.Composites.AxisComposite)|`Button`|Controls pulling in the positive direction (towards [`maxValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite)).|
-|[`negative`](xref:UnityEngine.InputSystem.Composites.AxisComposite)|`Button`|Controls pulling in the negative direction, (towards [`minValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite)).|
+|[`positive`](xref:UnityEngine.InputSystem.Composites.AxisComposite.positive)|`Button`|Controls pulling in the positive direction (towards [`maxValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite.maxValue)).|
+|[`negative`](xref:UnityEngine.InputSystem.Composites.AxisComposite.negative)|`Button`|Controls pulling in the negative direction, (towards [`minValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite.minValue)).|
 
 You can set the following parameters on an axis Composite:
 
@@ -228,7 +231,7 @@ You can set the following parameters on an axis Composite:
 |[`minValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite)|The value returned if the [`negative`](xref:UnityEngine.InputSystem.Composites.AxisComposite) side is actuated. Default is -1.|
 |[`maxValue`](xref:UnityEngine.InputSystem.Composites.AxisComposite)|The value returned if the [`positive`](xref:UnityEngine.InputSystem.Composites.AxisComposite) side is actuated. Default is 1.|
 
-If Controls from both the `positive` and the `negative` side are actuated, then the resulting value of the axis Composite depends on the `whichSideWin` parameter setting.
+If controls from both the `positive` and the `negative` side are actuated, then the resulting value of the axis Composite depends on the `whichSideWin` parameter setting.
 
 |[`WhichSideWins`](xref:UnityEngine.InputSystem.Composites.AxisComposite.WhichSideWins)|Description|
 |---------------|-----------|
@@ -241,9 +244,9 @@ If Controls from both the `positive` and the `negative` side are actuated, then 
 
 ### 2D vector
 
-A Composite that represents a 4-way button setup like the D-pad on gamepads. Each button represents a cardinal direction. Implemented in the [`Vector2Composite`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) class. The result is a `Vector2`.
+A 2D Vector Composite represents a 4-way button setup like the D-pad on gamepads, where each button represents a cardinal direction. This type of Composite binding uses the [`Vector2Composite`](xref:UnityEngine.InputSystem.Composites.Vector2Composite) class to compute a `Vector2`.
 
-This Composite is most useful for representing up-down-left-right controls, such as WASD keyboard input.
+Use this to represent up-down-left-right controls, such as WASD keyboard input.
 
 ```CSharp
 myAction.AddCompositeBinding("2DVector") // Or "Dpad"
@@ -260,16 +263,16 @@ myAction.AddCompositeBinding("2DVector(mode=2)")
     .With("Right", "<Gamepad>/leftStick/right");
 ```
 
-The 2D vector Composite has four part Bindings.
+The 2D vector Composite has four Part Bindings.
 
-|Part|Type|Description|
+|Part Binding|Type|Description|
 |----|----|-----------|
-|[`up`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|`Button`|Controls representing `(0,1)` (+Y).|
-|[`down`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|`Button`|Controls representing `(0,-1)` (-Y).|
-|[`left`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|`Button`|Controls representing `(-1,0)` (-X).|
-|[`right`](xref:UnityEngine.InputSystem.Composites.Vector2Composite)|`Button`|Controls representing `(1,0)` (+X).|
+|[`up`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.up)|`Button`|Controls representing `(0,1)` (+Y).|
+|[`down`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.down)|`Button`|Controls representing `(0,-1)` (-Y).|
+|[`left`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.left)|`Button`|Controls representing `(-1,0)` (-X).|
+|[`right`](xref:UnityEngine.InputSystem.Composites.Vector2Composite.right)|`Button`|Controls representing `(1,0)` (+X).|
 
-In addition, you can set the following parameters on a 2D vector Composite:
+In addition, you can set these parameters on a 2D Vector Composite:
 
 |Parameter|Description|
 |---------|-----------|
@@ -280,7 +283,7 @@ In addition, you can set the following parameters on a 2D vector Composite:
 
 ### 3D vector
 
-A Composite that represents a 6-way button where two combinations each control one axis of a 3D vector. Implemented in the [`Vector3Composite`](xref:UnityEngine.InputSystem.Composites.Vector3Composite) class. The result is a `Vector3`.
+A 3D Vector Composite that represents a 6-way button where two combinations each control one axis of a 3D Vector. This type of Composite binding uses the the [`Vector3Composite`](xref:UnityEngine.InputSystem.Composites.Vector3Composite) class to compute a `Vector3`.
 
 ```CSharp
 myAction.AddCompositeBinding("3DVector")
@@ -297,16 +300,16 @@ myAction.AddCompositeBinding("3DVector(mode=2)")
     .With("Right", "<Gamepad>/leftStick/right");
 ```
 
-The 3D vector Composite has four part Bindings.
+The 3D vector Composite has four Part Bindings.
 
-|Part|Type|Description|
+|Part Binding|Type|Description|
 |----|----|-----------|
-|[`up`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(0,1,0)` (+Y).|
-|[`down`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(0,-1,0)` (-Y).|
-|[`left`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(-1,0,0)` (-X).|
-|[`right`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(1,0,0)` (+X).|
-|[`forward`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(0,0,1)` (+Z).|
-|[`backward`](xref:UnityEngine.InputSystem.Composites.Vector3Composite)|`Button`|Controls representing `(0,0,-1)` (-Z).|
+|[`up`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.up)|`Button`|Controls representing `(0,1,0)` (+Y).|
+|[`down`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.down)|`Button`|Controls representing `(0,-1,0)` (-Y).|
+|[`left`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.left)|`Button`|Controls representing `(-1,0,0)` (-X).|
+|[`right`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.right)|`Button`|Controls representing `(1,0,0)` (+X).|
+|[`forward`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.forward)|`Button`|Controls representing `(0,0,1)` (+Z).|
+|[`backward`](xref:UnityEngine.InputSystem.Composites.Vector3Composite.backward)|`Button`|Controls representing `(0,0,-1)` (-Z).|
 
 In addition, you can set the following parameters on a 3D vector Composite:
 
@@ -316,9 +319,9 @@ In addition, you can set the following parameters on a 3D vector Composite:
 
 ### One Modifier
 
-A Composite that requires the user to hold down a "modifier" button in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+1". Implemented in the [`OneModifierComposite`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+A One Modifier Composite requires the user to hold down a "modifier" button in addition to another control from which the actual value of the binding is determined. This can be used, for example, for bindings such as "SHIFT+1". This type of Composite binding uses the [`OneModifierComposite`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite) class. The buttons can be on any device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 
-The result is a value of the same type as the controls bound to the [`binding`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite) part.
+The result is a value of the same type as the controls bound to the [`binding`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite.binding) part.
 
 ```CSharp
 // Add binding for "CTRL+1".
@@ -333,20 +336,20 @@ myAction.AddCompositeBinding("OneModifier")
     .With("Modifier", "<Keyboard>/alt");
 ```
 
-The button with one modifier Composite has two part Bindings.
+The button with one Modifier Composite has two Part Bindings.
 
-|Part|Type|Description|
+|Part Binding|Type|Description|
 |----|----|-----------|
-|[`modifier`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite)|`Button`|Modifier that has to be held for `binding` to come through. If the user holds any of the buttons bound to the `modifier` at the same time as the button that triggers the action, the Composite assumes the value of the `modifier` Binding. If the user does not press any button bound to the `modifier`, the Composite remains at default value.|
-|[`binding`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite)|Any|The control(s) whose value the Composite assumes while the user holds down the `modifier` button.|
+|[`modifier`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite.modifier)|`Button`|Modifier that has to be held for `binding` to come through. If the user holds any of the buttons bound to the `modifier` at the same time as the button that triggers the action, the Composite assumes the value of the `modifier` Binding. If the user does not press any button bound to the `modifier`, the Composite remains at default value.|
+|[`binding`](xref:UnityEngine.InputSystem.Composites.OneModifierComposite.binding)|Any|The control(s) whose value the Composite assumes while the user holds down the `modifier` button.|
 
 This Composite has no parameters.
 
 ### Two Modifiers
 
-A Composite that requires the user to hold down two "modifier" buttons in addition to another control from which the actual value of the Binding is determined. This can be used, for example, for Bindings such as "SHIFT+CTRL+1". Implemented in the [`TwoModifiersComposite`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite) class. The buttons can be on any Device, and can be toggle buttons or full-range buttons such as gamepad triggers.
+A Two Modifiers Composite requires the user to hold down two "modifier" buttons in addition to another control from which the actual value of the binding is determined. This can be used, for example, for bindings such as "SHIFT+CTRL+1". This type of Composite binding uses the [`TwoModifiersComposite`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite) class. The buttons can be on any device, and can be toggle buttons or full-range buttons such as gamepad triggers.
 
-The result is a value of the same type as the controls bound to the [`binding`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite) part.
+The result is a value of the same type as the controls bound to the [`binding`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite.binding) part.
 
 ```CSharp
 myAction.AddCompositeBinding("TwoModifiers")
@@ -357,13 +360,13 @@ myAction.AddCompositeBinding("TwoModifiers")
     .With("Modifier2", "<Keyboard>/rightShift");
 ```
 
-The button with two modifiers Composite has three part Bindings.
+The button with two Modifiers Composite has three Part Bindings.
 
-|Part|Type|Description|
+|Part Binding|Type|Description|
 |----|----|-----------|
-|[`modifier1`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite)|`Button`|The first modifier the user must hold alongside `modifier2`, for `binding` to come through. If the user does not press any button bound to the `modifier1`, the Composite remains at default value.|
-|[`modifier2`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite)|`Button`|The second modifier the user must hold alongside `modifier1`, for `binding` to come through. If the user does not press any button bound to the `modifier2`, the Composite remains at default value.|
-|[`binding`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite)|Any|The control(s) whose value the Composite assumes while the user presses both `modifier1` and `modifier2` at the same time.|
+|[`modifier1`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite.modifier1)|`Button`|The first modifier the user must hold alongside `modifier2`, for `binding` to come through. If the user does not press any button bound to the `modifier1`, the Composite remains at default value.|
+|[`modifier2`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite.modifier2)|`Button`|The second modifier the user must hold alongside `modifier1`, for `binding` to come through. If the user does not press any button bound to the `modifier2`, the Composite remains at default value.|
+|[`binding`](xref:UnityEngine.InputSystem.Composites.TwoModifiersComposite.binding)|Any|The control(s) whose value the Composite assumes while the user presses both `modifier1` and `modifier2` at the same time.|
 
 This Composite has no parameters.
 
@@ -371,10 +374,10 @@ This Composite has no parameters.
 
 You can define new types of Composites, and register them with the API. Unity treats these the same as predefined types, which the Input System internally defines and registers in the same way.
 
-To define a new type of Composite, create a class based on [`InputBindingComposite<TValue>`](xref:UnityEngine.InputSystem.InputBindingComposite-1).
+To define a new type of Composite, create a class based on [`InputBindingComposite<TValue>`](xref:UnityEngine.InputSystem.InputBindingComposite`1).
 
-> [!Important]
-> Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on Bindings, see [interactions](write-custom-interactions.md).
+> [!IMPORTANT]
+> Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on bindings, see [interactions](xref:input-system-interactions#writing-custom-interactions).
 
 ```CSharp
 // Use InputBindingComposite<TValue> as a base class for a composite that returns

@@ -22,12 +22,12 @@ The asset is created in your project, and automatically assigned as the **projec
 
 The Action Asset appears in your Project view, and is named "InputSystem_Actions". This is where your new configuration of actions is saved, including any changes you make to it.
 
-![](images/InputSystemActionsAsset.png)<br/>
+![The new Actions Asset in your Project window](images/InputSystemActionsAsset.png)<br/>
 *The new Actions Asset in your Project window*
 
 When you create an action asset this way, the new asset contains a set of default actions that are useful in many common scenarios. You can [configure them](./configure-actions.md) or [add new actions](./create-edit-delete-actions.md) to suit your project.
 
-![image alt text](./Images/ProjectSettingsInputActionsSimpleShot.png)
+![The Input System Package Project Settings after creating and assigning the default actions](./Images/ProjectSettingsInputActionsSimpleShot.png)
 *The Input System Package Project Settings after creating and assigning the default actions*
 
 Once you have created and assigned project-wide actions, the Input System Package page in Project Settings displays the **Actions Editor** interface. Read more about how to use the [Actions Editor](actions-editor.md) to configure your actions.
