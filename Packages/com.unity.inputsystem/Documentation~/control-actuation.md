@@ -6,7 +6,7 @@ uid: input-system-control-actuation
 
 Control actuation refers to whether or not a [control](controls.md) is currently being used by the user.
 
-A control is considered actuated when it has moved away from its default state in such a way that it affects the value of the control.
+A control is considered "actuated" when it has moved away from its default state in such a way that it affects the actual value of the control. Use [`IsActuated`](xref:UnityEngine.InputSystem.InputControlExtensions.IsActuated(UnityEngine.InputSystem.InputControl,System.Single)) to query whether a control is currently actuated.
 
 The recommended workflow is to [bind controls to actions](add-duplicate-delete-binding.md), and then [respond to input at runtime](./respond-to-input.md) by polling or recieving callbacks from those actions. For this reason, it is not typically necessary to directly check whether a control is actuated. Instead, actuation of a control bound to an action causes the action to be performed (according to its [interaction pattern](Interactions.md), if an interaction has been assigned).
 
@@ -34,7 +34,7 @@ if (Gamepad.current.leftStick.EvaluateMagnitude() > 0.25f)
     Debug.Log("Left Stick actuated past 25%");
 ```
 
-There are two mechanisms within the Input System that most notably make use of control actuation:
+These two mechanisms use control actuation:
 
 - [Interactive rebinding](interactive-rebinding.md) (`InputActionRebindingExceptions.RebindOperation`) uses it to select between multiple suitable controls to find the one that is actuated the most.
 - [Conflict resolution](binding-conflicts.md) between multiple controls that are bound to the same action uses it to decide which control gets to drive the action.

@@ -9,7 +9,7 @@ However there are many other ways to work with actions which might suit less com
 
 ## Create Actions using the Action editor
 
-For information on how to create and edit Input Actions in the editor, see the [Input Actions editor](actions-editor.md). This is the recommended workflow if you want to organise all your input actions and bindings in one place, which applies across the whole of your project. This often the case for most types of game or app.
+For information on how to create and edit Input Actions in the editor, see the [Input Actions editor](actions-editor.md). This is the recommended workflow if you want to organize all your input actions and bindings in one place, which applies across the whole of your project. This often the case for most types of game or app.
 
 ![Action Editor Window](Images/ProjectSettingsInputActionsSimpleShot.png)
 *The Input Actions Editor in the Project Settings window*

@@ -29,7 +29,7 @@ You can use this window to view the Actions to find out their names, value types
 
 ## The default Action Maps and Actions
 
-Action Maps allow you to organise Actions into groups which represent specific situations where a set of actions make sense together.
+Action Maps allow you to organize Actions into groups which represent specific situations where a set of actions make sense together.
 
 The Input System's default configuration comes with two Action Maps: "Player" and "UI". These each contain default actions that are typically useful for gameplay and user interface interactions respectively.
 

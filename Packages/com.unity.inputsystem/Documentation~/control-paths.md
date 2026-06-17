@@ -4,9 +4,7 @@ uid: input-system-control-paths
 
 # Control paths
 
-Control paths represent the way to describe a control or group of controls on a device, when [binding](bindings.md) them to an [action](actions.md).
-
-An example of a control path is `<Gamepad>/leftStick/x`, which refers to the X-axis of the left stick of any gamepad.
+The Input System can look up controls using textual paths. [Bindings](bindings.md) on Input [Actions](actions.md) rely on this feature to identify the control(s) they read input from. For example, `<Gamepad>/leftStick/x` means "X control on left stick of gamepad". However, you can also use them for lookup directly on controls and devices, or to let the Input System search for controls among all devices using [`InputSystem.FindControls`](xref:UnityEngine.InputSystem.InputSystem.FindControls(System.String)):
 
 At runtime, the Input System performs a look-up of all control paths against the currently connected devices to discover which controls match the ones specified in the paths. This process is called [binding resolution](binding-resolution.md). 
 
@@ -36,13 +34,17 @@ The device and control tree is organized hierarchically from generic to specific
 
 ## Format
 
-Control paths are strings, which resemble file system paths. Each path consists of one or more components separated by a forward slash:
+Control paths resemble file system paths: they contain components separated by a forward slash (`/`):
 
-    component/component...
+```
+component/component...
+```
 
-Each component uses a similar syntax made up of multiple fields. Each field is optional, but at least one field must be present. All fields are case-insensitive.
+Each component itself contains a set of fields with its own syntax. Each field is individually optional, provided that at least one of the fields is present as either a name or a wildcard:
 
-    <layoutName>{usageName}controlName#(displayName)
+```structured text
+<layoutName>{usageName}#(displayName)controlName
+```
 
 The following table explains the use of each field:
 
@@ -53,6 +55,23 @@ The following table explains the use of each field:
 |`controlName`|Requires the control at the current level to have the given name. Takes both "proper" names ([`InputControl.name`](xref:UnityEngine.InputSystem.InputControl)) and aliases ([`InputControl.aliases`](xref:UnityEngine.InputSystem.InputControl)) into account.<br><br>This field can also be a wildcard (`*`) to match any name.|`MyGamepad/buttonSouth`<br><br>`*/{PrimaryAction}` (match `PrimaryAction` usage on Devices with any name)|
 |`#(displayName)`|Requires the control at the current level to have the given display name (i.e. [`InputControl.displayName`](xref:UnityEngine.InputSystem.InputControl)). The display name may contain whitespace and symbols.|`<Keyboard>/#(a)` (matches the key that generates the "a" character, if any, according to the current keyboard layout).<br><br>`<Gamepad>/#(Cross)`|
 
+Here are examples of control paths:
+
+```csharp
+// Matches all gamepads (also gamepads *based* on the Gamepad layout):
+"<Gamepad>"
+// Matches the "Submit" control on all devices:
+"*/"
+// Matches the key that prints the "a" character on the current keyboard layout:
+"<Keyboard>/#(a)"
+// Matches the X axis of the left stick on a gamepad.
+"<Gamepad>/leftStick/x"
+// Matches the orientation control of the right-hand XR controller:
+"<XRController>/orientation"
+// Matches all buttons on a gamepad.
+"<Gamepad>/<Button>"
+```
+
 ### Wildcard characters
 
 If you enter a control path as text, you can use the wildcard asterisk character (`*`) to match multiple controls in the hierarchy specified. For example, you can use `<Touchscreen>/touch*/press` to bind to any finger pressed on the touchscreen, instead of individually binding to `<Touchscreen>/touch0/press`, `<Touchscreen>/touch1/press` and each other numbered touch separately.
@@ -60,9 +79,8 @@ If you enter a control path as text, you can use the wildcard asterisk character
 
 ## Access from code
 
-You can access the literal path of a given control via its [`InputControl.path`](xref:UnityEngine.InputSystem.InputControl) property.
+You can access the literal path of a given control via its [`InputControl.path`](xref:UnityEngine.InputSystem.InputControl.path) property. If you need to, you can manually parse a control path into its components using the [`InputControlPath.Parse(path)`](xref:UnityEngine.InputSystem.InputControlPath.Parse(System.String)) API:
 
-If needed, you can manually parse a control path into its components using the [`InputControlPath.Parse(path)`](xref:UnityEngine.InputSystem.InputControlPath) API.
 
 ```CSharp
 var parsed = InputControlPath.Parse("<XRController>{LeftHand}/trigger").ToArray();

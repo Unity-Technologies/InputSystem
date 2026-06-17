@@ -14,7 +14,7 @@ However, the documentation on this page gives information about the details of h
 
 Each control is connected to a block of memory that is considered the control's "state". You can query the size, format, and location of this block of memory from a control through the [`InputControl.stateBlock`](xref:UnityEngine.InputSystem.InputControl) property.
 
-The state of controls is stored in unmanaged memory that the Input System handles internally. All Devices added to the system share one block of unmanaged memory that contains the state of all the controls on the Devices.
+The Input System stores the state of controls in unmanaged memory that it handles internally. All Devices added to the system share one block of unmanaged memory that contains the state of all the controls on the Devices.
 
 A control's state might not be stored in the natural format for that control. For example, the system often represents buttons as bitfields, and axis controls as 8-bit or 16-bit integer values. This format is determined by the combination of platform, hardware, and drivers. Each control knows the format of its storage and how to translate the values as needed. The Input System uses [layouts](layouts.md) to understand this representation.
 
