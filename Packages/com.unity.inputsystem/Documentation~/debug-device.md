@@ -6,7 +6,7 @@ uid: input-system-debug-device
 
 In the Input Debugger window, navigate to the __Devices__ list and double-click any [Input Device](devices.md). This opens a window that displays information about the Device, including real-time state information for its Controls.
 
-![Device in Input Debugger](Images/DeviceInDebugger.png)
+![The Unity Editor window displays the Analysis option selected from the Window menu, and the Input Debugger option selected from the Analysis submenu to demonstrate how to access the devices in the Input Debugger tab.](Images/DeviceInDebugger.png)
 
 The top of the Device window displays general information about the specific Device, such as name, manufacturer, and serial number. This section also display the current __sample frequency__ and __processing delay__ of the deivce.
 

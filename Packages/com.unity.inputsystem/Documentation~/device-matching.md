@@ -23,7 +23,7 @@ InputSystem.RegisterLayoutMatcher<MyDevice>(
 
 ```
 
-If multiple matchers are matching the same [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription), the Input System chooses the matcher that has the larger number of properties to match against.
+If multiple matchers identify the same [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription), the Input System chooses the matcher that has the larger number of properties to match against.
 
 ## Hijacking the matching process
 

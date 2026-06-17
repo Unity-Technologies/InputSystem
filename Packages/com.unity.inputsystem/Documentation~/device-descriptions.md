@@ -4,9 +4,9 @@ uid: input-system-device-descriptions
 
 # Device descriptions 
 
-An [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription) describes a Device. The Input System uses this primarily during the Device discovery process. When a new Device is reported (by the runtime or by the user), the report contains a Device description. Based on the description, the system then attempts to find a Device [layout](layouts.md) that matches the description. This process is based on [Device matchers](#matching).
+The Input System uses the device description defined as a [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription) primarily during the Device discovery process. When a new Device is reported (by the runtime or by the user), the system then attempts to find a Device [layout](layouts.md) that matches the Device description contained in the report. This process is based on [Device matching](#matching).
 
-After a Device has been created, you can retrieve the description it was created from through the [`InputDevice.description`](xref:UnityEngine.InputSystem.InputDevice) property.
+After a Device has been created, you can retrieve the description it was created from through the [`InputDevice.description`](xref:UnityEngine.InputSystem.InputDevice.description) property.
 
 Every description has a set of standard fields:
 
