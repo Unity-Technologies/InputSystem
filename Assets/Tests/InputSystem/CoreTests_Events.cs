@@ -3030,6 +3030,7 @@ partial class CoreTests
         Assert.That(numMouse2EventsReceived, Is.EqualTo(1));
     }
 
+
     [Test]
     [Category("Events")]
     public void Events_MaximumQueuedEventsDuringEventProcessingIsLimited()

@@ -17,20 +17,34 @@ namespace UnityEngine.InputSystem
 
         protected new unsafe void OnStateEvent(InputEventPtr eventPtr)
         {
-            if (eventPtr.type != StateEvent.Type)
+            MouseState newState;
+
+            if (eventPtr.type == StateEvent.Type)
+            {
+                var stateEvent = StateEvent.FromUnchecked(eventPtr);
+                if (stateEvent->stateFormat != MouseState.Format)
+                {
+                    base.OnStateEvent(eventPtr);
+                    return;
+                }
+                newState = *(MouseState*)stateEvent->state;
+            }
+            else if (eventPtr.type == DeltaStateEvent.Type)
+            {
+                var deltaEvent = DeltaStateEvent.FromUnchecked(eventPtr);
+                if (!IsFullMouseStateDeltaEvent(deltaEvent))
+                {
+                    base.OnStateEvent(eventPtr);
+                    return;
+                }
+                newState = *(MouseState*)deltaEvent->deltaState;
+            }
+            else
             {
                 base.OnStateEvent(eventPtr);
                 return;
             }
 
-            var stateEvent = StateEvent.FromUnchecked(eventPtr);
-            if (stateEvent->stateFormat != MouseState.Format)
-            {
-                base.OnStateEvent(eventPtr);
-                return;
-            }
-
-            var newState = *(MouseState*)stateEvent->state;
             var stateFromDevice = (MouseState*)((byte*)currentStatePtr + m_StateBlock.byteOffset);
 
             newState.delta += stateFromDevice->delta;
@@ -51,17 +65,49 @@ namespace UnityEngine.InputSystem
 
         internal static unsafe bool MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
         {
-            if (currentEventPtr.type != StateEvent.Type || nextEventPtr.type != StateEvent.Type)
+            MouseState* currentState;
+            MouseState* nextState;
+
+            if (currentEventPtr.type == StateEvent.Type && nextEventPtr.type == StateEvent.Type)
+            {
+                var currentEvent = StateEvent.FromUnchecked(currentEventPtr);
+                var nextEvent = StateEvent.FromUnchecked(nextEventPtr);
+                if (currentEvent->stateFormat != MouseState.Format || nextEvent->stateFormat != MouseState.Format)
+                    return false;
+                currentState = (MouseState*)currentEvent->state;
+                nextState = (MouseState*)nextEvent->state;
+            }
+            else if (currentEventPtr.type == DeltaStateEvent.Type && nextEventPtr.type == DeltaStateEvent.Type)
+            {
+                var currentEvent = DeltaStateEvent.FromUnchecked(currentEventPtr);
+                var nextEvent = DeltaStateEvent.FromUnchecked(nextEventPtr);
+                if (!IsFullMouseStateDeltaEvent(currentEvent) || !IsFullMouseStateDeltaEvent(nextEvent))
+                    return false;
+                currentState = (MouseState*)currentEvent->deltaState;
+                nextState = (MouseState*)nextEvent->deltaState;
+            }
+            else if (currentEventPtr.type == StateEvent.Type && nextEventPtr.type == DeltaStateEvent.Type)
+            {
+                var currentEvent = StateEvent.FromUnchecked(currentEventPtr);
+                var nextEvent = DeltaStateEvent.FromUnchecked(nextEventPtr);
+                if (currentEvent->stateFormat != MouseState.Format || !IsFullMouseStateDeltaEvent(nextEvent))
+                    return false;
+                currentState = (MouseState*)currentEvent->state;
+                nextState = (MouseState*)nextEvent->deltaState;
+            }
+            else if (currentEventPtr.type == DeltaStateEvent.Type && nextEventPtr.type == StateEvent.Type)
+            {
+                var currentEvent = DeltaStateEvent.FromUnchecked(currentEventPtr);
+                var nextEvent = StateEvent.FromUnchecked(nextEventPtr);
+                if (!IsFullMouseStateDeltaEvent(currentEvent) || nextEvent->stateFormat != MouseState.Format)
+                    return false;
+                currentState = (MouseState*)currentEvent->deltaState;
+                nextState = (MouseState*)nextEvent->state;
+            }
+            else
+            {
                 return false;
-
-            var currentEvent = StateEvent.FromUnchecked(currentEventPtr);
-            var nextEvent = StateEvent.FromUnchecked(nextEventPtr);
-
-            if (currentEvent->stateFormat != MouseState.Format || nextEvent->stateFormat != MouseState.Format)
-                return false;
-
-            var currentState = (MouseState*)currentEvent->state;
-            var nextState = (MouseState*)nextEvent->state;
+            }
 
             // if buttons or clickCount changed we need to process it, so don't merge events together
             if (currentState->buttons != nextState->buttons || currentState->clickCount != nextState->clickCount)
@@ -75,6 +121,15 @@ namespace UnityEngine.InputSystem
         bool IEventMerger.MergeForward(InputEventPtr currentEventPtr, InputEventPtr nextEventPtr)
         {
             return MergeForward(currentEventPtr, nextEventPtr);
+        }
+
+        // A DeltaStateEvent qualifies as a full MouseState when it starts at offset 0 and covers
+        // at least enough bytes to read position, delta, scroll, buttons, and clickCount.
+        private static unsafe bool IsFullMouseStateDeltaEvent(DeltaStateEvent* deltaEvent)
+        {
+            return deltaEvent->stateFormat == MouseState.Format
+                && deltaEvent->stateOffset == 0
+                && deltaEvent->deltaStateSizeInBytes >= (uint)sizeof(MouseState);
         }
     }
 }
