@@ -388,7 +388,7 @@ public class SceneMenu : MonoBehaviour
 
         var txt = MakeText("Text", textArea.transform, "", 18,
             kTextPrimary, TextAlignmentOptions.MidlineLeft);
-        ph.textWrappingMode = TextWrappingModes.NoWrap;
+        txt.textWrappingMode = TextWrappingModes.NoWrap;
         Stretch(txt.gameObject);
 
         var input = bar.AddComponent<TMP_InputField>();
