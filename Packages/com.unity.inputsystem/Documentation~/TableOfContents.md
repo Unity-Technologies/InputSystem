@@ -6,6 +6,7 @@
     * [Using the Actions Workflow](using-actions-workflow.md)
     * [Using the PlayerInput Workflow](using-playerinput-workflow.md)
     * [Using the Direct Workflow](using-direct-workflow.md)
+  * [Video resources](videos.md)
 * [Setting up input](setting-up-input.md)
   * [Actions](actions.md)
   * [Input action assets](action-assets.md)

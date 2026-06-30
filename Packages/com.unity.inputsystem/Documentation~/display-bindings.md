@@ -64,6 +64,6 @@ You can also use this method to replace the text string with images.
     }
 ```
 
-Additionally, each Binding has a [`ToDisplayString`](xref:UnityEngine.InputSystem.InputBinding) method, which you can use to turn individual Bindings into display strings. There is also a generic formatting method for Control paths, [`InputControlPath.ToHumanReadableString`](xref:UnityEngine.InputSystem.InputControlPath), which you can use with arbitrary Control path strings.
+Additionally, each binding has a [`ToDisplayString`](xref:UnityEngine.InputSystem.InputBinding) method, which you can use to turn individual bindings into display strings. There is also a generic formatting method for Control paths, [`InputControlPath.ToHumanReadableString`](xref:UnityEngine.InputSystem.InputControlPath), which you can use with arbitrary Control path strings.
 
-Note that the Controls a Binding resolves to can change at any time, and the display strings for controls might change dynamically. For example, if the user switches the currently active keyboard layout, the display string for each individual key on the [`Keyboard`](xref:UnityEngine.InputSystem.Keyboard) might change.
+Note that the Controls a binding resolves to can change at any time, and the display strings for controls might change dynamically. For example, if the user switches the currently active keyboard layout, the display string for each individual key on the [`Keyboard`](xref:UnityEngine.InputSystem.Keyboard) might change.
