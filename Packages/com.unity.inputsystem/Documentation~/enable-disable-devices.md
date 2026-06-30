@@ -12,4 +12,4 @@ A Device can be manually disabled and re-enabled with [`InputSystem.DisableDevic
 
 Note that [sensors](devices-sensors.md) start in a disabled state by default, and you need to enable them in order for them to generate events.
 
-The Input System may automatically disable and re-enable Devices in certain situations, as detailed in the [next section](#background-and-focus-change-behavior).
+The Input System may automatically disable and re-enable Devices in certain situations, as detailed in the [next section](device-background-focus-changes.md).

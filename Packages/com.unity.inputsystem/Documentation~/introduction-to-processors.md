@@ -7,7 +7,7 @@ uid: input-system-intro-processors
 An Input Processor takes a value and returns a processed result for it. The received value and result value must be of the same type. For example, you can use a [clamp](#clamp) Processor to clamp values from a control to a certain range.
 
 > [!NOTE]
-> To convert received input values into different types, refer to [Composite Bindings](ActionBindings.md#composite-bindings).
+> To convert received input values into different types, refer to [Composite Bindings](composite-bindings.md).
 
 ## Using Processors
 
@@ -35,7 +35,7 @@ Refer to the [Processor Types](ProcessorTypes.md) for a comprehensive list and i
 
 ### Invert
 
-The [Invert Processor](ProcessorTypes.md#invert) inverts input values of any type (for example, float, Vector2, or Vector3) by multiplying them by `-1`. This results in effects such as reversing player navigation, for example, the left arrow would be interpreted as a right arrow, and vice versa.
+The [Invert Processor](#invert) inverts input values of any type (for example, float, Vector2, or Vector3) by multiplying them by `-1`. This results in effects such as reversing player navigation, for example, the left arrow would be interpreted as a right arrow, and vice versa.
 
 #### Example: Ship navigation
 
@@ -74,7 +74,7 @@ public class Boat : MonoBehaviour
 
 ### Normalize
 
-The [Normalize Processors](ProcessorTypes.md#normalize) normalizes the magnitude of the input vector so that it always has a length of 1. This extracts the direction of the input while removing additional information that may not be needed.
+The [Normalize Processors](#normalize) normalizes the magnitude of the input vector so that it always has a length of 1. This extracts the direction of the input while removing additional information that may not be needed.
 In the case of float input values, the values are normalized between a defined minimum, zero, and maximum.
 Normalized input is particularly useful in scenarios where the specific magnitude of an input might distort the consistency of an intended action.
 
@@ -97,7 +97,7 @@ To apply the Processor, add it to the binding, as shown in the image below.
 
 ### Scale
 
-The [Scale Processor](ProcessorTypes.md#scale) multiplies the input value by a given factor X. This applies to float values as well as vectors, where each axis is multiplied by the corresponding factor specified for that axis.
+The [Scale Processor](#scale) multiplies the input value by a given factor X. This applies to float values as well as vectors, where each axis is multiplied by the corresponding factor specified for that axis.
 This allows you to assign weight to input values, which can, for example, make a particular type of control easier to use.
 
 #### Example: Horizontally aligned CameraCollapse comment
@@ -122,7 +122,7 @@ You can use a Scale processor to adjust mouse sensitivity through a game setting
 
 ### Deadzone
 
-To filter noise from controls that are rarely in a default state, constantly send input values, or seldom report the maximum value, a [Deadzone Processor](ProcessorTypes.md#axis-deadzone) might be the right choice.
+To filter noise from controls that are rarely in a default state, constantly send input values, or seldom report the maximum value, a [Deadzone Processor](#deadzone) might be the right choice.
 
 The specified minimum value can filter out small movements or noise from the control, while the maximum value can mitigate the difference between the control's maximum value and the reported maximum values.
 
@@ -139,7 +139,7 @@ The default minimum value is overridden to allow a higher threshold for minimum 
 
 ### Clamp
 
-The [Clamp Processor](ProcessorTypes.md#clamp) clamps the input value to a specified range. The minimum value of the Processor defines the lowest input value that will be accepted, while the value cannot exceed the given maximum value. In combination with the Scale Processor, it is easy to standardize the input value ranges of different devices and place them within a well-defined value spectrum.
+The [Clamp Processor](#clamp) clamps the input value to a specified range. The minimum value of the Processor defines the lowest input value that will be accepted, while the value cannot exceed the given maximum value. In combination with the Scale Processor, it is easy to standardize the input value ranges of different devices and place them within a well-defined value spectrum.
 
 #### Example: Racing game speed control
 

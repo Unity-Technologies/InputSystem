@@ -4,7 +4,7 @@ uid: input-system-device-background-focus-changes
 
 # Device background and focus changes 
 
-In general, input is tied to [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html). This means that Devices do not receive input while the application is not in the foreground and thus no [Actions](actions.md) will receive input either. When the application comes back into focus, all devices will receive a [sync](#device-syncs) request to have them send their current state (which may have changed while the application was in the background) to the application. Devices that do not support sync requests will see a [soft reset](#device-resets) that resets all Controls not marked as [`dontReset`](layouts.md#control-items) to their default state.
+In general, input is tied to [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html). This means that Devices do not receive input while the application is not in the foreground and thus no [Actions](actions.md) will receive input either. When the application comes back into focus, all devices will receive a [sync](sync-device.md) request to have them send their current state (which may have changed while the application was in the background) to the application. Devices that do not support sync requests will see a [soft reset](reset-device.md) that resets all Controls not marked as [`dontReset`](control-items.md) to their default state.
 
 On platforms such as iOS and Android, that do not support running Unity applications in the background, this is the only supported behavior.
 
@@ -15,7 +15,7 @@ If the application is configured to run while in the background (that is, not ha
 
 If the application is configured this way to keep running while in the background, the player loop and thus the Input System, too, will keep running even when the application does not have focus. What happens with respect to input then depends on two factors:
 
-1. On the ability of individual devices to receive input while the application is not running in the foreground. This is only supported by a small subset of devices and platforms. VR devices ([`TrackedDevice`](xref:UnityEngine.InputSystem.TrackedDevice)) such as HMDs and VR controllers generally support this.<br><br>To find out whether a specific device supports this, you can query the [`InputDevice.canRunInBackground`](xref:UnityEngine.InputSystem.InputDevice) property. This property can also be forced to true or false with a Device's [layout](layouts.md#control-items).
+1. On the ability of individual devices to receive input while the application is not running in the foreground. This is only supported by a small subset of devices and platforms. VR devices ([`TrackedDevice`](xref:UnityEngine.InputSystem.TrackedDevice)) such as HMDs and VR controllers generally support this.<br><br>To find out whether a specific device supports this, you can query the [`InputDevice.canRunInBackground`](xref:UnityEngine.InputSystem.InputDevice) property. This property can also be forced to true or false with a Device's [layout](control-items.md).
 2. On two settings you can find in the project-wide [Input Settings](input-settings.md). Specifically, [`InputSettings.backgroundBehavior`](xref:UnityEngine.InputSystem.InputSettings) and [`InputSettings.editorInputBehaviorInPlayMode`](xref:UnityEngine.InputSystem.InputSettings). The table below shows a detailed breakdown of how input behaviors vary based on these two settings and in relation to the `Run In Background` player setting in Unity.
 
 > [!NOTE]

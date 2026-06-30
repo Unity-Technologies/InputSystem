@@ -10,7 +10,7 @@ Different Action types have different default Interactions. For example, the fol
 
 The following table provides an at-a-glance overview of how Interaction phases change for each action type's default Interaction. 
 
-|__Callback__|[`InputActionType.Value`](respond-to-input.md#value)|[`InputActionType.Button`](respond-to-input.md#button)|[`InputActionType.PassThrough`](respond-to-input.md#pass-through)|
+|__Callback__|[`InputActionType.Value`](about-action-control-types.md#action-type)|[`InputActionType.Button`](about-action-control-types.md#action-type)|[`InputActionType.PassThrough`](about-action-control-types.md#action-type)|
 |-----------|-------------|------------|-----------------|
 |[`started`](xref:UnityEngine.InputSystem.InputAction)|Control(s) changed value away from the default value.|Button started being pressed but has not necessarily crossed the press threshold yet.|not used|
 |[`performed`](xref:UnityEngine.InputSystem.InputAction)|Control(s) changed value.|Button was pressed to at least the button [press threshold](xref:UnityEngine.InputSystem.InputSettings).|Control changed value.|
@@ -18,7 +18,7 @@ The following table provides an at-a-glance overview of how Interaction phases c
 
 ## Value Action default Interaction
 
-[`Value`](respond-to-input.md#value)-type Actions have a default Interaction with the following behavior:
+[`Value`](about-action-control-types.md#action-type)-type Actions have a default Interaction with the following behavior:
 
 1. As soon as a bound Control becomes [actuated](control-actuation.md), the Action's Interaction phase goes from `Waiting` to `Started`, and then immediately to `Performed` and back to `Started`. One callback occurs on [`InputAction.started`](xref:UnityEngine.InputSystem.InputAction), followed by one callback on [`InputAction.performed`](xref:UnityEngine.InputSystem.InputAction).
 2. For as long as the bound Control remains actuated, the Action's Interaction phase stays in `Started` and triggers `Performed` whenever the value of the Control changes (that is, one call occurs to [`InputAction.performed`](xref:UnityEngine.InputSystem.InputAction)).
@@ -26,7 +26,7 @@ The following table provides an at-a-glance overview of how Interaction phases c
 
 ## Button Action default Interaction
 
-[`Button`](respond-to-input.md#button)-type Actions have a default Interaction with the following behavior:
+[`Button`](about-action-control-types.md#action-type)-type Actions have a default Interaction with the following behavior:
 
 1. As soon as a bound Control becomes [actuated](control-actuation.md), the Action's Interaction phase goes from `Waiting` to `Started`. One callback occurs on [`InputAction.started`](xref:UnityEngine.InputSystem.InputAction).
 2. If a Control then reaches or exceeds the button press threshold, the Action's Interaction phase goes from `Started` to `Performed`. One callback occurs on [`InputAction.performed`](xref:UnityEngine.InputSystem.InputAction). The default value of the button press threshold is defined in the [input settings](xref:UnityEngine.InputSystem.InputSettings). However, an individual control can [override](xref:UnityEngine.InputSystem.Controls.ButtonControl) this value.
@@ -35,4 +35,4 @@ The following table provides an at-a-glance overview of how Interaction phases c
 
 ## PassThrough Action default Interaction
 
-[`PassThrough`](respond-to-input.md#pass-through)-type Actions have a default Interaction with a simpler behavior. The Input System doesn't try to track bound Controls as a single source of input. Instead, it triggers a `Performed` callback for each value change.
+[`PassThrough`](about-action-control-types.md#action-type)-type Actions have a default Interaction with a simpler behavior. The Input System doesn't try to track bound Controls as a single source of input. Instead, it triggers a `Performed` callback for each value change.

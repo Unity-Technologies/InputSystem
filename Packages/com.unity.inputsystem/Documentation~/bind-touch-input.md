@@ -17,4 +17,4 @@ If you want to get input from multiple touches in the action:
 * Use bindings like `<Touchscreen>/touch3/press` to bind to individual touches.  
 * Alternatively, use a wildcard binding to bind one action to all touches. For example, `<Touchscreen>/touch*/press`.
 
-If you bind a single action to input from multiple touches, set the action type to [pass-through](respond-to-input.md#pass-through) so the action gets callbacks for each touch, instead of just one.
+If you bind a single action to input from multiple touches, set the action type to [pass-through](about-action-control-types.md#action-type) so the action gets callbacks for each touch, instead of just one.

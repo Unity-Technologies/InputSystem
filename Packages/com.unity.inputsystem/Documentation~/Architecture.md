@@ -19,7 +19,7 @@ The Input System can also send data back to the native backend in the form of [c
 
 The low-level Input System code processes and interprets the memory from the event stream that the native backend provides, and dispatches individual events.
 
-The Input System creates Device representations for any newly discovered Device in the event stream. The low-level code sees a Device as a block of raw, unmanaged memory. If it receives a state event for a Device, it writes the data from the state event into the Device's [state representation](controls.md#control-state) in memory, so that the state always contains an up-to-date representation of the Device and all its Controls.
+The Input System creates Device representations for any newly discovered Device in the event stream. The low-level code sees a Device as a block of raw, unmanaged memory. If it receives a state event for a Device, it writes the data from the state event into the Device's [state representation](control-state.md) in memory, so that the state always contains an up-to-date representation of the Device and all its Controls.
 
 The low-level system code also contains structs which describe the data layout of commonly known Devices.
 
@@ -31,4 +31,4 @@ The high-level Input System code interprets the data in a Device's state buffers
 
 Based on the information in the layouts, the Input System then creates [Control](controls.md) representations for each of the Device's controls, which let you read the state of each individual Control in a Device.
 
-As part of the high-level system, you can also build another abstraction layer to map Input Controls to your application mechanics. Use [Actions](actions.md) to [bind](bindings.md) one or more Controls to an input in your application. The Input System then monitors these Controls for state changes, and notifies your game logic using [callbacks](respond-to-input.md#responding-to-actions-using-callbacks). You can also specify more complex behaviors for your Actions using [Processors](processors.md) (which perform processing on the input data before sending it to you) and [Interactions](Interactions.md) (which let you specify patterns of input on a Control to listen to, such as multi-taps).
+As part of the high-level system, you can also build another abstraction layer to map Input Controls to your application mechanics. Use [Actions](actions.md) to [bind](bindings.md) one or more Controls to an input in your application. The Input System then monitors these Controls for state changes, and notifies your game logic using [callbacks](set-callbacks-on-actions.md). You can also specify more complex behaviors for your Actions using [Processors](processors.md) (which perform processing on the input data before sending it to you) and [Interactions](Interactions.md) (which let you specify patterns of input on a Control to listen to, such as multi-taps).

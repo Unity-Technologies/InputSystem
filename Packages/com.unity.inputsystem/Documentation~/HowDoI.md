@@ -39,7 +39,7 @@ Use the same techniques shown for the "Jump" action in the [Workflows section](w
 
 - [make my left-hand XR controller my right-hand one?](xref:UnityEngine.InputSystem.XR.XRController)
 
-- [get all current touches from the touchscreen?](devices-touch.md#reading-all-touches)
+- [get all current touches from the touchscreen?](touch-polling.md#read-all-touches)
 
 - [deal with my gamepad data arriving in a format different from `GamepadState`?](xref:UnityEngine.InputSystem.LowLevel.GamepadState)
 
@@ -49,8 +49,8 @@ Use the same techniques shown for the "Jump" action in the [Workflows section](w
 
 - [give my head tracking an extra update before rendering?](xref:UnityEngine.InputSystem.XR.XRHMD)
 
-- [record events flowing through the system?](debugging.md#other-tips)
+- [record events flowing through the system?](see-record-input-event-flow.md)
 
-- [see events as they're processed?](debugging.md#other-tips)
+- [see events as they're processed?](see-record-input-event-flow.md)
 
 - [see what Devices I have and what state they're in?](debug-device.md)

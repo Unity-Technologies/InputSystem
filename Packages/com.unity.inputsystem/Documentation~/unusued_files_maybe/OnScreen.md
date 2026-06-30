@@ -10,7 +10,7 @@ There are currently two Control types implemented out of the box: [buttons](#on-
 > [!NOTE]
 > On-screen Controls don't have a predefined visual representation. It's up to you to set up the visual aspect of a Control (for example, by adding a sprite or UI component to the GameObject). On-screen Controls take care of the interaction logic and of setting up and generating input from interactions.
 
-Each on-screen Control uses a [Control path](controls.md#control-paths) to reference the Control that it should report input as. For example, the following on-screen button reports input as the right shoulder button of a gamepad:
+Each on-screen Control uses a [Control path](../control-paths.md) to reference the Control that it should report input as. For example, the following on-screen button reports input as the right shoulder button of a gamepad:
 
 ![The OnScreenButton component displays the Control Path value as `rightShoulder [Gamepad]`.](Images/OnScreenButton.png)
 

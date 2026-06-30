@@ -37,14 +37,14 @@ You can then register the layout with [`InputSystem.RegisterLayout`](xref:UnityE
 InputSystem.RegisterLayout<MyDevice>();
 ```
 
-When the layout is instantiated, the system looks at every field and property defined directly in the type to potentially turn it into one or more [Control items](#control-items).
+When the layout is instantiated, the system looks at every field and property defined directly in the type to potentially turn it into one or more [Control items](control-items.md).
 
 1. If the field or property is annotated with [`InputControlAttribute`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute), the system applies the attribute's properties to the Control item. Some special defaults apply in this case:
     * If no [`offset`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute) is set, and the attribute is applied to a field, [`offset`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute) defaults to the offset of the field.
     * If no [`name`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute) is set, it defaults to the name of the property/field.
     * If no [`layout`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute) is set, the system infers it from the type of the field/property.
 2. If the field or property has a struct type which implements [`IInputStateTypeInfo`](xref:UnityEngine.InputSystem.LowLevel.IInputStateTypeInfo), the field is considered to be an embedded [state struct](#using-a-state-structure) and the system recurses into the field or property to gather Controls from it.
-3. Otherwise, if the type of the field or property is based on [`InputControl`](xref:UnityEngine.InputSystem.InputControl), the system adds a [Control item](#control-items) similar to case 1, where the member is annotated with [`InputControlAttribute`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute).
+3. Otherwise, if the type of the field or property is based on [`InputControl`](xref:UnityEngine.InputSystem.InputControl), the system adds a [Control item](control-items.md) similar to case 1, where the member is annotated with [`InputControlAttribute`](xref:UnityEngine.InputSystem.Layouts.InputControlAttribute).
 
 ## Using a state structure
 

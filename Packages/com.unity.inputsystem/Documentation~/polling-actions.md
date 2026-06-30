@@ -112,7 +112,7 @@ public class Example : MonoBehaviour
 
 ### Polling button actions example
 
-This example uses three actions called Shield, Teleport, and Submit (which are not included in the [default actions](./about-project-wide-actions.md#the-default-actions)):
+This example uses three actions called Shield, Teleport, and Submit (which are not included in the [default actions](default-actions.md)):
 
 ```CSharp
 using UnityEngine;

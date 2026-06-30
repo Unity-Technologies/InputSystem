@@ -4,7 +4,7 @@ uid: input-system-processors
 
 # Processors
 
-Use an input processor to apply processing to input values and return the result. For example, you can use a [clamp](built-in-processors.md#clamp) processor to clamp values to within a certain range.
+Use an input processor to apply processing to input values and return the result. For example, you can use a [clamp](built-in-processors.md) processor to clamp values to within a certain range.
 
 | **Topic** | **Description** |
 | :--- | :--- |

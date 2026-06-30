@@ -8,13 +8,13 @@ uid: input-system-configure-player-input-manager
 
 |Property|Description|
 |--------|-----------|
-|[`Notification Behavior`](xref:UnityEngine.InputSystem.PlayerInputManager)|How the [`PlayerInputManager`](xref:UnityEngine.InputSystem.PlayerInput) component notifies game code about changes to the connected players. [This works the same way as for the `PlayerInput` component](player-input-component.md#notification-behaviors).|
+|[`Notification Behavior`](xref:UnityEngine.InputSystem.PlayerInputManager)|How the [`PlayerInputManager`](xref:UnityEngine.InputSystem.PlayerInput) component notifies game code about changes to the connected players. [This works the same way as for the `PlayerInput` component](select-notification-behavior.md).|
 |[`Join Behavior`](xref:UnityEngine.InputSystem.PlayerInputManager)|Determines the mechanism by which players can join when joining is enabled. See documentation on [join behaviors](#join-behaviors).|
 |[`Player Prefab`](xref:UnityEngine.InputSystem.PlayerInputManager)|A prefab that represents a player in the game. The [`PlayerInputManager`](xref:UnityEngine.InputSystem.PlayerInputManager) component creates an instance of this prefab whenever a new player joins. This prefab must have one [`PlayerInput`](player-input-component.md) component in its hierarchy.|
 |[`Joining Enabled By Default`](xref:UnityEngine.InputSystem.PlayerInputManager)|While this is enabled, new players can join with the mechanism determined by [`Join Behavior`](xref:UnityEngine.InputSystem.PlayerInputManager).|
 |[`Limit Number of Players`](xref:UnityEngine.InputSystem.PlayerInputManager)|Enable this if you want to limit the number of players who can join the game.|
 |[`Max Player Count`](xref:UnityEngine.InputSystem.PlayerInputManager)(Only shown when `Limit number of Players` is enabled.)|The maximum number of players allowed to join the game.|
-|[`Enable Split-Screen`](xref:UnityEngine.InputSystem.PlayerInputManager)|If enabled, each player is automatically assigned a portion of the available screen area. See documentation on [split-screen](#split-screen) multiplayer.|
+|[`Enable Split-Screen`](xref:UnityEngine.InputSystem.PlayerInputManager)|If enabled, each player is automatically assigned a portion of the available screen area. See documentation on [split-screen](set-up-split-screen-local-multiplayer.md) multiplayer.|
 
 ## Join behaviors
 
@@ -28,7 +28,7 @@ You can use the [`Join Behavior`](xref:UnityEngine.InputSystem.PlayerInputManage
 
 ## `PlayerInputManager` notifications
 
-`PlayerInputManager` sends notifications when something notable happens with the current player setup. These notifications are delivered according to the `Notification Behavior` property, in the [same way as for `PlayerInput`](player-input-component.md#notification-behaviors).
+`PlayerInputManager` sends notifications when something notable happens with the current player setup. These notifications are delivered according to the `Notification Behavior` property, in the [same way as for `PlayerInput`](select-notification-behavior.md).
 
 Your game can listen to the following notifications:
 

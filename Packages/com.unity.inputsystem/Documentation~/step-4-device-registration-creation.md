@@ -4,7 +4,7 @@ uid: input-system-step-4-device-registration
 
 # Step 4 Device registration and creation 
 
-You now have a functioning device, but you haven't registered it (added it to the system) yet. This means you can't see the device when, for example, you create bindings in the [Action editor](action-assets.md#editing-input-action-assets).
+You now have a functioning device, but you haven't registered it (added it to the system) yet. This means you can't see the device when, for example, you create bindings in the [Action editor](actions-editor.md).
 
 You can register your device type with the system from within the code that runs automatically as part of Unity's startup. To do so, modify the definition of `MyDevice` like so:
 

@@ -8,10 +8,10 @@ Each `InputBinding` has the following properties:
 
 |Property|Description|
 |--------|-----------|
-|[`path`](xref:UnityEngine.InputSystem.InputBinding)|[Control path](controls.md#control-paths) that identifies the control(s) from which the Action should receive input.<br><br>Example: `"<Gamepad>/leftStick"`|
-|[`overridePath`](xref:UnityEngine.InputSystem.InputBinding)|[Control path](controls.md#control-paths) that overrides `path`. Unlike `path`, `overridePath` is not persistent, so you can use it to non-destructively override the path on a binding. If it is set to something other than null, it takes effect and overrides `path`.  To get the path which is currently in effect (that is, either `path` or `overridePath`), you can query the [`effectivePath`](xref:UnityEngine.InputSystem.InputBinding) property.|
+|[`path`](xref:UnityEngine.InputSystem.InputBinding)|[Control path](control-paths.md) that identifies the control(s) from which the Action should receive input.<br><br>Example: `"<Gamepad>/leftStick"`|
+|[`overridePath`](xref:UnityEngine.InputSystem.InputBinding)|[Control path](control-paths.md) that overrides `path`. Unlike `path`, `overridePath` is not persistent, so you can use it to non-destructively override the path on a binding. If it is set to something other than null, it takes effect and overrides `path`.  To get the path which is currently in effect (that is, either `path` or `overridePath`), you can query the [`effectivePath`](xref:UnityEngine.InputSystem.InputBinding) property.|
 |[`action`](xref:UnityEngine.InputSystem.InputBinding)|The name or ID of the action that the binding should trigger. Note that this can be null or empty (for instance, for  [composites](#composite-bindings)). Not case-sensitive.<br><br>Example: `"fire"`|
-|[`groups`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of binding groups that the binding belongs to. Can be null or empty. Binding groups can be anything, but are mostly used for [Control Schemes](#control-schemes). Not case-sensitive.<br><br>Example: `"Keyboard&Mouse;Gamepad"`|
+|[`groups`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of binding groups that the binding belongs to. Can be null or empty. Binding groups can be anything, but are mostly used for [Control Schemes](control-schemes.md). Not case-sensitive.<br><br>Example: `"Keyboard&Mouse;Gamepad"`|
 |[`interactions`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of [Interactions](Interactions.md) to apply to input on this binding. Note that Unity appends Interactions applied to the [Action](actions.md) itself (if any) to this list. Not case-sensitive.<br><br>Example: `"slowTap;hold(duration=0.75)"`|
 |[`processors`](xref:UnityEngine.InputSystem.InputBinding)|A semicolon-separated list of [Processors](processors.md) to apply to input on this binding. Note that Unity appends Processors applied to the [Action](actions.md) itself (if any) to this list. Not case-sensitive.<br><br>Processors on bindings apply in addition to Processors on Controls that are providing values. For example, if you put a `stickDeadzone` Processor on a binding and then bind it to `<Gamepad>/leftStick`, you get deadzones applied twice: once from the deadzone Processor sitting on the `leftStick` Control, and once from the binding.<br><br>Example: `"invert;axisDeadzone(min=0.1,max=0.95)"`|
 |[`id`](xref:UnityEngine.InputSystem.InputBinding)|Unique ID of the binding. You can use it to identify the binding when storing binding overrides in user settings, for example.|
@@ -60,7 +60,7 @@ playerInput.actions["move"]
 
 ## Setting parameters
 
-A binding might, either through itself or through its associated action, lead to [processor](processors.md), [interaction](Interactions.md), and/or [composite](#composite-bindings) objects being created. These objects can have parameters you can configure through in the [Binding properties view](actions-editor.md#bindings) of the Action editor or through the API. This configuration will give parameters their default value.
+A binding might, either through itself or through its associated action, lead to [processor](processors.md), [interaction](Interactions.md), and/or [composite](#composite-bindings) objects being created. These objects can have parameters you can configure through in the [Binding properties view](binding-properties-panel-reference.md) of the Action editor or through the API. This configuration will give parameters their default value.
 
 ```CSharp
 // Create an action with a "Hold" interaction on it.
@@ -473,7 +473,7 @@ public class CustomParameterEditor : InputParameterEditor<CustomComposite>
 
 ## Changing bindings
 
-In general, you can change existing bindings with the [`InputActionSetupExtensions.ChangeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) method. This returns an accessor that can be used to modify the properties of the targeted [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding). Note that most of the write operations of the accessor are destructive. For non-destructive changes to bindings, refer to [Applying Overrides](#applying-overrides).
+In general, you can change existing bindings with the [`InputActionSetupExtensions.ChangeBinding`](xref:UnityEngine.InputSystem.InputActionSetupExtensions) method. This returns an accessor that can be used to modify the properties of the targeted [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding). Note that most of the write operations of the accessor are destructive. For non-destructive changes to bindings, refer to [Applying Overrides](#apply-binding-overrides).
 
 ```CSharp
 // Get write access to the second binding of the 'fire' action.
@@ -533,11 +533,11 @@ You can override aspects of any binding at run-time non-destructively. Specific 
 
 |Property|Override|Description|
 |--------|--------|-----------|
-|[`path`](xref:UnityEngine.InputSystem.InputBinding)|[`overridePath`](xref:UnityEngine.InputSystem.InputBinding)|Replaces the [Control path](./controls.md#control-paths) that determines which Control(s) are referenced in the binding. If [`overridePath`](xref:UnityEngine.InputSystem.InputBinding) is set to an empty string, the binding is effectively disabled.<br><br>Example: `"<Gamepad>/leftStick"`|
+|[`path`](xref:UnityEngine.InputSystem.InputBinding)|[`overridePath`](xref:UnityEngine.InputSystem.InputBinding)|Replaces the [Control path](control-paths.md) that determines which Control(s) are referenced in the binding. If [`overridePath`](xref:UnityEngine.InputSystem.InputBinding) is set to an empty string, the binding is effectively disabled.<br><br>Example: `"<Gamepad>/leftStick"`|
 |[`processors`](xref:UnityEngine.InputSystem.InputBinding)|[`overrideProcessors`](xref:UnityEngine.InputSystem.InputBinding)|Replaces the [processors](processors.md) applied to the binding.<br><br>Example: `"invert,normalize(min=0,max=10)"`|
 |[`interactions`](xref:UnityEngine.InputSystem.InputBinding)|[`overrideInteractions`](xref:UnityEngine.InputSystem.InputBinding)|Replaces the [interactions](Interactions.md) applied to the binding.<br><br>Example: `"tap(duration=0.5)"`|
 
->NOTE: The `override` property values will not be saved along with the Actions (for example, when calling [`InputActionAsset.ToJson()`](xref:UnityEngine.InputSystem.InputActionAsset)). Refer to [Saving and loading rebinds](#saving-and-loading-rebinds) for details about how to persist user rebinds.
+>NOTE: The `override` property values will not be saved along with the Actions (for example, when calling [`InputActionAsset.ToJson()`](xref:UnityEngine.InputSystem.InputActionAsset)). Refer to [Saving and loading rebinds](save-load-rebinds.md) for details about how to persist user rebinds.
 
 To set the various `override` properties, you can use the [`ApplyBindingOverride`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions) APIs.
 

@@ -8,7 +8,7 @@ You can add a processor to an action or binding in the Input Actions Editor.
 
 ## Processors on bindings
 
-When you create bindings for your [actions](Actions.md), you can choose to add Processors to the bindings. These process the values from the controls they bind to, before the system applies them to the Action value. For instance, you might want to invert the `Vector2` values from the controls along the Y-axis before passing these values to the Action that drives the input logic for your application. To do this, you can add an [Invert Vector2](ProcessorTypes.md#invert-vector-2) Processor to your binding.
+When you create bindings for your [actions](Actions.md), you can choose to add Processors to the bindings. These process the values from the controls they bind to, before the system applies them to the Action value. For instance, you might want to invert the `Vector2` values from the controls along the Y-axis before passing these values to the Action that drives the input logic for your application. To do this, you can add an [Invert Vector2](built-in-processors.md) Processor to your binding.
 
 If you're using Actions defined in the [Input Actions Editor](ActionsEditor.md), or in an [action asset](ActionAssets.md), you can add any Processor to your bindings in the Input Action editor:
 

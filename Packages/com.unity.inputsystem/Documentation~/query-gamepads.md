@@ -112,4 +112,4 @@ The gamepad layout already adds stick deadzone processors which take their minim
 
 To use a gamepad for driving mouse input, refer to the sample called Gamepad Mouse Cursor. To access the sample, open the Package Manager window, and select the Input System package. Then select the Samples tab. The sample demonstrates how to set up gamepad input to drive a virtual mouse cursor.
 
-You can also use the [`VirtualMouseInput`](xref:UnityEngine.InputSystem.UI.VirtualMouseInput) component to control the hardware or software cursor. For more information, refer to [`VirtualMouseInput` component](ui-input.md#virtual-mouse-cursor-control).
+You can also use the [`VirtualMouseInput`](xref:UnityEngine.InputSystem.UI.VirtualMouseInput) component to control the hardware or software cursor. For more information, refer to [`VirtualMouseInput` component](virtual-mouse-ui-cursor-control.md).
