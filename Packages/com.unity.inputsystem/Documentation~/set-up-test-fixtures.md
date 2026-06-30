@@ -6,7 +6,8 @@ uid: input-system-set-up-test-fixtures
 
 Use [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) to create an isolated version of the Input System for tests. The fixture sets up a blank, default-initialized version of the Input System for each test, and restores the Input System to its original state after the test completes. The default-initialized version has all built-in registrations (such as layout and processors), but doesn't have any pre-existing Input Devices.
 
->__NOTE:__ [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) will not have custom registrations performed from Unity startup code such as `[InitializeOnLoad]` or `[RuntimeInitializeOnLoadMethod]`. Layouts needed during tests have to be manually registered as part of the test setup.
+> [!NOTE]
+> [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) will not have custom registrations performed from Unity startup code such as `[InitializeOnLoad]` or `[RuntimeInitializeOnLoadMethod]`. Layouts needed during tests have to be manually registered as part of the test setup.
 
 You can use the fixture as a base class for your own fixture:
 
