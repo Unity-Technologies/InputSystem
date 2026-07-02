@@ -32,10 +32,13 @@ namespace UnityEngine.InputSystem.XInput
 
 
             // Matches macOS native support for Xbox Controllers
-            // macOS reports all Xbox controllers as "Controller" with manufacter Microsoft
+            // macOS reports all Xbox controllers as "Controller" with manufacturer Microsoft, though the
+            // exact manufacturer string varies ("Microsoft Corporation", sometimes with a leading invalid
+            // byte rendered as U+FFFD on macOS Tahoe). WithManufacturer does an exact case-insensitive
+            // equality check for plain-letter patterns, so we use WithManufacturerContains here.
             InputSystem.RegisterLayout<XboxGamepadMacOSNative>(
                 matches: new InputDeviceMatcher().WithInterface("HID")
-                    .WithProduct("Controller").WithManufacturer("Microsoft"));
+                    .WithProduct("Controller").WithManufacturerContains("Microsoft"));
 
             // Matching older Xbox One controllers that have different View and Share buttons than the newer Xbox Series
             // controllers.
