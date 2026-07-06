@@ -240,6 +240,8 @@ You can derive a layout from an existing layout. This process is based on mergin
 * For layouts defined in JSON, you can specify the base layout in the `extends` property of the root node.
 * For layouts created in code using [`InputControlLayout.Builder`](xref:UnityEngine.InputSystem.Layouts.InputControlLayout.Builder), you can specify a base layout using [`InputControlLayout.Builder.Extend()`](xref:UnityEngine.InputSystem.Layouts.InputControlLayout.Builder.Extend(System.String)).
 
+> **Note:** The layout hierarchy also determines which binding paths in Input Action Assets resolve controls on your device. When a path such as `<Gamepad>/buttonSouth` is resolved, the Input System walks the device's base layout chain upward until it finds a match. If your device class does not inherit from `Gamepad` (or whichever base layout the path references), that path will not resolves controls, no state change monitors will be created, and the corresponding actions will not fire. This also applies to custom base layouts: if you define a family of devices that share binding paths under a common layout name (e.g. `<MyBaseLayout>/...`), every device in that family must inherit from the C# class registered for that base layout.
+
 ## Control items
 
 Each layout is comprised of zero or more Control items. Each item either describes a new Control, or modifies the properties of an existing Control. The latter can also reach down into the hierarchy and modify properties of a Control added implicitly as a child by another item.
