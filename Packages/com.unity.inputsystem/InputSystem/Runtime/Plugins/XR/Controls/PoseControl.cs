@@ -254,6 +254,11 @@ namespace UnityEngine.InputSystem.XR
                 m_StateBlock.bitOffset == 0 &&
                 isTracked.m_StateBlock.format == InputStateBlock.kFormatBit &&
                 isTracked.m_StateBlock.sizeInBits == 1 &&
+                isTracked.m_StateBlock.bitOffset == 0 &&
+                isTracked.clamp == AxisControl.Clamp.None &&
+                isTracked.invert == false &&
+                isTracked.normalize == false &&
+                isTracked.scale == false &&
                 trackingState.optimizedControlDataType == InputStateBlock.kFormatInt &&
                 position.optimizedControlDataType == InputStateBlock.kFormatVector3 &&
                 rotation.optimizedControlDataType == InputStateBlock.kFormatQuaternion &&
