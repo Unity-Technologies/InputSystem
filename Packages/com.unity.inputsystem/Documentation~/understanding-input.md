@@ -1,7 +1,7 @@
 ---
-uid: understanding-input
+uid: concepts-input
 ---
-# Understanding input
+# Concepts
 
 Input refers to signals sent by users of your game or app from an input device, such as a keyboard, mouse, touchscreen, gamepad, or joystick. Almost all Unity projects require input of some form, and the Input system package provides a flexible set of features which allow you to configure and respond to input in a way that suits your project.
 

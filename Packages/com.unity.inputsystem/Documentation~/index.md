@@ -16,9 +16,13 @@ This **Input System package** is a newer, more flexible system, which allows you
 > [!TIP]
 > During the installation process for the **Input System** package, the installer offers to automatically deactivate the older built-in system. 
 
-To get started, refer to the [Installation](Installation.md) and [Workflows](workflows.md) sections. 
+To get started, refer to the [Workflows](workflows.md) section to decide how to use Input:
 
-For a demo project, refer tp the [Warriors demo](https://github.com/UnityTechnologies/InputSystem_Warriors) on GitHub.
+* Using actions, which is the recommended workflow.
+* Using both actions and the PlayerInput component, which provides features for callbacks and multiplayer.
+* Directly read device states with a script for fast prototyping or single-platform applications.
+
+For a demo project, refer to the [Warriors demo](https://github.com/UnityTechnologies/InputSystem_Warriors) on GitHub.
 
 ![Screenshot of the Input Actions Editor window displaying the default action map, Actions, and Action Properties. They are displayed in 3 columns side-by-side in that order.](Images/ActionsEditor.png)<br/>
 *The Input Actions Editor, displaying some of the default actions that come pre-configured with the Input System package.*
