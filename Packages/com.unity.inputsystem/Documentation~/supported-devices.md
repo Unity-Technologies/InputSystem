@@ -4,8 +4,6 @@ uid: input-system-supported-devices
 
 # Supported devices
 
-![Supported Devices](Images/SupportedDevices.png)
-
 A Project usually supports a known set of input methods. For example, a mobile app might support only touch, and a console application might support only gamepads. A cross-platform application might support gamepads, mouse, and keyboard, but might not require XR Device support.
 
 To narrow the options that the Editor UI presents to you, and to avoid creating input Devices and consuming input that your application won't use, you can restrict the set of supported Devices on a per-project basis.
