@@ -1,12 +1,12 @@
 ---
 uid: input-system-videos
 ---
-
-# Video resources
+# Videos
 
 This page provides a collection of video resources to introduce the Input System in Unity 6. Follow the videos in the order provided, since many of the tutorials provide a foundation for understanding the more advanced tutorials.
 
 The Input System supports several different workflows, each with its own advantages. These videos walk you through the most commonly used workflows and offer practical guidance to help you begin using the Input System right away.
+
 
 ## Introduction to the Unity Input System
 
@@ -19,6 +19,7 @@ The Input System supports several different workflows, each with its own advanta
 - Learn how processors can modify or transform raw input data before it’s used (for example, normalizing, inverting, or clamping values).
 
 **Link**: [Watch video 1/7](https://www.youtube.com/watch?v=TiTKAseu17A) (YouTube)
+
 
 ## Input System scripting
 
@@ -50,6 +51,7 @@ The Input System supports several different workflows, each with its own advanta
 
 **Link**: [Watch Video 4/7](https://www.youtube.com/watch?v=GdjP5pggaHw) (YouTube)
 
+
 ## Rebind Input System controls
 
 **Description**: The fifth video in the series explores in-game rebinding:
@@ -69,6 +71,7 @@ The Input System supports several different workflows, each with its own advanta
 - Set up behaviors for communicating with your scripts.
 
 **Link**: [Watch Video 6/7](https://www.youtube.com/watch?v=beDfIBLfx4c) (YouTube)
+
 
 ## Player Input Manager and local multiplayer games
 
