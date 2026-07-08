@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_2020_2_OR_NEWER
+#if UNITY_EDITOR
 using System;
 using System.Collections.ObjectModel;
 using UnityEditor;

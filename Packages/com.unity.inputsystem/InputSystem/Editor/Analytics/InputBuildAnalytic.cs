@@ -167,13 +167,9 @@ namespace UnityEngine.InputSystem.Editor
                         throw new Exception("Unsupported editor property drawer mode");
                 }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 var inputSystemActions = InputSystem.actions;
                 var actionsPath = inputSystemActions == null ? null : AssetDatabase.GetAssetPath(inputSystemActions);
                 has_projectwide_input_action_asset = !string.IsNullOrEmpty(actionsPath);
-#else
-                has_projectwide_input_action_asset = false;
-#endif
 
                 var settingsPath = settings == null ? null : AssetDatabase.GetAssetPath(settings);
                 has_settings_asset = !string.IsNullOrEmpty(settingsPath);
@@ -193,18 +189,16 @@ namespace UnityEngine.InputSystem.Editor
                 supported_devices = settings.supportedDevices.ToArray();
                 disable_redundant_events_merging = settings.disableRedundantEventsMerging;
                 shortcut_keys_consume_input = settings.shortcutKeysConsumeInput;
+                shortcut_keys_use_action_priority = settings.shortcutKeysUseActionPriority;
 
                 feature_optimized_controls_enabled = settings.IsFeatureEnabled(InputFeatureNames.kUseOptimizedControls);
                 feature_read_value_caching_enabled = settings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching);
                 feature_paranoid_read_value_caching_checks_enabled =
                     settings.IsFeatureEnabled(InputFeatureNames.kParanoidReadValueCachingChecks);
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
                 feature_use_imgui_editor_for_assets =
                     settings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets);
-#else
-                feature_use_imgui_editor_for_assets = false;
-#endif
+
                 feature_disable_unity_remote_support =
                     settings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport);
                 feature_run_player_updates_in_editmode =
@@ -315,6 +309,11 @@ namespace UnityEngine.InputSystem.Editor
             /// </summary>
             public bool shortcut_keys_consume_input;
 
+            /// <summary>
+            /// Represents <see cref="InputSettings.shortcutKeysUseActionPriority"/>
+            /// </summary>
+            public bool shortcut_keys_use_action_priority;
+
             #endregion
 
             #region Feature flag settings
@@ -392,7 +391,7 @@ namespace UnityEngine.InputSystem.Editor
 
             public void OnPostprocessBuild(BuildReport report)
             {
-                InputSystem.s_Manager?.m_Runtime?.SendAnalytic(new InputBuildAnalytic(report));
+                InputSystem.manager?.runtime?.SendAnalytic(new InputBuildAnalytic(report));
             }
         }
     }

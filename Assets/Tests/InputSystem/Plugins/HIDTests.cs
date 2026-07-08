@@ -218,27 +218,9 @@ internal class HIDTests : CoreTestsFixture
 
         // The HID report descriptor is fetched from the device via an IOCTL.
         var deviceId = runtime.AllocateDeviceId();
-        unsafe
-        {
-            runtime.SetDeviceCommandCallback(deviceId,
-                (id, commandPtr) =>
-                {
-                    if (commandPtr->type == HID.QueryHIDReportDescriptorSizeDeviceCommandType)
-                        return reportDescriptor.Length;
 
-                    if (commandPtr->type == HID.QueryHIDReportDescriptorDeviceCommandType
-                        && commandPtr->payloadSizeInBytes >= reportDescriptor.Length)
-                    {
-                        fixed(byte* ptr = reportDescriptor)
-                        {
-                            UnsafeUtility.MemCpy(commandPtr->payloadPtr, ptr, reportDescriptor.Length);
-                            return reportDescriptor.Length;
-                        }
-                    }
+        SetDeviceCommandCallbackToReturnReportDescriptor(deviceId, reportDescriptor);
 
-                    return InputDeviceCommand.GenericFailure;
-                });
-        }
         // Report device.
         runtime.ReportNewInputDevice(
             new InputDeviceDescription
@@ -307,6 +289,203 @@ internal class HIDTests : CoreTestsFixture
         Assert.That(hidDescriptor.collections[0].childCount, Is.EqualTo(kNumElements));
 
         ////TODO: check hat switch
+    }
+
+    // This is used to mock out the IOCTL the HID device driver would use to return
+    // the report descriptor and its size.
+    unsafe void SetDeviceCommandCallbackToReturnReportDescriptor(int deviceId, byte[] reportDescriptor)
+    {
+        runtime.SetDeviceCommandCallback(deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr == null)
+                    return InputDeviceCommand.GenericFailure;
+
+                if (commandPtr->type == HID.QueryHIDReportDescriptorSizeDeviceCommandType)
+                    return reportDescriptor.Length;
+
+                if (commandPtr->type == HID.QueryHIDReportDescriptorDeviceCommandType
+                    && commandPtr->payloadSizeInBytes >= reportDescriptor.Length)
+                {
+                    fixed(byte* ptr = reportDescriptor)
+                    {
+                        UnsafeUtility.MemCpy(commandPtr->payloadPtr, ptr, reportDescriptor.Length);
+                        return reportDescriptor.Length;
+                    }
+                }
+
+                return InputDeviceCommand.GenericFailure;
+            });
+    }
+
+    [Test]
+    [Category("HID Devices")]
+    // These descriptor values were generated with the Microsoft HID Authoring descriptor tool in
+    // https://github.com/microsoft/hidtools for the expected value:
+    // Logical min 0, logical max 65535
+    [TestCase(16, new byte[] {0x16, 0x00, 0x00}, new byte[] { 0x27, 0xFF, 0xFF, 0x00, 0x00 }, 0, 65535)]
+    // Logical min -32768, logical max 32767
+    [TestCase(16, new byte[] {0x16, 0x00, 0x80}, new byte[] {0x26, 0xFF, 0x7F}, -32768, 32767)]
+    // Logical min 0, logical max 255
+    [TestCase(8, new byte[] {0x15, 00}, new byte[] {0x26, 0xFF, 0x00}, 0, 255)]
+    // Logical min -128, logical max 127
+    [TestCase(8, new byte[] {0x15, 0x80}, new byte[] {0x25, 0x7F}, -128, 127)]
+    // Logical min -16, logical max 15 (below 8 bit boundary)
+    [TestCase(5, new byte[] {0x15, 0xF0}, new byte[] {0x25, 0x0F}, -16, 15)]
+    // Logical min 0, logical max 31 (below 8 bit boundary)
+    [TestCase(5, new byte[] {0x15, 0x00}, new byte[] {0x25, 0x1F}, 0, 31)]
+    // Logical min -4096, logical max 4095 (crosses byte boundary)
+    [TestCase(13, new byte[] {0x16, 0x00, 0xF0}, new byte[] {0x26, 0xFF, 0x0F}, -4096, 4095)]
+    // Logical min 0, logical max 8191 (crosses byte boundary)
+    [TestCase(13, new byte[] {0x15, 0x00}, new byte[] {0x26, 0xFF, 0x1F}, 0, 8191)]
+    // Logical min 0, logical max 16777215 (24 bit)
+    [TestCase(24, new byte[] {0x15, 0x00}, new byte[] {0x27, 0xFF, 0xFF, 0xFF, 0x00}, 0, 16777215)]
+    // Logical min -8388608, logical max 8388607 (24 bit)
+    [TestCase(24, new byte[] {0x17, 0x00, 0x00, 0x80, 0xFF}, new byte[] {0x27, 0xFF, 0xFF, 0x7F, 0x00}, -8388608, 8388607)]
+    // Logical min -72, logical max -35
+    [TestCase(8, new byte[] {0x15, 0xB8}, new byte[] {0x25, 0xDD}, -72, -35)]
+    // Logical min 30, logical max 78
+    [TestCase(8, new byte[] {0x15, 0x1E}, new byte[] {0x25, 0x4E}, 30, 78)]
+
+    public void Devices_CanParseHIDDescriptor_WithSignedLogicalMinAndMaxValues(byte reportSizeBits, byte[] logicalMinBytes, byte[] logicalMaxBytes, int logicalMinExpected, int logicalMaxExpected)
+    {
+        // Dynamically create HID report descriptor for one X-axis with parameterized logical min/max
+        var reportDescriptorStart = new byte[]
+        {
+            0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+            0x09, 0x05,        // Usage (Game Pad)
+            0xA1, 0x01,        // Collection (Application)
+            0x85, 0x01,        //   Report ID (1)
+            0x05, 0x01,        //   Usage Page (Generic Desktop Ctrls)
+            0x09, 0x30,        //   Usage (X)
+        };
+
+        var reportDescriptorEnd = new byte[]
+        {
+            0x75, reportSizeBits,   //   Report Size (8)
+            0x95, 0x01,             //   Report Count (1)
+            0x81, 0x02,             //   Input (Data,Var,Abs)
+            0xC0,                   //   End Collection
+        };
+
+        // Concatenate to form final descriptor based on test parameters where logical min/max bytes
+        // are inserted in the middle.
+        var reportDescriptor = reportDescriptorStart.Concat(logicalMinBytes).
+            Concat(logicalMaxBytes).
+            Concat(reportDescriptorEnd).
+            ToArray();
+
+        // The HID report descriptor is fetched from the device via an IOCTL.
+        var deviceId = runtime.AllocateDeviceId();
+
+        // Callback to return the desired report descriptor.
+        SetDeviceCommandCallbackToReturnReportDescriptor(deviceId, reportDescriptor);
+
+        // Report device.
+        runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestLogicalMinMaxParsing",
+                product = "TestHID",
+                capabilities = new HID.HIDDeviceDescriptor
+                {
+                    vendorId = 0x321,
+                    productId = 0x432
+                }.ToJson()
+            }.ToJson(), deviceId);
+
+        InputSystem.Update();
+
+        var device = InputSystem.GetDeviceById(deviceId);
+        Assert.That(device, Is.Not.Null);
+
+        var parsedDescriptor = JsonUtility.FromJson<HID.HIDDeviceDescriptor>(device.description.capabilities);
+
+        // Check we parsed the values as expected
+        foreach (var element in parsedDescriptor.elements)
+        {
+            if (element.usage == (int)HID.GenericDesktop.X)
+            {
+                Assert.That(element.logicalMin, Is.EqualTo(logicalMinExpected));
+                Assert.That(element.logicalMax, Is.EqualTo(logicalMaxExpected));
+            }
+            else
+                Assert.Fail("Could not find X element in descriptor");
+        }
+    }
+
+    // Regression test for https://jira.unity3d.com/browse/UUM-143659.
+    //
+    // HID devices whose report descriptor declares a hat switch with Report Size 8
+    // (rather than the standard 4 bits, e.g. ESP32-BLE-Gamepad) caused an
+    // IndexOutOfRangeException inside InputDeviceBuilder.InsertControlBitRangeNode
+    // while constructing the control tree. InputManager caught the exception and
+    // logged "Could not create a device for ...", so the device never showed up.
+    [Test]
+    [Category("Devices")]
+    [Description("Regression test for case UUM-143659")]
+    public void Devices_CanCreateGenericHID_FromGamepadWithEightBitHatSwitch()
+    {
+        // Minimal Gamepad collection that contains a hat switch whose Report Size
+        // is declared as 8 bits (instead of the usual 4). Modelled on the
+        // descriptor reported in UUM-143659 (ESP32-BLE-Gamepad library).
+        var reportDescriptor = new byte[]
+        {
+            0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+            0x09, 0x05,        // Usage (Game Pad)
+            0xA1, 0x01,        // Collection (Application)
+
+            // Two 8-bit axes so the control tree has more than one leaf.
+            0x09, 0x30,        //   Usage (X)
+            0x09, 0x31,        //   Usage (Y)
+            0x15, 0x00,        //   Logical Minimum (0)
+            0x26, 0xFF, 0x00,  //   Logical Maximum (255)
+            0x75, 0x08,        //   Report Size (8)
+            0x95, 0x02,        //   Report Count (2)
+            0x81, 0x02,        //   Input (Data,Var,Abs)
+
+            // Hat switch with the problematic 8-bit Report Size.
+            0xA1, 0x00,        //   Collection (Physical)
+            0x05, 0x01,        //     Usage Page (Generic Desktop Ctrls)
+            0x09, 0x39,        //     Usage (Hat switch)
+            0x15, 0x01,        //     Logical Minimum (1)
+            0x25, 0x08,        //     Logical Maximum (8)
+            0x35, 0x00,        //     Physical Minimum (0)
+            0x46, 0x3B, 0x01,  //     Physical Maximum (315)
+            0x65, 0x12,        //     Unit (SI Rotation, Length: Centimeter)
+            0x75, 0x08,        //     Report Size (8)   <-- bug: 8 instead of 4
+            0x95, 0x01,        //     Report Count (1)
+            0x81, 0x42,        //     Input (Data,Var,Abs,Null State)
+            0xC0,              //   End Collection
+
+            0xC0,              // End Collection
+        };
+
+        var deviceId = runtime.AllocateDeviceId();
+        SetDeviceCommandCallbackToReturnReportDescriptor(deviceId, reportDescriptor);
+
+        runtime.ReportNewInputDevice(
+            new InputDeviceDescription
+            {
+                interfaceName = HID.kHIDInterface,
+                manufacturer = "TestVendor",
+                product = "TestEightBitHatGamepad",
+                capabilities = new HID.HIDDeviceDescriptor
+                {
+                    vendorId = 0xE502,
+                    productId = 0xBBAB
+                }.ToJson()
+            }.ToJson(), deviceId);
+
+        // Device construction runs through InputDeviceBuilder. Before the fix
+        // this raises IndexOutOfRangeException in InsertControlBitRangeNode,
+        // which InputManager catches and turns into a LogType.Error
+        // ("Could not create a device for ...") — that error fails the test.
+        InputSystem.Update();
+
+        Assert.That(InputSystem.GetDeviceById(deviceId), Is.Not.Null,
+            "Device should be created without throwing IndexOutOfRangeException.");
     }
 
     [Test]
@@ -708,8 +887,8 @@ internal class HIDTests : CoreTestsFixture
             }.ToJson());
         InputSystem.Update();
 
-        InputSystem.SaveAndReset();
-        InputSystem.Restore();
+        m_StateManager.SaveAndReset(enableRemoting: false, runtime: null);
+        m_StateManager.Restore();
 
         var hid = (HID)InputSystem.devices.First(x => x is HID);
 
@@ -1026,7 +1205,7 @@ internal class HIDTests : CoreTestsFixture
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    struct SimpleJoystickLayout : IInputStateTypeInfo
+    struct SimpleJoystickLayoutWithStick : IInputStateTypeInfo
     {
         [FieldOffset(0)] public byte reportId;
         [FieldOffset(1)] public ushort x;
@@ -1069,7 +1248,7 @@ internal class HIDTests : CoreTestsFixture
         Assert.That(device, Is.TypeOf<Joystick>());
         Assert.That(device["Stick"], Is.TypeOf<StickControl>());
 
-        InputSystem.QueueStateEvent(device, new SimpleJoystickLayout { reportId = 1, x = ushort.MaxValue, y = ushort.MinValue });
+        InputSystem.QueueStateEvent(device, new SimpleJoystickLayoutWithStick { reportId = 1, x = ushort.MaxValue, y = ushort.MinValue });
         InputSystem.Update();
 
         Assert.That(device["stick"].ReadValueAsObject(),

@@ -84,7 +84,7 @@
         },
         "PVP-40-1": {
           "errors": [
-            "CHANGELOG.md: line 11: header must match regex: ^\\[(?<version>.*)\\]( - (?<date>\\d{4}-\\d{2}-\\d{2}))?$"
+            "CHANGELOG.md: line 8: header must match regex: ^\\[(?<version>.*)\\]( - (?<date>\\d{4}-\\d{2}-\\d{2}))?$"
           ]
         },
         "PVP-91-3": {
@@ -127,10 +127,12 @@
         },
         "PVP-92-3": {
           "errors": [
-            "InputSystem/Plugins/Switch/SwitchProControllerHID.cs: .Switch.",
-            "InputSystem/Plugins/Switch/SwitchProControllerHID.cs: .Switch\n",
-            "InputSystem/Plugins/Switch/SwitchSupportHID.cs: .Switch\n",
-            "Documentation~/Gamepad.md: .Switch."
+            "Documentation~/Gamepad.md: .Switch.",
+            "InputSystem/Runtime/Plugins/iOS/IOSGameController.cs: .Switch;",
+            "InputSystem/Runtime/Plugins/Switch/SwitchProController.cs: .Switch\n",
+            "InputSystem/Runtime/Plugins/Switch/SwitchProControllerHID.cs: .Switch.",
+            "InputSystem/Runtime/Plugins/Switch/SwitchProControllerHID.cs: .Switch\n",
+            "InputSystem/Runtime/Plugins/Switch/SwitchSupportHID.cs: .Switch\n"
           ]
         },
         "PVP-124-2": {

@@ -94,12 +94,16 @@ namespace UnityEngine.InputSystem.Editor
                     if (m_CompositeParts == null)
                         InitializeCompositePartProperties();
 
-                    var selectedPart = EditorGUILayout.Popup(s_CompositePartAssignmentLabel, m_SelectedCompositePart,
-                        m_CompositePartOptions);
-                    if (selectedPart != m_SelectedCompositePart)
+                    // If m_CompositeParts still null after InitializeCompositePartProperties something went wrong and we can't select
+                    if (m_CompositeParts != null)
                     {
-                        m_SelectedCompositePart = selectedPart;
-                        OnCompositePartAssignmentChanged();
+                        var selectedPart = EditorGUILayout.Popup(s_CompositePartAssignmentLabel, m_SelectedCompositePart,
+                            m_CompositePartOptions);
+                        if (selectedPart != m_SelectedCompositePart)
+                        {
+                            m_SelectedCompositePart = selectedPart;
+                            OnCompositePartAssignmentChanged();
+                        }
                     }
                 }
 

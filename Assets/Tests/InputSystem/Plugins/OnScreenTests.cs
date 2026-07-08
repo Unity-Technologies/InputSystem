@@ -582,6 +582,40 @@ internal class OnScreenTests : CoreTestsFixture
         Assert.That(stick.gameObject.GetComponent<RectTransform>().anchoredPosition, Is.Not.EqualTo(stickOriginPosition));
     }
 
+    [UnityTest]
+    [Category("Devices")]
+    public IEnumerator OnScreenStick_IsolateMode_ShouldCastRayToChild()
+    {
+        InputSystem.AddDevice<Touchscreen>();
+
+        var uiTestScene = new UITestScene(this);
+
+        var stickRect = uiTestScene.AddImage("StickParent");
+        var stick = stickRect.gameObject.AddComponent<OnScreenStick>();
+        stick.controlPath = "<Gamepad>/leftStick";
+        stick.useIsolatedInputActions = true;
+
+        var childGO = new GameObject("StickImage", typeof(RectTransform), typeof(Image));
+        var childRect = childGO.GetComponent<RectTransform>();
+        childRect.SetParent(stickRect, worldPositionStays: false);
+        childRect.anchorMin = Vector2.zero;
+        childRect.anchorMax = Vector2.one;
+        childRect.sizeDelta = Vector2.zero;
+        childGO.GetComponent<Image>().raycastTarget = true;
+
+        var stickOriginPosition = stickRect.anchoredPosition;
+
+        // Ensure that the OnScreenStick component has been started.
+        yield return null;
+
+        yield return uiTestScene.PressAndDrag(childRect, new Vector2(50, 0));
+
+        // Allow one more frame for queued events to be processed.
+        yield return null;
+
+        Assert.That(stickRect.anchoredPosition, Is.Not.EqualTo(stickOriginPosition));
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1305016/
     [Test]
     [Category("Devices")]

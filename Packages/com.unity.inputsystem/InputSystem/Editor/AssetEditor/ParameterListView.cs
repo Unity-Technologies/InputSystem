@@ -247,7 +247,6 @@ namespace UnityEngine.InputSystem.Editor.Lists
             m_ParameterEditor = null;
         }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         public void OnDrawVisualElements(VisualElement root)
         {
             if (m_ParameterEditor != null)
@@ -278,11 +277,26 @@ namespace UnityEngine.InputSystem.Editor.Lists
 
                 if (parameter.isEnum)
                 {
-                    var intValue = parameter.value.value.ToInt32();
-                    var field = new DropdownField(label.text, parameter.enumNames.Select(x => x.text).ToList(), intValue);
-                    field.tooltip = label.tooltip;
-                    field.RegisterValueChangedCallback(evt => OnValueChanged(ref parameter, field.index, closedIndex));
-                    field.RegisterCallback<BlurEvent>(_ => OnEditEnd());
+                    var names = parameter.enumNames.Select(c => c.text).ToList();
+                    var rawValue = parameter.value.value.ToInt32();
+                    var selectedIndex = parameter.enumValues.IndexOf(rawValue);
+                    if (selectedIndex < 0 || selectedIndex >= names.Count)
+                        selectedIndex = 0;
+
+                    var field = new DropdownField(label.text, names, selectedIndex)
+                    {
+                        tooltip = label.tooltip
+                    };
+
+                    field.RegisterValueChangedCallback(evt =>
+                    {
+                        var newBackingValue = parameter.enumValues[field.index];
+                        parameter.value.value = PrimitiveValue.FromObject(newBackingValue).ConvertTo(parameter.value.type);
+                        m_Parameters[closedIndex] = parameter;
+                        onChange?.Invoke();
+                    });
+
+                    field.RegisterCallback<BlurEvent>(_ => onChange?.Invoke());
                     root.Add(field);
                 }
                 else if (parameter.value.type == TypeCode.Int64 || parameter.value.type == TypeCode.UInt64)
@@ -328,8 +342,6 @@ namespace UnityEngine.InputSystem.Editor.Lists
             }
         }
 
-#endif
-
         private void OnValuesChanged()
         {
             ReadParameterValuesFrom(m_ParameterEditor.target);
@@ -351,10 +363,10 @@ namespace UnityEngine.InputSystem.Editor.Lists
                 return;
             }
 
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             // handled by OnDrawVisualElements with UI Toolkit
-            if (!InputSystem.settings.useIMGUIEditorForAssets) return;
-#endif
+            if (!InputSystem.settings.useIMGUIEditorForAssets)
+                return;
+
             // Otherwise, fall back to our default logic.
             if (m_Parameters == null)
                 return;

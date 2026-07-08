@@ -409,7 +409,6 @@ partial class CoreTests
     {
         CollectAnalytics(InputBuildAnalytic.kEventName);
 
-        var storedSettings = InputSystem.s_Manager.settings;
         InputSettings defaultSettings = null;
 
         try
@@ -429,11 +428,7 @@ partial class CoreTests
             // Assert: Data content
             var data = (InputBuildAnalytic.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
             Assert.That(data.build_guid, Is.EqualTo(string.Empty));
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.has_projectwide_input_action_asset, Is.EqualTo(InputSystem.actions != null));
-#else
-            Assert.That(data.has_projectwide_input_action_asset, Is.False);
-#endif
             Assert.That(data.has_settings_asset, Is.False);
             Assert.That(data.has_default_settings, Is.True);
 
@@ -456,21 +451,17 @@ partial class CoreTests
             Assert.That(data.supported_devices, Is.EqualTo(defaultSettings.supportedDevices));
             Assert.That(data.disable_redundant_events_merging, Is.EqualTo(defaultSettings.disableRedundantEventsMerging));
             Assert.That(data.shortcut_keys_consume_input, Is.EqualTo(defaultSettings.shortcutKeysConsumeInput));
+            Assert.That(data.shortcut_keys_use_action_priority, Is.EqualTo(defaultSettings.shortcutKeysUseActionPriority));
 
             Assert.That(data.feature_optimized_controls_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseOptimizedControls)));
             Assert.That(data.feature_read_value_caching_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching)));
             Assert.That(data.feature_paranoid_read_value_caching_checks_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kParanoidReadValueCachingChecks)));
             Assert.That(data.feature_disable_unity_remote_support, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kDisableUnityRemoteSupport)));
             Assert.That(data.feature_run_player_updates_in_editmode, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kRunPlayerUpdatesInEditMode)));
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.feature_use_imgui_editor_for_assets, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseIMGUIEditorForAssets)));
-#else
-            Assert.That(data.feature_use_imgui_editor_for_assets, Is.False);
-#endif
         }
         finally
         {
-            InputSystem.s_Manager.settings = storedSettings;
             if (defaultSettings != null)
                 Object.DestroyImmediate(defaultSettings);
         }
@@ -482,7 +473,6 @@ partial class CoreTests
     {
         CollectAnalytics(InputBuildAnalytic.kEventName);
 
-        var storedSettings = InputSystem.s_Manager.settings;
         InputSettings customSettings = null;
 
         try
@@ -510,14 +500,13 @@ partial class CoreTests
             customSettings.supportedDevices = Array.Empty<string>();
             customSettings.disableRedundantEventsMerging = true;
             customSettings.shortcutKeysConsumeInput = true;
+            customSettings.shortcutKeysUseActionPriority = true;
 
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kDisableUnityRemoteSupport, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kRunPlayerUpdatesInEditMode, true);
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseIMGUIEditorForAssets, true);
-#endif
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseReadValueCaching, true);
 
             InputSystem.settings = customSettings;
@@ -535,11 +524,7 @@ partial class CoreTests
             var data = (InputBuildAnalytic.InputBuildAnalyticData)sentAnalyticsEvents[0].data;
 
             Assert.That(data.build_guid, Is.EqualTo(string.Empty));
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.has_projectwide_input_action_asset, Is.EqualTo(InputSystem.actions != null));
-#else
-            Assert.That(data.has_projectwide_input_action_asset, Is.False);
-#endif
             Assert.That(data.has_settings_asset, Is.False); // Note: We just don't write any file in this test, hence false
             Assert.That(data.has_default_settings, Is.False);
 
@@ -562,21 +547,17 @@ partial class CoreTests
             Assert.That(data.supported_devices, Is.EqualTo(customSettings.supportedDevices));
             Assert.That(data.disable_redundant_events_merging, Is.EqualTo(customSettings.disableRedundantEventsMerging));
             Assert.That(data.shortcut_keys_consume_input, Is.EqualTo(customSettings.shortcutKeysConsumeInput));
+            Assert.That(data.shortcut_keys_use_action_priority, Is.EqualTo(customSettings.shortcutKeysUseActionPriority));
 
             Assert.That(data.feature_optimized_controls_enabled, Is.True);
             Assert.That(data.feature_read_value_caching_enabled, Is.True);
             Assert.That(data.feature_paranoid_read_value_caching_checks_enabled, Is.True);
             Assert.That(data.feature_disable_unity_remote_support, Is.True);
             Assert.That(data.feature_run_player_updates_in_editmode, Is.True);
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             Assert.That(data.feature_use_imgui_editor_for_assets, Is.True);
-#else
-            Assert.That(data.feature_use_imgui_editor_for_assets, Is.False); // No impact
-#endif
         }
         finally
         {
-            InputSystem.s_Manager.settings = storedSettings;
             if (customSettings != null)
                 Object.DestroyImmediate(customSettings);
         }

@@ -109,9 +109,9 @@ public class GamepadISX : MonoBehaviour
         if (String.IsNullOrEmpty(str))
             return null;
         else if (str.Length == 1)
-            return str.ToUpper();
+            return str.ToUpperInvariant();
         else
-            return char.ToUpper(str[0]) + str.Substring(1);
+            return char.ToUpperInvariant(str[0]) + str.Substring(1);
     }
 
     protected void ShowMessage(string msg)

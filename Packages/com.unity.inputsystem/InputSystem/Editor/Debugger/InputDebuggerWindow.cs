@@ -12,6 +12,12 @@ using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Users;
 using UnityEngine.InputSystem.Utilities;
 
+#if UNITY_6000_2_OR_NEWER
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
+
 ////FIXME: Generate proper IDs for the individual tree view items; the current sequential numbering scheme just causes lots of
 ////       weird expansion/collapsing to happen.
 
@@ -44,7 +50,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 s_Instance = GetWindow<InputDebuggerWindow>();
                 s_Instance.Show();
-                s_Instance.titleContent = new GUIContent("Input Debug");
             }
             else
             {
@@ -74,6 +79,11 @@ namespace UnityEngine.InputSystem.Editor
                 s_Instance.UninstallHooks();
                 s_Instance.Refresh();
             }
+        }
+
+        private void OnEnable()
+        {
+            titleContent = new GUIContent("Input Debugger");
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
@@ -212,9 +222,9 @@ namespace UnityEngine.InputSystem.Editor
         {
             var playerUpdateType = InputDeviceDebuggerWindow.DetermineUpdateTypeToShow(device);
             var currentUpdateType = InputState.currentUpdateType;
-            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, playerUpdateType);
+            InputStateBuffers.SwitchTo(InputSystem.manager.m_StateBuffers, playerUpdateType);
             InputSystem.ResetDevice(device, alsoResetDontResetControls: hard);
-            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, currentUpdateType);
+            InputStateBuffers.SwitchTo(InputSystem.manager.m_StateBuffers, currentUpdateType);
         }
 
         private static void ToggleAddDevicesNotSupportedByProject()
@@ -225,15 +235,15 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ToggleDiagnosticMode()
         {
-            if (InputSystem.s_Manager.m_Diagnostics != null)
+            if (InputSystem.manager.m_Diagnostics != null)
             {
-                InputSystem.s_Manager.m_Diagnostics = null;
+                InputSystem.manager.m_Diagnostics = null;
             }
             else
             {
                 if (m_Diagnostics == null)
                     m_Diagnostics = new InputDiagnostics();
-                InputSystem.s_Manager.m_Diagnostics = m_Diagnostics;
+                InputSystem.manager.m_Diagnostics = m_Diagnostics;
             }
         }
 
@@ -275,7 +285,8 @@ namespace UnityEngine.InputSystem.Editor
                     var profilerName = ProfilerDriver.GetConnectionIdentifier(profiler);
                     var isConnected = ProfilerDriver.connectedProfiler == profiler;
                     if (enabled)
-                        menu.AddItem(new GUIContent(profilerName), isConnected, () => {
+                        menu.AddItem(new GUIContent(profilerName), isConnected, () =>
+                        {
                             ProfilerDriver.connectedProfiler = profiler;
                             EnableRemoteDevices();
                         });
@@ -291,7 +302,8 @@ namespace UnityEngine.InputSystem.Editor
 
                     var url = "device://" + device.id;
                     var isConnected = ProfilerDriver.connectedProfiler == 0xFEEE && ProfilerDriver.directConnectionUrl == url;
-                    menu.AddItem(new GUIContent(device.name), isConnected, () => {
+                    menu.AddItem(new GUIContent(device.name), isConnected, () =>
+                    {
                         ProfilerDriver.DirectURLConnect(url);
                         EnableRemoteDevices();
                     });
@@ -311,7 +323,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 menu.AddItem(Contents.addDevicesNotSupportedByProjectContent, InputEditorUserSettings.addDevicesNotSupportedByProject,
                     ToggleAddDevicesNotSupportedByProject);
-                menu.AddItem(Contents.diagnosticsModeContent, InputSystem.s_Manager.m_Diagnostics != null,
+                menu.AddItem(Contents.diagnosticsModeContent, InputSystem.manager.m_Diagnostics != null,
                     ToggleDiagnosticMode);
                 menu.AddItem(Contents.touchSimulationContent, InputEditorUserSettings.simulateTouch, ToggleTouchSimulation);
 
@@ -961,7 +973,7 @@ namespace UnityEngine.InputSystem.Editor
                     {
                         var control = state.controls[controlStartIndex + n];
                         var interactions =
-                            StringHelpers.Join(new[] {binding.effectiveInteractions, action.interactions}, ",");
+                            StringHelpers.Join(new[] { binding.effectiveInteractions, action.interactions }, ",");
 
                         var text = control.path;
                         if (!string.IsNullOrEmpty(interactions))

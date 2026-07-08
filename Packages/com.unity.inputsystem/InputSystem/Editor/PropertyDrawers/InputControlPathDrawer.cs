@@ -44,7 +44,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             EditorGUI.BeginProperty(position, label, property);
-            m_Editor.OnGUI(position, label, property: null, modifiedCallback: () => property.serializedObject.ApplyModifiedProperties());
+            m_Editor.OnGUI(position, label, property, () => property.serializedObject.ApplyModifiedProperties());
             EditorGUI.EndProperty();
         }
     }

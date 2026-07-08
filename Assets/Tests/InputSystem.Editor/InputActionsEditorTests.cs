@@ -1,6 +1,4 @@
-// UITK TreeView is not supported in earlier versions
-// Therefore the UITK version of the InputActionAsset Editor is not available on earlier Editor versions either.
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS && UNITY_6000_0_OR_NEWER
+#if UNITY_EDITOR && UNITY_6000_0_OR_NEWER
 
 using NUnit.Framework;
 using System;
@@ -21,6 +19,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     {
         base.OneTimeSetUp();
         m_Asset = AssetDatabaseUtils.CreateAsset<InputActionAsset>();
+        m_Asset.AddControlScheme(new InputControlScheme("test"));
         var actionMap = m_Asset.AddActionMap("First Name");
         m_Asset.AddActionMap("Second Name");
         m_Asset.AddActionMap("Third Name");
@@ -45,7 +44,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
     #region Helper methods
 
-    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = 5.0)
+    IEnumerator WaitForActionMapRename(int index, bool isActive, double timeoutSecs = kDefaultTimeoutSecs)
     {
         return WaitUntil(() =>
         {
@@ -58,7 +57,7 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         }, $"WaitForActionMapRename {index} {isActive}", timeoutSecs);
     }
 
-    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = 5.0)
+    IEnumerator WaitForActionRename(int index, bool isActive, double timeoutSecs = kDefaultTimeoutSecs)
     {
         return WaitUntil(() =>
         {
@@ -74,7 +73,6 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     #endregion
 
     [Test]
-    [Ignore("Instability, see ISXB-1284")]
     public void CanListActionMaps()
     {
         var actionMapsContainer = m_Window.rootVisualElement.Q("action-maps-container");
@@ -88,7 +86,6 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
-    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanCreateActionMap()
     {
         var button = m_Window.rootVisualElement.Q<Button>("add-new-action-map-button");
@@ -117,7 +114,6 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
-    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanRenameActionMap()
     {
         var actionMapsContainer = m_Window.rootVisualElement.Q("action-maps-container");
@@ -166,7 +162,6 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
-    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanDeleteActionMap()
     {
         var actionMapsContainer = m_Window.rootVisualElement.Q("action-maps-container");
@@ -195,7 +190,6 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
-    [Ignore("Instability, see ISXB-1284")]
     public IEnumerator CanRenameAction()
     {
         var actionContainer = m_Window.rootVisualElement.Q("actions-container");
@@ -213,8 +207,8 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
         // Re-fetch the actions since the UI may have refreshed.
         actionItem = actionContainer.Query<InputActionsTreeViewItem>().ToList();
 
-        // Click twice to start the rename
         SimulateClickOn(actionItem[1]);
+        yield return WaitForNotDirty();
         // If the item is already focused, don't click again
         if (!actionItem[1].IsFocused)
         {
@@ -240,6 +234,29 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
 
         // Check on the asset side
         Assert.That(m_Window.currentAssetInEditor.actionMaps[0].actions[1].name, Is.EqualTo("New Name"));
+    }
+
+    /// <summary>
+    /// <see href="https://jira.unity3d.com/browse/ISXB-1607">ISXB-1607</see>
+    /// Fix an out of range exception when pressing undo after creating and editing a new control scheme.
+    /// </summary>
+    /// <returns></returns>
+    [UnityTest]
+    [Ignore("Currently this is difficult to test, Darren - re-visit once we have converted the advanced dropdown to UIToolkit")]
+    public IEnumerator CanUndoActionMap_ControlSchemeEdit()
+    {
+        var controlSchemeToolbarMenu = m_Window.rootVisualElement.Q("control-schemes-toolbar-menu");
+
+        // changing the selection triggers a state change, wait for the scheduler to process the frame
+        yield return WaitForSchedulerLoop();
+        yield return WaitForNotDirty();
+
+        SimulateClickOn(controlSchemeToolbarMenu);
+
+        yield return WaitForSchedulerLoop();
+        yield return WaitForNotDirty();
+
+        yield return WaitForFocus(m_Window.rootVisualElement.Q("control-schemes-toolbar-menu"));
     }
 }
 #endif

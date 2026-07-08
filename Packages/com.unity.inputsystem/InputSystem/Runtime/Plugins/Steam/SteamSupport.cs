@@ -1,0 +1,243 @@
+#if (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT
+using System;
+using UnityEngine.InputSystem.Layouts;
+using UnityEngine.InputSystem.Utilities;
+
+namespace UnityEngine.InputSystem.Steam
+{
+    /// <summary>
+    /// Adds support for Steam controllers.
+    /// </summary>
+#if UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
+    public
+#else
+    internal
+#endif
+    static class SteamSupport
+    {
+        /// <summary>
+        /// Wrapper around the Steam controller API.
+        /// </summary>
+        /// <remarks>
+        /// This must be set by user code for Steam controller support to become functional.
+        /// </remarks>
+        public static ISteamControllerAPI api
+        {
+            get { return s_GlobalState.api; }
+            set
+            {
+                s_GlobalState.api = value;
+                InstallControllerUpdateHooks(s_GlobalState.api != null);
+            }
+        }
+
+        internal static ISteamControllerAPI GetAPIAndRequireItToBeSet()
+        {
+            if (s_GlobalState.api == null)
+                throw new InvalidOperationException("ISteamControllerAPI implementation has not been set on SteamSupport");
+            return s_GlobalState.api;
+        }
+
+        private class GlobalState
+        {
+            public SteamHandle<SteamController>[] connectedControllers;
+            public SteamController[] inputDevices;
+            public int inputDeviceCount;
+            public ISteamControllerAPI api;
+        }
+
+        private static GlobalState s_GlobalState = new GlobalState();
+
+        /// <summary>
+        /// Returns if the controller Update event handlers have been set or not.
+        /// </summary>
+        /// <remarks>
+        /// The s_ConnectedControllers array is allocated in response to setting event handlers and
+        /// so it can double as our "is installed" flag.
+        /// </remarks>
+        private static bool updateHooksInstalled => s_GlobalState.connectedControllers != null;
+
+        private const int STEAM_CONTROLLER_MAX_COUNT = 16;
+
+        /// <summary>
+        /// Enable support for the Steam controller API.
+        /// </summary>
+        public static void Initialize()
+        {
+            // We use this as a base layout.
+            InputSystem.RegisterLayout<SteamController>();
+
+            InstallControllerUpdateHooks(s_GlobalState.api != null);
+        }
+
+        /// <summary>
+        /// Disable Steam controller API support and reset the state.
+        /// </summary>
+        internal static void Shutdown()
+        {
+            InstallControllerUpdateHooks(false);
+
+            s_GlobalState.api = null;
+            s_GlobalState.inputDevices = null;
+            s_GlobalState.inputDeviceCount = 0;
+        }
+
+        private static void InstallControllerUpdateHooks(bool state)
+        {
+            Debug.Assert(api != null || !state);
+            if (state && !updateHooksInstalled)
+            {
+                s_GlobalState.connectedControllers = new SteamHandle<SteamController>[STEAM_CONTROLLER_MAX_COUNT];
+                InputSystem.onBeforeUpdate += OnUpdate;
+                InputSystem.onActionChange += OnActionChange;
+            }
+            else if (!state && updateHooksInstalled)
+            {
+                InputSystem.onBeforeUpdate -= OnUpdate;
+                InputSystem.onActionChange -= OnActionChange;
+                s_GlobalState.connectedControllers = null;
+            }
+        }
+
+        private static void OnActionChange(object mapOrAction, InputActionChange change)
+        {
+            // We only care about action map activations. Steam has no support for enabling or disabling
+            // individual actions and also has no support disabling sets once enabled (can only switch
+            // to different set).
+            if (change != InputActionChange.ActionMapEnabled)
+                return;
+
+            // See if the map has any bindings to SteamControllers.
+            // NOTE: We only support a single SteamController on any action map here. The first SteamController
+            //       we find is the one we're doing all the work on.
+            var actionMap = (InputActionMap)mapOrAction;
+            foreach (var action in actionMap.actions)
+            {
+                foreach (var control in action.controls)
+                {
+                    var steamController = control.device as SteamController;
+                    if (steamController == null)
+                        continue;
+
+                    // Yes, there's active bindings to a SteamController on the map. Look through the Steam action
+                    // sets on the controller for a name match on the action map. If we have one, sync the enable/
+                    // disable status of the set.
+                    var actionMapName = actionMap.name;
+                    foreach (var set in steamController.steamActionSets)
+                    {
+                        if (string.Compare(set.name, actionMapName, StringComparison.InvariantCultureIgnoreCase) != 0)
+                            continue;
+
+                        // Nothing to do if the Steam controller has auto-syncing disabled.
+                        if (!steamController.autoActivateSets)
+                            return;
+
+                        // Sync status.
+                        steamController.ActivateSteamActionSet(set.handle);
+
+                        // Done.
+                        return;
+                    }
+                }
+            }
+        }
+
+        private static void OnUpdate()
+        {
+            if (api == null)
+                return;
+
+            // Update controller state.
+            api.RunFrame();
+
+            // Check if we have any new controllers have appeared.
+            var numConnectedControllers = api.GetConnectedControllers(s_GlobalState.connectedControllers);
+            for (var i = 0; i < numConnectedControllers; ++i)
+            {
+                var handle = s_GlobalState.connectedControllers[i];
+
+                // See if we already have a device for this one.
+                if (s_GlobalState.inputDevices != null)
+                {
+                    SteamController existingDevice = null;
+                    for (var n = 0; n < s_GlobalState.inputDeviceCount; ++n)
+                    {
+                        if (s_GlobalState.inputDevices[n].steamControllerHandle == handle)
+                        {
+                            existingDevice = s_GlobalState.inputDevices[n];
+                            break;
+                        }
+                    }
+
+                    // Yes, we do.
+                    if (existingDevice != null)
+                        continue;
+                }
+
+                ////FIXME: this should not create garbage
+                // No, so create a new device.
+                var controllerLayouts = InputSystem.ListLayoutsBasedOn("SteamController");
+                foreach (var layout in controllerLayouts)
+                {
+                    // Rather than directly creating a device with the layout, let it go through
+                    // the usual matching process.
+                    var device = InputSystem.AddDevice(new InputDeviceDescription
+                    {
+                        interfaceName = SteamController.kSteamInterface,
+                        product = layout
+                    });
+
+                    // Make sure it's a SteamController we got.
+                    var steamDevice = device as SteamController;
+                    if (steamDevice == null)
+                    {
+                        Debug.LogError(string.Format(
+                            "InputDevice created from layout '{0}' based on the 'SteamController' layout is not a SteamController",
+                            device.layout));
+                        continue;
+                    }
+
+                    // Resolve the controller's actions.
+                    steamDevice.InvokeResolveSteamActions();
+
+                    // Assign it the Steam controller handle.
+                    steamDevice.steamControllerHandle = handle;
+
+                    ArrayHelpers.AppendWithCapacity(ref s_GlobalState.inputDevices, ref s_GlobalState.inputDeviceCount, steamDevice);
+                }
+            }
+
+            // Update all controllers we have.
+            for (var i = 0; i < s_GlobalState.inputDeviceCount; ++i)
+            {
+                var device = s_GlobalState.inputDevices[i];
+                var handle = device.steamControllerHandle;
+
+                // Check if the device still exists.
+                var stillExists = false;
+                for (var n = 0; n < numConnectedControllers; ++n)
+                    if (s_GlobalState.connectedControllers[n] == handle)
+                    {
+                        stillExists = true;
+                        break;
+                    }
+
+                // If not, remove it.
+                if (!stillExists)
+                {
+                    ArrayHelpers.EraseAtByMovingTail(s_GlobalState.inputDevices, ref s_GlobalState.inputDeviceCount, i);
+                    ////REVIEW: should this rather queue a device removal event?
+                    InputSystem.RemoveDevice(device);
+                    --i;
+                    continue;
+                }
+
+                ////TODO: support polling Steam controllers on an async polling thread adhering to InputSystem.pollingFrequency
+                // Otherwise, update it.
+                device.InvokeUpdate();
+            }
+        }
+    }
+}
+
+#endif // (UNITY_STANDALONE || UNITY_EDITOR) && UNITY_ENABLE_STEAM_CONTROLLER_SUPPORT

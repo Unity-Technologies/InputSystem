@@ -227,7 +227,7 @@ public DualShock4GamepadHID : Gamepad
 {
     static DualShock4GamepadHID()
     {
-        // This is one way to match the Device.
+        // This is one way to match the device.
         InputSystem.RegisterLayout<DualShock4GamepadHID>(
             new InputDeviceMatcher()
                 .WithInterface("HID")

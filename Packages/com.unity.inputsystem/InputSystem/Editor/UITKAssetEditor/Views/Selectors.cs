@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -287,7 +287,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static IEnumerable<string> BuildControlTypeList(InputActionType selectedActionType)
         {
-            var allLayouts = InputSystem.s_Manager.m_Layouts;
+            var allLayouts = InputSystem.manager.m_Layouts;
 
             // "Any" is always in first position (index 0)
             yield return "Any";

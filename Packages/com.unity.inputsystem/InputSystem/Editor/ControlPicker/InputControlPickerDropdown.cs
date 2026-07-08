@@ -47,7 +47,7 @@ namespace UnityEngine.InputSystem.Editor
                 m_ExpectedControlType = typeof(InputDevice);
             else
                 m_ExpectedControlType = !string.IsNullOrEmpty(expectedControlLayout)
-                    ? InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout))
+                    ? InputSystem.manager.m_Layouts.GetControlTypeForLayout(new InternedString(expectedControlLayout))
                     : null;
 
             // If the layout is for a device, automatically switch to device
@@ -58,11 +58,14 @@ namespace UnityEngine.InputSystem.Editor
             Reload();
         }
 
+        public void SetPickedCallback(Action<string> action)
+        {
+            m_OnPickCallback = action;
+        }
+
         protected override void OnDestroy()
         {
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(false, false);
-            #endif
             m_RebindingOperation?.Dispose();
             m_RebindingOperation = null;
         }
@@ -118,9 +121,7 @@ namespace UnityEngine.InputSystem.Editor
 
         protected override void ItemSelected(AdvancedDropdownItem item)
         {
-            #if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
             InputActionsEditorSettingsProvider.SetIMGUIDropdownVisible(false, true);
-            #endif
             var path = ((InputControlDropdownItem)item).controlPathWithDevice;
             m_OnPickCallback(path);
         }
@@ -416,7 +417,7 @@ namespace UnityEngine.InputSystem.Editor
             if (m_ExpectedControlType == null)
                 return true;
 
-            var layoutType = InputSystem.s_Manager.m_Layouts.GetControlTypeForLayout(new InternedString(layout));
+            var layoutType = InputSystem.manager.m_Layouts.GetControlTypeForLayout(new InternedString(layout));
             return m_ExpectedControlType.IsAssignableFrom(layoutType);
         }
 

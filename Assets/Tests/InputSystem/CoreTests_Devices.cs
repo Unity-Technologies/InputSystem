@@ -19,9 +19,10 @@ using UnityEngine.Profiling;
 using UnityEngine.Scripting;
 using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
+using UnityEngineInternal.Input;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
 using UnityEngine.TestTools.Constraints;
-using Is = UnityEngine.TestTools.Constraints.Is;
+using Is = NUnit.Framework.Is;
 using Quaternion = UnityEngine.Quaternion;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 using Vector2 = UnityEngine.Vector2;
@@ -572,11 +573,11 @@ partial class CoreTests
 
         InputSystem.RegisterLayout(deviceJson);
 
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
 
         InputSystem.AddDevice("CustomGamepad");
 
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
     }
 
     [Test]
@@ -596,15 +597,15 @@ partial class CoreTests
         var device1 = InputSystem.AddDevice("CustomGamepad");
         var device2 = InputSystem.AddDevice("CustomGamepad");
 
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
 
         InputSystem.RemoveDevice(device1);
 
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
 
         InputSystem.RemoveDevice(device2);
 
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo((InputUpdateType)0));
     }
 
     private class TestDeviceReceivingAddAndRemoveNotification : Mouse
@@ -1522,7 +1523,7 @@ partial class CoreTests
         Assert.That(device, Is.Not.Null);
 
         // Loose focus.
-        runtime.PlayerFocusLost();
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
         InputSystem.Update();
 
         // Disconnect.
@@ -1534,7 +1535,7 @@ partial class CoreTests
         Assert.That(InputSystem.devices, Is.Empty);
 
         // Regain focus.
-        runtime.PlayerFocusGained();
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
         InputSystem.Update();
 
         var newDeviceId = runtime.ReportNewInputDevice(deviceDesc);
@@ -2851,15 +2852,6 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
-    public void Devices_CanGetKeyCodeFromKeyboardKey()
-    {
-        var keyboard = InputSystem.AddDevice<Keyboard>();
-
-        Assert.That(keyboard.aKey.keyCode, Is.EqualTo(Key.A));
-    }
-
-    [Test]
-    [Category("Devices")]
     public void Devices_CanLookUpKeyFromKeyboardUsingKeyCode()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
@@ -4146,12 +4138,10 @@ partial class CoreTests
     [Retry(2)] // Warm up JIT
     public void Devices_RemovingAndReaddingDevice_DoesNotAllocateMemory()
     {
-#if UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
         // Exclude project-wide actions from this test
         // Prevent GC Allocations happening later in test
         InputSystem.actions?.Disable();
         InputActionState.DestroyAllActionMapStates();
-#endif
 
         var description =
             new InputDeviceDescription
@@ -4394,6 +4384,15 @@ partial class CoreTests
         Assert.That(InputSystem.pollingFrequency, Is.EqualTo(120).Within(0.000001));
     }
 
+    #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
+    [Test]
+    [Category("Devices")]
+    public void Devices_PollingFrequencyIsAtLeast60HzByDefault()
+    {
+        Assert.That(InputSystem.pollingFrequency, Is.GreaterThanOrEqualTo(60));
+    }
+
+    #else
     [Test]
     [Category("Devices")]
     public void Devices_PollingFrequencyIs60HzByDefault()
@@ -4402,6 +4401,8 @@ partial class CoreTests
         // Make sure InputManager passed the frequency on to the runtime.
         Assert.That(runtime.pollingFrequency, Is.EqualTo(60).Within(0.000001));
     }
+
+    #endif
 
     [Test]
     [Category("Devices")]
@@ -4604,7 +4605,13 @@ partial class CoreTests
         InputSystem.onDeviceChange += DeviceChangeCallback;
 
         var eventCount = 0;
-        InputSystem.onEvent += (eventPtr, _) => ++ eventCount;
+        InputSystem.onEvent += (eventPtr, _) =>
+        {
+            // Focus events will always be processed no matter the state
+            // Since the test relies on counting events based on state, dont count focus events
+            if (eventPtr.data->type != (FourCC)FocusConstants.kEventType)
+                ++eventCount;
+        };
 
         Assert.That(trackedDevice.enabled, Is.True);
         Assert.That(mouse.enabled, Is.True);
@@ -4647,7 +4654,8 @@ partial class CoreTests
         }
 
         // Lose focus.
-        runtime.PlayerFocusLost();
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
+        InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(sensor.enabled, Is.False);
         Assert.That(disabledDevice.enabled, Is.False);
@@ -5068,7 +5076,8 @@ partial class CoreTests
         commands.Clear();
 
         // Regain focus.
-        runtime.PlayerFocusGained();
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
+        InputSystem.Update(InputUpdateType.Dynamic);
 
         Assert.That(sensor.enabled, Is.False);
         Assert.That(disabledDevice.enabled, Is.False);
@@ -5275,13 +5284,10 @@ partial class CoreTests
                             "Sync Gamepad", "Sync Joystick",
                             "Sync TrackedDevice", "Sync TrackedDevice2",
                             "Sync Mouse", "Sync Mouse2", "Sync Mouse3",
-                            "Sync Keyboard", "Reset Joystick"
+                            "Sync Keyboard"
                         }));
-                        // Enabled devices that don't support syncs get reset.
-                        Assert.That(changes, Is.EquivalentTo(new[]
-                        {
-                            "SoftReset Mouse1", "SoftReset Mouse3", "HardReset Joystick", "SoftReset TrackedDevice2"
-                        }));
+                        // Enabled devices that don't support syncs dont get reset for Ignore Focus as we do not want to cancel any actions.
+                        Assert.That(changes, Is.Empty);
                         break;
                     }
             }
@@ -5318,7 +5324,13 @@ partial class CoreTests
         Assert.That(performedCount, Is.EqualTo(1));
 
         // Lose focus
-        runtime.PlayerFocusLost();
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
+#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+        // in the new system, we have to process the focus event to update the state of the devices.
+        // In the old system, this wouldn't work and would make the test fal
+        InputSystem.Update();
+#endif
+
         Assert.That(gamepad.enabled, Is.False);
 
         // Queue an event while in the background. We don't want to see this event to be processed once focus
@@ -5329,7 +5341,7 @@ partial class CoreTests
         InputSystem.Update();
 
         // Gain focus
-        runtime.PlayerFocusGained();
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
 
         // Run update to try process events accordingly once focus is gained
         InputSystem.Update();

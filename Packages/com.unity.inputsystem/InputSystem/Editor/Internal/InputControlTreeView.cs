@@ -6,6 +6,12 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using Unity.Profiling;
 
+#if UNITY_6000_2_OR_NEWER
+using TreeView = UnityEditor.IMGUI.Controls.TreeView<int>;
+using TreeViewItem = UnityEditor.IMGUI.Controls.TreeViewItem<int>;
+using TreeViewState = UnityEditor.IMGUI.Controls.TreeViewState<int>;
+#endif
+
 ////TODO: make control values editable (create state events from UI and pump them into the system)
 
 ////TODO: show processors attached to controls
@@ -99,20 +105,20 @@ namespace UnityEngine.InputSystem.Editor
                 headerContent = new GUIContent("Type")
             };
             columns[(int)ColumnId.Format] =
-                new MultiColumnHeaderState.Column {headerContent = new GUIContent("Format")};
+                new MultiColumnHeaderState.Column { headerContent = new GUIContent("Format") };
             columns[(int)ColumnId.Offset] =
-                new MultiColumnHeaderState.Column {headerContent = new GUIContent("Offset")};
+                new MultiColumnHeaderState.Column { headerContent = new GUIContent("Offset") };
             columns[(int)ColumnId.Bit] =
-                new MultiColumnHeaderState.Column {width = 40, headerContent = new GUIContent("Bit")};
+                new MultiColumnHeaderState.Column { width = 40, headerContent = new GUIContent("Bit") };
             columns[(int)ColumnId.Size] =
-                new MultiColumnHeaderState.Column {headerContent = new GUIContent("Size (Bits)")};
+                new MultiColumnHeaderState.Column { headerContent = new GUIContent("Size (Bits)") };
             columns[(int)ColumnId.Optimized] =
-                new MultiColumnHeaderState.Column {headerContent = new GUIContent("Optimized")};
+                new MultiColumnHeaderState.Column { headerContent = new GUIContent("Optimized") };
 
             if (numValueColumns == 1)
             {
                 columns[(int)ColumnId.Value] =
-                    new MultiColumnHeaderState.Column {width = 120, headerContent = new GUIContent("Value")};
+                    new MultiColumnHeaderState.Column { width = 120, headerContent = new GUIContent("Value") };
             }
             else
             {
@@ -151,7 +157,7 @@ namespace UnityEngine.InputSystem.Editor
             return new TreeViewItem
             {
                 id = 0,
-                children = new List<TreeViewItem> {rootItem},
+                children = new List<TreeViewItem> { rootItem },
                 depth = -1
             };
         }
