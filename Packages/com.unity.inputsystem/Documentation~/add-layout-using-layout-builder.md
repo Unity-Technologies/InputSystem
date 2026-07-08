@@ -2,7 +2,7 @@
 uid: input-system-layout-builder
 ---
 
-# Add a layout using Layout Builder 
+# Add a layout using Layout Builder
 
 Finally, the Input System can also build layouts on the fly in code. This is useful for Device interfaces such as [HID](hid-specification.md) that supply descriptive information for each Device.
 

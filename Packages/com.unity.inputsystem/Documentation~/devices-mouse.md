@@ -17,4 +17,3 @@ The Input System represents mouse input with the [`Mouse`](xref:UnityEngine.Inpu
 - [Use a Virtual Mouse for UI cursor control](virtual-mouse-ui-cursor-control.md)
 - [Pointer input UI support](supported-ui-input-types-pointer.md)
 - [Read devices directly](read-devices-directly.md)
-

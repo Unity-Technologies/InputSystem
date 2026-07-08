@@ -58,9 +58,9 @@ In this example, you want to expose the controller as a [gamepad](gamepads-intro
 If you don't know the format of a given HID you want to support:
 
 1. Plug the device into your computer
-1. Open the Input Debugger (**Window** > **Analysis** > **Input Debugger**) 
+1. Open the Input Debugger (**Window** > **Analysis** > **Input Debugger**)
 1. Open both the debugger view for the device and the window showing the HID descriptor
-1. Go through the controls one by one, refer to the debug view, and correlate that to the controls in the HID descriptor. 
+1. Go through the controls one by one, refer to the debug view, and correlate that to the controls in the HID descriptor.
 
 You can also double-click individual events and compare the raw data coming in from the device. If you select two events in the event trace, you can then right-click them and choose **Compare** to open a window that shows only the differences between the two events.
 

@@ -11,7 +11,7 @@ To install the sample:
 1. Navigate to the Input System package in the Package Manager window (refer to [Installation](Installation.md)).
 1. Next to the __Visualizers__ sample, select __Import in project__.
 
-The sample provides two visualizer components: 
+The sample provides two visualizer components:
 
 * [`InputControlVisualizer`](visualise-input-controls)
 * [`InputActionVisualizer`](visualise-actions)

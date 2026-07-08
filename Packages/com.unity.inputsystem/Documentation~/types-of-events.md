@@ -2,7 +2,7 @@
 uid: input-system-types-of-events
 ---
 
-# Types of events 
+# Types of events
 
 There are three types of events: state, device, and text.
 

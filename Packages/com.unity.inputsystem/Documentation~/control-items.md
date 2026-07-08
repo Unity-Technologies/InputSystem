@@ -2,7 +2,7 @@
 uid: input-system-control-items
 ---
 
-# Control items 
+# Control items
 
 Each layout is comprised of zero or more Control items. Each item either describes a new Control, or modifies the properties of an existing Control. The latter can also reach down into the hierarchy and modify properties of a Control added implicitly as a child by another item.
 

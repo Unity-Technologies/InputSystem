@@ -16,7 +16,7 @@ For each [binding](bindings.md), the Binding Properties panel displays the follo
 |Property|Description|
 |-|-|
 |**Path**| Select the path of the control to assign this binding to. You can select an [input device](devices.md) from the list available, or use the **Usage** menu to select from a list of [usages](control-usages.md). |
-|**Use in control scheme**|Select the [control schemes](control-schemes.md) that you want to apply this binding to. <br/><br/> This section only appears if you have control schemes in your project. | 
+|**Use in control scheme**|Select the [control schemes](control-schemes.md) that you want to apply this binding to. <br/><br/> This section only appears if you have control schemes in your project. |
 
 ## Composite binding properties
 

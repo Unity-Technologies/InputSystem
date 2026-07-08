@@ -6,12 +6,12 @@ uid: input-system-query-pen-devices
 
 To query the last used or last added pen, use [`Pen.current`](xref:UnityEngine.InputSystem.Pen.current).
 
-> [!NOTE] 
+> [!NOTE]
 > Some devices support tracking multiple pens independently, but the Input System doesn't support this currently.
 
 ## Access the pressure of the pen
 
-To access the pen's current pressure, use [`Pen.pressure`](xref:UnityEngine.InputSystem.Pointer.pressure), where 0 means no pressure, and 1 means maximum pressure. 
+To access the pen's current pressure, use [`Pen.pressure`](xref:UnityEngine.InputSystem.Pointer.pressure), where 0 means no pressure, and 1 means maximum pressure.
 
 Pressure can go over 1 if the system applies a custom pressure curve where a pressure value of 1 doesn't require pressing the pen down all the way to the maximum force the hardware supports. If a pen doesn't support different pressure levels, `Pen.pressure` always returns 1.
 

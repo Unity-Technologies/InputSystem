@@ -2,7 +2,7 @@
 uid: input-system-step-3-update-method
 ---
 
-# Step 3 The Update method 
+# Step 3 The Update method
 
 You now have a Device in place along with its associated state format. You can call the following method to create a fully set-up Device with your two Controls on it:
 

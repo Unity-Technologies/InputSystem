@@ -2,7 +2,7 @@
 uid: input-system-listen-to-events
 ---
 
-# Listen to events 
+# Listen to events
 
 If you want to do any monitoring or processing on incoming events yourself, subscribe to the [`InputSystem.onEvent`](xref:UnityEngine.InputSystem.InputSystem) callback.
 

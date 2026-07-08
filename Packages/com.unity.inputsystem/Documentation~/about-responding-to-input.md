@@ -11,7 +11,7 @@ The Input System offers various ways to respond to input at runtime, from the re
 Working with the Input System's [recommended workflow](workflows.md) in your project involves two phases which you must approach in this order:
 
 1. Configure your project's actions.
-2. Implement responses to actions. 
+2. Implement responses to actions.
 
 ### Configure your project's actions
 
@@ -36,4 +36,3 @@ For most common scenarios, especially action games where the user's input has a 
 The Input System also allows you to read device states directly, which bypasses many of the features such as actions and bindings. This workflow is suitable for fast prototyping, or single fixed platform scenarios, but is a less flexible workflow because it bypasses some useful Input System features.
 
 Refer to [Read devices directly](read-devices-directly.md) for further information about this workflow.
-

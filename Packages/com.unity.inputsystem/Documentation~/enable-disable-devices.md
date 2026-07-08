@@ -2,7 +2,7 @@
 uid: input-system-enable-disable-devices
 ---
 
-# Enable and disable devices 
+# Enable and disable devices
 
 When a Device is added, the Input System sends it an initial [`QueryEnabledStateCommand`](xref:UnityEngine.InputSystem.LowLevel.QueryEnabledStateCommand) to find out whether the device is currently enabled or not. The result of this is reflected in the [`InputDevice.enabled`](xref:UnityEngine.InputSystem.InputDevice) property.
 

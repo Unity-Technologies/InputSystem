@@ -36,4 +36,3 @@ Each action has a name ([`InputAction.name`](xref:UnityEngine.InputSystem.InputA
 Each action map has a name ([`InputActionMap.name`](xref:UnityEngine.InputSystem.InputActionMap)), which must also be unique with respect to the other action maps present, if any. Each action map also has a unique ID ([`InputActionMap.id`](xref:UnityEngine.InputSystem.InputActionMap)), which you can use to reference the action map. The ID remains the same even if you rename the action map.
 
 With a reference to an action map, you can then read all the [`actions`](xref:UnityEngine.InputSystem.InputActionMap) which belong to that map.
-

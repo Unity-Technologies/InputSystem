@@ -2,7 +2,7 @@
 uid: input-system-create-device
 ---
 
-# Create a device 
+# Create a device
 
 Once the system has chosen a [layout](layouts.md) for a device, it instantiates an [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice) and populates it with [`InputControls`](xref:UnityEngine.InputSystem.InputControl) as the layout dictates. This process is internal and happens automatically.
 
@@ -20,7 +20,7 @@ Once added, the [`InputDevice.added`](xref:UnityEngine.InputSystem.InputDevice) 
 To add devices manually, you can call one of the `InputSystem.AddDevice` methods such as [`InputSystem.AddDevice(layout)`](xref:UnityEngine.InputSystem.InputSystem).
 
 ```CSharp
-// Add a gamepad. This bypasses the matching process and creates 
+// Add a gamepad. This bypasses the matching process and creates
 // a device directly
 // with the Gamepad layout.
 InputSystem.AddDevice<Gamepad>();

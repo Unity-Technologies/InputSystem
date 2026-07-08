@@ -16,11 +16,10 @@ The **action type** influences how the Input System processes state changes for 
 
 ## Control type
 
-The **control type** determines the type of value that should be sent to the action, such as an in integer or float value, or a 1D, 2D, or 3D axis. 
+The **control type** determines the type of value that should be sent to the action, such as an in integer or float value, or a 1D, 2D, or 3D axis.
 
 The control type that you select has the effect of filtering the available controls to only those that are capable of providing the values appropriate for that control.
 
 For example, if you select **2D axis** as the control type, only those types of controls that can supply a 2D vector as value are available as options for the binding control path, such as a thumb stick or Dpad.
 
 There are more specific control types available which further filter the available bindings, such as **Stick**, **Dpad** or **Touch**. If you select one of these control types, the list of available controls is further limited to only those controls of those specific types when you [select a binding for your action](add-duplicate-delete-binding.md).
-

@@ -2,7 +2,7 @@
 uid: input-system-update-mode
 ---
 
-# Update Mode 
+# Update Mode
 
 This setting determines when the Input System processes input. The Input System can process input in one of three distinct ways:
 

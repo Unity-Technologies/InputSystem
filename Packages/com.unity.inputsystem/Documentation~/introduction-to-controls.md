@@ -23,4 +23,3 @@ A control represents a source of values. These values can be of any structured o
 ## Parts of devices that are not controls
 
 Devices sometimes have other functional parts that are not considered controls. For example, output and configuration items such as haptic feedback, player number indicator lights, and on/off switches. The Input System only considers a part to be a control if it sends values for the purposes of input.
-

@@ -2,7 +2,7 @@
 uid: input-system-read-input-editor-windows
 ---
 
-# Read input in Editor Windows 
+# Read input in Editor Windows
 
 Unlike Unity's old Input Manager, you can use the new Input System from within `EditorWindow` code as well. For example, you can gain access to pen pressure information like this:
 

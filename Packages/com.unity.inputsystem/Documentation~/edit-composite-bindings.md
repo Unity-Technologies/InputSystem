@@ -18,7 +18,7 @@ To assign bindings to each part of the composite:
 2. Expand the Action's hierarchy as necessary to display the composite binding and its parts.
 3. Select the part you want to configure
 4. In the Binding Properties panel, [select a control for this part](./select-control-binding.md) using the Path field.
- 
+
 ## Change a composite's type
 
 A composite binding's type controls the selection of parts it has, and what value it outputs. To change a composite's type:
@@ -27,7 +27,7 @@ A composite binding's type controls the selection of parts it has, and what valu
 2. Expand the Action's hierarchy as necessary to display the composite binding.
 3. Select the composite binding.
 4. In the Binding Properties panel, select a new **Composite Type**.
-   
+
 Changing a composite binding's type will change which parts it has, and any configurations on parts that are removed are lost.
 
 ## Add or remove extra parts of the composite

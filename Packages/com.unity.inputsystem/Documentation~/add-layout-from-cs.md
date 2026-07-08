@@ -2,7 +2,7 @@
 uid: input-system-add-layout-from-cs
 ---
 
-# Add a layout from C# 
+# Add a layout from C#
 
 In its most basic form, a layout can be expressed by a C# class derived from:
 

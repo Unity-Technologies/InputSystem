@@ -2,7 +2,7 @@
 uid: input-system-sync-device
 ---
 
-# Sync a device 
+# Sync a device
 
 A Device may be requested to send an event with its current state through [`RequestSyncCommand`](xref:UnityEngine.InputSystem.LowLevel.RequestSyncCommand). It depends on the platform and type of Device whether this is supported or not.
 

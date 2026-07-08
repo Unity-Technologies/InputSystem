@@ -2,7 +2,7 @@
 uid: input-system-default-value-properties
 ---
 
-# Default value properties 
+# Default value properties
 
 |Property|Description|
 |----|-----------|

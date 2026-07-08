@@ -23,4 +23,3 @@ Learn how to investigate and troubleshoot the Input System when something isn't 
 - [Testing](testing.md)
 - [Binding resolution](binding-resolution.md)
 - [Debug Player Input Component](debug-player-input-component.md)
-

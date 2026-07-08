@@ -29,7 +29,7 @@ The Input Actions Editor is divided into three panels:
 
 ## Properties panel reference
 
-The properties that appear in the Action Properties and Binding Properties panels differ depending on the action or binding you have selected. For detailed reference documentation, refer to: 
+The properties that appear in the Action Properties and Binding Properties panels differ depending on the action or binding you have selected. For detailed reference documentation, refer to:
 
 * [Action Properties panel reference](action-properties-panel-reference.md)
 * [Bindings properties panel reference](binding-properties-panel-reference.md)

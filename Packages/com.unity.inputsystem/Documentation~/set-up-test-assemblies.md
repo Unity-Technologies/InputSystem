@@ -2,12 +2,12 @@
 uid: input-system-set-up-test-assemblies
 ---
 
-# Set up test assemblies 
+# Set up test assemblies
 
 To set up a test assembly that uses the Input System's automation framework, follow these steps:
 
 1. In the `Packages/manifest.json` file of your project, `com.unity.inputsystem` must be listed in `testables`. This is necessary for test code that comes with the package to be included with test builds of your project.<br><br>You can, for example, add this after the `dependencies` property like so:
-    
+
     ```
     },
     "testables" : [

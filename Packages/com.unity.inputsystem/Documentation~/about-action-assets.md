@@ -12,5 +12,4 @@ The Input System creates an action asset when you set up the [default project-wi
 
 ## Action maps
 
-Actions assets allow you to group sets of related actions into [action maps](./create-edit-delete-action-maps.md). For example, in an open-world city game, you might create separate action maps for different situations such as exploring on foot, driving a car, flying an aircraft, or navigating UI interfaces. This means, for most common scenarios, you don't need to use more than one Input action asset. 
-
+Actions assets allow you to group sets of related actions into [action maps](./create-edit-delete-action-maps.md). For example, in an open-world city game, you might create separate action maps for different situations such as exploring on foot, driving a car, flying an aircraft, or navigating UI interfaces. This means, for most common scenarios, you don't need to use more than one Input action asset.

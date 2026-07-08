@@ -84,7 +84,7 @@ The following code traces all input events on the [`Accelerometer.current`](xref
 
 Use the attitude sensor to determine the orientation of a device. This is useful to control content by rotating a device. Values are affected by the [Compensate Orientation](compensate-orientation.md) setting.
 
-On Android devices, there are two types of attitude sensors: [`RotationVector`](https://developer.android.com/reference/android/hardware/Sensor#TYPE_ROTATION_VECTOR) and [`GameRotationVector`](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR). 
+On Android devices, there are two types of attitude sensors: [`RotationVector`](https://developer.android.com/reference/android/hardware/Sensor#TYPE_ROTATION_VECTOR) and [`GameRotationVector`](https://developer.android.com/reference/android/hardware/Sensor#TYPE_GAME_ROTATION_VECTOR).
 
 Some Android devices have both types of sensor, while other devices may only have one or the other type available. These two types of attitude sensor behave slightly differently to each other. You can [read about the differences between them here](https://developer.android.com/guide/topics/sensors/sensors_position#sensors-pos-gamerot).
 

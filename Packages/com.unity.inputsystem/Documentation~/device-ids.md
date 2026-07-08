@@ -2,7 +2,7 @@
 uid: input-system-device-ids
 ---
 
-# Device IDs 
+# Device IDs
 
 Each created Device receives a unique numeric ID. You can access this ID through [`InputDevice.deviceId`](xref:UnityEngine.InputSystem.InputDevice).
 

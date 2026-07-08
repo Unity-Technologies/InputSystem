@@ -2,7 +2,7 @@
 uid: input-system-device-background-focus-changes
 ---
 
-# Device background and focus changes 
+# Device background and focus changes
 
 In general, input is tied to [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html). This means that Devices do not receive input while the application is not in the foreground and thus no [Actions](actions.md) will receive input either. When the application comes back into focus, all devices will receive a [sync](sync-device.md) request to have them send their current state (which may have changed while the application was in the background) to the application. Devices that do not support sync requests will see a [soft reset](reset-device.md) that resets all Controls not marked as [`dontReset`](control-items.md) to their default state.
 

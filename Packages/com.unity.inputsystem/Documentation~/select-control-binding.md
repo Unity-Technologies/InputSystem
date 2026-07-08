@@ -6,7 +6,7 @@ uid: input-system-control-for-binding
 
 The [control path](control-paths.md) identifies the control (or controls) that a binding is bound to, such as a button or stick on a gamepad, or a specific keyboard key.
 
-When selecting a control path, there are various levels of specificity you can use, such as referring to a common control across all types of gamepad (such as the left stick on a gamepad), a specific control on a specific model of gamepad (such as the `A` button on an Xbox controller), or a specific control usage across all types of device (such as the control associated with `Back` on any type of device). Refer to [control path specificity](control-paths.md#specificity) for more information. 
+When selecting a control path, there are various levels of specificity you can use, such as referring to a common control across all types of gamepad (such as the left stick on a gamepad), a specific control on a specific model of gamepad (such as the `A` button on an Xbox controller), or a specific control usage across all types of device (such as the control associated with `Back` on any type of device). Refer to [control path specificity](control-paths.md#specificity) for more information.
 
 There are three ways to specify the control path for a binding in the [Actions Editor window](./actions-editor.md). These are:
 
@@ -53,6 +53,6 @@ Instead of browsing the tree to find the Control you want, if you have the devic
 You can choose to manually type the binding path as text instead of using the Control picker. To do this:
 
 1. Select the __T__ button next to the Control path popup. This changes the **path** field from a popup menu to a text field, where you can enter any binding string.
-2. Type the control path's binding string into the text field. 
+2. Type the control path's binding string into the text field.
 
-Refer to [control paths format](./control-paths.md#format) for more details about valid syntax for this field. 
+Refer to [control paths format](./control-paths.md#format) for more details about valid syntax for this field.

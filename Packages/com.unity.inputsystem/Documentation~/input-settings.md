@@ -2,7 +2,7 @@
 uid: input-system-input-settings
 ---
 
-# Input settings 
+# Input settings
 
 The Input settings panel, available in the Project Settings window, allows you to configure various features and behaviors of the Input System. This section explains how to create a settings asset, and the options available in all settings.
 

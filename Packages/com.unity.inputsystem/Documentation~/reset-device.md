@@ -2,7 +2,7 @@
 uid: input-system-reset-device
 ---
 
-# Reset a device 
+# Reset a device
 
 Resetting a Device resets its Controls to their default state. You can do this manually using [`InputSystem.ResetDevice`](xref:UnityEngine.InputSystem.InputSystem):
 

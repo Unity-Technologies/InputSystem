@@ -2,7 +2,7 @@
 uid: input-system-debug-device
 ---
 
-# Debug a device 
+# Debug a device
 
 In the Input Debugger window, navigate to the __Devices__ list and double-click any [Input Device](devices.md). This opens a window that displays information about the Device, including real-time state information for its Controls.
 

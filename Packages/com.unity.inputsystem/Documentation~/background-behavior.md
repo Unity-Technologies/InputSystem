@@ -2,7 +2,7 @@
 uid: input-system-background-behavior
 ---
 
-# Background behavior 
+# Background behavior
 
 Background Behaviour determines what happens when [application focus](https://docs.unity3d.com/ScriptReference/Application-isFocused.html) is lost or regained, and how input behaves while the application is not in the foreground.
 

@@ -4,7 +4,7 @@ uid: input-system-action-control-types
 
 # Action and control types
 
-Actions have an **Action Type** and **Control Type** which you can configure in the [Actions Editor window](actions-editor.md). These settings allow you to configure the basic behaviour of an action. 
+Actions have an **Action Type** and **Control Type** which you can configure in the [Actions Editor window](actions-editor.md). These settings allow you to configure the basic behaviour of an action.
 
 | **Topic** | **Description** |
 | :--- | :--- |

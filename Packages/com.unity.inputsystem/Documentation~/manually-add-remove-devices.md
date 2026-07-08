@@ -2,7 +2,7 @@
 uid: input-system-manually-add-remove-devices
 ---
 
-# Manually add and remove devices 
+# Manually add and remove devices
 
 To manually add and remove Devices through the API, use [`InputSystem.AddDevice()`](xref:UnityEngine.InputSystem.InputSystem) and [`InputSystem.RemoveDevice()`](xref:UnityEngine.InputSystem.InputSystem).
 

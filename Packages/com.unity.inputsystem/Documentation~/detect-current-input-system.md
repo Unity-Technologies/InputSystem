@@ -1,1 +1,1 @@
-# Detect the current input system 
+# Detect the current input system

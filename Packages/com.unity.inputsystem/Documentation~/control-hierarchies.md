@@ -15,4 +15,3 @@ The arrangement of control hierarchies are defined in [layouts](layouts.md).
 ## Access hierarchies with code
 
 You can access the parent of a Control using [`InputControl.parent`](xref:UnityEngine.InputSystem.InputControl), and its children using [`InputControl.children`](xref:UnityEngine.InputSystem.InputControl). To access the flattened hierarchy of all Controls on a Device, use [`InputDevice.allControls`](xref:UnityEngine.InputSystem.InputDevice).
-
