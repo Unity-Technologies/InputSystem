@@ -13,8 +13,8 @@ The Input package identifies and recognizes the following types of input devices
 * [Keyboards](devices-keyboard.md): Devices with key input.
 * [Joysticks](devices-joysticks.md): Devices with at least one input stick and button.
 * [Gamepads](devices-gamepads.md): Devices with two thumbsticks, a D-pad, four face buttons, two shoulder buttons, and two trigger buttons. This category has the following devices:
-    * [PlayStation gamepads](gamepads-playstation.md)
-    * [Switch gamepads](gamepads-switch.md)
+    * [PlayStation gamepads](gamepads-p.md)
+    * [Switch gamepads](gamepads-s.md)
     * [Xbox gamepads](gamepads-xbox.md)
 * [Sensors](devices-sensors.md): Devices which have sensors that measure environmental characteristics such as acceleration, or orientation.
 

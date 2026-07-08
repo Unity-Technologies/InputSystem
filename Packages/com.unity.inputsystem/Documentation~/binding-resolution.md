@@ -20,7 +20,7 @@ During binding resolution, the action automatically calls [`InputSystem.FindCont
 
 Note that a single [binding control path](control-paths.md) can match multiple Controls. For example:
 
-* A device-specific path such as `<DualShockGamepad>/buttonEast` matches the "Circle" button on a [PlayStation controller](gamepads-playstation.md). If you have multiple PlayStation controllers connected, it resolves to the "Circle" button on each of these controllers.
+* A device-specific path such as `<DualShockGamepad>/buttonEast` matches the "Circle" button on a [PlayStation controller](gamepads-p.md). If you have multiple PlayStation controllers connected, it resolves to the "Circle" button on each of these controllers.
 
 * An abstract device path such as `<Gamepad>/buttonEast` matches the right action button on any connected gamepad. If you have a PlayStation controller and an [Xbox controller](gamepads-xbox.md) connected, it resolves to the "Circle" button on the PlayStation controller, and to the "B" button on the Xbox controller.
 

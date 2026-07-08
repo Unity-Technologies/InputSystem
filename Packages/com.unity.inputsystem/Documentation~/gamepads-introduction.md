@@ -12,7 +12,7 @@ The Input System also provides device-specific APIs for:
 
 * PlayStation DualShock and DualSense hardware in the [`DualShock`](xref:UnityEngine.InputSystem.DualShock) namespace.
 * Xbox controllers that use XInput in the [`XInput`](xref:UnityEngine.InputSystem.XInput) namespace.
-* Nintendo Switch Pro controllers in the [`Switch`](xref:UnityEngine.InputSystem.Switch) namespace.
+* Nintendo Switch Pro controllers in the [`Switch`](xref:UnityEngine.InputSystem) namespace.
 
 For platform availability, refer to [Supported devices reference](supported-devices-reference.md).
 
