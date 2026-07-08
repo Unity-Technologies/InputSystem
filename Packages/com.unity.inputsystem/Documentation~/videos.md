@@ -30,7 +30,6 @@ The Input System supports several different workflows, each with its own advanta
 
 **Link**: [Watch video 2/7](https://www.youtube.com/watch?v=Cd2Erk_bsRY) (YouTube)
 
-
 ## Mobile controls
 
 **Description**: The third video in the series demonstrates how to add mobile touch controls to your game using Unity’s Input System:
@@ -39,7 +38,6 @@ The Input System supports several different workflows, each with its own advanta
 - Enable touch-based input for third-person character movement.
 
 **Link**: [Watch Video 3/7](https://www.youtube.com/watch?v=aI-r7ILNDug) (YouTube)
-
 
 ## UI toolkit with the Input System
 
@@ -58,7 +56,6 @@ The Input System supports several different workflows, each with its own advanta
 - Save these custom bindings using PlayerPrefs, to ensure your settings persist between game sessions.
 
 **Link**: [Watch Video 5/7](https://www.youtube.com/watch?v=JfuqMaOiNPs) (YouTube)
-
 
 ## Player Input Component
 
