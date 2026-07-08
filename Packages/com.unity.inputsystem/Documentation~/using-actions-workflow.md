@@ -3,7 +3,8 @@ uid: input-system-workflow-project-wide-actions
 ---
 # Workflow Overview - Actions
 
-<img src="Images/Workflow-Actions.png" height="200px">
+![The Input Device and Actions icons under the Binding header lead directly into the icon representing your action code.](Images/Workflow-Actions.png){height="200px"}
+
 
 While the Input System has a variety of workflows to choose from, this is the primary recommended workflow, which suits most common scenarios for game and app input.
 

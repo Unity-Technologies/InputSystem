@@ -2,7 +2,7 @@
 uid: input-system-step-1-state-struct
 ---
 
-# Step 1 The state struct 
+# Step 1 The state struct
 
 The first step is to create a C# `struct` that represents the form in which the system receives and stores input, and also describes the `InputControl` instances that the Input System must create for the Device in order to retrieve its state.
 

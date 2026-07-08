@@ -1,9 +1,10 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEngine;
 using UnityEngine.InputSystem.Editor.Lists;
 using UnityEngine.InputSystem.Utilities;
 
@@ -266,7 +267,8 @@ namespace UnityEngine.InputSystem.Editor
                         else
                             lastPastedElement = CopyPasteHelper.PasteActionsOrBindingsFromClipboard(state.With(selectedBindingIndex: newIndex >= 0 ? newIndex : state.selectedBindingIndex));
 
-                        lastPastedElement.FindPropertyRelative("m_Action").stringValue = relatedAction.Value.name;
+                        if (lastPastedElement != null)
+                            lastPastedElement.FindPropertyRelative("m_Action").stringValue = relatedAction.Value.name;
                     }
                 }
 
@@ -533,6 +535,18 @@ namespace UnityEngine.InputSystem.Editor
             };
         }
 
+        public static Command ChangeActionPriority(SerializedInputAction inputAction, int priority)
+        {
+            return (in InputActionsEditorState state) =>
+            {
+                var priorityProperty = inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Priority));
+                priorityProperty.intValue = InputAction.ClampPriority(priority);
+                state.serializedObject.ApplyModifiedProperties();
+                state.m_Analytics?.RegisterActionEdit();
+                return state;
+            };
+        }
+
         public static Command ChangeActionType(SerializedInputAction inputAction, InputActionType newValue)
         {
             return (in InputActionsEditorState state) =>
@@ -595,7 +609,6 @@ namespace UnityEngine.InputSystem.Editor
                 // TODO It makes more sense to call back to editor since editor owns target object?
                 //InputActionAssetManager.SaveAsset(state.serializedObject.targetObject as InputActionAsset);
                 postSaveAction?.Invoke();
-                state.m_Analytics?.RegisterExplicitSave();
                 return state;
             };
         }

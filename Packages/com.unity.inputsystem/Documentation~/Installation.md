@@ -45,12 +45,12 @@ When the new input backends are enabled, the `ENABLE_INPUT_SYSTEM=1` C# `#define
 
 ## Install samples
 
-The package comes with a number of samples. You can install these directly from the Package Manager window in Unity (__Window > Package Manager__). 
+The package comes with a number of samples. You can install these directly from the Package Manager window in Unity (__Window > Package Manager__).
 
 To view the list of samples:
 
 1. Select the package in the **Package Manager** window.
-1. Select the __Samples__ tab. 
+1. Select the __Samples__ tab.
 1. Select __Import__ next to any sample name to import that sample into the current project.
 
 ![Install Samples](Images/InstallSamples.png)

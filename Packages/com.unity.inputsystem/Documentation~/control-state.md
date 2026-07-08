@@ -10,7 +10,7 @@ The recommended workflow is to [bind controls to actions](add-duplicate-delete-b
 
 However, the documentation on this page gives information about the details of how controls states are stored, and how to directly access the state, which may be useful if you are using a different workflow for a specialized situation.
 
-## Details 
+## Details
 
 Each control is connected to a block of memory that is considered the control's "state". You can query the size, format, and location of this block of memory from a control through the [`InputControl.stateBlock`](xref:UnityEngine.InputSystem.InputControl) property.
 
@@ -27,4 +27,3 @@ Gamepad.current.leftStick.x.ReadValue();
 Each type of control has a specific type of values that it returns, regardless of how many different types of formats it supports for its state. You can access this value type through the [`InputControl.valueType`](xref:UnityEngine.InputSystem.InputControl) property.
 
 Reading a value from a control might apply one or more value Processors. Refer to [Processors](processors.md) for more information.
-

@@ -2,7 +2,7 @@
 uid: input-system-device-descriptions
 ---
 
-# Device descriptions 
+# Device descriptions
 
 The Input System uses the device description defined as a [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription) primarily during the Device discovery process. When a new Device is reported (by the runtime or by the user), the system then attempts to find a Device [layout](layouts.md) that matches the Device description contained in the report. This process is based on [Device matching](device-matching.md).
 

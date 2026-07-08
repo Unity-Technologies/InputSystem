@@ -8,7 +8,7 @@ Different Action types have different default Interactions. For example, the fol
 
 ![Interaction Diagram](./Images/InteractionsDiagram.png)
 
-The following table provides an at-a-glance overview of how Interaction phases change for each action type's default Interaction. 
+The following table provides an at-a-glance overview of how Interaction phases change for each action type's default Interaction.
 
 |__Callback__|[`InputActionType.Value`](about-action-control-types.md#action-type)|[`InputActionType.Button`](about-action-control-types.md#action-type)|[`InputActionType.PassThrough`](about-action-control-types.md#action-type)|
 |-----------|-------------|------------|-----------------|

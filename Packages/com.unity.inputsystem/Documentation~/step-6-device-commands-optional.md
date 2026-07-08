@@ -2,7 +2,7 @@
 uid: input-system-step-6-optional
 ---
 
-# Step 6 Device Commands (Optional) 
+# Step 6 Device Commands (Optional)
 
 A final, but optional, step is to add support for Device commands. A "device command" is that opposite of input. In other words, it consists of data traveling __to__ the input device, which might also return data as part of the operation (much like a function call). You can use this to communicate with the backend of the device in order to query configuration, or to initiate effects such as haptics. At the moment there isn't a proper interface available for this, however there are still some scenarios that can be solved with the current interfaces.
 

@@ -2,7 +2,7 @@
 uid: input-system-look-up-bindings
 ---
 
-# Look up bindings 
+# Look up bindings
 
 You can retrieve the bindings of an action using its [`InputAction.bindings`](xref:UnityEngine.InputSystem.InputAction) property which returns a read-only array of [`InputBinding`](xref:UnityEngine.InputSystem.InputBinding) structs.
 

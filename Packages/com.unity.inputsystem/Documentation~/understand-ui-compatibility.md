@@ -4,15 +4,15 @@ uid: input-system-ui-sys-comp
 
 # Understand UI system compatibility
 
-Unity has [three major UI solutions](https://docs.unity3d.com/Manual/UIToolkits.html). The Input System package's compatibility and workflow with these solutions varies depending on which UI solution you are using, and which version of Unity you are using. 
+Unity has [three major UI solutions](https://docs.unity3d.com/Manual/UIToolkits.html). The Input System package's compatibility and workflow with these solutions varies depending on which UI solution you are using, and which version of Unity you are using.
 
-The three main UI systems are: 
+The three main UI systems are:
 
 * [**UI Toolkit**](https://docs.unity3d.com/Manual/UIElements.html)
 * [**Unity UI**](https://docs.unity3d.com/Packages/com.unity.ugui@latest)
 * [**IMGUI**](https://docs.unity3d.com/Manual/GUIScriptingGuide.html)
 
-Some systems and versions require that you use the Input System’s [UI Input Module component](using-ui-input-module.md) to pass actions from the Input System to the UI. 
+Some systems and versions require that you use the Input System’s [UI Input Module component](using-ui-input-module.md) to pass actions from the Input System to the UI.
 
 ## Compatibility summary
 UI system|Compatible|UI Input Module component
@@ -32,7 +32,7 @@ For more information on how to configure UI Toolkit input, refer to UI Toolkit [
 
 ### UI Toolkit event system
 
-Internally, UI Toolkit installs the `PanelEventHandler` component as an event listener. The listener intercepts events that `InputSystemUIInputModule` sends, and translates them into events that are specific to UI Toolkit. Those events are then routed into the visual tree. 
+Internally, UI Toolkit installs the `PanelEventHandler` component as an event listener. The listener intercepts events that `InputSystemUIInputModule` sends, and translates them into events that are specific to UI Toolkit. Those events are then routed into the visual tree.
 
 If you employ `EventSystem.SetUITookitEventSystemOverride`, this default mechanism is bypassed.
 

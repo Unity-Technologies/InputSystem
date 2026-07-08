@@ -704,7 +704,9 @@ partial class CoreTests
         InputState.AddChangeMonitor(gamepad.leftStick,
             (control, time, eventPtr, monitorIndex) => monitorFired = true);
 
-        runtime.PlayerFocusLost();
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
+        InputSystem.Update(InputUpdateType.Dynamic);
+
         Set(gamepad.leftStick, new Vector2(0.123f, 0.234f), queueEventOnly: true);
         InputSystem.Update(InputUpdateType.Editor);
 
@@ -1235,7 +1237,7 @@ partial class CoreTests
     {
         Assert.That(InputSystem.settings.updateMode, Is.EqualTo(InputSettings.UpdateMode.ProcessEventsInDynamicUpdate));
         Assert.That(runtime.onShouldRunUpdate(InputUpdateType.Fixed), Is.False);
-        Assert.That(InputSystem.s_Manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.Fixed, Is.EqualTo(InputUpdateType.None));
     }
 
     [Test]
@@ -1676,7 +1678,9 @@ partial class CoreTests
         {
             history.StartRecording();
 
-            runtime.PlayerFocusLost();
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
             Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
             InputSystem.Update(InputUpdateType.Editor);
 
@@ -1696,7 +1700,9 @@ partial class CoreTests
             history.updateMask = InputUpdateType.Editor;
             history.StartRecording();
 
-            runtime.PlayerFocusLost();
+            ScheduleFocusChangedEvent(applicationHasFocus: false);
+            InputSystem.Update(InputUpdateType.Dynamic);
+
             Set(gamepad.leftTrigger, 0.123f, queueEventOnly: true);
             InputSystem.Update(InputUpdateType.Editor);
 
@@ -1880,5 +1886,24 @@ partial class CoreTests
         //test memory consumption
         ////TODO
         Assert.Fail();
+    }
+
+    [Test]
+    [Category("State")]
+    public void State_InputManagerInstallRuntime_WithSameRuntimeInstance_DoesNotReplaceStateMonitors()
+    {
+        InputSystem.AddDevice<Keyboard>();
+        using (var map = new InputActionMap("install_runtime_monitors"))
+        {
+            map.AddAction("a", binding: "<Keyboard>/space");
+            map.Enable();
+
+            var monitors = InputSystem.manager.m_StateMonitors;
+            Assert.That(monitors, Is.Not.Null);
+
+            InputSystem.manager.InstallRuntime(InputSystem.manager.runtime);
+
+            Assert.That(ReferenceEquals(InputSystem.manager.m_StateMonitors, monitors), Is.True);
+        }
     }
 }

@@ -1,4 +1,4 @@
 {
   "displayName": "Simple Multiplayer",
-  "description": "Demonstrates how to set up a simple local multiplayer scenario."
+  "description": "Demonstrates how to set up a simple local multiplayer scenario. Requires the Universal Render Pipeline (URP) package to be installed for shader compilation."
 }

@@ -12,11 +12,11 @@ If you apply Interactions to both an Action and its bindings, then the effect is
 
 ## Apply Interactions to Actions in the Editor
 
-To apply interactions in the Input Action Editor: 
+To apply interactions in the Input Action Editor:
 
-1. Select an Action to edit, so that the right pane of the window displays the properties for that Action. 
-1. Select the plus icon on the __Interactions__ foldout to open a list of all available Interactions types. 
-1. Select an Interaction type to add an Interaction instance of that type. The Interaction now appears in the __Interactions__ foldout. 
+1. Select an Action to edit, so that the right pane of the window displays the properties for that Action.
+1. Select the plus icon on the __Interactions__ foldout to open a list of all available Interactions types.
+1. Select an Interaction type to add an Interaction instance of that type. The Interaction now appears in the __Interactions__ foldout.
 1. If the Interaction has any parameters, you can edit them at this stage.
 
 ## Apply Interactions to Actions in code

@@ -6,7 +6,7 @@ uid: input-system-edit-bindings
 
 Open the [Actions Editor window](actions-editor.md) to add, duplicate, or delete bindings.
 
-## Add a binding 
+## Add a binding
 
 To add a new binding to an action:
 
@@ -35,4 +35,3 @@ You can add multiple bindings to an action, which is generally useful for suppor
 
 ![The default "move" action with its multiple bindings highlighted](./Images/ActionWithMultipleBindings.png)<br/>
 _The default "Move" action in the Actions Editor window, displaying the multiple bindings associated with it._
-

@@ -19,4 +19,3 @@ Touch devices capture input from touchscreens, and inherit from the `Pointer` cl
 - [Create on-screen controls](on-screen-controls.md)
 - [Input for user interfaces](ui-input.md)
 - [Devices](devices.md)
-

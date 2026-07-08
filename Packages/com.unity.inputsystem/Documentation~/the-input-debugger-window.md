@@ -2,7 +2,7 @@
 uid: input-system-debugger-window
 ---
 
-# The input debugger window 
+# The input debugger window
 
 When something isn't working as expected, the quickest way to troubleshoot what's wrong is the Input Debugger in the Unity Editor. The Input Debugger provides access to the activity of the Input System in both the Editor and the connected Players.
 

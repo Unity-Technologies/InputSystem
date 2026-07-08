@@ -93,5 +93,5 @@ These actions named "Move" and "Jump" in this script work straight away with no 
 
 > [!NOTE]
 > - Different types of Action have different value types, and so have different methods to access their value, which is why you see `.ReadValue<Vector2>()` used to read a 2D axis, and `.IsPressed()` to read a button state, in the example above.
-> 
+>
 > - If you create more than one Action with same name in different action maps, you must specify the Action Map and the Action Name separated by a `/` character when using FindAction. For example: `InputSystem.actions.FindAction("Player/Move")`

@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 
 using System;
 using System.Collections.Generic;
@@ -24,11 +24,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 private static bool migratedInputActionAssets = false;
 
-#if UNITY_2021_2_OR_NEWER
                 private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths, bool didDomainReload)
-#else
-                private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
-#endif
                 {
                     if (!migratedInputActionAssets && importedAssets.Contains(kAssetPathInputManager))
                     {
@@ -347,4 +343,4 @@ namespace UnityEngine.InputSystem.Editor
         }
     }
 }
-#endif // UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#endif // UNITY_EDITOR

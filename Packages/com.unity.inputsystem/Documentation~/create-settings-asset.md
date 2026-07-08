@@ -2,7 +2,7 @@
 uid: input-settings-create-settings-asset
 ---
 
-# Create a settings asset 
+# Create a settings asset
 
 When you first view the input settings, they are not editable, and instead a button to __Create settings asset__ is displayed at the top of the input settings window.
 

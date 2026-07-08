@@ -22,8 +22,8 @@ You must use the corresponding type that matches the action's [control type's](a
 
 To poll an action whose type is **Button**, use:
 
-- [`IsPressed()`](xref:UnityEngine.InputSystem.InputAction) 
-- [`WasPressedThisFrame()`](xref:UnityEngine.InputSystem.InputAction) 
+- [`IsPressed()`](xref:UnityEngine.InputSystem.InputAction)
+- [`WasPressedThisFrame()`](xref:UnityEngine.InputSystem.InputAction)
 - [`WasReleasedThisFrame()`](xref:UnityEngine.InputSystem.InputAction)
 
 Buttons have no applicable value other than whether they are pressed or released.
@@ -76,7 +76,7 @@ public class Example : MonoBehaviour
 }
 ```
 
-### Polling actions example using interaction phase 
+### Polling actions example using interaction phase
 
 
 This example uses the Interact action from the [default actions](default-actions.md), which has a [Hold](built-in-interactions.md#hold) interaction to make it perform only after the bound control is held for a period of time (for example, 0.4s):

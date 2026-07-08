@@ -2,7 +2,7 @@
 uid: input-system-record-events
 ---
 
-# Record events 
+# Record events
 
 >NOTE: To download a sample project which contains a reusable MonoBehaviour called `InputRecorder`, which can capture and replay input from arbitrary devices, open the Package Manager, select the Input System Package, and choose the sample project "Input Recorder" to download.
 

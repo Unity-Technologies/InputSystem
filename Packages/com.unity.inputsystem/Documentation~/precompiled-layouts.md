@@ -2,7 +2,7 @@
 uid: input-system-precompiled-layouts
 ---
 
-# Precompiled layouts 
+# Precompiled layouts
 
 Building a device at runtime from an [`InputControlLayout`](xref:UnityEngine.InputSystem.Layouts.InputControlLayout) is a slow process. The layout instance itself has to be built (which might involve reflection) and then interpreted in order to put the final [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice) instance together. This process usually involves the loading of multiple [`InputControlLayout`](xref:UnityEngine.InputSystem.Layouts.InputControlLayout) instances, each of which might be the result of merging multiple layouts together (if the layout involves [inheritance](layout-inheritance.md) or [overrides](override-layout-definitions.md)).
 
@@ -10,4 +10,3 @@ You can speed up this process up by "baking" the final form of a layout into a "
 
 > [!NOTE]
 > Precompiled layouts must be device layouts. It is not possible to precompile the layout for an [`InputControl`](xref:UnityEngine.InputSystem.InputControl).
-

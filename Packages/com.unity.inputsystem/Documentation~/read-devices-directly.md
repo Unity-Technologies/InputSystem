@@ -23,7 +23,7 @@ To get a reference to a device, you can either:
 
 You can get references to any supported device currently connected by using one of the [InputDevice classes](xref:UnityEngine.InputSystem.InputDevice) and using the `.current` property to get the currently active device of that type. For example, [`Gamepad.current`](xref:UnityEngine.InputSystem.Gamepad) returns the most recently active connected gamepad.
 
-You can browse the available device types from the [InputDevice classes API documentation](xref:UnityEngine.InputSystem.InputDevice). 
+You can browse the available device types from the [InputDevice classes API documentation](xref:UnityEngine.InputSystem.InputDevice).
 
 - Some types listed are usable directly, such as `Gamepad` or `Joystick`.
 - Some are abstract parent classes that have usable child classes. For example, `Pointer` is not directly usable, but has usable child classes of `Mouse`, `Pen`, and `Touch`.
@@ -48,7 +48,7 @@ Once you have the reference to the device, and you know the control property to 
 
 - For value type controls, use `ReadValue`, which returns a value of the control's type.
 - For button type controls, use `isPressed`, `wasPressedThisFrame` or `wasReleasedThisFrame`.
-  
+
 For example:
 
 ```CSharp
@@ -62,7 +62,7 @@ public class MyPlayerScript : MonoBehaviour
         var gamepad = Gamepad.current;
 
         // check there is a Gamepad connected
-        if (gamepad != null) 
+        if (gamepad != null)
         {
             if (gamepad.rightTrigger.wasPressedThisFrame)
             {

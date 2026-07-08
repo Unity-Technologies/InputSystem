@@ -1,4 +1,4 @@
-#if UNITY_EDITOR && UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,9 +97,9 @@ namespace UnityEngine.InputSystem.Editor
 
                 state.serializedObject.ApplyModifiedProperties();
                 return state.With(
-                    selectedControlScheme: new InputControlScheme(controlScheme),
+                    selectedControlScheme: InputControlSchemeEditorExtensions.FromSerializedProperty(controlScheme),
                     // Select the control scheme updated, otherwise select the new one it was added
-                    selectedControlSchemeIndex: updateExisting? state.selectedControlSchemeIndex: controlSchemesArray.arraySize - 1);
+                    selectedControlSchemeIndex: updateExisting ? state.selectedControlSchemeIndex : controlSchemesArray.arraySize - 1);
             };
         }
 
@@ -137,7 +137,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 return state.With(
                     selectedControlSchemeIndex: controlSchemeIndex,
-                    selectedControlScheme: new InputControlScheme(controlSchemeSerializedProperty));
+                    selectedControlScheme: InputControlSchemeEditorExtensions.FromSerializedProperty(controlSchemeSerializedProperty));
             };
         }
 
@@ -145,10 +145,16 @@ namespace UnityEngine.InputSystem.Editor
         {
             return (in InputActionsEditorState state) =>
             {
-                var controlSchemeSerializedProperty = state.selectedControlSchemeIndex == -1 ? null :
-                    state.serializedObject
-                        .FindProperty(nameof(InputActionAsset.m_ControlSchemes))
-                        .GetArrayElementAtIndex(state.selectedControlSchemeIndex);
+                SerializedProperty controlSchemeSerializedProperty = null;
+                var serializedProperty = state.serializedObject
+                    .FindProperty(nameof(InputActionAsset.m_ControlSchemes));
+
+                if (state.selectedControlSchemeIndex < serializedProperty.arraySize)
+                {
+                    controlSchemeSerializedProperty = state.selectedControlSchemeIndex == -1 ? null :
+                        serializedProperty
+                            .GetArrayElementAtIndex(state.selectedControlSchemeIndex);
+                }
 
                 if (controlSchemeSerializedProperty == null)
                 {
@@ -158,7 +164,7 @@ namespace UnityEngine.InputSystem.Editor
                 }
 
                 return state.With(
-                    selectedControlScheme: new InputControlScheme(controlSchemeSerializedProperty));
+                    selectedControlScheme: InputControlSchemeEditorExtensions.FromSerializedProperty(controlSchemeSerializedProperty));
             };
         }
 
@@ -210,13 +216,13 @@ namespace UnityEngine.InputSystem.Editor
                 if (indexOfArrayElement > serializedArray.arraySize - 1)
                     return state.With(
                         selectedControlSchemeIndex: serializedArray.arraySize - 1,
-                        selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(serializedArray.arraySize - 1)), selectedDeviceRequirementIndex: -1);
+                        selectedControlScheme: InputControlSchemeEditorExtensions.FromSerializedProperty(serializedArray.GetArrayElementAtIndex(serializedArray.arraySize - 1)), selectedDeviceRequirementIndex: -1);
 
                 state.m_Analytics?.RegisterControlSchemeEdit();
 
                 return state.With(
                     selectedControlSchemeIndex: indexOfArrayElement,
-                    selectedControlScheme: new InputControlScheme(serializedArray.GetArrayElementAtIndex(indexOfArrayElement)), selectedDeviceRequirementIndex: -1);
+                    selectedControlScheme: InputControlSchemeEditorExtensions.FromSerializedProperty(serializedArray.GetArrayElementAtIndex(indexOfArrayElement)), selectedDeviceRequirementIndex: -1);
             };
         }
 

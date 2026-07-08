@@ -2,7 +2,7 @@
 uid: input-system-native-devices
 ---
 
-# Native devices 
+# Native devices
 
 Devices that the [native backend](Architecture.md#native-backend) reports are considered native (as opposed to Devices created from script code). To identify these Devices, you can check the [`InputDevice.native`](xref:UnityEngine.InputSystem.InputDevice) property.
 

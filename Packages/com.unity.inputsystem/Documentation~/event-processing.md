@@ -2,7 +2,7 @@
 uid: input-system-event-processing
 ---
 
-# Event processing 
+# Event processing
 
 [Events](xref:UnityEngine.InputSystem.LowLevel.InputEvent) are collected on a queue by the Unity runtime. This queue is regularly flushed out and the events on it processed. Events can be added to the queue manually by calling [`InputSystem.QueueEvent`](xref:UnityEngine.InputSystem.InputSystem).
 

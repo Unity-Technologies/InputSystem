@@ -2,7 +2,7 @@
 uid: input-system-write-tests
 ---
 
-# Write tests 
+# Write tests
 
 When writing a test, use [`InputSystem.AddDevice<T>()`](xref:UnityEngine.InputSystem.InputSystem) to add new Devices.
 

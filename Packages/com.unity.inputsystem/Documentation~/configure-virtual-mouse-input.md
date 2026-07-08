@@ -26,6 +26,6 @@ To configure the input to drive the virtual mouse, do one of the following:
 
 ## Control the system mouse cursor with the virtual mouse
 
-To set the virtual mouse to control the system mouse cursor, set [Cursor Mode](xref:UnityEngine.InputSystem.UI.VirtualMouseInput) to **Hardware Cursor If Available**. 
+To set the virtual mouse to control the system mouse cursor, set [Cursor Mode](xref:UnityEngine.InputSystem.UI.VirtualMouseInput) to **Hardware Cursor If Available**.
 
 In this mode, the **Cursor Graphic** is hidden when a system mouse is present, and you use [Mouse.WarpCursorPosition](xref:UnityEngine.InputSystem.Mouse) to move the system mouse cursor instead of the software cursor. The transform linked through **Cursor Transform** is not updated.

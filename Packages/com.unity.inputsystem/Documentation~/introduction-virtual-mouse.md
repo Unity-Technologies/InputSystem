@@ -4,7 +4,7 @@ uid: input-system-virtual-mouse-intro
 
 # Introduction to Virtual Mouse for UI cursor control
 
-If your application uses gamepads and joysticks as an input, you can use [navigation input actions](supported-ui-input-types-navigation.md) to operate the UI. However, it usually involves extra work to make the UI work well with navigation. 
+If your application uses gamepads and joysticks as an input, you can use [navigation input actions](supported-ui-input-types-navigation.md) to operate the UI. However, it usually involves extra work to make the UI work well with navigation.
 
 An alternative way to operate the UI is to allow gamepads and joysticks to drive the cursor from a virtual mouse. The Input System package provides a **Virtual Mouse** component for this purpose.
 

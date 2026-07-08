@@ -34,7 +34,7 @@ Only the following combinations of devices/OSes currently support rumble:
 
 [`IDualMotorRumble`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) is based on [`IHaptics`](xref:UnityEngine.InputSystem.Haptics.IHaptics), which is the base interface for any haptics support on any device. You can pause, resume, and reset haptic feedback using the [`PauseHaptics`](xref:UnityEngine.InputSystem.Haptics.IHaptics.PauseHaptics), [`ResumeHaptics`](xref:UnityEngine.InputSystem.Haptics.IHaptics.ResumeHaptics), and [`ResetHaptics`](xref:UnityEngine.InputSystem.Haptics.IHaptics.ResetHaptics) methods respectively.
 
-In certain situations, you might want to globally pause or stop haptics for all devices. For example, if the player enters an in-game menu, you can pause haptics while the player is in the menu, and then resume haptics once the player resumes the game. 
+In certain situations, you might want to globally pause or stop haptics for all devices. For example, if the player enters an in-game menu, you can pause haptics while the player is in the menu, and then resume haptics once the player resumes the game.
 
 You can use the corresponding methods on [`InputSystem`](xref:UnityEngine.InputSystem.InputSystem) to achieve this result. These methods work the same way as device-specific methods, but affect all devices:
 

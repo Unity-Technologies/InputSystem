@@ -2,7 +2,7 @@
 uid: input-system-save-load-rebinds
 ---
 
-# Save and load rebinds 
+# Save and load rebinds
 
 You can serialize override properties of [Bindings](xref:UnityEngine.InputSystem.InputBinding) by serializing them as JSON strings and restoring them from these. Use [`SaveBindingOverridesAsJson`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions) to create these strings and [`LoadBindingOverridesFromJson`](xref:UnityEngine.InputSystem.InputActionRebindingExtensions) to restore overrides from them.
 

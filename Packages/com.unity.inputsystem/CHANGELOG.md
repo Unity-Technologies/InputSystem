@@ -5,20 +5,210 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-Due to package verification, the latest version below is the unpublished version and the date is meaningless.
-however, it has to be formatted properly to pass verification tests.
-
 ## [Unreleased] - yyyy-mm-dd
+
+### Fixed
+
+- Fixed input devices being lost (no keyboard, mouse, gamepad, etc.) after upgrading the package while the Editor is open (related to the recent fast enter playmode change). [ISX-2569]
+- Fixed `InputSystemProvider` disabling project-wide actions on shutdown when UI Toolkit destroys its objects mid-play. The provider now scopes its lifecycle to the UI action map only and does not disable project-wide actions [UUM-134130](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-134130)
+- Fixed `InputActionRebindingExtensions.GetBindingDisplayString(InputAction, InputBinding, ...)` returning an empty string for composite bindings when the binding mask filters by group [UUM-141423](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141423)
+- Fixed `InputEventPtr.handled` not preventing actions from triggering when switching devices. The default event handled policy has been changed from `SuppressStateUpdates` (now deprecated) to `SuppressActionEventNotifications`, which keeps device state synchronized while suppressing action callbacks for handled events. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
+- Fixed all `InputAction.WasXxxThisFrame()` and `WasXxxThisDynamicUpdate()` polling APIs to use per-action suppression tracking instead of a map-wide flag. Previously, when multiple events arrived in the same frame with mixed handled/unhandled states, the last event's suppression state could incorrectly affect all actions in the map. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
+- Fixed `InputRecorder` playback not starting when the Game View is not focused in the Editor [ISXB-1319](https://jira.unity3d.com/browse/ISXB-1319)
+- Fixed a `NullReferenceException` thrown when removing all action maps [UUM-137116](https://jira.unity3d.com/browse/UUM-137116)
+- Simplified default setting messaging by consolidating repetitive messages into a single HelpBox.
+- Fixed a `NullPointerReferenceException` thrown in `InputManagerStateMonitors.FireStateChangeNotifications` logging by adding validation [UUM-136095].
+- Fixed auto-save not working for Input System actions in Project Settings when both the Project Settings and Input System Actions windows were open [UUM-134035](https://jira.unity3d.com/browse/UUM-134035)
+- Improved New Input System warning dialog, Native Device Inputs Not Enabled [UUM-132151].
+- Fixed caching for InputControlPath display name [ISX-2501](https://jira.unity3d.com/browse/ISX-2501)
+- Fixed editor closing and not saving the input asset when clicking cancel in the dialog prompt [UUM-134748](https://jira.unity3d.com/browse/UUM-134748)
+- Fixed an incorrect ArraysHelper.Merge implementation that used the comparer incorrectly [ISXB-1790] (https://jira.unity3d.com/browse/ISXB-1790)
+- Fixed the input actions editor window entering a corrupt state when restarting Unity after the asset was edited. [UUM-134737](https://jira.unity3d.com/browse/UUM-134737)
+- Fixed the Input Actions Editor Window toolbar buttons overlapping each other when the window size is too small [ISXB-1783] (https://jira.unity3d.com/browse/ISXB-1783)
+- Fixed `buttonSouth` returning the state of the east button (and so on for all the compass named buttons) when using a Nintendo Switch Pro Controller on iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
+- Fixed `aButton` returning the state of the east button (and so on for all the letter named buttons) when using a Nintendo Switch Pro Controller on Standalone & iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
+- Fixed an issue where `UIToolkit` `ClickEvent` could be fired on Android after device rotation due to inactive touch state being replayed during action initial state checks [UUM-100125](https://jira.unity3d.com/browse/UUM-100125).
+- Fixed InputSystem.onAnyButtonPress fails to trigger when the device receives a touch [UUM-137930](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137930).
+- Fixed an incorrect ArraysHelper.HaveDuplicateReferences implementation that didn't use its arguments right [ISXB-1792] (https://github.com/Unity-Technologies/InputSystem/pull/2376)
+- Fixed `InputAction.IsPressed`, `WasPressedThisFrame`, and `WasReleasedThisFrame` using a `ButtonControl`'s `pressPoint` when a binding also had an explicit `PressInteraction` with its own `pressPoint`, which could make those APIs disagree with the interaction's press and release behavior. Action-level press APIs now follow the interaction threshold when both are set explicitly.
+- Fixed `IndexOutOfRangeException` in `InputDeviceBuilder` when connecting an HID gamepad whose report descriptor declares a hat switch with Report Size 8 (e.g. ESP32-BLE-Gamepad). The HID layer now anchors the hat's directional sub-controls to the hat's own byte instead of letting the layout system auto-allocate a fresh byte for each [UUM-143659](https://jira.unity3d.com/browse/UUM-143659).
+- Fixed Input Debugger window's incorrect name. It is now called 'Input Debugger' instead of 'Input Debug' [UUM-137124](https://jira.unity3d.com/browse/UUM-137124).
+
+### Changed
+- Action-level `IsPressed`, `WasPressedThisFrame`, and `WasReleasedThisFrame` for bindings to `Vector2Control` / `StickControl` no longer consult a per-control `pressPoint` on the vector (that field was removed). Use a `Press` interaction to set a custom threshold, or rely on `defaultButtonPressPoint`.
+- Removed 32-bit compilation check for HID on Windows players, which had no impact anymore. (ISX-2543)
+- Migrated sample scenes to use Universal Render Pipeline (URP) with Built-in Render Pipeline fallback shaders. The URP package is now required to run the samples. (ISX-2343)
+- Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.
+- Changed the UI for `InputSystem.inputsettings` asset to use UI Toolkit framework.
+- Added documentation for rumble support on Android.
+
+### Added
+
+- Added `InputSettings.shortcutKeysUseActionPriority` to opt into action-priority based shortcut overlap resolution. `shortcutKeysConsumeInput` enables complexity-based resolution when action priority is off (matching previous develop behavior). When both are enabled, action priority takes precedence. Serialized `InputAction` priority values are always kept; the Priority field in the Input Actions editor is shown only when action priority resolution is enabled. Both settings default to off.
+
+- Support for entering the play mode with domain reload turned off (i.e. Faster Enter Playmode feature) [ISX-2411]
+
+## [1.19.0] - 2026-02-24
+
+### Changed
+
+- Reverted the deprecation of the USE_IMGUI_EDITOR_FOR_ASSETS feature option (ISX-2397).
+- Updated `m_ActionAssetInstanceID` in PlayerInputEditor.cs to use `EntityId` instead of `InstanceID`.
+- Consecutive wildcard characters ('*') used in input control-paths are now collapsed into a single wildcard when multiple consecutive wildcard characters are present.
+
+### Fixed
+
+- Fixed the `Auto-Save` toggle button with some extra pixels to align the text in the window better.
+- Align title font size with toolbar style in `Input Action` window.
+- Updated Action Properties headers to use colors consistent with GameObject component headers.
+- Fixed misaligned Virtual Cursor when changing resolution [ISXB-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1119)
+- Fixed OnScreenStick ignoring dynamic-origin presses when isolated input actions were enabled. [ISXB-1027](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1027)
+- Fixed an issue where `IndexOutOfRangeException` was thrown from `InputManagerStateMonitors.AddStateChangeMonitor` when attempting to enable an action map from within an `InputAction.cancel` callback when using control schemes. (ISXB-1767).
+
+### Added
+
+- Added `keywords` for InputSystem project settings window.
+
+## [1.18.0] - 2026-01-14
+
+### Changed
+- Updated documentation to reflect that the OnMouse MonoBehaviour events are now supported in Unity 6.4 and above.
+- Updated the supported devices documentation to clarify that touchscreens are supported on Linux.
+- Updated documentation to reflect PS5 controller support on Linux.
+
+### Fixed
+
+- Fixed add buttons use add icon in input actions window (ISX-2340)
+- Fixed warnings being generated on Unity 6.4 and 6.5. (ISX-2395).
+- Fixed extra empty lines being displayed in the control binding list when mouse buttons are pressed [ISXB-1677](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1677)
+- Fixed InputActionReference not being set when attempting to set it on a Prefab or ScriptableObject [ISXB-1787](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1787)
+
+## [1.17.0] - 2025-11-25
+
+### Changed
+- Project-Wide Input Actions support can no longer be compiled out (removed the `UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS` define). (ISX-2397)
+- Removed code that had to do with Unity versions older than Unity 2022.3 LTS. (ISX-2396)
+- Auto-save on focus lost can no longer be compiled out (ISX-2397)
+- Deprecated the `USE_IMGUI_EDITOR_FOR_ASSETS` feature option (ISX-2397)
+
+### Fixed
+- An issue where a UITK MouseEvent was triggered when changing from Scene View to Game View in the Editor has been fixed. [ISXB-1671](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1671)
+- Fix documentation error in file AndroidGameController.cs mentioning a wrong controller. [DOCATT-9806]
+- Deferred auto-registration of processors, interactions and composite binding types referenced by `InputActionAsset`
+  to only happen once when an unresolved type reference is found in an action definition. This avoids reflective
+  type loading from assemblies for all cases where the Input System is not extended. (ISXB-1766).
+
+## [1.16.0] - 2025-11-10
+
+### Changed
+- Replaced "Look" rebinding button for "Keyboard" control scheme with a mouse sensitivity slider in `RebindingUISample` to illustrate how to support customizing scaling of mouse deltas and how to reapply the persisted setting between runs.
+- Changed: Input System no longer depends the obsolete com.unity.modules.vr package.
+- Removed code that had to do with Unity versions older than Unity 2021.3 LTS.
+
+### Added
+- Added an example of how to swap two similar controls to the `RebindingUISample`. This is accessible via a button with two arrows at the right hand-side of the screen. Pressing the button allows swapping the current bindings of the "Move" and "Look" gamepad bindings via the new `RebindActionUI.SwapBinding(RebindActionUI other)` method.
+- Added support for (MonoBehavior OnMouse events) [https://docs.unity3d.com/ScriptReference/MonoBehaviour.html] when running the Input System on Unity 6000.4 or newer.
+- Added tests and a sample for MonoBehavior OnMouse events using the InputSystem package.
+- Added support for all the existing InputControl types in InputTestFixture.Trigger [ISXB-1716]
+
+### Fixed
+- Fixed warnings being generated on Unity 6.3 (beta). (ISXB-1718).
+- Fixed an issue in `DeltaStateEvent.From` where unsafe code would throw exception or crash if internal pointer `currentStatePtr` was `null`. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
+- Fixed an issue in `InputTestFixture.Set` where attempting to change state of a device not belonging to the test fixture context would result in null pointer exception or crash. [ISXB-1637](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1637).
+- Fixed an issue where input action parameter overrides applied via `InputActionRebindingExtensions.ApplyParameterOverride` would not be applied if the associated binding has the empty string as `InputBinding.name`and the binding mask also has the empty string as name. (ISXB-1721).
+- Fixed an issue in `InputActionReference` where `Set` was not updating the cached action leading to incorrect evaluation of `InputActionReference.action` after first being cached, then set, then read again. This could lead to reference not being reset if set programmatically during play-mode. [ISXB-1584](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1584).
+- Fixed an issue where `InputActionSetupExtensions.Remove` will result in `NullReferenceException` if the action being removed has no bindings. (ISXB-1688).
+- Fixed an issue where assigning a ``MonoBehaviour` field of type `InputActionReference` to an instance stored in `.inputactions` asset via `InputActionReference.Set` in playmode corrupts the originally referenced asset. (ISXB-1692).
+- Fixed an issue where `InputActionReference.Create(null)` returns `null` instead "of a reference object to the given action" as documented behaviour for the API. (ISXB-1693)
+- Fixed an issue where `InputActionReference.Set(null)` does not update the cached input action reference nor the `ScriptableObject.name` leading to incorrect action being returned and reference showing up as the path to the previously assigned action in Inspector. (ISXB-1694)
+- Fixed an issue where Inspector field of type `InputActionReference` isn't reflecting broken reference in case action is deleted from asset, action map is deleted from asset, or the asset itself is deleted. (ISXB-1701)
+- Fixed HID parsing not handling logical minimum and maximum values correctly when they are negative. This applies for platforms that parse HID descriptors in the package, e.g. macOS at the moment.
+- Fix usage of correct data format for stick axes in HID Layout Builder ([User contribution](https://github.com/Unity-Technologies/InputSystem/pull/2245))
+- Fixed InputSystemUIInputModule calling pointer events on parent objects even when the "Send Pointer Hover To Parent" is off on 2022.3.XX. This was  was previously only available on Unity 6 versions since 1.11.0. [ISXB-1296]
+- Limited the Add Control Scheme popup window max size to be its parent window, so that it won't resize beyond the visible area. [ISXB-1733](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1733)
+- Fixed an issue where the action icon would shrink or disappear from UI when an action has a very long name. [ISXB-1650](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1650).
+- Fixed upgrading input actions containing multiple processors [ISXB-1674](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1674).
+- Fixed an issue that led to non-deterministic behaviour during `.inputaction` asset imports that could lead to corrupted assets or Unity hanging during asset import when "Generate C# Scripts" was active in importer settings. [ISXB-1746](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1746)
+
+## [1.15.0] - 2025-10-03
+
+### Changed
+- Expanded `RebindingUISample` to include a "game mode" state and a "menu state" to be more similar to a real game. Also added action-performed indicators (`InputActionIndicator`) illustrating when actions get triggered.
+
+### Added
+- Exposed MediaPlayPause, MediaRewind, MediaForward keys on Keyboard.
+- Added a new fluent API `WithSuppressedActionPropagation()` to `UnityEngine.InputSystem.InputActionRebindingExtensions` that allows suppressing actions from firing during interactive rebinding while allowing state updates to avoid actions triggering after state event suppression (default). ISXB-1546.
+- Added a new Monobehavior `InputActionLabel` to rebinding sample to allow dynamic text showing relevant binding for an `InputAction`.
+
+### Fixed
+- Fixed an issue in `RebindingUISample` that fired actions bound to the same control as the target control in a rebinding process. ISXB-1524.
+- Fixed an issue in `RebindingUISample` preventing UI navigation without Keyboard and Mouse present.
+- Fixed an issue in `RebindActionUI` which resulted in active binding not being shown after a scene reload. ISXB-1588.
+- Fixed an issue in `GamepadIconExample` which resulted in icons for left and right triggers not being displayed after a rebind to the exact same controls. ISXB-1593.
+- Fixed the compilation warnings when used with Unity 6.4 (ISX-2349).
+- Fixed an issue where `InputSystemUIInputModule.localMultiPlayerRoot` could not be set to `null` when using `MultiplayerEventSystem`. [ISXB-1610](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1610)
+- Fixed an issue in `Keyboard` where the sub-script operator would return a `null` key control for the deprecated key `Key.IMESelected`. Now, an aliased `KeyControl`mapping to the IMESelected bit is returned for compability reasons. It is still strongly advised to not rely on this key since `IMESelected` bit isn't strictly a key and will be removed from the `Key` enumeration type in a future major revision. [ISXB-1541](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1541).
+- Fixed an ArgumentOutOfRangeException that was thrown when pressing the undo shortcut while changing a control scheme name. [ISXB-1607](https://issuetracker.unity3d.com/issues/argumentoutofrangeexception-error-is-thrown-when-pressing-the-undo-shortcut-while-changing-the-control-scheme-name)
+- Fixed an issue where the onAnyButtonPress callback would be triggered multiple times during unrelated events when a button is held down. See [ISXB-1005](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1005).
+- Fixed InputControl picker not updating correctly when the Input Actions Window was dirty. [ISXB-1221](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1221)
+- Fixed formatting issues on processor documentation page.
+
+## [1.14.2] - 2025-08-05
+
+### Fixed
+- Fixed an issue where using Pen devices on Android tablets would result in double clicks for UI interactions. [ISXB-1456](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1456)
+- Fixed an issue preventing an embedded platform from being released. It adds back some `#defines` to `XRSupport` and `InputDeviceCharacteristics`.
+- Fixed a warning not showing the asset name correctly when the input action map parameters for runtime GUI were not setup. [ISXB-1560]
+
+## [1.14.1] - 2025-07-10
+
+### Added
+- Support for Xbox controllers over USB on macOS, using macOS's default driver. [ISXB-1548]
+
+### Fixed
+- Fixed an analytics event being invoked twice when the Save button in the Actions view was pressed. [ISXB-1378](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1378)
+- Fixed an issue causing a number of errors to be displayed when using `InputTestFixture` in playmode tests with domain reloading disabled on playmode entry. [ISXB-1446](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1446)
+- Fixed issue where user was not prompted to save changes when loading a second input actions asset into an already opened editor. [ISXB-1343](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1343)
+- Fixed the on hover behaviour of the two plus buttons in the Input Actions Editor window [ISXB-1327](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1327)
+- Fixed an issue on macOS which didn't detect up-left DPAD presses for Xbox controllers. [ISXB-810](https://issuetracker.unity3d.com/issues/macos-d-pad-upper-left-corner-is-not-logged-with-the-xbox-controller)
+- Fixed Input Actions code generation overwriting user files when the names happened to match. [ISXB-1257](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1257)
+- Fixed Input Actions code generation using locale-dependent rules when lowercasing and uppercasing strings. [ISXB-1406]
+- Fixed an issue when providing JoinPlayer with a specific split screen index. [ISXB-897](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-897)
+- Fixed Inspector Window being refreshed all the time when a PlayerInput component is present with Invoke Unity Events nofication mode chosen [ISXB-1448](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1448)
+- Fixed an issue where an action with a name containing a slash "/" could not be found via `InputActionAsset.FindAction(string,bool)`. [ISXB-1306](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1306).
+- Fixed Gamepad stick up/down inputs that were not recognized in WebGL. [ISXB-1090](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1090)
+- Fixed reenabling the VirtualMouseInput component may sometimes lead to NullReferenceException. [ISXB-1096](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1096)
+- Fixed the default button press point not being respected in Editor (as well as some other Touchscreen properties). [ISXB-1152](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1152)
+- Fixed the TreeView compilation warnings when used with Unity 6.2 beta (ISX-2320)
+- Fixed actions being reset when disabling the InputSystemUIInputModule component [ISXB-1493](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1493)
+- Fixed a memory leak when disabling and enabling the InputSystemUIInputModule component at runtime [ISXB-1573](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1573)
+- Fixed all InputControls being changed at once when you change just one by reverting `2a37caac288ac09bc9122234339dc5df8d3a0ca6`, which was an attempt at fixing [ISXB-1221] that introduced this regression [ISXB-1531] (https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1493)
+- Fixed PlayerInput component automatically switching away from the default ActionMap set to 'None'.
+- Fixed a console error being shown when targeting visionOS builds in 2022.3.
+- Fixed a Tap Interaction issue with analog controls. The Tap interaction would keep re-starting after timeout. [ISXB-627](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-627)
+- Fixed the defaultActionMap dropdown in the PlayerInput component defaulting to <None> instead of the first ActionMap.
+- Fixed TrackedPoseDriver stops updating position and rotation when device is added after its initialization. [ISXB-1555](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1555)
+- Fixed PlayerInput component not working with C# Wrappers (ISXB-1535). This reverted changes done to fix [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920) but users can now fix it themselves.
+- Fixed an issue that caused input processors with enum properties to incorrectly serialise by index instead of by value [ISXB-1474](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1474).
+
+### Changed
+
+- Changed conditional guards inside Plugins/XR so that we don't unnecessarily wrap entire classes. This stops downstream packages from having to also wrap Input System objects with similar conditionals.
+
+## [1.14.0] - 2025-03-20
 
 ### Fixed
 - Fixed an issue where all action maps were enabled initially for project wide actions, which overrode the PlayerInput action map configuration. [ISXB-920](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-920)
 - Fixed an issue where ButtonStates are not fully updated when switching SingleUnifiedPointer. [ISXB-1356](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1356)
+- Fixed errors when pasting composite parts into non-composites. [ISXB-757](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-757)
+- Fixed an issue where updating the InputSystem outside of the dynamic Update would lead to UI input and navigation events get lost. [ISXB-1313](https://issuetracker.unity3d.com/issues/ui-onclick-events-sometimes-do-not-trigger-when-manual-update-is-utilized-with-input-system)
 
 ### Changed
 - Changed enum value `Key.IMESelected` to obsolete which was not a real key. Please use the ButtonControl `imeSelected`.
 
 ### Added
 - Added support of F13-F24 keys. [UUM-44328](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-44328)
+- Added missing documentation for the Tracked Pose Driver and Tracked Device Raycaster components. [ISXB-1410](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1410)
 
 ## [1.13.1] - 2025-02-18
 
@@ -28,15 +218,19 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed arrow key navigation of Input Actions after Action rename. [ISXB-1024](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1024)
 - Fixed gamepad navigation in UI Toolkit TextField when using InputSystemUIInputModule. [UUM-77364](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-77364)
 - Fixed issue where asset editor window splitter positions were not persisted [ISXB-1316]
-- Fixed an issue where updating the InputSystem outside of the dynamic Update would lead to UI input and navigation events get lost. [ISXB-1313](https://issuetracker.unity3d.com/issues/ui-onclick-events-sometimes-do-not-trigger-when-manual-update-is-utilized-with-input-system)
 - Fixed a bug that would cause `TrackedPoseDriver` to update position and rotation when no HMD device is connected [ISXB-699](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-699) instead of keeping it unchanged.
 
 ### Changed
 - Changed default input action asset name from New Controls to New Actions.
 - Added disabling of action maps in rebinding UI sample.
+- `InputSystem.pollingFrequency` is now initialized based on recommended polling frequency by the underlying platform on Unity versions newer than 6000.3.0a1. It can still be customized (set) during run-time as usual. Increasing polling frequency beyond the default 60Hz leads to less probability of input loss and reduces input latency.
 
 ### Added
 - An alternative way to access if an action state reached a certain phase during this rendering frame (Update()). This can be utilized even if the InputSystem update mode is set to manual or FixedUpdate. It can be used to access the action phase during rendering, eg for perform updates to the UI.
+
+### Added
+- Added achievable average frequency diagnostic to Input Debugger device window (along with sensor frequency and global polling frequency information).
+- Added processing delay input system latency (average, minimum, maximum) diagnostics to Input Bugger device window.
 
 ## [1.13.0] - 2025-02-05
 
@@ -356,7 +550,7 @@ however, it has to be formatted properly to pass verification tests.
 - Fixed issue of visual elements being null during editing project-wide actions in project settings which prompted console errors.
 - Fixed case ISX-1436 (UI TK Input Action Asset Editor - Error deleting Bindings with DeleteKey on Windows).
 - Fixed issue with UI Toolkit based Input Action Editor not restoring it's selected items after Domain Reload.
-- Fixed the [`GetHapticCapabilitiesCommand`](xref:UnityEngine.InputSystem.XR.Haptics.GetHapticCapabilitiesCommand) always failing to execute due to a mismatch in the size in bytes of the payload and the size expected by XR devices. Changed [`HapticCapabilities`](xref:UnityEngine.InputSystem.XR.Haptics.HapticCapabilities) to include all properties returned by the XR input subsystem. This makes Input System match the functionality provided by the [XR](https://docs.unity3d.com/Manual/com.unity.modules.xr.html) module's [`InputDevice.TryGetHapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.InputDevice.TryGetHapticCapabilities.html) and [`HapticCapabilities`](https://docs.unity3d.com/ScriptReference/XR.HapticCapabilities.html).
+- Fixed the [`GetHapticCapabilitiesCommand`](xref:UnityEngine.InputSystem.XR.Haptics.GetHapticCapabilitiesCommand) always failing to execute due to a mismatch in the size in bytes of the payload and the size expected by XR devices. Changed [`HapticCapabilities`](xref:UnityEngine.InputSystem.XR.Haptics.HapticCapabilities) to include all properties returned by the XR input subsystem. This makes Input System match the functionality provided by the [XR](https://docs.unity3d.com/Manual/com.unity.modules.xr.html) module's [`InputDevice.TryGetHapticCapabilities`](xref:UnityEngine.XR.InputDevice.TryGetHapticCapabilities(UnityEngine.XR.HapticCapabilities&)) and [`HapticCapabilities`](xref:UnityEngine.XR.HapticCapabilities).
 - Fixed issue where deleting a binding in the Input Action Editor would usually result in an unexpected item being selected next.
 
 ## [1.8.0-pre.1] - 2023-09-04
@@ -1792,7 +1986,8 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 - **The system no longer supports processing input in __BOTH__ fixed and dynamic updates**. Instead, a choice has to be made whether to process input before each `FixedUpdate()` or before each `Update()`.
   * Rationale: the existing code that supported having both updates receive input independently still had several holes and became increasingly complex and brittle. Our solution was based on not actually processing input twice but on channeling input concurrently into both the state of both updates. Together with the fact that specific inputs have to reset (and possibly accumulate) correctly with respect to their update time slices, this became increasingly hard to do right. This, together with the fact that we've come to increasingly question the value of this feature, led us to removing the capability while preserving the ability to determine where input is processed.
-  * NOTE: Timeslicing is NOT affected by this. You can still switch to `ProcessEventInFixedUpdates` and get events timesliced to individual `FixedUpdate` periods according to their timestamps.
+    > [!NOTE]
+    > Timeslicing is NOT affected by this. You can still switch to `ProcessEventInFixedUpdates` and get events timesliced to individual `FixedUpdate` periods according to their timestamps.
   * `InputSettings.UpdateMode.ProcessEventsInBothFixedAndDynamicUpdate` has been removed.
   * `InputSettings.UpdateMode.ProcessEventsInDynamicUpdateOnly` has been renamed to `InputSettings.UpdateMode.ProcessEventsInDynamicUpdate` and is now the default.
   * `InputSettings.UpdateMode.ProcessEventsInFixedUpdateOnly` has been renamed to `InputSettings.UpdateMode.ProcessEventsInFixedUpdate`.
@@ -1993,9 +2188,10 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 ## [0.2.6-preview] - 2019-03-20
 
->NOTE: The UI code for editing actions has largely been rewritten. There may be regressions.
->NOTE: The minimum version requirement for the new input system has been bumped
-       to 2019.1
+> [!NOTE]
+> The UI code for editing actions has largely been rewritten. There may be regressions.
+>
+> The minimum version requirement for the new input system has been bumped to 2019.1
 
 ### Added
 
@@ -2073,7 +2269,8 @@ This release includes a number of Quality-of-Life improvements for a range of co
 
 This release contains a number of fairly significant changes. The focus has been on further improving the action system to make it easier to use as well as to make it work more reliably and predictably.
 
->NOTE: There are some breaking changes. Please see the "Changed" section below.
+> [!NOTE]
+> There are some breaking changes. Please see the "Changed" section below.
 
 ### Changed
 
@@ -2209,10 +2406,11 @@ This release contains a number of fairly significant changes. The focus has been
 
 ## [0.1.2-preview] - 2018-12-19
 
-    NOTE: The minimum version requirement for the new input system has been bumped
-          to 2018.3. The previous minum requirement of 2018.2 is no longer supported.
-          Also, we have dropped support for the .NET 3.5 runtime. The new .NET 4
-          runtime is now required to use the new input system.
+> [!NOTE]
+> The minimum version requirement for the new input system has been bumped
+> to 2018.3. The previous minum requirement of 2018.2 is no longer supported.
+> Also, we have dropped support for the .NET 3.5 runtime. The new .NET 4
+> runtime is now required to use the new input system.
 
 We've started working on documentation. The current work-in-progress can be found on [GitHub](https://github.com/Unity-Technologies/InputSystem/blob/develop/Packages/com.unity.inputsystem/Documentation~/InputSystem.md).
 

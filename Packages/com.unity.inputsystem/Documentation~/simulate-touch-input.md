@@ -14,7 +14,7 @@ You can simulate touch input from [pointer devices](pointers-introduction.md) su
 
 To enable touch simulation in the Unity Editor, perform the following steps:
 
-1. Open the [Input Debugger](the-input-debugger-window.md) (**Window** > **Analysis** > **Input Debugger**)  
+1. Open the [Input Debugger](the-input-debugger-window.md) (**Window** > **Analysis** > **Input Debugger**)
 1. Select the **Options** dropdown, and enable **Simulate Touch Input From Mouse or Pen**.
 
 ## Add touch simulation to a GameObject

@@ -6,7 +6,7 @@ uid: input-system-control-paths
 
 The Input System can look up controls using textual paths. [Bindings](bindings.md) on Input [Actions](actions.md) rely on this feature to identify the control(s) they read input from. For example, `<Gamepad>/leftStick/x` means "X control on left stick of gamepad". However, you can also use them for lookup directly on controls and devices, or to let the Input System search for controls among all devices using [`InputSystem.FindControls`](xref:UnityEngine.InputSystem.InputSystem.FindControls(System.String)):
 
-At runtime, the Input System performs a look-up of all control paths against the currently connected devices to discover which controls match the ones specified in the paths. This process is called [binding resolution](binding-resolution.md). 
+At runtime, the Input System performs a look-up of all control paths against the currently connected devices to discover which controls match the ones specified in the paths. This process is called [binding resolution](binding-resolution.md).
 
 
 ## Specificity

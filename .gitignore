@@ -45,6 +45,7 @@ Packages/com.unity.package-manager-doctools/
 
 Tools/CI/[Bb]in
 Tools/CI/[Oo]bj
+Tools/CI/.claude/**
 
 .Editor
 .bin

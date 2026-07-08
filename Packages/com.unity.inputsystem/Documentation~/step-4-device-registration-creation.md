@@ -2,7 +2,7 @@
 uid: input-system-step-4-device-registration
 ---
 
-# Step 4 Device registration and creation 
+# Step 4 Device registration and creation
 
 You now have a functioning device, but you haven't registered it (added it to the system) yet. This means you can't see the device when, for example, you create bindings in the [Action editor](actions-editor.md).
 

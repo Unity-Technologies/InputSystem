@@ -2,7 +2,7 @@
 uid: input-system-event-merging
 ---
 
-# Event merging 
+# Event merging
 
 Input system uses event mering to reduce amount of events required to be processed.
 This greatly improves performance when working with high refresh rate devices like 8000 Hz mice, touchscreens and others.

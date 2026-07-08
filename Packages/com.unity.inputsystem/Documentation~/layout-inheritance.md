@@ -2,7 +2,7 @@
 uid: input-system-layout-inheritance
 ---
 
-# Layout inheritance 
+# Layout inheritance
 
 You can derive a layout from an existing layout. This process is based on merging the information from the derived layout on top of the information that the base layout contains.
 

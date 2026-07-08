@@ -197,7 +197,7 @@ Composites can have parameters, just like [Interactions](Interactions.md) and [P
 myAction.AddCompositeBinding("Axis(whichSideWins=1)");
 ```
 
-There are currently five Composite types that come with the system out of the box: 
+There are currently five Composite types that come with the system out of the box:
 
 - [1D-Axis](#1d-axis): two buttons that pull a 1D axis in the negative and positive direction.
 - [2D-Vector](#2d-vector): represents a 4-way button setup where each button represents a cardinal direction, for example a WASD keyboard input (up-down-left-right controls).

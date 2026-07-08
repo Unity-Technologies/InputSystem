@@ -10,4 +10,3 @@ The system considers synthetic controls for [interactive rebinding](rebind-actio
 
 > [!NOTE]
 > To query whether a control is synthetic, use the [`InputControl.synthetic`](xref:UnityEngine.InputSystem.InputControl.synthetic) property.
-

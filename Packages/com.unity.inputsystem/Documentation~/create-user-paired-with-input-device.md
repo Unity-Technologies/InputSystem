@@ -2,7 +2,7 @@
 uid: input-system-user-paired-with-device
 ---
 
-# Create a user paired with an input device 
+# Create a user paired with an input device
 
 You can use the [`InputUser.PerformPairingWithDevice`](xref:UnityEngine.InputSystem.Users.InputUser) method to create a new [`InputUser`](xref:UnityEngine.InputSystem.Users.InputUser) instance and pair it with an [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice). You can also optionally pass in an existing [`InputUser`](xref:UnityEngine.InputSystem.Users.InputUser) instance to pair it with the Device, if you don't want to create a new user instance.
 

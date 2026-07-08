@@ -5,10 +5,10 @@ uid: input-system-on-screen
 
 You can use on-screen controls to simulate Input Devices with UI widgets that the user interacts with on the screen. The most prominent example is the use of stick and button widgets on touchscreens to emulate a joystick or gamepad.
 
-There are two built-in on-screen control types: 
+There are two built-in on-screen control types:
 
-* [On-screen buttons](create-on-screen-button-control.md) 
-* [On-screen sticks](create-on-screen-stick-control.md) 
+* [On-screen buttons](create-on-screen-button-control.md)
+* [On-screen sticks](create-on-screen-stick-control.md)
 
 You can implement custom controls by extending the base [`OnScreenControl`](xref:UnityEngine.InputSystem.OnScreen.OnScreenControl) class (see documentation on [writing custom on screen controls](create-custom-on-screen-control.md) to learn more).
 

@@ -2,7 +2,7 @@
 uid: input-system-set-up-test-fixtures
 ---
 
-# Set up test fixtures 
+# Set up test fixtures
 
 Use [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) to create an isolated version of the Input System for tests. The fixture sets up a blank, default-initialized version of the Input System for each test, and restores the Input System to its original state after the test completes. The default-initialized version has all built-in registrations (such as layout and processors), but doesn't have any pre-existing Input Devices.
 
@@ -41,7 +41,7 @@ class MyTests : InputTestFixture
 }
 ```
 
-> [!IMPORTANT] 
+> [!IMPORTANT]
 > If you do this, do __not__ add a `[SetUp]` or `[TearDown]` method. Doing so will cause the methods in [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) to not be called, thus leading to the test fixture not properly initializing or shutting down. Instead, override the `Setup` and/or `TearDown` method inherited from `InputTestFixture`.
 
 Alternatively, you can instantiate it in your fixture:

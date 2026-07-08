@@ -10,7 +10,7 @@ The Input System directly supports HID (connected with both USB and Bluetooth) o
 
 The Input System handles HIDs in one of the following ways:
 
-* Uses a set layout if the system has a known layout for the specific HID.  
+* Uses a set layout if the system has a known layout for the specific HID.
 * If the system doesn't have a known layout, Unity auto-generates one for the HID.
 
 ## Auto-generated layouts
@@ -25,12 +25,12 @@ To resolve the situation of HIDs not working as expected, you can add a custom l
 
 ## HID in the Unity Editor
 
-Every HID comes with a device descriptor. To browse through the descriptor of an HID from the Input Debugger, select the HID Descriptor button in the device debugger window. 
+Every HID comes with a device descriptor. To browse through the descriptor of an HID from the Input Debugger, select the HID Descriptor button in the device debugger window.
 
 To specify the type of the device, the HID descriptor reports entry numbers in the [HID usage tables](https://www.usb.org/document-library/hid-usage-tables-112), and a list of all controls on the device, along with their data ranges and usages.
 
 ## HID output
 
-HIDs can support output (for example, to toggle lights or force feedback motors on a gamepad). Unity controls output by sending HID Output Report commands to a device. Output reports use Device-specific data formats. 
+HIDs can support output (for example, to toggle lights or force feedback motors on a gamepad). Unity controls output by sending HID Output Report commands to a device. Output reports use Device-specific data formats.
 
 To use HID Output Reports, call [InputDevice.ExecuteCommand](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.InputDevice.html#UnityEngine_InputSystem_InputDevice_ExecuteCommand__1___0__) to send a command struct with the [typeStatic](http://localhost:57437/com.unity.inputsystem@1.12/api/UnityEngine.InputSystem.LowLevel.IInputDeviceCommandInfo.html#properties) property set as "HIDO" to a device. The command struct contains the device-specific data sent out to the HID.

@@ -2,7 +2,7 @@
 uid: input-system-compensate-orientation
 ---
 
-# Compensate orientation 
+# Compensate orientation
 
 If this setting is enabled, rotation values reported by [sensors](devices-sensors.md) are rotated around the Z axis as follows:
 

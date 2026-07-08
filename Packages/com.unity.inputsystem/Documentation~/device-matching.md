@@ -2,7 +2,7 @@
 uid: input-system-device-matching
 ---
 
-# Device matching 
+# Device matching
 
 [`InputDeviceMatcher`](xref:UnityEngine.InputSystem.Layouts.InputDeviceMatcher) instances handle matching an [`InputDeviceDescription`](xref:UnityEngine.InputSystem.Layouts.InputDeviceDescription) to a registered layout. Each matcher loosely functions as a kind of regular expression. Each field in the description can be independently matched with either a plain string or regular expression. Matching is not case-sensitive. For a matcher to apply, all of its individual expressions have to match.
 

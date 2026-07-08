@@ -2,7 +2,7 @@
 uid: input-system-platform-specific-settings
 ---
 
-# Platform-specific settings 
+# Platform-specific settings
 
 ## iOS/tvOS
 

@@ -2,7 +2,7 @@
 uid: input-system-step-5-optional
 ---
 
-# Step 5 current and all (optional) 
+# Step 5 current and all (optional)
 
 For convenience, you can quickly access the last used device of a given type, or list all devices of a specific type. To do this, add support for a `current` and for an `all` getter to the API of `MyDevice`.
 

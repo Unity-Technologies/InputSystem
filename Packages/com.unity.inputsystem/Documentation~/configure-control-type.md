@@ -17,4 +17,3 @@ To configure an action's action type:
 ## Additional resources
 
 * [Control types reference](control-types-reference.md)
-

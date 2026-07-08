@@ -56,6 +56,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Mouse>/scroll
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &2680667828813364402
 GameObject:
   m_ObjectHideFlags: 0
@@ -112,6 +113,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Mouse>/middleButton
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &2680667828976453752
 GameObject:
   m_ObjectHideFlags: 0
@@ -168,6 +170,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Mouse>/leftButton
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &2680667828982178413
 GameObject:
   m_ObjectHideFlags: 0
@@ -224,6 +227,7 @@ MonoBehaviour:
   m_Visualization: 4
   m_ControlPath: <Mouse>
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &2680667830654736508
 GameObject:
   m_ObjectHideFlags: 0
@@ -280,6 +284,7 @@ MonoBehaviour:
   m_Visualization: 6
   m_ControlPath: <Mouse>
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &2680667830751945958
 GameObject:
   m_ObjectHideFlags: 0
@@ -336,6 +341,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Mouse>/position
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &2680667830796240929
 GameObject:
   m_ObjectHideFlags: 0
@@ -403,6 +409,7 @@ MonoBehaviour:
   m_Visualization: 0
   m_ControlPath: 
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &2680667830847656252
 GameObject:
   m_ObjectHideFlags: 0
@@ -459,6 +466,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Mouse>/delta
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &2680667830881149238
 GameObject:
   m_ObjectHideFlags: 0
@@ -515,6 +523,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Mouse>/rightButton
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &2680667830892693967
 GameObject:
   m_ObjectHideFlags: 0
@@ -571,6 +580,7 @@ MonoBehaviour:
   m_Visualization: 7
   m_ControlPath: <Mouse>
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &7796791542505312439
 GameObject:
   m_ObjectHideFlags: 0
@@ -627,6 +637,7 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Mouse>/backButton
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0
 --- !u!1 &9216766396740359067
 GameObject:
   m_ObjectHideFlags: 0
@@ -683,3 +694,4 @@ MonoBehaviour:
   m_Visualization: 1
   m_ControlPath: <Mouse>/forwardButton
   m_ControlIndex: 0
+  m_UseCurrentDevice: 0

@@ -1135,22 +1135,34 @@ internal partial class CoreTests
         }
     }
 
-    // It can be desirable to not let the event through that we're rebinding from. This, for example, prevents the event
-    // from triggering UI actions. Note, however, that it also prevents the state of the device from updating correctly.
-    //
-    // NOTE: Hopefully, when we have a system in place that allows coordinating event consumption between actions, we have
-    //       have a more elegant solution at our hand for solving the problem here.
-    [Test]
+    // ISXB-1097: Verifies event suppression behavior during interactive rebinding under both
+    // event handled policies. Under SuppressStateUpdates, handled events are discarded entirely
+    // (device state not updated). Under SuppressActionEventNotifications, handled events still
+    // propagate state but suppress action-level notifications (e.g. WasPressedThisFrame).
+#pragma warning disable CS0618 // Type or member is obsolete
+    [TestCase(InputEventHandledPolicy.SuppressStateUpdates)]
+#pragma warning restore CS0618 // Type or member is obsolete
+    [TestCase(InputEventHandledPolicy.SuppressActionEventNotifications)]
     [Category("Actions")]
-    public void Actions_InteractiveRebinding_CanSuppressEventsWhileListening()
+    public void Actions_InteractiveRebinding_CanSuppressEventsWhileListening(InputEventHandledPolicy policy)
     {
+        InputSystem.manager.inputEventHandledPolicy = policy;
+#pragma warning disable CS0618 // Type or member is obsolete
+        var stateUpdatesAreSuppressed = policy == InputEventHandledPolicy.SuppressStateUpdates;
+#pragma warning restore CS0618 // Type or member is obsolete
+
         var gamepad = InputSystem.AddDevice<Gamepad>();
         var mouse = InputSystem.AddDevice<Mouse>();
 
-        var action = new InputAction(binding: "<Gamepad>/buttonNorth");
+        var rebindAction = new InputAction(binding: "<Gamepad>/buttonNorth");
+
+        // Separate action to verify WasPressedThisFrame suppression behavior.
+        var observerAction = new InputAction(name: "observer", type: InputActionType.Button,
+            binding: "<Gamepad>/buttonSouth");
+        observerAction.Enable();
 
         using (new InputActionRebindingExtensions.RebindingOperation()
-               .WithAction(action)
+               .WithAction(rebindAction)
                .WithControlsExcluding("<Pointer>/position")
                .WithControlsExcluding("<Pointer>/press")
                .WithControlsExcluding("<Mouse>/leftButton")
@@ -1159,17 +1171,30 @@ internal partial class CoreTests
                .Start()
         )
         {
-            // Non-bindable controls should not be suppressed and continue working as normal
+            // Non-bindable controls should not be suppressed and continue working as normal.
             Set(mouse.position, new Vector2(123, 234));
             Press(mouse.leftButton);
             Press(gamepad.buttonEast);
 
             Press(gamepad.buttonSouth);
-            Assert.That(action.bindings[0].overridePath, Is.EqualTo("<Gamepad>/buttonSouth"));
+            Assert.That(rebindAction.bindings[0].overridePath, Is.EqualTo("<Gamepad>/buttonSouth"));
             Assert.That(mouse.leftButton.isPressed, Is.True);
-            Assert.That(gamepad.buttonSouth.isPressed, Is.False);
             Assert.That(gamepad.buttonEast.isPressed, Is.True);
             Assert.That(mouse.position.ReadValue(), Is.EqualTo(new Vector2(123, 234)).Using(Vector2EqualityComparer.Instance));
+
+            // ISXB-1097: Under SuppressStateUpdates, the handled event is discarded so device
+            // state is not updated. Under SuppressActionEventNotifications, state propagates
+            // normally — only action notifications are suppressed.
+            Assert.That(gamepad.buttonSouth.isPressed, Is.EqualTo(!stateUpdatesAreSuppressed));
+
+            // ISXB-1097: WasPressedThisFrame is an action-level pull API and should return
+            // false under both policies, but for different reasons:
+            // - SuppressStateUpdates: the event is discarded before state updates, so the
+            //   action never observes the press at all.
+            // - SuppressActionEventNotifications: state propagates (device sees the press)
+            //   but InputAction.WasPressedThisFrame() is gated by the per-action suppressed
+            //   flag (TriggerState.isSuppressed) and returns false.
+            Assert.That(observerAction.WasPressedThisFrame(), Is.False);
         }
     }
 
@@ -1650,6 +1675,67 @@ internal partial class CoreTests
         Set(gamepad.leftStick, new Vector2(0.6f, 0.6f));
 
         Assert.That(action.ReadValue<Vector2>(), Is.EqualTo(new Vector2(0.6f * 4, 0.6f * 4)).Using(Vector2EqualityComparer.Instance));
+    }
+
+    private static void AssertParameterValue(InputAction action, string name, float value, InputBinding bindingMask)
+    {
+        var x = action.GetParameterValue(name, bindingMask);
+        Assert.That(x.HasValue);
+        Assert.That(x.Value.ToSingle(), Is.EqualTo(value));
+    }
+
+    // ISXB-1721 - Parameter overrides do not work if a binding has the empty string assigned as its name.
+    [TestCase(null, null)]
+    [TestCase("", "")] // ISXB-1721 error case.
+    [TestCase("a", "b")]
+    [Category("Actions")]
+    public void Actions_CanApplySpecificParameterOverrides_UsingSpecificBindingMask(string firstBindingName, string secondBindingName)
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+
+        var action = new InputAction(name: "Look", type: InputActionType.PassThrough);
+        var binding1 = action.AddBinding("<Mouse>/delta", groups: "Mouse", processors: "scaleVector2(x=0.25,y=0.25)");
+        var binding2 = action.AddBinding("<Gamepad>/leftStick", groups: "Gamepad", processors: "scaleVector2(x=4,y=4)");
+        if (firstBindingName != null)
+            binding1.WithName(firstBindingName);
+        if (secondBindingName != null)
+            binding2.WithName(secondBindingName);
+        action.Enable();
+
+        // Make sure parameters correspond to our binding definitions
+        AssertParameterValue(action, "x", 0.25f, action.bindings[0]);
+        AssertParameterValue(action, "y", 0.25f, action.bindings[0]);
+        AssertParameterValue(action, "x", 4.0f, action.bindings[1]);
+        AssertParameterValue(action, "y", 4.0f, action.bindings[1]);
+
+        // Override with the same mask as we fetched the parameter
+        action.ApplyParameterOverride("x", 1.2f, action.bindings[0]);
+        action.ApplyParameterOverride("y", 0.2f, action.bindings[0]);
+
+        // Check the parameter again
+        AssertParameterValue(action, "x", 1.2f, action.bindings[0]); // overridden
+        AssertParameterValue(action, "y", 0.2f, action.bindings[0]); // overridden
+        AssertParameterValue(action, "x", 4.0f, action.bindings[1]); // unmodified
+        AssertParameterValue(action, "y", 4.0f, action.bindings[1]); // unmodified
+
+        // Check that binding processor overrides are applied
+        Set(mouse.delta, new Vector2(-1.0f, -2.0f));
+        Assert.That(action.ReadValue<Vector2>(),
+            Is.EqualTo(new Vector2(-1.0f * 1.2f, -2.0f * 0.2f))
+                .Using(Vector2EqualityComparer.Instance));
+
+        // Check that binding processor overrides are not applied
+        Set(gamepad.leftStick, new Vector2(1.0f, 0.0f));
+        Assert.That(action.ReadValue<Vector2>(),
+            Is.EqualTo(new Vector2(1.0f * 4.0f, 0.0f * 4.0f))
+                .Using(Vector2EqualityComparer.Instance));
+
+        // Check that binding processor overrides are not applied
+        Set(gamepad.leftStick, new Vector2(0.0f, 1.0f));
+        Assert.That(action.ReadValue<Vector2>(),
+            Is.EqualTo(new Vector2(0.0f * 4.0f, 1.0f * 4.0f))
+                .Using(Vector2EqualityComparer.Instance));
     }
 
     [Test]

@@ -2,7 +2,7 @@
 uid: input-system-add-layout-from-json
 ---
 
-# Add a layout from JSON 
+# Add a layout from JSON
 
 You can also create a layout from a JSON string that contains the same information. This is mostly useful if you want to be able to store and transfer layout information separate from your code - for instance, if you want to be able to add support for new Devices dynamically without making a new build of your application. You can use [`InputControlLayout.ToJson()`](xref:UnityEngine.InputSystem.Layouts.InputControlLayout) and [`InputControlLayout.FromJson()`](xref:UnityEngine.InputSystem.Layouts.InputControlLayout) to convert layouts to and from the format.
 

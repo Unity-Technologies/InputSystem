@@ -40,7 +40,3 @@ The Input System package API supports less common scenarios. To customize your p
 - [Stand-alone actions](declare-standalone-actions.md)
 - [Loading actions from JSON](configure-input-from-json.md)
 - [Creating actions in code](configure-input-from-code.md)
-
-
-
-

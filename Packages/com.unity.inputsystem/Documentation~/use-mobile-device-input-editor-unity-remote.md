@@ -2,7 +2,7 @@
 uid: input-system-unity-remote
 ---
 
-# Use mobile device input in the Editor (Unity Remote) 
+# Use mobile device input in the Editor (Unity Remote)
 
 The Unity Remote is an app available for iOS and Android which allows using a mobile device for input while running in the Unity Editor. You can find details about the app and how to install it in the [Unity manual](https://docs.unity3d.com/Manual/UnityRemote5.html).
 

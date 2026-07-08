@@ -1,4 +1,4 @@
 {
   "displayName": "Simple Demo",
-  "description": "A walkthrough of a simple character controller that demonstrates several techniques for working with the input system. See the README.md file in the sample for details."
+  "description": "A walkthrough of a simple character controller that demonstrates several techniques for working with the input system. See the README.md file in the sample for details. Requires the Universal Render Pipeline (URP) package to be installed for shader compilation."
 }

@@ -2,7 +2,7 @@
 uid: input-system-create-events
 ---
 
-# Create events 
+# Create events
 
 Anyone can create and queue new input events against any existing Device. Queueing an input event is thread-safe, which means that event generation can happen in background threads.
 

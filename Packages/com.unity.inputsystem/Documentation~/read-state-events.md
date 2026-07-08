@@ -2,7 +2,7 @@
 uid: input-system-read-state-events
 ---
 
-# Read state events 
+# Read state events
 
 State events contain raw memory snapshots for Devices. As such, interpreting the data in the event requires knowledge about where and how individual state is stored for a given Device.
 

@@ -26,7 +26,7 @@ You can use a [`PressInteraction`](xref:UnityEngine.InputSystem.Interactions.Pre
 |__Parameters__|Type|Default value|
 |---|---|---|
 |[`pressPoint`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|`float`|[`InputSettings.defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings)|
-|[`behavior`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|[`PressBehavior`](xref:UnityEngine.InputSystem.Interactions.PressBehavior)|`PressOnly`| 
+|[`behavior`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|[`PressBehavior`](xref:UnityEngine.InputSystem.Interactions.PressBehavior)|`PressOnly`|
 
 
 |__Callbacks__/[`behavior`](xref:UnityEngine.InputSystem.Interactions.PressInteraction)|`PressOnly`|`ReleaseOnly`|`PressAndRelease`|

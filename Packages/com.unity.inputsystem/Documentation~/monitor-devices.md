@@ -2,7 +2,7 @@
 uid: input-system-monitor-devices
 ---
 
-# Monitor devices 
+# Monitor devices
 
 To be notified when new Devices are added or existing Devices are removed, use [`InputSystem.onDeviceChange`](xref:UnityEngine.InputSystem.InputSystem).
 

@@ -21,7 +21,7 @@ using UnityEngine.TestTools.Constraints;
 using UnityEngine.TestTools.Utils;
 using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
-using Is = UnityEngine.TestTools.Constraints.Is;
+using Is = NUnit.Framework.Is;
 using MouseButton = UnityEngine.InputSystem.LowLevel.MouseButton;
 using UnityEngine.Scripting;
 using Cursor = UnityEngine.Cursor;
@@ -31,9 +31,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
-#if UNITY_2021_2_OR_NEWER
 using UnityEngine.UIElements;
-#endif
 
 #pragma warning disable CS0649
 ////TODO: app focus handling
@@ -399,13 +397,7 @@ internal partial class UITests : CoreTestsFixture
         }
         yield return null;
 
-        const int kHaveMovementEvents =
-#if UNITY_2021_2_OR_NEWER
-            1
-#else
-            0
-#endif
-        ;
+        const int kHaveMovementEvents = 1;
 
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo((isTouch ? 3 : 1) + kHaveMovementEvents));
         Assert.That(scene.parentReceiver.events, Has.Count.EqualTo(1 + kHaveMovementEvents));
@@ -486,7 +478,6 @@ internal partial class UITests : CoreTestsFixture
             // Touch has no ability to point without pressing so pointer enter event is followed
             // right by pointer down event.
 
-#if UNITY_2021_2_OR_NEWER
             // PointerMove.
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].type, Is.EqualTo(EventType.PointerMove));
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.button, Is.EqualTo(PointerEventData.InputButton.Left));
@@ -514,7 +505,6 @@ internal partial class UITests : CoreTestsFixture
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerPressRaycast.gameObject, Is.Null);
             Assert.That(scene.leftChildReceiver.events[0 + kHaveMovementEvents].pointerData.pointerPressRaycast.screenPosition,
                 Is.EqualTo(default(Vector2)).Using(Vector2EqualityComparer.Instance));
-#endif
 
             // PointerDown.
             Assert.That(scene.leftChildReceiver.events[1 + kHaveMovementEvents].type, Is.EqualTo(EventType.PointerDown));
@@ -741,7 +731,6 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerCurrentRaycast.screenPosition", secondScreenPosition),
 
                 // PointerMove.
-#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 OneEvent("dragging", false),
                 // Again, pointer movement is processed exclusively "from" the left button.
@@ -755,7 +744,6 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("lastPress", clickButton == PointerEventData.InputButton.Left ? null : scene.leftGameObject),
                 OneEvent("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
                 OneEvent("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
-#endif
 
                 // BeginDrag.
                 OneEvent("type", EventType.BeginDrag),
@@ -788,12 +776,7 @@ internal partial class UITests : CoreTestsFixture
         );
 
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
-        Assert.That(scene.parentReceiver.events,
-            EventSequence(
-#if UNITY_2021_2_OR_NEWER
-                OneEvent("type", EventType.PointerMove)
-#endif
-            )
+        Assert.That(scene.parentReceiver.events, EventSequence(OneEvent("type", EventType.PointerMove))
         );
 
         scene.leftChildReceiver.events.Clear();
@@ -819,12 +802,7 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.eventSystem.IsPointerOverGameObject(pointerId), Is.True);
         // Should not have seen pointer enter/exit on parent (we only moved from one of its
         // children to another) but *should* have seen a move event.
-        Assert.That(scene.parentReceiver.events,
-            EventSequence(
-#if UNITY_2021_2_OR_NEWER
-                OneEvent("type", EventType.PointerMove)
-#endif
-            )
+        Assert.That(scene.parentReceiver.events, EventSequence(OneEvent("type", EventType.PointerMove))
         );
 
         if (isTracked)
@@ -852,7 +830,6 @@ internal partial class UITests : CoreTestsFixture
                 // press positions on the moves will be zero.
 
                 // PointerMove.
-#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
                 OneEvent("button", PointerEventData.InputButton.Left),
                 OneEvent("pointerEnter", scene.leftGameObject),
@@ -867,7 +844,6 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("dragging", clickButton == PointerEventData.InputButton.Left ? true : false),
                 OneEvent("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
                 OneEvent("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
-#endif
 
                 // PointerExit.
                 OneEvent("type", EventType.PointerExit),
@@ -927,10 +903,8 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerPressRaycast.gameObject", clickButton == PointerEventData.InputButton.Left ? scene.leftGameObject : null),
                 AllEvents("pointerPressRaycast.screenPosition", clickButton == PointerEventData.InputButton.Left ? firstScreenPosition : Vector2.zero),
 
-                OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
-                , OneEvent("type", EventType.PointerMove)
-#endif
+                OneEvent("type", EventType.PointerEnter),
+                OneEvent("type", EventType.PointerMove)
             )
         );
 
@@ -1460,33 +1434,132 @@ internal partial class UITests : CoreTestsFixture
         scene.leftChildReceiver.events.Clear();
         scene.rightChildReceiver.events.Clear();
 
-        // Test if creating Pointer events from different devices at the same time results in only one event
-        BeginTouch(0, firstPosition, screen: touch1, queueEventOnly: true);
-        Press(mouse1.leftButton);
+        // End previous touches that started so that we can do a cleanup from the last test.
+        EndTouch(1, secondPosition, screen: touch1);
         yield return null;
-        EndTouch(0, firstPosition, screen: touch1, queueEventOnly: true);
+        EndTouch(1, firstPosition, screen: touch2);
+        yield return null;
+        // Set a mouse position without any clicks to "emulate" a real movement before a button press.
+        Set(mouse1.position, secondPosition + new Vector2(-10, 0));
+        yield return null;
+
+        scene.leftChildReceiver.events.Clear();
+        scene.rightChildReceiver.events.Clear();
+
+        // Test a press and release from both a Mouse and Touchscreen at the same time
+        // This is to simulate some platforms that always send Mouse/Pen and Touches (e.g. Android).
+        // Also, this mostly assets the expected behavior for the options SingleMouseOrPenButMultiTouchAndTrack.
+        var touchId = 2;
+        BeginTouch(touchId, secondPosition, screen: touch1, queueEventOnly: true);
+        Set(mouse1.position, secondPosition, queueEventOnly: true);
+        Press(mouse1.leftButton);
+
+        yield return null;
+
+        EndTouch(touchId, secondPosition, screen: touch1, queueEventOnly: true);
         Release(mouse1.leftButton);
         yield return null;
 
+        Func<UICallbackReceiver.Event, bool> eventDeviceCondition = null;
+        var expectedCount = 0;
         switch (pointerBehavior)
         {
-            case UIPointerBehavior.SingleUnifiedPointer:
-                //// Getting "Drop" event even if using only one type of input device for Press/Release.
-                //// E.g. the following test would also produce only a Drop event:
-                ////     Press(mouse1.leftButton);
-                ////     yield return null;
-                ////     Release(mouse1.leftButton);
-                ////     yield return null;
-                break;
             case UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack:
-            case UIPointerBehavior.AllPointersAsIs:
-                // Single pointer click on the left object
-                Assert.That(scene.leftChildReceiver.events,
-                    Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerClick).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.device == mouse1).And
-                        .Matches((UICallbackReceiver.Event e) => e.pointerData.position == firstPosition));
+                // Expects only mouse events for PointerClick, PointerDown, and PointerUp
+                eventDeviceCondition = (e) => e.pointerData.device == mouse1;
+                expectedCount = 1;
+                // Make sure that the touch does not generate a UI events.
+                Assert.That(scene.rightChildReceiver.events, Has.None.Matches((UICallbackReceiver.Event e) =>
+                    e.pointerData != null && e.pointerData.device == touch1));
                 break;
+
+            case UIPointerBehavior.SingleUnifiedPointer:
+                // Expects only single UI events with touch source since they are the first events in the queue
+                eventDeviceCondition = (e) => e.pointerData.device == touch1;
+                expectedCount = 1;
+                break;
+
+            case UIPointerBehavior.AllPointersAsIs:
+                // Expects both pointer devices to generate PointerClick, PointerDown, and PointerUp events
+                eventDeviceCondition = (e) => e.pointerData.device == mouse1 || e.pointerData.device == touch1;
+                expectedCount = 2;
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(pointerBehavior), pointerBehavior, null);
         }
+
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(expectedCount).With.Property("type").EqualTo(EventType.PointerClick).And
+                .Matches((UICallbackReceiver.Event e) => eventDeviceCondition(e)).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(expectedCount).With.Property("type").EqualTo(EventType.PointerDown).And
+                .Matches((UICallbackReceiver.Event e) => eventDeviceCondition(e)).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+        Assert.That(scene.rightChildReceiver.events,
+            Has.Exactly(expectedCount).With.Property("type").EqualTo(EventType.PointerUp).And
+                .Matches((UICallbackReceiver.Event e) => eventDeviceCondition(e)).And
+                .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [Description("Tests that disabling the UI module during a Button click event works correctly with touch pointers." +
+        "ISXB-687")]
+    public IEnumerator UI_DisablingEventSystemOnClickEventWorksWithTouchPointers()
+    {
+        var touch = InputSystem.AddDevice<Touchscreen>();
+        var scene = CreateTestUI();
+
+        var actions = ScriptableObject.CreateInstance<InputActionAsset>();
+        var uiActions = actions.AddActionMap("UI");
+        var pointAction = uiActions.AddAction("point", type: InputActionType.PassThrough);
+        var clickAction = uiActions.AddAction("click", type: InputActionType.PassThrough);
+
+        pointAction.AddBinding("<Touchscreen>/touch*/position");
+        clickAction.AddBinding("<Touchscreen>/touch*/press");
+
+        pointAction.Enable();
+        clickAction.Enable();
+
+        scene.uiModule.point = InputActionReference.Create(pointAction);
+        scene.uiModule.pointerBehavior = UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack;
+        scene.uiModule.leftClick = InputActionReference.Create(clickAction);
+
+        // Turn left object into a button.
+        var button = scene.leftGameObject.AddComponent<MyButton>();
+        var clicked = false;
+
+        // Add a listener to the button to disable the UI module when clicked.
+        // This calls InputSystemUIInputModule.OnDisable() which will reset the pointer data during
+        // InputSystemUIInputModule.Process() and ProcessPointer(). It will allow us to test that removing
+        // a pointer once the UI module is disabled (all pointers are removed) works correctly.
+        button.onClick.AddListener(() =>
+        {
+            clicked = true;
+            scene.uiModule.enabled = false; // Disable the UI module to test pointer reset.
+        });
+
+        yield return null;
+
+        var firstPosition = scene.From640x480ToScreen(100, 100);
+
+        // This will allocate a pointer for the touch and set the first touch position and press
+        BeginTouch(1, firstPosition, screen: touch);
+        yield return null;
+
+        Assert.That(clicked, Is.False, "Button was clicked when it should not have been yet.");
+        Assert.That(scene.uiModule.m_PointerStates.length, Is.EqualTo(1),
+            "A pointer states was not allocated for the touch pointer.");
+
+        // Release the touch to make sure we have a Click event that calls the button listener.
+        EndTouch(1, firstPosition, screen: touch);
+        yield return null;
+
+        Assert.That(clicked, Is.True, "Button was not clicked when it should have been.");
+        Assert.That(scene.uiModule.m_PointerStates.length, Is.EqualTo(0),
+            "Pointer states were not cleared when the UI module was disabled after a click event.");
     }
 
     [UnityTest]
@@ -1793,7 +1866,6 @@ internal partial class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
 
-#if UNITY_2021_2_OR_NEWER
         Assert.That(scene.rightChildReceiver.events,
             Has.Exactly(1).With.Property("type").EqualTo(EventType.PointerMove).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.device == touchScreen).And
@@ -1801,7 +1873,6 @@ internal partial class UITests : CoreTestsFixture
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerId == pointerIdTouch2).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.pointerType == UIPointerType.Touch).And
                 .Matches((UICallbackReceiver.Event e) => e.pointerData.position == secondPosition));
-#endif
 
         // Pointer 3
         Assert.That(scene.rightChildReceiver.events,
@@ -1926,12 +1997,10 @@ internal partial class UITests : CoreTestsFixture
                     AllEvents("pointerType", UIPointerType.Touch),
                     AllEvents("touchId", 1),
                     AllEvents("position", scene.From640x480ToScreen(180, 180)),
-                    OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
-                    , OneEvent("type", EventType.PointerMove)
-#endif
-                    , OneEvent("type", EventType.PointerDown)
-                    , OneEvent("type", EventType.InitializePotentialDrag)
+                    OneEvent("type", EventType.PointerEnter),
+                    OneEvent("type", EventType.PointerMove),
+                    OneEvent("type", EventType.PointerDown),
+                    OneEvent("type", EventType.InitializePotentialDrag)
                 )
             );
 
@@ -2050,10 +2119,8 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice1.deviceId),
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.leftGameObject)),
-                OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
-                , OneEvent("type", EventType.PointerMove)
-#endif
+                OneEvent("type", EventType.PointerEnter),
+                OneEvent("type", EventType.PointerMove)
             )
         );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -2070,10 +2137,8 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice2.deviceId),
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.leftGameObject, Vector3.left)),
-                OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
-                , OneEvent("type", EventType.PointerMove)
-#endif
+                OneEvent("type", EventType.PointerEnter),
+                OneEvent("type", EventType.PointerMove)
             )
         );
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
@@ -2131,9 +2196,7 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice1.deviceId),
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject)),
-#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
-#endif
                 OneEvent("type", EventType.PointerExit)
             )
         );
@@ -2143,10 +2206,8 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice1.deviceId),
                 AllEvents("device", trackedDevice1),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject)),
-                OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
-                , OneEvent("type", EventType.PointerMove)
-#endif
+                OneEvent("type", EventType.PointerEnter),
+                OneEvent("type", EventType.PointerMove)
             )
         );
 
@@ -2163,9 +2224,7 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("pointerId", trackedDevice2.deviceId),
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject, Vector3.right)),
-#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
-#endif
                 OneEvent("type", EventType.PointerExit)
             )
         );
@@ -2176,9 +2235,7 @@ internal partial class UITests : CoreTestsFixture
                 AllEvents("device", trackedDevice2),
                 AllEvents("trackedDeviceOrientation", scene.GetLookAtQuaternion(Vector3.zero, scene.rightGameObject, Vector3.right)),
                 OneEvent("type", EventType.PointerEnter)
-#if UNITY_2021_2_OR_NEWER
                 , OneEvent("type", EventType.PointerMove)
-#endif
             )
         );
     }
@@ -2502,12 +2559,7 @@ internal partial class UITests : CoreTestsFixture
         var raycastResult = scene.uiModule.GetLastRaycastResult(trackedDevice.deviceId);
         Assert.That(raycastResult.isValid, Is.True);
 
-        //2021.2 added an additional move event.
-#if UNITY_2021_2_OR_NEWER
         Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(2));
-#else
-        Assert.That(scene.leftChildReceiver.events, Has.Count.EqualTo(1));
-#endif
         Assert.That(scene.leftChildReceiver.events[0].pointerData, Is.Not.Null);
 
         var eventRaycastResult = scene.leftChildReceiver.events[0].pointerData.pointerCurrentRaycast;
@@ -2663,6 +2715,81 @@ internal partial class UITests : CoreTestsFixture
             scene.eventSystem.InvokeUpdate();
             Profiler.EndSample();
         }, Is.Not.AllocatingGCMemory());
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    public IEnumerator UI_CanNavigateUI_WithLocalMultiPlayerRoot_Null_UsingGamepads()
+    {
+        // Setup navigation
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var scene = CreateTestUI(makeSelectable: true);
+
+        // Create actions for navigation
+        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
+        var map = asset.AddActionMap("map");
+        var moveAction = map.AddAction("move", type: InputActionType.Value, binding: "<Gamepad>/leftStick");
+        var submitAction = map.AddAction("submit", type: InputActionType.Button, binding: "<Gamepad>/buttonSouth");
+
+        // Assign actions to the UI module
+        scene.uiModule.move = InputActionReference.Create(moveAction);
+        scene.uiModule.submit = InputActionReference.Create(submitAction);
+        map.Enable();
+
+        // Test 1: Assign localMultiPlayerRoot to a value
+        scene.eventSystem.playerRoot = scene.parentGameObject;
+
+        // Initial selection
+        scene.eventSystem.SetSelectedGameObject(scene.leftGameObject);
+        yield return null;
+
+        // Move right
+        Set(gamepad.leftStick, new Vector2(1, 0));
+        yield return null;
+
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.rightGameObject), "Right navigation did not work when localMultiPlayerRoot was set");
+
+        // Move left
+        Set(gamepad.leftStick, Vector2.zero);
+        yield return null;
+        Set(gamepad.leftStick, new Vector2(-1, 0));
+        yield return null;
+
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject), "Left navigation did not work when localMultiPlayerRoot was set");
+
+        // Reset stick position
+        Set(gamepad.leftStick, Vector2.zero);
+        yield return null;
+
+        // Test 2: With localMultiPlayerRoot set to null
+        scene.eventSystem.playerRoot = null;
+
+        // Reset selection
+        scene.eventSystem.SetSelectedGameObject(scene.leftGameObject);
+        yield return null;
+
+        // Move right
+        Set(gamepad.leftStick, new Vector2(1, 0));
+        yield return null;
+
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.rightGameObject), "Right navigation did not work when localMultiPlayerRoot was null");
+
+        // Move left
+        Set(gamepad.leftStick, Vector2.zero);
+        yield return null;
+        Set(gamepad.leftStick, new Vector2(-1, 0));
+        yield return null;
+
+        Assert.That(scene.eventSystem.currentSelectedGameObject, Is.SameAs(scene.leftGameObject), "Left navigation did not work when localMultiPlayerRoot was null");
+
+        // Submit
+        PressAndRelease(gamepad.buttonSouth);
+        yield return null;
+
+        Assert.That(scene.leftChildReceiver.events, Has.Exactly(1).With.Property("type").EqualTo(EventType.Submit), "Submit event was not received when localMultiPlayerRoot was null");
+
+        // Checking that localMultiPlayerRoot is null
+        Assert.AreEqual(null, scene.uiModule.localMultiPlayerRoot);
     }
 
     [UnityTest]
@@ -2871,26 +2998,29 @@ internal partial class UITests : CoreTestsFixture
 
     [UnityTest]
     [Category("UI")]
-    public IEnumerator UI_CanDriveUIFromGamepad()
+
+    [TestCase("Gamepad", ExpectedResult = 1)]
+#if UNITY_WEBGL || UNITY_EDITOR
+    [TestCase("WebGLGamepad", ExpectedResult = 1)]
+#endif
+    public IEnumerator UI_CanDriveUIFromGamepad(string deviceLayout)
     {
-        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var gamepad = (Gamepad)InputSystem.AddDevice(deviceLayout);
 
         var scene = CreateTestUI();
 
-        var asset = ScriptableObject.CreateInstance<InputActionAsset>();
-        var map = asset.AddActionMap("map");
-        var moveAction = map.AddAction("move", type: InputActionType.PassThrough, binding: "<Gamepad>/*stick");
-        var submitAction = map.AddAction("submit", type: InputActionType.PassThrough, binding: "<Gamepad>/buttonSouth");
-        var cancelAction = map.AddAction("cancel", type: InputActionType.PassThrough, binding: "<Gamepad>/buttonEast");
+        var actions = new DefaultInputActions();
 
-        scene.uiModule.move = InputActionReference.Create(moveAction);
-        scene.uiModule.submit = InputActionReference.Create(submitAction);
-        scene.uiModule.cancel = InputActionReference.Create(cancelAction);
+        scene.uiModule.move = InputActionReference.Create(actions.UI.Navigate);
+        scene.uiModule.submit = InputActionReference.Create(actions.UI.Submit);
+        scene.uiModule.cancel = InputActionReference.Create(actions.UI.Cancel);
 
         scene.uiModule.moveRepeatDelay = 0.1f;
         scene.uiModule.moveRepeatRate = 0.1f;
 
-        map.Enable();
+        actions.Enable();
+        Assert.That(actions.UI.enabled, Is.True);
+        Assert.That(actions.Player.enabled, Is.True);
 
         yield return null;
 
@@ -2913,7 +3043,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Right),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(1.0f, 0.0f))));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
 #if UNITY_INPUT_SYSTEM_INPUT_MODULE_NAVIGATION_DEVICE_TYPE
@@ -2932,7 +3062,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Left),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(-1.0f, 0.0f))));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2946,7 +3076,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Up),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(0.0f, 1.0f))));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2960,7 +3090,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Down),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(0.0f, -1.0f))));
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
 
         scene.leftChildReceiver.events.Clear();
@@ -2975,7 +3105,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Down),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(0.0f, -1.0f))));
 
         scene.leftChildReceiver.events.Clear();
 
@@ -2989,7 +3119,7 @@ internal partial class UITests : CoreTestsFixture
                 OneEvent("type", EventType.Move),
                 OneEvent("device", gamepad),
                 OneEvent("moveDir", MoveDirection.Down),
-                OneEvent("moveVector", gamepad.leftStick.ReadValue())));
+                OneEvent("moveVector", new Vector2(0.0f, -1.0f))));
 
         scene.leftChildReceiver.events.Clear();
 
@@ -3031,6 +3161,10 @@ internal partial class UITests : CoreTestsFixture
 
         Assert.That(scene.leftChildReceiver.events, Is.Empty);
         Assert.That(scene.rightChildReceiver.events, Is.Empty);
+
+        actions.Disable();
+        Assert.That(actions.UI.enabled, Is.False);
+        Assert.That(actions.Player.enabled, Is.False);
     }
 
     [Test]
@@ -3786,25 +3920,15 @@ internal partial class UITests : CoreTestsFixture
     // to our manifest without breaking test runs with previous versions of Unity. However, in 2021.2, all the UITK functionality
     // has moved into the com.unity.modules.uielements module which is also available in previous versions of Unity. This way we
     // can have a reference to UITK that doesn't break things in previous versions of Unity.
-#if UNITY_2022_3_OR_NEWER
     [UnityTest]
     [Category("UI")]
-    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
-    [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
-    [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
-#if UNITY_ANDROID || UNITY_IOS || UNITY_TVOS
-    [Ignore("Currently fails on the farm but succeeds locally on Note 10+; needs looking into.")]
-#endif
-#if UNITY_STANDALONE_LINUX || UNITY_EDITOR_LINUX
-    [Ignore("Disabled to make test suite pass on Linux")]
+#if UNITY_2022_3 && (UNITY_ANDROID || UNITY_IOS)
+    [Ignore("Issue with mouse support on Android and iOS for 2022.3.")]
 #endif
     [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
-    public IEnumerator UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule(UIPointerBehavior pointerBehavior)
+    public IEnumerator UI_UIToolkitInputModule_MouseClick_CapturesAndClicksButton()
     {
         var mouse = InputSystem.AddDevice<Mouse>();
-        var gamepad = InputSystem.AddDevice<Gamepad>();
-        var touchscreen = InputSystem.AddDevice<Touchscreen>();
-
         var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
         yield return null;
         Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
@@ -3813,90 +3937,158 @@ internal partial class UITests : CoreTestsFixture
         {
             var objects = scene.GetRootGameObjects();
             var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
-            InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
             var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
-            var uiRoot = uiDocument.rootVisualElement;
-            var uiButton = uiRoot.Query<UnityEngine.UIElements.Button>("Button").First();
-            var scrollView = uiRoot.Query<ScrollView>("ScrollView").First();
-
-            uiModule.pointerBehavior = pointerBehavior;
+            var uiButton = uiDocument.rootVisualElement.Query<UnityEngine.UIElements.Button>("Button").First();
 
             var clickReceived = false;
             uiButton.clicked += () => clickReceived = true;
-            // NOTE: We do *NOT* do the following as the gamepad submit action will *not* trigger a ClickEvent.
-            //uiButton.RegisterCallback<ClickEvent>(_ => clickReceived = true);
 
             yield return null;
 
             var buttonCenter = new Vector2(uiButton.worldBound.center.x, Screen.height - uiButton.worldBound.center.y);
-            var buttonOutside = new Vector2(uiButton.worldBound.max.x + 10, Screen.height - uiButton.worldBound.center.y);
-            var scrollViewCenter = new Vector2(scrollView.worldBound.center.x, Screen.height - scrollView.worldBound.center.y);
-
             Set(mouse.position, buttonCenter, queueEventOnly: true);
             Press(mouse.leftButton, queueEventOnly: true);
-
-            ////TODO: look at BaseInput and whether we need to override it in order for IME to go through our codepaths
-            ////TODO: look into or document raycasting aspect (GraphicRaycaster) when using UITK (disable raycaster?)
-            ////TODO: fix scroll wheel bindings on virtual cursor sample
-
             yield return null;
-
             Assert.That(uiButton.HasMouseCapture(), Is.True, "Expected uiButton to have mouse capture");
 
             Release(mouse.leftButton, queueEventOnly: true);
+            yield return null;
+            Assert.That(uiButton.HasMouseCapture(), Is.False, "Expected uiButton to no longer have mouse capture");
+            Assert.That(clickReceived, Is.True, "Expected mouse click callback on UITK button");
+        }
+        finally
+        {
+            if (mouse.added)
+                InputSystem.RemoveDevice(mouse);
+            SceneManager.UnloadSceneAsync(scene);
+        }
+
+        yield return null;
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
+    public IEnumerator UI_UIToolkitInputModule_MouseScroll_MovesScrollView()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
+        yield return null;
+        Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
+
+        try
+        {
+            var objects = scene.GetRootGameObjects();
+            var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
+            var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
+            var scrollView = uiDocument.rootVisualElement.Query<ScrollView>("ScrollView").First();
 
             yield return null;
 
-            Assert.That(uiButton.HasMouseCapture(), Is.False, "Expected uiButton to no longer have mouse capture");
-            Assert.That(clickReceived, Is.True);
-
-            // Put mouse in upper right corner and scroll down.
+            var scrollViewCenter = new Vector2(scrollView.worldBound.center.x, Screen.height - scrollView.worldBound.center.y);
             Assert.That(scrollView.verticalScroller.value, Is.Zero, "Expected verticalScroller to be all the way up");
             Set(mouse.position, scrollViewCenter, queueEventOnly: true);
             yield return null;
             Set(mouse.scroll, new Vector2(0, -100), queueEventOnly: true);
             yield return null;
-
-            ////FIXME: as of a time of writing, this line is broken on trunk due to the bug in UITK
-            // The bug is https://fogbugz.unity3d.com/f/cases/1323488/
-            // just adding a define as a safeguard measure to reenable it when trunk goes to next version cycle
-#if UNITY_2021_3_OR_NEWER
             Assert.That(scrollView.verticalScroller.value, Is.GreaterThan(0));
-#endif
+        }
+        finally
+        {
+            if (mouse.added)
+                InputSystem.RemoveDevice(mouse);
+            SceneManager.UnloadSceneAsync(scene);
+        }
 
-            // Try a button press with the gamepad.
-            // NOTE: The current version of UITK does not focus the button automatically. Fix for that is in the pipe.
-            //       For now focus the button manually.
+        yield return null;
+    }
+
+    [UnityTest]
+    [Category("UI")]
+    [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
+    public IEnumerator UI_UIToolkitInputModule_GamepadSubmit_ClicksFocusedButton()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
+        yield return null;
+        Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
+
+        try
+        {
+            var objects = scene.GetRootGameObjects();
+            var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
+            var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
+            var uiButton = uiDocument.rootVisualElement.Query<UnityEngine.UIElements.Button>("Button").First();
+
+            yield return null;
+
+            var clickReceived = false;
+            uiButton.clicked += () => clickReceived = true;
             uiButton.Focus();
-            clickReceived = false;
+
             PressAndRelease(gamepad.buttonSouth, queueEventOnly: true);
             yield return null;
+            Assert.That(clickReceived, Is.True, "Expected gamepad submit to click focused UITK button");
+        }
+        finally
+        {
+            if (gamepad.added)
+                InputSystem.RemoveDevice(gamepad);
+            SceneManager.UnloadSceneAsync(scene);
+        }
 
-            Assert.That(clickReceived, Is.True, "Expected to have received click");
+        yield return null;
+    }
 
-            ////TODO: tracked device support (not yet supported by UITK)
+    [UnityTest]
+    [Category("UI")]
+    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
+#if UNITY_2022_3 && (UNITY_ANDROID || UNITY_IOS)
+    [Ignore("Fails on CI for 2022.3 on Android and iOS.")]
+#endif
+    [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
+    public IEnumerator UI_UIToolkitInputModule_MultiTouchPointerOwnership(UIPointerBehavior pointerBehavior)
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+        var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
+        yield return null;
+        Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
 
-            static bool IsActive(VisualElement ve)
-            {
-                return ve.Query<VisualElement>().Active().ToList().Contains(ve);
-            }
+        try
+        {
+            var objects = scene.GetRootGameObjects();
+            var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
+            var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
+            var uiButton = uiDocument.rootVisualElement.Query<UnityEngine.UIElements.Button>("Button").First();
 
-            // Move the mouse away from the button to check that touch inputs are also able to activate it.
-            Set(mouse.position, buttonOutside, queueEventOnly: true);
+            uiModule.pointerBehavior = pointerBehavior;
             yield return null;
-            InputSystem.RemoveDevice(mouse);
+
+            var buttonCenter = new Vector2(uiButton.worldBound.center.x, Screen.height - uiButton.worldBound.center.y);
+            var buttonOutside = new Vector2(uiButton.worldBound.max.x + 10, Screen.height - uiButton.worldBound.center.y);
 
             var uiButtonDownCount = 0;
             var uiButtonUpCount = 0;
-            uiButton.RegisterCallback<PointerDownEvent>(e => uiButtonDownCount++, TrickleDown.TrickleDown);
-            uiButton.RegisterCallback<PointerUpEvent>(e => uiButtonUpCount++, TrickleDown.TrickleDown);
+            var uiButtonDownPointerIds = new List<int>();
+            var uiButtonUpPointerIds = new List<int>();
+            uiButton.RegisterCallback<PointerDownEvent>(eventData =>
+            {
+                uiButtonDownCount++;
+                uiButtonDownPointerIds.Add(eventData.pointerId);
+            }, TrickleDown.TrickleDown);
+            uiButton.RegisterCallback<PointerUpEvent>(eventData =>
+            {
+                uiButtonUpCount++;
+                uiButtonUpPointerIds.Add(eventData.pointerId);
+            }, TrickleDown.TrickleDown);
 
-            // Case 1369081: Make sure button doesn't get "stuck" in an active state when multiple fingers are used.
             BeginTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
             Assert.That(uiButtonDownCount, Is.EqualTo(1), "Expected uiButtonDownCount to be 1");
             Assert.That(uiButtonUpCount, Is.EqualTo(0), "Expected uiButtonUpCount to be 0");
-            Assert.That(IsActive(uiButton), Is.True, "Expected uiButton to be active");
+            Assert.That(uiButtonDownPointerIds, Has.Count.EqualTo(1), "Expected one PointerDown pointerId");
 
             BeginTouch(2, buttonOutside, screen: touchscreen);
             yield return null;
@@ -3907,29 +4099,100 @@ internal partial class UITests : CoreTestsFixture
             if (pointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
             {
                 Assert.That(uiButtonUpCount, Is.EqualTo(1), "Expected uiButtonUpCount to be 1");
-                Assert.That(IsActive(uiButton), Is.False, "Expected uiButton to no longer be active");
+                Assert.That(uiButtonUpPointerIds, Has.Count.EqualTo(1), "Expected one PointerUp pointerId");
             }
             else
             {
                 Assert.That(uiButtonUpCount, Is.EqualTo(0), "Expected uiButtonUpCount to be 0");
-                Assert.That(IsActive(uiButton), Is.True, "Expected uiButton to be active");
+                Assert.That(uiButtonUpPointerIds, Is.Empty, "Expected no PointerUp pointerId from outside touch");
             }
 
             EndTouch(1, buttonCenter, screen: touchscreen);
             yield return null;
             Assert.That(uiButtonDownCount, Is.EqualTo(1), "Expected uiButtonDownCount to be 1");
             Assert.That(uiButtonUpCount, Is.EqualTo(1), "Expected uiButtonUpCount to be 1");
-            Assert.That(IsActive(uiButton), Is.False, "Expected uiButton to no longer be active");
-
-            InputSystem.RemoveDevice(touchscreen);
+            Assert.That(uiButtonUpPointerIds, Has.Count.EqualTo(1), "Expected one PointerUp pointerId after releasing touch #1");
+            Assert.That(uiButtonUpPointerIds[0], Is.EqualTo(uiButtonDownPointerIds[0]),
+                "Expected PointerUp ownership to match the pointer that pressed the button");
+            Assert.That(IsActiveVisualElement(uiButton), Is.False, "Expected uiButton to no longer be active");
         }
         finally
         {
+            if (touchscreen.added)
+                InputSystem.RemoveDevice(touchscreen);
             SceneManager.UnloadSceneAsync(scene);
         }
 
-        // Wait for unload to complete.
         yield return null;
+    }
+
+    [UnityTest]
+    [Category("UI")]
+#if UNITY_2022_3 && (UNITY_ANDROID || UNITY_IOS)
+    [Ignore("Issue with mouse support on Android and iOS for 2022.3.")]
+#endif
+    [TestCase(UIPointerBehavior.AllPointersAsIs, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleMouseOrPenButMultiTouchAndTrack, ExpectedResult = 1)]
+    [TestCase(UIPointerBehavior.SingleUnifiedPointer, ExpectedResult = 1)]
+    [PrebuildSetup(typeof(UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup))]
+    public IEnumerator UI_UIToolkitInputModule_MultiTouchVisualActiveState_FollowsPointerBehavior(UIPointerBehavior pointerBehavior)
+    {
+        var touchscreen = InputSystem.AddDevice<Touchscreen>();
+        var scene = SceneManager.LoadScene("UITKTestScene", new LoadSceneParameters(LoadSceneMode.Additive));
+        yield return null;
+        Assert.That(scene.isLoaded, Is.True, "UITKTestScene did not load as expected");
+
+        try
+        {
+            var objects = scene.GetRootGameObjects();
+            var uiModule = objects.First(x => x.name == "EventSystem").GetComponent<InputSystemUIInputModule>();
+            var uiDocument = objects.First(x => x.name == "UIDocument").GetComponent<UIDocument>();
+            var uiRoot = uiDocument.rootVisualElement;
+            var uiButton = uiRoot.Query<UnityEngine.UIElements.Button>("Button").First();
+
+            uiModule.pointerBehavior = pointerBehavior;
+
+            yield return null;
+
+            var buttonCenter = new Vector2(uiButton.worldBound.center.x, Screen.height - uiButton.worldBound.center.y);
+            var buttonOutside = new Vector2(uiButton.worldBound.max.x + 10, Screen.height - uiButton.worldBound.center.y);
+
+            // Finger #1 presses and holds on the button.
+            BeginTouch(1, buttonCenter, screen: touchscreen);
+            yield return null;
+            Assert.That(IsActiveVisualElement(uiButton), Is.True, "Expected uiButton to be active while touch #1 is still pressed.");
+
+            // Finger #2 taps outside of the button while finger #1 is still held.
+            BeginTouch(2, buttonOutside, screen: touchscreen);
+            yield return null;
+            EndTouch(2, buttonOutside, screen: touchscreen);
+            yield return null;
+
+            // Desired contract:
+            // - SingleUnifiedPointer: touch #2 can replace current pointer and clear active state.
+            // - Non-unified behaviors: touch #1 is still pressed and should keep the button visually active.
+            if (pointerBehavior == UIPointerBehavior.SingleUnifiedPointer)
+                Assert.That(IsActiveVisualElement(uiButton), Is.False, "Expected uiButton to no longer be active in SingleUnifiedPointer mode.");
+            else
+                Assert.That(IsActiveVisualElement(uiButton), Is.True, "Expected uiButton to remain active while touch #1 is still pressed.");
+
+            EndTouch(1, buttonCenter, screen: touchscreen);
+            yield return null;
+            Assert.That(IsActiveVisualElement(uiButton), Is.False, "Expected uiButton to no longer be active after touch #1 is released.");
+        }
+        finally
+        {
+            if (touchscreen.added)
+                InputSystem.RemoveDevice(touchscreen);
+            SceneManager.UnloadSceneAsync(scene);
+        }
+
+        yield return null;
+    }
+
+    private static bool IsActiveVisualElement(VisualElement visualElement)
+    {
+        return visualElement.Query<VisualElement>().Active().ToList().Contains(visualElement);
     }
 
     private class UI_CanOperateUIToolkitInterface_UsingInputSystemUIInputModule_Setup : IPrebuildSetup
@@ -3942,7 +4205,6 @@ internal partial class UITests : CoreTestsFixture
 #endif
         }
     }
-#endif
 
     static bool[] canRunInBackgroundValueSource = new[] { false, true };
 
@@ -3990,9 +4252,7 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.leftChildReceiver.events,
             EventSequence(
                 OneEvent("type", EventType.PointerEnter),
-#if UNITY_2021_2_OR_NEWER
                 OneEvent("type", EventType.PointerMove),
-#endif
                 OneEvent("type", EventType.PointerDown),
                 OneEvent("type", EventType.InitializePotentialDrag)
             )
@@ -4000,7 +4260,9 @@ internal partial class UITests : CoreTestsFixture
 
         scene.leftChildReceiver.events.Clear();
 
-        runtime.PlayerFocusLost();
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
+        InputSystem.Update(InputUpdateType.Dynamic);
+
         if (canRunInBackground)
             Assert.That(clickCanceled, Is.EqualTo(0));
         else
@@ -4011,7 +4273,9 @@ internal partial class UITests : CoreTestsFixture
         Assert.That(scene.eventSystem.hasFocus, Is.False);
         Assert.That(clicked, Is.False);
 
-        runtime.PlayerFocusGained();
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
+        InputSystem.Update(InputUpdateType.Dynamic);
+
         scene.eventSystem.SendMessage("OnApplicationFocus", true);
 
         yield return null;
@@ -4040,11 +4304,13 @@ internal partial class UITests : CoreTestsFixture
 
         // Ensure that losing and regaining focus doesn't cause the next click to be ignored
         clicked = false;
-        runtime.PlayerFocusLost();
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
+        InputSystem.Update(InputUpdateType.Dynamic);
         scene.eventSystem.SendMessage("OnApplicationFocus", false);
         yield return null;
 
-        runtime.PlayerFocusGained();
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
+        InputSystem.Update(InputUpdateType.Dynamic);
         scene.eventSystem.SendMessage("OnApplicationFocus", true);
         yield return null;
 
@@ -4455,9 +4721,7 @@ internal partial class UITests : CoreTestsFixture
         PointerUp,
         PointerEnter,
         PointerExit,
-#if UNITY_2021_2_OR_NEWER
         PointerMove,
-#endif
         Select,
         Deselect,
         InitializePotentialDrag,
@@ -4472,12 +4736,10 @@ internal partial class UITests : CoreTestsFixture
     }
 
     private class UICallbackReceiver : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerEnterHandler,
-#if UNITY_2021_2_OR_NEWER
-        IPointerMoveHandler,
-#endif
-        IPointerExitHandler, IPointerUpHandler, IMoveHandler, ISelectHandler, IDeselectHandler, IInitializePotentialDragHandler,
-        IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, ISubmitHandler, ICancelHandler, IScrollHandler
+        IPointerMoveHandler, IPointerExitHandler, IPointerUpHandler, IMoveHandler, ISelectHandler, IDeselectHandler,
+        IInitializePotentialDragHandler, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, ISubmitHandler, ICancelHandler, IScrollHandler
     {
+        [Serializable]
         public struct Event
         {
             public EventType type { get; }
@@ -4528,13 +4790,10 @@ internal partial class UITests : CoreTestsFixture
             events.Add(new Event(EventType.PointerUp, ClonePointerEventData(eventData)));
         }
 
-#if UNITY_2021_2_OR_NEWER
         public void OnPointerMove(PointerEventData eventData)
         {
             events.Add(new Event(EventType.PointerMove, ClonePointerEventData(eventData)));
         }
-
-#endif
 
         public void OnMove(AxisEventData eventData)
         {
@@ -4643,7 +4902,6 @@ internal partial class UITests : CoreTestsFixture
                 pointerType = extendedEventData.pointerType,
                 trackedDeviceOrientation = extendedEventData.trackedDeviceOrientation,
                 trackedDevicePosition = extendedEventData.trackedDevicePosition,
-#if UNITY_2021_1_OR_NEWER
                 pressure = eventData.pressure,
                 tangentialPressure = eventData.tangentialPressure,
                 altitudeAngle = eventData.altitudeAngle,
@@ -4651,7 +4909,6 @@ internal partial class UITests : CoreTestsFixture
                 twist = eventData.twist,
                 radius = eventData.radius,
                 radiusVariance = eventData.radiusVariance,
-#endif
 #if UNITY_2022_3_OR_NEWER
                 displayIndex = eventData.displayIndex,
 #endif

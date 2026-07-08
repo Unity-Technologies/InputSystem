@@ -2,7 +2,7 @@
 uid: input-system-send-command-to-device
 ---
 
-# Send a command to a device 
+# Send a command to a device
 
 The Input System sends commands to the Device through [`InputDevice.ExecuteCommand<TCommand>`](xref:UnityEngine.InputSystem.InputDevice). To monitor Device commands, use [`InputSystem.onDeviceCommand`](xref:UnityEngine.InputSystem.InputSystem).
 

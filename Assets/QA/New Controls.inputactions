@@ -1,1 +1,6 @@
-{"actions":[{"name":"default/action","bindings":[{"path":"*/{Accept}","modifiers":"","groups":"","chainWithPrevious":false}]}]}
+{
+    "version": 0,
+    "name": "New Controls",
+    "maps": [],
+    "controlSchemes": []
+}
