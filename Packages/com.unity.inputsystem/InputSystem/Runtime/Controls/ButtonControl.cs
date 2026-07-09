@@ -378,6 +378,20 @@ namespace UnityEngine.InputSystem.Controls
 
 #endif // UNITY_EDITOR
 
+        protected override FourCC CalculateOptimizedControlDataType()
+        {
+            if (clamp == Clamp.None &&
+                invert == false &&
+                normalize == false &&
+                scale == false &&
+                m_StateBlock.format == InputStateBlock.FormatBit &&
+                m_StateBlock.sizeInBits == 1 &&
+                m_StateBlock.bitOffset == 0)
+                return InputStateBlock.FormatBit;
+
+            return base.CalculateOptimizedControlDataType();
+        }
+
         // We make the current global default button press point available as a static so that we don't have to
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.
         internal static float s_GlobalDefaultButtonPressPoint;

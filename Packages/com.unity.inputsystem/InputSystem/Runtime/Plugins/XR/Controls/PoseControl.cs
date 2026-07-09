@@ -252,13 +252,7 @@ namespace UnityEngine.InputSystem.XR
             if (
                 m_StateBlock.sizeInBits == PoseState.kSizeInBytes * 8 &&
                 m_StateBlock.bitOffset == 0 &&
-                isTracked.m_StateBlock.format == InputStateBlock.kFormatBit &&
-                isTracked.m_StateBlock.sizeInBits == 1 &&
-                isTracked.m_StateBlock.bitOffset == 0 &&
-                isTracked.clamp == AxisControl.Clamp.None &&
-                isTracked.invert == false &&
-                isTracked.normalize == false &&
-                isTracked.scale == false &&
+                isTracked.optimizedControlDataType == InputStateBlock.kFormatBit &&
                 trackingState.optimizedControlDataType == InputStateBlock.kFormatInt &&
                 position.optimizedControlDataType == InputStateBlock.kFormatVector3 &&
                 rotation.optimizedControlDataType == InputStateBlock.kFormatQuaternion &&
