@@ -37,4 +37,4 @@ Under **Improved Shortcut Support**, two independent options control how the Inp
 
 Both options default to **off**. If **Action Priority Shortcut Resolution** is on, it **takes precedence** over complexity-based resolution even if **Complexity-Based Shortcut Resolution** is also enabled.
 
-For more detail on complexity ordering, see [Multiple input sequences (such as keyboard shortcuts)](xref:input-system-action-bindings#multiple-input-sequences-such-as-keyboard-shortcuts).
+For more detail on complexity ordering, see [Multiple input sequences (such as keyboard shortcuts)](xref:input-system-binding-conflicts#multiple-input-sequences-such-as-keyboard-shortcuts).

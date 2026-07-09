@@ -21,4 +21,4 @@ The Input System provides the following types of controls. These are available t
 
 You can browse the set of all registered control layouts in the [input debugger](debug-layouts.md).
 
-All controls are based on the [`InputControl`](xref:UnityEngine.InputSystem.InputControl) base class. Most concrete implementations are based on [`InputControl<TValue>`](xref:UnityEngine.InputSystem.InputControl-1).
+All controls are based on the [`InputControl`](xref:UnityEngine.InputSystem.InputControl) base class. Most concrete implementations are based on [`InputControl<TValue>`](xref:UnityEngine.InputSystem.InputControl`1).

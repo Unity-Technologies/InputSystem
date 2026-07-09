@@ -4,7 +4,7 @@ uid: input-system-add-processors-controls
 
 # Add processors to controls
 
-You can have any number of Processors directly on an [`InputControl`](xref:UnityEngine.InputSystem.InputControl), which then process the values read from the Control. Whenever you call [`ReadValue`](xref:UnityEngine.InputSystem.InputControl-1) on a Control, all Processors on that Control process the value before it gets returned to you. You can use [`ReadUnprocessedValue`](xref:UnityEngine.InputSystem.InputControl-1) on a Control to bypass the Processors.
+You can have any number of Processors directly on an [`InputControl`](xref:UnityEngine.InputSystem.InputControl), which then process the values read from the Control. Whenever you call [`ReadValue`](xref:UnityEngine.InputSystem.InputControl`1) on a Control, all Processors on that Control process the value before it gets returned to you. You can use [`ReadUnprocessedValue`](xref:UnityEngine.InputSystem.InputControl`1) on a Control to bypass the Processors.
 
 The Input System adds Processors to a Control during device creation, if they're specified in the Control's [layout](Layouts.md). You can't add Processors to existing Controls after they've been created, so you can only add Processors to Controls when you're [creating custom devices](custom-devices.md). The devices that the Input System supports out of the box already have some useful Processors added on their Controls. For instance, sticks on gamepads have a [Stick Deadzone](built-in-processors.md) Processor.
 

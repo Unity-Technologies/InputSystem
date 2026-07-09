@@ -18,7 +18,7 @@ The Input System stores the state of controls in unmanaged memory that it handle
 
 A control's state might not be stored in the natural format for that control. For example, the system often represents buttons as bitfields, and axis controls as 8-bit or 16-bit integer values. This format is determined by the combination of platform, hardware, and drivers. Each control knows the format of its storage and how to translate the values as needed. The Input System uses [layouts](layouts.md) to understand this representation.
 
-You can access the current state of a control through its [`ReadValue`](xref:UnityEngine.InputSystem.InputControl-1) method.
+You can access the current state of a control through its [`ReadValue`](xref:UnityEngine.InputSystem.InputControl`1) method.
 
 ```CSharp
 Gamepad.current.leftStick.x.ReadValue();

@@ -377,7 +377,7 @@ You can define new types of Composites, and register them with the API. Unity tr
 To define a new type of Composite, create a class based on [`InputBindingComposite<TValue>`](xref:UnityEngine.InputSystem.InputBindingComposite`1).
 
 > [!IMPORTANT]
-> Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on bindings, refer to [interactions](xref:input-system-interactions#writing-custom-interactions).
+> Composites must be __stateless__. This means that you cannot store local state that changes depending on the input being processed. For __stateful__ processing on bindings, refer to [interactions](xref:input-system-custom-interactions).
 
 ```CSharp
 // Use InputBindingComposite<TValue> as a base class for a composite that returns
@@ -455,7 +455,7 @@ The Composite should now appear in the editor UI when you add a binding, and you
         .With("secondpart", "<Gamepad>/buttonNorth");
 ```
 
-To define a custom parameter editor for the Composite, you can derive from  [`InputParameterEditor<TObject>`](xref:UnityEngine.InputSystem.Editor.InputParameterEditor-1).
+To define a custom parameter editor for the Composite, you can derive from  [`InputParameterEditor<TObject>`](xref:UnityEngine.InputSystem.Editor.InputParameterEditor`1).
 
 ```CSharp
 #if UNITY_EDITOR

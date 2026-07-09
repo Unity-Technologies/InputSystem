@@ -46,6 +46,6 @@ Each action-related property has identical settings to define actions and contro
 |**Setting**|**Description**|
 |--------|-----------|
 |Menu drop-down (**⋮**) | Options: <br/>- **Action**: Create a new action on the virtual mouse component. <br/>- **Reference**: Use a reference to an existing action. |
-|Action Properties (**cog** icon) | Open an Action Properties window. Refer to [Action Properties panel reference](action-properties-panel-reference) for details on the properties available. <br/><br/>This setting only appears if you selected **Action** in the drop-down menu. |
+|Action Properties (**cog** icon) | Open an Action Properties window. Refer to [Action Properties panel reference](action-properties-panel-reference.md) for details on the properties available. <br/><br/>This setting only appears if you selected **Action** in the drop-down menu. |
 |Add Binding (**+**)| Add a binding to the new action. <br/><br/>This setting only appears if you selected **Action** in the drop-down menu.|
 |Delete Selection (**-**)|Delete the selected binding. <br/><br/>This setting only appears if you selected **Action** in the drop-down menu.|

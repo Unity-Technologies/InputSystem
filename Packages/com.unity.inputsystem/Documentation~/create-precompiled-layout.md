@@ -8,7 +8,7 @@ The first step in setting up a precompiled layout is to generate it.
 
 To generate a layout:
 
-1. Open the [Input Debugger](xref:input-system-debugging).
+1. Open the [Input Debugger](xref:input-debugging).
 2. Navigate to the layout you want to precompile within the **Layouts** branch and right-click it.
 3. Select **Generate Precompiled Layout**.
 

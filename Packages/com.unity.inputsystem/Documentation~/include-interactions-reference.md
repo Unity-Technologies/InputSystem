@@ -2,7 +2,7 @@
 
 The Interactions foldout contains properties for [interactions](Interactions.md) that you can assign to actions and bindings.
 
-All properties in the Interactions foldout correspond to the [`InputSystem.Interactions`](..api/UnityEngine.InputSystem.Interactions.html) API.
+All properties in the Interactions foldout correspond to the [`InputSystem.Interactions`](../api/UnityEngine.InputSystem.Interactions.html) API.
 
 By default, all Interactions have the following properties:
 
@@ -10,7 +10,7 @@ By default, all Interactions have the following properties:
 |-|-|
 |**Press Point**| Set the amount of control actuation required for the action to trigger. |
 |**Default**| Use the default value for the associated property. Un-check this checkbox to enter a custom value.|
-|**Open Input Settings**| Open the [project-wide Input System settings](input-settings) in the Project Settings. |
+|**Open Input Settings**| Open the [project-wide Input System settings](input-settings.md) in the Project Settings. |
 
 Additionally, each Interaction type has unique properties.
 

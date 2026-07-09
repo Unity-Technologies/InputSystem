@@ -13,5 +13,5 @@ To install the sample:
 
 The sample provides two visualizer components:
 
-* [`InputControlVisualizer`](visualise-input-controls)
-* [`InputActionVisualizer`](visualise-actions)
+* [`InputControlVisualizer`](visualise-input-controls.md)
+* [`InputActionVisualizer`](visualise-actions.md)

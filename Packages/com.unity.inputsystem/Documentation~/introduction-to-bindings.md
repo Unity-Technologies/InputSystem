@@ -15,4 +15,4 @@ You can also bind multiple controls from the same device to an action. For examp
 ![The default "move" action with its multiple bindings highlighted](./Images/ActionWithMultipleBindings.png)<br/>
 _The default "Move" action in the Actions Editor window, displaying the multiple bindings associated with it._
 
-You can also set up [Composite](composite-bindings) bindings, which don't bind to the controls themselves, but receive their input from **Part Bindings** and then return a value representing a composition of those inputs. For example, the right trigger on the gamepad can act as a strength multiplier on the value of the left stick.
+You can also set up [Composite](composite-bindings.md) bindings, which don't bind to the controls themselves, but receive their input from **Part Bindings** and then return a value representing a composition of those inputs. For example, the right trigger on the gamepad can act as a strength multiplier on the value of the left stick.

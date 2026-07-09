@@ -4,7 +4,7 @@ uid: input-system-input-comp-ref
 
 # UI Input Module component reference
 
- Use the UI Input Module to configure UI-specific actions and inputs. To view the UI Input Module, refer to [Access the UI Input Module](access-ui-input-module).
+ Use the UI Input Module to configure UI-specific actions and inputs. To view the UI Input Module, refer to [Access the UI Input Module](access-ui-input-module.md).
 
 The properties on the UI Input Module correspond to the [`InputSystemUIInputModule`](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule) class.
 

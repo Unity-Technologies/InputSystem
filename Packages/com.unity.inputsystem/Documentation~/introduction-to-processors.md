@@ -11,11 +11,11 @@ An Input Processor takes a value and returns a processed result for it. The rece
 
 ## Using Processors
 
-You can install Processors on [bindings](ActionBindings.md), [actions](Actions.md) or on [controls](Controls.md). Refer to [How to apply Processors](HowToApplyProcessors.md) to learn more.
+You can install Processors on [bindings](bindings.md), [actions](Actions.md) or on [controls](Controls.md). Refer to [How to apply Processors](Processors.md) to learn more.
 
 Each Processor is [registered](xref:UnityEngine.InputSystem.InputSystem) using a unique name. To replace an existing one, register your own under an existing name.
 
-Processors can have parameters which can be booleans, integers, or floating-point numbers. When created in data such as [bindings](./ActionBindings.md), processors are described as strings that look like function calls:
+Processors can have parameters which can be booleans, integers, or floating-point numbers. When created in data such as [bindings](./bindings.md), processors are described as strings that look like function calls:
 
 ```CSharp
     // This references the processor registered as "scale" and sets its "factor"
@@ -31,7 +31,7 @@ Processors can have parameters which can be booleans, integers, or floating-poin
 ## Choose the right ProcessorCollapse comment
 
 The following sections contain a brief explanation and various example scenarios for the different Processor types. Note that there are additional cases where Processors may apply; the scenarios described here illustrate only some of them. In some situations, it might be useful to combine multiple Processors to achieve a specific goal.
-Refer to the [Processor Types](ProcessorTypes.md) for a comprehensive list and information on how to write your own custom Processors.
+Refer to the [Processor Types](built-in-processors.md) for a comprehensive list and information on how to write your own custom Processors.
 
 ### Invert
 

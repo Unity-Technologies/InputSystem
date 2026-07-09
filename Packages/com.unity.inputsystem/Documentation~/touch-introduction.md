@@ -31,7 +31,7 @@ To query the touch screen that was last used or last added, use [`Touchscreen.cu
 
 ### API controls
 
-A touch screen device consists of multiple [`TouchControl`](xref:UnityEngine.InputSystem.Controls.TouchControl.html) instances. Each of these represents a finger which is touching the device. The [`primaryTouch`](xref:UnityEngine.InputSystem.Touchscreen.primaryTouch) control represents the touch which is currently driving the [pointer](pointers-introduction.md) representation, and which should be used to interact with the UI.
+A touch screen device consists of multiple [`TouchControl`](xref:UnityEngine.InputSystem.Controls.TouchControl) instances. Each of these represents a finger which is touching the device. The [`primaryTouch`](xref:UnityEngine.InputSystem.Touchscreen.primaryTouch) control represents the touch which is currently driving the [pointer](pointers-introduction.md) representation, and which should be used to interact with the UI.
 
 The `primaryTouch` control usually represents the first finger that touches the screen and is always identical to one of the entries in the [`touches`](xref:UnityEngine.InputSystem.Touchscreen.touches) array. The `touches` array contains all the touches that the system can track. This array has a fixed size, regardless of how many touches are currently active. If you need an API that only represents active touches, refer to the higher-level [`EnhancedTouch.Touch` class](#high-level-touch-support).
 

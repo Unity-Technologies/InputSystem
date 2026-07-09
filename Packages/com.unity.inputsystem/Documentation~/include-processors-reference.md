@@ -2,7 +2,7 @@
 
 The Processors foldout contains properties for [processors](processors.md) that you can assign to actions and bindings.
 
-All properties in the Processors foldout correspond to the [`InputSystem.Processors`](..api/UnityEngine.InputSystem.Processors.html) API.
+All properties in the Processors foldout correspond to the [`InputSystem.Processors`](../api/UnityEngine.InputSystem.Processors.html) API.
 
 |Processor|Description|
 |-|-|

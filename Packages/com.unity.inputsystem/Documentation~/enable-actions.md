@@ -34,11 +34,11 @@ While enabled, the action actively monitors the [control(s)](controls.md) it is 
 
 ## Overlapping bindings and action priority
 
-When several enabled actions share the same physical control (for example a plain **B** key action and a **Shift**+**B** composite), the Input System can resolve which action should respond first using either complexity-based or priority-based resolution. Both modes are configured in **Project Settings** > **Input System Package** under [Improved Shortcut Support](xref:input-system-settings#improved-shortcut-support).
+When several enabled actions share the same physical control (for example a plain **B** key action and a **Shift**+**B** composite), the Input System can resolve which action should respond first using either complexity-based or priority-based resolution. Both modes are configured in **Project Settings** > **Input System Package** under [Improved Shortcut Support](xref:input-system-settings).
 
 Each action has a [`Priority`](xref:UnityEngine.InputSystem.InputAction.Priority) property. The range is from `0` to `65535`, and is clamped when set. A higher value means a higher priority, notified first.
 
-The `Priority` value applies to all bindings on that action. Serialized priority is always stored on the asset; at runtime it's used only when **Action Priority Shortcut Resolution** is enabled. In that case, the **Priority** field is also shown in the [Input Actions Editor](xref:input-system-configuring-input).
+The `Priority` value applies to all bindings on that action. Serialized priority is always stored on the asset; at runtime it's used only when **Action Priority Shortcut Resolution** is enabled. In that case, the **Priority** field is also shown in the [Input Actions Editor](xref:input-system-input-actions-editor-landing).
 
 When action priority resolution is active:
 
@@ -56,4 +56,4 @@ reloadAction.Priority = 5;
 
 You can also edit the **Priority** field on an action in the Input Actions Editor when **Action Priority Shortcut Resolution** is enabled.
 
-For information about composite shortcuts and complexity ordering, refer to [Multiple input sequences (such as keyboard shortcuts)](xref:input-system-action-bindings#multiple-input-sequences-such-as-keyboard-shortcuts).
+For information about composite shortcuts and complexity ordering, refer to [Multiple input sequences (such as keyboard shortcuts)](xref:input-system-binding-conflicts#multiple-input-sequences-such-as-keyboard-shortcuts).

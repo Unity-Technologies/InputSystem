@@ -14,7 +14,7 @@ To create a custom processor:
 
 ## Add a processor class and method
 
-**1.** Add a class derived from [`InputProcessor<TValue>`](xref:UnityEngine.InputSystem.InputProcessor-1), and implement the [`Process`](xref:UnityEngine.InputSystem.InputProcessor-1) method:
+**1.** Add a class derived from [`InputProcessor<TValue>`](xref:UnityEngine.InputSystem.InputProcessor`1), and implement the [`Process`](xref:UnityEngine.InputSystem.InputProcessor`1) method:
 
 ```CSharp
 public class MyValueShiftProcessor : InputProcessor<float>
@@ -67,7 +67,7 @@ var action = new InputAction(processors: "myvalueshift(valueShift=2.3)");
 
 ## Customize the Editor UI
 
-To customize the UI for editing your Processor, create a custom [`InputParameterEditor`](xref:UnityEngine.InputSystem.Editor.InputParameterEditor-1) class for it:
+To customize the UI for editing your Processor, create a custom [`InputParameterEditor`](xref:UnityEngine.InputSystem.Editor.InputParameterEditor`1) class for it:
 
 ```CSharp
 // No registration is necessary for an InputParameterEditor.

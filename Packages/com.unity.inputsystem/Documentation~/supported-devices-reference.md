@@ -65,7 +65,7 @@ Support varies between browsers, Devices, and operating systems, and further dif
 
 ## Other gamepads, joysticks, and racing wheels
 
-The Input System supports any Device which implements the USB HID specification. However, for Devices which don't have specific [layouts](xref:input-system-layouts) implemented in the Input System, the system can only surface the information available from the HID descriptor of the Device, which limits how precisely it can describe a control. These Devices often work best when allowing the user to [manually remap the controls](xref:UnityEngine.InputSystem.InputActionRebindingExtensions). If you need to support a specific Device, you can also [add your own mapping for it](xref:input-system-hid#creating-a-custom-device-layout). See documentation on [HID](xref:input-system-hid) for more information.
+The Input System supports any Device which implements the USB HID specification. However, for Devices which don't have specific [layouts](xref:input-system-layouts) implemented in the Input System, the system can only surface the information available from the HID descriptor of the Device, which limits how precisely it can describe a control. These Devices often work best when allowing the user to [manually remap the controls](xref:UnityEngine.InputSystem.InputActionRebindingExtensions). If you need to support a specific Device, you can also [add your own mapping for it](xref:input-system-custom-device-layout). See documentation on [HID](xref:input-system-hid) for more information.
 
 ## PS5 controller support on Linux
 
