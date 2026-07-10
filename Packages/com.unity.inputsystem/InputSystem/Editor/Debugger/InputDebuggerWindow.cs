@@ -50,7 +50,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 s_Instance = GetWindow<InputDebuggerWindow>();
                 s_Instance.Show();
-                s_Instance.titleContent = new GUIContent("Input Debug");
             }
             else
             {
@@ -80,6 +79,11 @@ namespace UnityEngine.InputSystem.Editor
                 s_Instance.UninstallHooks();
                 s_Instance.Refresh();
             }
+        }
+
+        private void OnEnable()
+        {
+            titleContent = new GUIContent("Input Debugger");
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)

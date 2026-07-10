@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed an incorrect ArraysHelper.HaveDuplicateReferences implementation that didn't use its arguments right [ISXB-1792] (https://github.com/Unity-Technologies/InputSystem/pull/2376)
 - Fixed `InputAction.IsPressed`, `WasPressedThisFrame`, and `WasReleasedThisFrame` using a `ButtonControl`'s `pressPoint` when a binding also had an explicit `PressInteraction` with its own `pressPoint`, which could make those APIs disagree with the interaction's press and release behavior. Action-level press APIs now follow the interaction threshold when both are set explicitly.
 - Fixed `IndexOutOfRangeException` in `InputDeviceBuilder` when connecting an HID gamepad whose report descriptor declares a hat switch with Report Size 8 (e.g. ESP32-BLE-Gamepad). The HID layer now anchors the hat's directional sub-controls to the hat's own byte instead of letting the layout system auto-allocate a fresh byte for each [UUM-143659](https://jira.unity3d.com/browse/UUM-143659).
+- Fixed Input Debugger window's incorrect name. It is now called 'Input Debugger' instead of 'Input Debug' [UUM-137124](https://jira.unity3d.com/browse/UUM-137124).
 - Fixed `PoseControl.isTracked` always returning false when read through non-optimized code paths (e.g. Input Debugger) due to `sizeInBits = 8` causing the value to be normalized as `1/255` instead of `1.0`.
 
 ### Changed
