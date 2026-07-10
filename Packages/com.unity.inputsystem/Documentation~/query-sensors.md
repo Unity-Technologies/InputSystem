@@ -14,7 +14,7 @@ if (Gyroscope.current != null)
 
 ```
 
-Unlike other devices, sensors are disabled by default. To enable a sensor, call [`InputSystem.EnableDevice`](xref:UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_EnableDevice_UnityEngine_InputSystem_InputDevice).
+Unlike other devices, sensors are disabled by default. To enable a sensor, call [`InputSystem.EnableDevice`](xref:UnityEngine.InputSystem.InputSystem).
 
 ```c#
 
@@ -22,7 +22,7 @@ InputSystem.EnableDevice(Gyroscope.current);
 
 ```
 
-To disable a sensor, call [`InputSystem.DisableDevice`](xref:UnityEngine.InputSystem.InputSystem.html#UnityEngine_InputSystem_InputSystem_DisableDevice_UnityEngine_InputSystem_InputDevice_System_Boolean).
+To disable a sensor, call [`InputSystem.DisableDevice`](xref:UnityEngine.InputSystem.InputSystem).
 
 ```c#
 
