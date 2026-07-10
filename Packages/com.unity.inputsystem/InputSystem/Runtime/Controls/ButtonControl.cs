@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
@@ -378,6 +379,7 @@ namespace UnityEngine.InputSystem.Controls
 
 #endif // UNITY_EDITOR
 
+        /// <inheritdoc />
         protected override FourCC CalculateOptimizedControlDataType()
         {
             if (clamp == Clamp.None &&
