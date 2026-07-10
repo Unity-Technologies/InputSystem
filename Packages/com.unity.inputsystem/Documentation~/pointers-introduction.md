@@ -19,4 +19,4 @@ For a list of platforms that support pointers, refer to [Supported devices refer
 The coordinates of pointers depend on whether you're working in a player or in the Unity Editor:
 
 * In player code, the coordinates are in the coordinate space of the Player window.
-* In Editor code, the coordinates are in the coordinate space of the current [`EditorWindow`](xref:UnityEditor.EditorWindow). For example, if you query [`Pointer.current.position`](xref:UnityEngine.InputSystem.Pointer.position) in [`UnityEditor.EditorWindow.OnGUI`](xref:EditorWindow.OnGUI), the returned 2D vector is in the coordinate space of your local GUI (same as [`UnityEngine.Event.mousePosition`](xref:UnityEngine.Event-mousePositio)).
+* In Editor code, the coordinates are in the coordinate space of the current [`EditorWindow`](xref:UnityEditor.EditorWindow). For example, if you query [`Pointer.current.position`](xref:UnityEngine.InputSystem.Pointer.position) in [`UnityEditor.EditorWindow.OnGUI`](xref:EditorWindow.OnGUI), the returned 2D vector is in the coordinate space of your local GUI (same as [`UnityEngine.Event.mousePosition`](xref:UnityEngine.Event-mousePosition)).

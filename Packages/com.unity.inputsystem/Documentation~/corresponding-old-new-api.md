@@ -88,7 +88,7 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 [`Input.simulateMouseWithTouches`](https://docs.unity3d.com/ScriptReference/Input-multiTouchEnabled.html)|No corresponding API yet.
 [`Input.stylusTouchSupported`](https://docs.unity3d.com/ScriptReference/Input-stylusTouchSupported.html)|No corresponding API yet.
 [`Input.touchCount`](https://docs.unity3d.com/ScriptReference/Input-touchCount.html)|[`EnhancedTouch.Touch.activeTouches.Count`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch)<br/> **Note:** Enable enhanced touch support first by calling [`EnhancedTouchSupport.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport)
-[`Input.touches`](https://docs.unity3d.com/ScriptReference/Input-touches.html)|[`EnhancedTouch.Touch.activeTouches`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch)<br/> **Note:** Enable enhanced touch support first by calling [`EnhancedTouch.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport)
+[`Input.touches`](https://docs.unity3d.com/scriptreference/input-touches.html)|[`EnhancedTouch.Touch.activeTouches`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch)<br/> **Note:** Enable enhanced touch support first by calling [`EnhancedTouch.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport)
 [`Input.touchPressureSupported`](https://docs.unity3d.com/ScriptReference/Input-touchPressureSupported.html)|No corresponding API yet.
 [`Input.touchSupported`](https://docs.unity3d.com/ScriptReference/Input-touchSupported.html)|[`Touchscreen.current != null`](xref:UnityEngine.InputSystem.Touchscreen)
 [`Input.backButtonLeavesApp`](https://docs.unity3d.com/ScriptReference/Input-backButtonLeavesApp.html)|No corresponding API yet.

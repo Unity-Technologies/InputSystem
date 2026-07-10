@@ -16,7 +16,7 @@ These default actions mean that in many cases, you can start scripting with the 
 ### The legacy default Actions Asset
 
 > [!NOTE]
-> The default actions asset is entirely separate from the [default project-wide actions](xref:project-wide-actions). It is a legacy asset that is included in the package for backwards compatibility.
+> The default actions asset is entirely separate from the [default project-wide actions](about-project-wide-actions.md). It is a legacy asset that is included in the package for backwards compatibility.
 
 The Input System package provides an asset called `DefaultInputActions.inputactions` which you can reference directly in your projects like any other Unity asset. The asset is also available in code form through the [`DefaultInputActions`](xref:UnityEngine.InputSystem.DefaultInputActions) class.
 

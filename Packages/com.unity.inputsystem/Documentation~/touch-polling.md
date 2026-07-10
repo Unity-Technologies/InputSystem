@@ -4,7 +4,7 @@ uid: input-system-polling-touch-input
 
 # Touch polling
 
-The [`EnhancedTouch.Touch`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch) class provides a [polling API](polling-actions.md) for touch input similar to [`UnityEngine.Input.touches`](xref:UnityEngine.Input-touches). You can use it to query touches on a frame-by-frame basis.
+The [`EnhancedTouch.Touch`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch) class provides a [polling API](polling-actions.md) for touch input similar to [`UnityEngine.Input.touches`](docs.unity3d.com/scriptreference/input-touches.html). You can use it to query touches on a frame-by-frame basis.
 
 > [!IMPORTANT]
 > Don't use [`Touchscreen`](xref:UnityEngine.InputSystem.Touchscreen) for polling. If you read out touch state from `Touchscreen` directly inside of the `Update` or `FixedUpdate` methods, your application misses changes in touch state.

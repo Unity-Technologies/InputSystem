@@ -18,6 +18,6 @@ Each sensor device implements a single control which represents the data read by
 | [`PressureSensor`](xref:UnityEngine.InputSystem.PressureSensor) | Represents the atmospheric pressure measured by the device. | Yes | No | No |
 | [`ProximitySensor`](xref:UnityEngine.InputSystem.ProximitySensor) | Measures how close the device is to the user. | Yes | No | No |
 | [`HumiditySensor`](xref:UnityEngine.InputSystem.HumiditySensor) | Represents the ambient air humidity. | Yes | No | No |
-| [`AmbientTemperatureSensor`](xref:InputSystem.AmbientTemperatureSensor) | Represents the ambient air temperature. | Yes | No | No |
+| [`AmbientTemperatureSensor`](xref:UnityEngine.InputSystem.AmbientTemperatureSensor) | Represents the ambient air temperature. | Yes | No | No |
 | [`StepCounter`](xref:UnityEngine.InputSystem.StepCounter) | Represents the user's footstep count. | Yes | Yes | No |
 | [`HingeAngle`](xref:UnityEngine.InputSystem.HingeAngle) | Represents the hinge angle of foldable devices. | Yes | No | No |
