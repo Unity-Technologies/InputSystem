@@ -32,8 +32,7 @@ Only the following combinations of devices/OSes currently support rumble:
 * Gamepads on iOS, tvOS, and visionOS. Requires Unity 6000.7 or later.
     * Supports rumble on gamepads for which Apple's GameController framework exposes haptics. Supported gamepads include PS4, PS5, Xbox, and Nintendo Switch Pro controllers.
     * If the gamepad supports left and right motors, you can control the speed of each motor individually. Otherwise, the higher value of the left and right motor speed applies to all motors on the gamepad.
-    * The first [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call allocates rumble resources, which adds latency.
-    * When you set all motor speeds to `0.0`, an inactivity timer starts. After 2 minutes, the system releases rumble resources to preserve the controller's battery. The next [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call reallocates resources and again incurs allocation latency.
+    * The first [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call allocates rumble resources, which adds latency. When you set all motor speeds to `0.0`, an inactivity timer starts. After 2 minutes, the system releases rumble resources to preserve the controller's battery. The next [`SetMotorSpeeds`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) call reallocates resources, adding further latency.
     * Not every controller model exposes haptics through Apple's GameController framework. To confirm rumble support for a given controller, it's recommended test using a native application.
 
 ## Pausing, resuming, and stopping haptics
