@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed input devices being lost (no keyboard, mouse, gamepad, etc.) after upgrading the package while the Editor is open (related to the recent fast enter playmode change). [ISX-2569]
 - Fixed `InputSystemProvider` disabling project-wide actions on shutdown when UI Toolkit destroys its objects mid-play. The provider now scopes its lifecycle to the UI action map only and does not disable project-wide actions [UUM-134130](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-134130)
 - Fixed `InputActionRebindingExtensions.GetBindingDisplayString(InputAction, InputBinding, ...)` returning an empty string for composite bindings when the binding mask filters by group [UUM-141423](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141423)
 - Fixed `InputEventPtr.handled` not preventing actions from triggering when switching devices. The default event handled policy has been changed from `SuppressStateUpdates` (now deprecated) to `SuppressActionEventNotifications`, which keeps device state synchronized while suppressing action callbacks for handled events. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
@@ -32,6 +33,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed `InputAction.IsPressed`, `WasPressedThisFrame`, and `WasReleasedThisFrame` using a `ButtonControl`'s `pressPoint` when a binding also had an explicit `PressInteraction` with its own `pressPoint`, which could make those APIs disagree with the interaction's press and release behavior. Action-level press APIs now follow the interaction threshold when both are set explicitly.
 - Fixed `IndexOutOfRangeException` in `InputDeviceBuilder` when connecting an HID gamepad whose report descriptor declares a hat switch with Report Size 8 (e.g. ESP32-BLE-Gamepad). The HID layer now anchors the hat's directional sub-controls to the hat's own byte instead of letting the layout system auto-allocate a fresh byte for each [UUM-143659](https://jira.unity3d.com/browse/UUM-143659).
 - Fixed `OnMouseUpAsButton` and `OnMouseUp` being dropped in Play mode when the Game view's focus changes between a press and its release on Unity 6000.5.0a8 and newer. The legacy `SendMouseEvents` pipeline is no longer driven from `InputUpdateType.Editor` updates, which read the editor state buffer (position (0,0), not pressed) and produced a spurious mouse release that cleared the press target.
+- Fixed Input Debugger window's incorrect name. It is now called 'Input Debugger' instead of 'Input Debug' [UUM-137124](https://jira.unity3d.com/browse/UUM-137124).
 
 ### Changed
 - Action-level `IsPressed`, `WasPressedThisFrame`, and `WasReleasedThisFrame` for bindings to `Vector2Control` / `StickControl` no longer consult a per-control `pressPoint` on the vector (that field was removed). Use a `Press` interaction to set a custom threshold, or rely on `defaultButtonPressPoint`.
@@ -39,7 +41,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Migrated sample scenes to use Universal Render Pipeline (URP) with Built-in Render Pipeline fallback shaders. The URP package is now required to run the samples. (ISX-2343)
 - Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.
 - Changed the UI for `InputSystem.inputsettings` asset to use UI Toolkit framework.
-- Added documentation for rumble support on Android.
+- Added documentation for rumble support on Android and iOS.
 
 ### Added
 
