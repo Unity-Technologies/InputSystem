@@ -40,7 +40,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Migrated sample scenes to use Universal Render Pipeline (URP) with Built-in Render Pipeline fallback shaders. The URP package is now required to run the samples. (ISX-2343)
 - Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.
 - Changed the UI for `InputSystem.inputsettings` asset to use UI Toolkit framework.
-- Added documentation for rumble support on Android.
+- Added documentation for rumble support on Android and iOS.
 
 ### Added
 
