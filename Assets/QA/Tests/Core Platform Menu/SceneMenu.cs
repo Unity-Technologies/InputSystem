@@ -382,13 +382,13 @@ public class SceneMenu : MonoBehaviour
         var ph = MakeText("Placeholder", textArea.transform, "Search scenes\u2026", 18,
             kTextSecondary, TextAlignmentOptions.MidlineLeft);
         ph.fontStyle = FontStyles.Italic;
-        ph.textWrappingMode = TextWrappingModes.NoWrap;
+        DisableWordWrap(ph);
         ph.overflowMode = TextOverflowModes.Ellipsis;
         Stretch(ph.gameObject);
 
         var txt = MakeText("Text", textArea.transform, "", 18,
             kTextPrimary, TextAlignmentOptions.MidlineLeft);
-        txt.textWrappingMode = TextWrappingModes.NoWrap;
+        DisableWordWrap(txt);
         Stretch(txt.gameObject);
 
         var input = bar.AddComponent<TMP_InputField>();
@@ -614,7 +614,7 @@ public class SceneMenu : MonoBehaviour
         var nameT = MakeText("Name", go.transform, entry.displayName, 15, kTextPrimary,
             TextAlignmentOptions.Center);
         nameT.overflowMode      = TextOverflowModes.Ellipsis;
-        nameT.textWrappingMode = TextWrappingModes.NoWrap;
+        DisableWordWrap(nameT);
         var nr = Rect(nameT);
         nr.anchorMin = new Vector2(0.04f, 0.38f);
         nr.anchorMax = new Vector2(0.96f, 0.94f);
@@ -626,7 +626,7 @@ public class SceneMenu : MonoBehaviour
             var subT = MakeText("Sub", go.transform, entry.subcategory, 11, kTextSecondary,
                 TextAlignmentOptions.Center);
             subT.overflowMode      = TextOverflowModes.Ellipsis;
-            subT.textWrappingMode = TextWrappingModes.NoWrap;
+            DisableWordWrap(subT);
             var srr = Rect(subT);
             srr.anchorMin = new Vector2(0.04f, 0.06f);
             srr.anchorMax = new Vector2(0.96f, 0.38f);
@@ -712,6 +712,15 @@ public class SceneMenu : MonoBehaviour
         t.alignment     = align;
         t.raycastTarget = false;
         return t;
+    }
+
+    static void DisableWordWrap(TMP_Text t)
+    {
+#if UNITY_6000_0_OR_NEWER
+        t.textWrappingMode = TextWrappingModes.NoWrap;
+#else
+        t.enableWordWrapping = false;
+#endif
     }
 
     static void Stretch(GameObject go)
