@@ -29,11 +29,20 @@ namespace UnityEngine.InputSystem
     {
         internal void OnFocusChanged(bool focus)
         {
+            // We set this to temporarily override applicationHasFocus before processing the focus change
+            // as defaultUpdateType is influenced by it. Before returning from this method, clear the
+            // bool to stop overriding to indicate this manager has finished processing the focus change.
+            m_IsHandlingFocusChange = true;
+            m_ApplicationHadFocus = !focus;
+
 #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();
 
             if (!m_Runtime.isInPlayMode)
+            {
+                m_IsHandlingFocusChange = false;
                 return;
+            }
 
             var gameViewFocus = m_Settings.editorInputBehaviorInPlayMode;
 #endif
@@ -51,11 +60,11 @@ namespace UnityEngine.InputSystem
                 m_Runtime.runInBackground;
 #endif
 
-            var backgroundBehavior = m_Settings.backgroundBehavior;
-            if (backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
+            if (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
             {
                 // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
                 // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
+                m_IsHandlingFocusChange = false;
                 return;
             }
 
@@ -116,6 +125,8 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
             m_CurrentUpdate = InputUpdateType.None;
 #endif
+
+            m_IsHandlingFocusChange = false;
         }
 
         /// <summary>

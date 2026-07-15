@@ -246,6 +246,7 @@ namespace UnityEngine.InputSystem
             m_FocusState = newFocusState
                 ? m_FocusState | FocusFlags.ApplicationFocus
                 : m_FocusState & ~FocusFlags.ApplicationFocus;
+
             onPlayerFocusChanged?.Invoke(newFocusState);
         }
 

@@ -241,7 +241,7 @@ namespace UnityEngine.InputSystem
                 // The solution here would be to make update calls explicitly specify the update type and no longer use this property.
                 if (!m_RunPlayerUpdatesInEditMode && (!gameIsPlaying || !gameHasFocus))
                     return InputUpdateType.Editor;
-                #endif
+#endif
 
                 return m_UpdateMask.GetUpdateTypeForPlayer();
             }
@@ -536,7 +536,17 @@ namespace UnityEngine.InputSystem
 #else
             true;
 #endif
-        private bool applicationHasFocus => m_Runtime != null ? m_Runtime.isPlayerFocused : Application.isFocused;
+        private bool applicationHasFocus
+        {
+            get
+            {
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+                if (m_IsHandlingFocusChange)
+                    return m_ApplicationHadFocus;
+#endif
+                return m_Runtime != null ? m_Runtime.isPlayerFocused : Application.isFocused;
+            }
+        }
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
@@ -2425,6 +2435,12 @@ namespace UnityEngine.InputSystem
         #if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
         private bool m_DiscardOutOfFocusEvents;
         private double m_FocusRegainedTime;
+        // These two bools are used for overriding applicationHasFocus which affects gameHasFocus
+        // and thus defaultUpdateType. See comments in defaultUpdateType. While processing the
+        // focus change in the OnFocusChanged method, these are used to temporarily override
+        // those properties.
+        private bool m_IsHandlingFocusChange;
+        private bool m_ApplicationHadFocus;
         #endif
         private InputEventStream m_InputEventStream;
 
