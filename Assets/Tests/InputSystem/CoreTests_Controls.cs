@@ -1428,7 +1428,7 @@ partial class CoreTests
         Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
         Assert.That(mouse.position.y.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatFloat));
         Assert.That(mouse.position.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatVector2));
-        Assert.That(mouse.leftButton.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));
+        Assert.That(mouse.leftButton.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatBit));
 
         InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, false);
         Assert.That(mouse.position.x.optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatInvalid));

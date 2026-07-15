@@ -60,7 +60,7 @@ namespace UnityEngine.InputSystem.XR
         /// <remarks>
         /// Fully tracked means that the pose is accurate and not using any simulated or extrapolated positions, and the system tracking this pose is able to confidently track this object.
         /// </remarks>
-        [FieldOffset(0), InputControl(displayName = "Is Tracked", layout = "Button", sizeInBits = 8 /* needed to ensure optimization kicks-in */)]
+        [FieldOffset(0), InputControl(displayName = "Is Tracked", layout = "Button", sizeInBits = 1)]
         public bool isTracked;
 
         /// <summary>
@@ -252,7 +252,7 @@ namespace UnityEngine.InputSystem.XR
             if (
                 m_StateBlock.sizeInBits == PoseState.kSizeInBytes * 8 &&
                 m_StateBlock.bitOffset == 0 &&
-                isTracked.optimizedControlDataType == InputStateBlock.kFormatByte &&
+                isTracked.optimizedControlDataType == InputStateBlock.kFormatBit &&
                 trackingState.optimizedControlDataType == InputStateBlock.kFormatInt &&
                 position.optimizedControlDataType == InputStateBlock.kFormatVector3 &&
                 rotation.optimizedControlDataType == InputStateBlock.kFormatQuaternion &&

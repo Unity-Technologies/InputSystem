@@ -1222,6 +1222,52 @@ internal class XRTests : CoreTestsFixture
         Assert.That((device["posecontrol"] as PoseControl).optimizedControlDataType, Is.EqualTo(InputStateBlock.FormatPose));
     }
 
+    [Test]
+    [Category("Controls")]
+    [TestCase(true)]
+    [TestCase(false)]
+    public void Controls_PoseControl_IsTracked_ReadsCorrectly(bool useOptimizedControls)
+    {
+        InputSystem.settings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, useOptimizedControls);
+
+        runtime.ReportNewInputDevice(PoseDeviceState.CreateDeviceDescription().ToJson());
+
+        InputSystem.Update();
+
+        var device = InputSystem.devices[0];
+        var poseControl = device["posecontrol"] as PoseControl;
+
+        // Queue state with isTracked = true (byte value 1)
+        InputSystem.QueueStateEvent(device, new PoseDeviceState
+        {
+            isTracked = 1,
+            trackingState = (uint)(InputTrackingState.Position | InputTrackingState.Rotation),
+            position = new Vector3(1, 2, 3),
+            rotation = Quaternion.identity,
+        });
+        InputSystem.Update();
+
+        // Reading isTracked as a ButtonControl should return true
+        Assert.That(poseControl.isTracked.isPressed, Is.True, "isTracked.isPressed should be true when tracked");
+        Assert.That(poseControl.isTracked.ReadValue(), Is.EqualTo(1.0f).Within(0.001f), "isTracked.ReadValue() should be 1.0f when tracked");
+
+        // Reading the full PoseState should also have isTracked = true
+        var poseState = poseControl.ReadValue();
+        Assert.That(poseState.isTracked, Is.True, "PoseState.isTracked should be true when tracked");
+
+        // Queue state with isTracked = false (byte value 0)
+        InputSystem.QueueStateEvent(device, new PoseDeviceState
+        {
+            isTracked = 0,
+            trackingState = 0,
+        });
+        InputSystem.Update();
+
+        Assert.That(poseControl.isTracked.isPressed, Is.False, "isTracked.isPressed should be false when not tracked");
+        Assert.That(poseControl.isTracked.ReadValue(), Is.EqualTo(0.0f).Within(0.001f), "isTracked.ReadValue() should be 0.0f when not tracked");
+        Assert.That(poseControl.ReadValue().isTracked, Is.False, "PoseState.isTracked should be false when not tracked");
+    }
+
     // ISXB-405
     [Test]
     [Category("Devices")]

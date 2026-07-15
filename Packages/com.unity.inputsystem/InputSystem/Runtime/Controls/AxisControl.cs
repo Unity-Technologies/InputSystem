@@ -310,6 +310,7 @@ namespace UnityEngine.InputSystem.Controls
             return NormalizeProcessor.Normalize(clampedValue, min, max, 0);
         }
 
+        /// <inheritdoc />
         protected override FourCC CalculateOptimizedControlDataType()
         {
             var noProcessingNeeded =

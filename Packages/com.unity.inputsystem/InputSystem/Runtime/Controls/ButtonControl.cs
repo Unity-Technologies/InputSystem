@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using UnityEngine.InputSystem.LowLevel;
+using UnityEngine.InputSystem.Utilities;
 using UnityEngine.Scripting;
 
 ////REVIEW: introduce separate base class for ButtonControl and AxisControl instead of deriving ButtonControl from AxisControl?
@@ -377,6 +378,21 @@ namespace UnityEngine.InputSystem.Controls
         }
 
 #endif // UNITY_EDITOR
+
+        /// <inheritdoc />
+        protected override FourCC CalculateOptimizedControlDataType()
+        {
+            if (clamp == Clamp.None &&
+                invert == false &&
+                normalize == false &&
+                scale == false &&
+                m_StateBlock.format == InputStateBlock.FormatBit &&
+                m_StateBlock.sizeInBits == 1 &&
+                m_StateBlock.bitOffset == 0)
+                return InputStateBlock.FormatBit;
+
+            return base.CalculateOptimizedControlDataType();
+        }
 
         // We make the current global default button press point available as a static so that we don't have to
         // constantly make the hop from InputSystem.settings -> InputManager.m_Settings -> defaultButtonPressPoint.
