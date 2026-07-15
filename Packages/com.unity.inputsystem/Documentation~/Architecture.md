@@ -15,7 +15,11 @@ The Input System can also send data back to the native backend in the form of [c
 
 # Input System (low-level)
 
-The diagram below reads top-to-bottom as a layered pipeline: the native **platform backends** at the bottom feed the **InputManager**, which uses **layouts** to build **devices** whose state is stored in **Input State Memory** at the top.
+The diagram of the low-level Input System reads top-to-bottom as a layered pipeline: 
+
+1. The native platform backends at the bottom feed the InputManager.
+1. The InputManager uses layouts to build devices. 
+1. The device's state is stored in Input State Memory at the top.
 
 ```mermaid
 flowchart TB
@@ -94,9 +98,19 @@ The low-level system code also contains structs which describe the data layout o
 
 # Input System (high-level)
 
-The high-level system is easiest to understand in two parts: how input flows through the system at **runtime**, and how Actions are **authored as assets**. Both are shown below for a single player; each additional player gets its own `InputActionState` and a cloned `InputActionAsset` with its own device list and binding mask.
+The high-level system is easiest to understand in two parts:
 
-**Runtime data flow** — a Device control's state is written into Input State memory, a State Change Monitor notices the change, the `InputActionState` is updated, and the resulting Action fires a callback on the `PlayerInput` component in the scene:
+- How input flows through the system at runtime.
+- How actions are authored as assets. 
+
+The diagram shows both parts for a single player; each additional player gets its own `InputActionState` and a cloned `InputActionAsset` with its own device list and binding mask.
+
+The first diagram is for the runtime data flow:
+
+1. A device's control state is written into Input State memory.
+1. A State Change Monitor notices the change.
+1. The `InputActionState` is updated.
+1. The resulting action fires a callback on the `PlayerInput` component in the scene.
 
 ```mermaid
 flowchart LR
@@ -140,7 +154,10 @@ flowchart LR
     class IU,PI go;
 ```
 
-**Asset structure** — an `InputActionAsset` contains Maps, Actions, and Bindings. At runtime these populate the arrays inside the `InputActionState` shown above (`m_State`):
+The second diagram is for the asset structure:
+
+1. An `InputActionAsset` contains maps, actions, and bindings. 
+1. At runtime these populate the arrays inside the `InputActionState` shown in the previous diagram (`m_State`).
 
 ```mermaid
 flowchart LR
