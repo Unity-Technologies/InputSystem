@@ -556,7 +556,7 @@ namespace UnityEngine.InputSystem
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
-            m_RunPlayerUpdatesInEditMode || applicationHasFocus || gameShouldGetInputRegardlessOfFocus || isEditorEventPassthroughActive;
+                     m_RunPlayerUpdatesInEditMode || applicationHasFocus || gameShouldGetInputRegardlessOfFocus || isEditorEventPassthroughActive;
 #else
             applicationHasFocus || gameShouldGetInputRegardlessOfFocus;
 #endif
