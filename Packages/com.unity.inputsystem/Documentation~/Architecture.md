@@ -15,7 +15,76 @@ The Input System can also send data back to the native backend in the form of [c
 
 # Input System (low-level)
 
-![Low-Level Architecture](Images/InputArchitectureLowLevel.png)
+The diagram below reads top-to-bottom as a layered pipeline: the native **platform backends** at the bottom feed the **InputManager**, which uses **layouts** to build **devices** whose state is stored in **Input State Memory** at the top.
+
+```mermaid
+flowchart TB
+    %% ---------- Input State Memory (top) ----------
+    StateMemory["Input State Memory
+    (unmanaged raw memory — each device and control
+    gets a chunk that stores its current state)"]
+
+    %% ---------- Devices (built from layouts) ----------
+    Gamepad_D["Gamepad (device)"] --> leftStick
+    leftStick --> x & y & up & down & left & right
+    Keyboard_D["Keyboard (device)"] --> a & b & c & d
+    leftStick -->|"state written to"| StateMemory
+    Keyboard_D -->|"state written to"| StateMemory
+
+    %% ---------- Layouts (describe how to build controls and devices) ----------
+    Mouse -->|derives| Pointer
+    Pen -->|derives| Pointer
+    Touchscreen -->|derives| Pointer
+    DS_PS4["DualShock (PS4)"] --> DualShock
+    DS_HID["DualShock (HID)"] --> DualShock
+    DualShock --> Gamepad_L["Gamepad (layout)"]
+    Keyboard_L["Keyboard (layout)"]
+    Stick(("Stick"))
+    Axis(("Axis"))
+    Button(("Button"))
+    Dpad(("Dpad"))
+
+    %% Layout building blocks build the individual device controls
+    Gamepad_L -.->|builds| Gamepad_D
+    Stick -.->|builds| leftStick
+    Axis -.->|builds| x & y
+    Button -.->|builds| up & down & left & right
+    Keyboard_L -.->|builds| Keyboard_D
+
+    %% ---------- InputManager (middle) ----------
+    InputManager(["<b>InputManager</b>
+    Matches layouts to devices (InputDeviceMatcher),
+    builds devices (InputDeviceBuilder), creates & updates them"])
+    Gamepad_L -->|"searched by"| InputManager
+    InputManager -->|"creates & updates"| Gamepad_D
+    InputManager -->|"creates & updates"| Keyboard_D
+
+    %% ---------- Input Runtime (bottom) ----------
+    DDQ["Device Discovery Queue"]
+    EQ["Event Queue"]
+    BEQ["Background Event Queue
+    (async; flushes into the foreground queue)"]
+    Backends["Platform Backends
+    Windows · macOS · Linux · UWP · iOS · Android
+    · Switch · Xbox · PS4 · WebGL · XR"]
+    Backends --> DDQ & EQ & BEQ
+    DDQ -->|"Device Discovered"| InputManager
+    EQ -->|"Update (flushes event buffers)"| InputManager
+    InputManager -->|"Queue Event"| EQ
+    InputManager -->|"Device Command (IOCTL-style)"| Backends
+
+    %% ---------- Grouping by color ----------
+    classDef layout fill:#e6f0ff,stroke:#4a78c0,color:#000;
+    classDef device fill:#e8f7e8,stroke:#4aa04a,color:#000;
+    classDef runtime fill:#fdf3d0,stroke:#b9962e,color:#000;
+    classDef mem fill:#f0e6f6,stroke:#8a5ea0,color:#000;
+    classDef manager fill:#ffffff,stroke:#e0403f,stroke-width:2px,color:#000;
+    class Mouse,Pen,Touchscreen,Pointer,DS_PS4,DS_HID,DualShock,Gamepad_L,Keyboard_L,Stick,Axis,Button,Dpad layout;
+    class Gamepad_D,leftStick,x,y,up,down,left,right,Keyboard_D,a,b,c,d device;
+    class DDQ,EQ,BEQ,Backends runtime;
+    class StateMemory mem;
+    class InputManager manager;
+```
 
 The low-level Input System code processes and interprets the memory from the event stream that the native backend provides, and dispatches individual events.
 
@@ -25,7 +94,86 @@ The low-level system code also contains structs which describe the data layout o
 
 # Input System (high-level)
 
-![High-Level Architecture](Images/InputArchitectureHighLevel.png)
+The high-level system is easiest to understand in two parts: how input flows through the system at **runtime**, and how Actions are **authored as assets**. Both are shown below for a single player; each additional player gets its own `InputActionState` and a cloned `InputActionAsset` with its own device list and binding mask.
+
+**Runtime data flow** — a Device control's state is written into Input State memory, a State Change Monitor notices the change, the `InputActionState` is updated, and the resulting Action fires a callback on the `PlayerInput` component in the scene:
+
+```mermaid
+flowchart LR
+    %% ---------- Devices ----------
+    Keyboard["Keyboard"] --> space["space"]
+
+    %% ---------- Input State (unmanaged raw memory) ----------
+    KBbit["KeyboardState
+    1 Bit for Space Key"]
+    space -->|"stored in"| KBbit
+
+    %% ---------- Runtime ----------
+    StateEvent["StateEvent (KeyboardState)
+    NativeInputSystem.onUpdate"] -->|feeds| OnUpdate["InputManager.OnUpdate()"]
+
+    %% ---------- Action state ----------
+    AState(["InputActionState
+    NotifyControlStateChanged()"])
+    trig["triggerStates[]"]
+    bind["bindingStates[]"]
+    ctrl["controls[]"]
+    AState --> trig & bind & ctrl
+    OnUpdate ==>|"NotifyControlStateChanged()"| AState
+    KBbit -->|"State Change Monitor"| bind
+    space -->|"State Change Monitor"| ctrl
+
+    %% ---------- Callback out to the scene ----------
+    trig -->|triggers| IU["InputUser"]
+    IU -->|"OnActionTriggered()"| PI["PlayerInput
+    (Scene GameObject)"]
+
+    classDef device fill:#e6f0ff,stroke:#4a78c0,color:#000;
+    classDef state fill:#cfcfcf,stroke:#555,color:#000;
+    classDef astate fill:#efe9ff,stroke:#7a5ec0,color:#000;
+    classDef runtime fill:#fdf3d0,stroke:#b9962e,color:#000;
+    classDef go fill:#d9d9d9,stroke:#666,color:#000;
+    class Keyboard,space device;
+    class KBbit state;
+    class AState,trig,bind,ctrl astate;
+    class StateEvent,OnUpdate runtime;
+    class IU,PI go;
+```
+
+**Asset structure** — an `InputActionAsset` contains Maps, Actions, and Bindings. At runtime these populate the arrays inside the `InputActionState` shown above (`m_State`):
+
+```mermaid
+flowchart LR
+    %% ---------- Asset hierarchy ----------
+    Asset["InputActionAsset: MyGame.inputactions
+    devices = [ Keyboard ]
+    bindingMask = { groups: KeyboardMouse }"]
+    Map["InputActionMap: gameplay"]
+    Act["InputAction (m_Actions[])
+    gameplay/jump"]
+    Bind_a["InputBinding (m_Bindings[])
+    path: &lt;Keyboard&gt;/space
+    action: jump — groups: KeyboardMouse"]
+    Bind_b["InputBinding (m_Bindings[])
+    path: &lt;Gamepad&gt;/buttonSouth
+    action: jump — groups: Gamepad"]
+    Asset --> Map
+    Map --> Act
+    Map --> Bind_a & Bind_b
+
+    %% ---------- Populates the runtime action state ----------
+    Act -.->|populates| trig["triggerStates[]"]
+    Bind_a -.->|populates| bind["bindingStates[]"]
+    Bind_b -.->|populates| bind
+    bind -.->|resolves controls| ctrl["controls[]"]
+    State(["InputActionState
+    (m_State)"]) --- trig & bind & ctrl
+
+    classDef asset fill:#e8f7e8,stroke:#4aa04a,color:#000;
+    classDef astate fill:#efe9ff,stroke:#7a5ec0,color:#000;
+    class Asset,Map,Act,Bind_a,Bind_b asset;
+    class trig,bind,ctrl,State astate;
+```
 
 The high-level Input System code interprets the data in a Device's state buffers by using [layouts](layouts.md), which describe the data layout of a Device and its Controls in memory. The Input System creates layouts from either the pre-defined structs of commonly known Devices supplied by the low level system, or dynamically at runtime, as in the case of [generic HIDs](hid-specification.md).
 
