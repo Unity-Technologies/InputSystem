@@ -264,22 +264,6 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        public FocusFlags focusState
-        {
-            get
-            {
-                if (m_Runtime != null)
-                    return m_Runtime.focusState;
-
-                return Application.isFocused ? FocusFlags.ApplicationFocus : FocusFlags.None;
-            }
-            set
-            {
-                if (m_Runtime != null)
-                    m_Runtime.focusState = value;
-            }
-        }
-
         public float pollingFrequency
         {
             get
@@ -3925,8 +3909,7 @@ namespace UnityEngine.InputSystem
         private unsafe void ProcessFocusEvent(InputEvent* currentEventReadPtr)
         {
             var focusEventPtr = (InputFocusEvent*)currentEventReadPtr;
-            FocusFlags state = focusEventPtr->focusFlags;
-            focusState = state;
+            m_Runtime.focusState = focusEventPtr->focusFlags;
 
 #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();
