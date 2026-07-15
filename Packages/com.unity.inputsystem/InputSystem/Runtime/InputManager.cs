@@ -2267,7 +2267,7 @@ namespace UnityEngine.InputSystem
             #endif
             m_Runtime.pollingFrequency = pollingFrequency;
 
-            SetRuntimeFocusState(Application.isFocused);
+            m_Runtime.InitializeFocusState();
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -4045,21 +4045,6 @@ namespace UnityEngine.InputSystem
         }
 
 #endif // UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-
-        /// <summary>
-        /// Set the focus state of the runtime, converting from the given boolean to either setting or clearing the focus flag.
-        /// </summary>
-        /// <param name="applicationFocus">The application focus state.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetRuntimeFocusState(bool applicationFocus)
-        {
-            if (m_Runtime != null)
-            {
-                m_Runtime.focusState = applicationFocus
-                    ? m_Runtime.focusState | FocusFlags.ApplicationFocus
-                    : m_Runtime.focusState & ~FocusFlags.ApplicationFocus;
-            }
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FinalizeUpdate(InputUpdateType updateType)

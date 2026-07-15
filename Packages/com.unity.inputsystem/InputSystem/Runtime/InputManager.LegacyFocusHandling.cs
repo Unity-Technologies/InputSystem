@@ -33,10 +33,7 @@ namespace UnityEngine.InputSystem
             SyncAllDevicesWhenEditorIsActivated();
 
             if (!m_Runtime.isInPlayMode)
-            {
-                SetRuntimeFocusState(focus);
                 return;
-            }
 
             var gameViewFocus = m_Settings.editorInputBehaviorInPlayMode;
 #endif
@@ -59,7 +56,6 @@ namespace UnityEngine.InputSystem
             {
                 // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
                 // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
-                SetRuntimeFocusState(focus);
                 return;
             }
 
@@ -120,9 +116,6 @@ namespace UnityEngine.InputSystem
 #if UNITY_EDITOR
             m_CurrentUpdate = InputUpdateType.None;
 #endif
-
-            // We set this *after* the block above as defaultUpdateType is influenced by the setting.
-            SetRuntimeFocusState(focus);
         }
 
         /// <summary>

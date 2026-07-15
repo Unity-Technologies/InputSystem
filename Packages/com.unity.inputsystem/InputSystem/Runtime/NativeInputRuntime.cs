@@ -316,12 +316,24 @@ namespace UnityEngine.InputSystem.LowLevel
             return true;
         }
 
+        public void InitializeFocusState()
+        {
+            m_FocusState = Application.isFocused
+                ? m_FocusState | FocusFlags.ApplicationFocus
+                : m_FocusState & ~FocusFlags.ApplicationFocus;
+        }
+
 #if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
         private Action<bool> m_FocusChangedMethod;
 
         private void OnFocusChanged(bool focus)
         {
             m_FocusChangedMethod(focus);
+
+            // We set this *after* the callback above as InputManager.defaultUpdateType is influenced by the property.
+            m_FocusState = focus
+                ? m_FocusState | FocusFlags.ApplicationFocus
+                : m_FocusState & ~FocusFlags.ApplicationFocus;
         }
 
 #endif

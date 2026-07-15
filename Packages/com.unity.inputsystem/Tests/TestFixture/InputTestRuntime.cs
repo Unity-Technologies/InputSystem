@@ -234,6 +234,13 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public void InitializeFocusState()
+        {
+            // Testing should start in focus and individual tests can change this test runtime to lose focus
+            // by calling InvokePlayerFocusChanged via InputTestFixture.ScheduleFocusChangedEvent.
+            m_FocusState = FocusFlags.ApplicationFocus;
+        }
+
         public void InvokePlayerFocusChanged(bool newFocusState)
         {
             m_FocusState = newFocusState
