@@ -113,7 +113,7 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Set delegate to call when the application changes focus.
         /// </summary>
-        /// <seealso cref="Application.onFocusChanged"/>
+        /// <seealso cref="Application.focusChanged"/>
         Action<bool> onPlayerFocusChanged { get; set; }
 #endif
 

@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// In editor this means the GameView has focus. In a built player this means the player has focus.
         /// </summary>
-        ApplicationFocus = (1 << 0)
+        ApplicationFocus = (1 << 0),
     };
 
     internal partial class InputManager
@@ -34,7 +34,7 @@ namespace UnityEngine.InputSystem
 
             if (!m_Runtime.isInPlayMode)
             {
-                focusState = focus ? FocusFlags.ApplicationFocus : FocusFlags.None;
+                SetRuntimeFocusState(focus);
                 return;
             }
 
@@ -59,7 +59,7 @@ namespace UnityEngine.InputSystem
             {
                 // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
                 // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
-                focusState = focus ? FocusFlags.ApplicationFocus : FocusFlags.None;
+                SetRuntimeFocusState(focus);
                 return;
             }
 
@@ -122,7 +122,7 @@ namespace UnityEngine.InputSystem
 #endif
 
             // We set this *after* the block above as defaultUpdateType is influenced by the setting.
-            focusState = focus ? FocusFlags.ApplicationFocus : FocusFlags.None;
+            SetRuntimeFocusState(focus);
         }
 
         /// <summary>
@@ -150,8 +150,6 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Determines if we should exit early from event processing without handling events.
         /// </summary>
-        /// <param name="eventBuffer">The current event buffer</param>
-        /// <param name="canFlushBuffer">Whether the buffer can be flushed</param>
         /// <param name="updateType">The current update type</param>
         /// <returns>True if we should exit early, false otherwise.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

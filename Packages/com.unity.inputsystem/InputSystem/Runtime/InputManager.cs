@@ -268,20 +268,15 @@ namespace UnityEngine.InputSystem
         {
             get
             {
-#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-                return m_Runtime.focusState;
-#else
-                return m_FocusState;
-#endif
+                if (m_Runtime != null)
+                    return m_Runtime.focusState;
+
+                return Application.isFocused ? FocusFlags.ApplicationFocus : FocusFlags.None;
             }
             set
             {
-#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
                 if (m_Runtime != null)
                     m_Runtime.focusState = value;
-#else
-                m_FocusState = value;
-#endif
             }
         }
 
@@ -557,11 +552,11 @@ namespace UnityEngine.InputSystem
 #else
             true;
 #endif
-        private bool applicationHasFocus => (focusState & FocusFlags.ApplicationFocus) != FocusFlags.None;
+        private bool applicationHasFocus => m_Runtime != null ? m_Runtime.isPlayerFocused : Application.isFocused;
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
-                     m_RunPlayerUpdatesInEditMode || applicationHasFocus || gameShouldGetInputRegardlessOfFocus || isEditorEventPassthroughActive;
+            m_RunPlayerUpdatesInEditMode || applicationHasFocus || gameShouldGetInputRegardlessOfFocus || isEditorEventPassthroughActive;
 #else
             applicationHasFocus || gameShouldGetInputRegardlessOfFocus;
 #endif
@@ -2027,11 +2022,6 @@ namespace UnityEngine.InputSystem
             // we don't know which one the user is going to use. The user
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
-            #if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-            m_FocusState = Application.isFocused
-                ? m_FocusState | FocusFlags.ApplicationFocus
-                : m_FocusState & ~FocusFlags.ApplicationFocus;
-            #endif
             #if UNITY_EDITOR
             m_EditorIsActive = true;
             m_UpdateMask |= InputUpdateType.Editor;
@@ -2277,9 +2267,7 @@ namespace UnityEngine.InputSystem
             #endif
             m_Runtime.pollingFrequency = pollingFrequency;
 
-            focusState = m_Runtime.isPlayerFocused
-                ? focusState | FocusFlags.ApplicationFocus
-                : focusState & ~FocusFlags.ApplicationFocus;
+            SetRuntimeFocusState(Application.isFocused);
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -2451,7 +2439,6 @@ namespace UnityEngine.InputSystem
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         #if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-        private FocusFlags m_FocusState = FocusFlags.ApplicationFocus;
         private bool m_DiscardOutOfFocusEvents;
         private double m_FocusRegainedTime;
         #endif
@@ -4058,6 +4045,21 @@ namespace UnityEngine.InputSystem
         }
 
 #endif // UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+
+        /// <summary>
+        /// Set the focus state of the runtime, converting from the given boolean to either setting or clearing the focus flag.
+        /// </summary>
+        /// <param name="applicationFocus">The application focus state.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetRuntimeFocusState(bool applicationFocus)
+        {
+            if (m_Runtime != null)
+            {
+                m_Runtime.focusState = applicationFocus
+                    ? m_Runtime.focusState | FocusFlags.ApplicationFocus
+                    : m_Runtime.focusState & ~FocusFlags.ApplicationFocus;
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FinalizeUpdate(InputUpdateType updateType)
