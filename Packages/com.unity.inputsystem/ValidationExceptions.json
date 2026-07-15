@@ -54,6 +54,16 @@
           "PackageVersion": "1.20.0"
         },
         {
+          "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "File 'Documentation~/gamepads-s.md' contains keyword pattern '(?<!(BuildTarget|BuildTargetGroup|BuildSettings|AddressablesPlatform|RuntimePlatform|TargetPlatform|OpCodes|GraphicsDeviceType))\\.switch\\W' which indicates it is specific to restricted targets '-Switch'. It must not be published",
+          "PackageVersion": "1.20.0"
+        },
+        {
+          "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "The Input System supports Switch Pro controllers on desktop computers with the [`SwitchProControllerHID`](xref:UnityEngine.InputSystem.Switch.SwitchProControllerHID) class, which implements basic gamepad functionality.",
+          "PackageVersion": "1.20.0"
+        },
+        {
           "ValidationTest": "Assembly Definition Validation",
           "ExceptionMessage": "For editor assemblies, 'Editor' should be present in the includePlatform section in: [{Package-Root}/InputSystem/Editor/Plugins/InputForUI/InputSystemForUI.Editor.asmdef]",
           "PackageVersion": "1.20.0"

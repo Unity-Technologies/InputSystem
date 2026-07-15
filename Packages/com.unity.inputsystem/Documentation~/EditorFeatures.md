@@ -1,18 +1,22 @@
 ---
 uid: input-system-editor-features
 ---
-# Input System Editor Features
 
-This section describes how the Input System integrates with the Unity Editor, which allows you to read input in edit mode, debug input values, and set up automated input tests.
+# Editor features
 
-### [Using Input in the Editor](xref:input-system-use-in-editor)
+Use the Input System while developing in the Unity Editor—not only during Play mode in a built player.
 
-Unlike Unity's old Input Manager, the Input System package allows you to read input  from within [Editor window code](https://docs.unity3d.com/Manual/editor-EditorWindows.html) as well. ([Read more](xref:input-system-use-in-editor))
+Read input from custom Editor windows, stream touch and sensor data from a mobile device with Unity Remote, and trace or record how events flow through the system.
 
-### [The Input Debugger](xref:input-system-debugging)
+| **Topic** | **Description** |
+| :--- | :--- |
+| **[Read input in Editor Windows](read-input-editor-windows.md)** | Read pen, keyboard, and other device input from `EditorWindow` code outside Play mode. |
+| **[Use mobile device input in the Editor (Unity Remote)](use-mobile-device-input-editor-unity-remote.md)** | Stream mobile touch and sensor input into the Editor while in Play mode using the Unity Remote app. |
+| **[See and record input event flow](see-record-input-event-flow.md)** | Trace and record events with `InputEventTrace` to inspect how input moves through the system. |
 
-When something isn't working as expected, the quickest way to troubleshoot what's wrong is the Input Debugger in the Unity Editor. The Input Debugger provides access to the activity of the Input System in both the Editor and the connected Players. ([Read more](xref:input-system-debugging))
+## Additional resources
 
-### [Automated Input Testing](xref:input-system-testing)
-
-The Input System has built-in support for writing automated input tests. You can drive input entirely from code, without any dependencies on platform backends and physical hardware devices. The automated input tests you write consider the generated input to be the same as input generated at runtime by actual platform code. ([Read more](xref:input-system-testing))
+- [Debugging](debugging.md)
+- [The input debugger window](the-input-debugger-window.md)
+- [Testing](testing.md)
+- [See and record input event flow](see-record-input-event-flow.md)

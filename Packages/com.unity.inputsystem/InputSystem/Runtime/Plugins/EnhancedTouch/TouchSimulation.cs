@@ -27,7 +27,7 @@ namespace UnityEngine.InputSystem.EnhancedTouch
     /// </summary>
     [AddComponentMenu("Input/Debug/Touch Simulation")]
     [ExecuteInEditMode]
-    [HelpURL(InputSystem.kDocUrl + "/manual/Touch.html#touch-simulation")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/simulate-touch-input.html")]
     public class TouchSimulation : MonoBehaviour, IInputStateChangeMonitor
     {
         public Touchscreen simulatedTouchscreen { get; private set; }
