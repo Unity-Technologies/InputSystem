@@ -30,7 +30,7 @@ namespace UnityEngine.InputSystem.OnScreen
     /// control schemes of the simulated device.
     /// </remarks>
     [AddComponentMenu("Input/On-Screen Stick")]
-    [HelpURL(InputSystem.kDocUrl + "/manual/OnScreen.html#on-screen-sticks")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/create-on-screen-stick-control.html")]
     public class OnScreenStick : OnScreenControl, IPointerDownHandler, IPointerUpHandler, IDragHandler
     {
         private const string kDynamicOriginClickable = "DynamicOriginClickable";

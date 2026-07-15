@@ -4069,7 +4069,9 @@ namespace UnityEngine.InputSystem
             //send pointer data to backend for OnMouseEvents
 #if UNITY_INPUTSYSTEM_SUPPORTS_MOUSE_SCRIPT_EVENTS
             var pointer = Pointer.current;
-            if (pointer != null && pointer.added && gameIsPlaying)
+            // Skip during InputUpdateType.Editor: pointer reads the editor state buffer (position (0,0), not pressed),
+            // which would emit a spurious release and drop OnMouseUp/OnMouseUpAsButton on the real release.
+            if (pointer != null && pointer.added && gameIsPlaying && updateType != InputUpdateType.Editor)
                 NativeInputSystem.DoSendMouseEvents(pointer.press.isPressed, pointer.press.wasPressedThisFrame, pointer.position.x.value, pointer.position.y.value);
 #endif
             m_CurrentUpdate = default;

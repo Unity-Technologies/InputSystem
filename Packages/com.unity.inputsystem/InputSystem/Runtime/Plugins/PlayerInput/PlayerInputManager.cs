@@ -32,7 +32,7 @@ namespace UnityEngine.InputSystem
     /// unpaired devices.
     /// </remarks>
     [AddComponentMenu("Input/Player Input Manager")]
-    [HelpURL(InputSystem.kDocUrl + "/manual/PlayerInputManager.html")]
+    [HelpURL(InputSystem.kDocUrl + "/manual/player-input-manager-component.html")]
     public class PlayerInputManager : MonoBehaviour
     {
         /// <summary>
