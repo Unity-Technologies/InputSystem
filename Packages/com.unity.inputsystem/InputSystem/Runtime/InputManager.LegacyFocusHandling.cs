@@ -35,6 +35,10 @@ namespace UnityEngine.InputSystem
             m_IsHandlingFocusChange = true;
             m_ApplicationHadFocus = !focus;
 
+#if UNITY_EDITOR
+            var shouldClearCurrentUpdateInFinally = false;
+#endif
+
             try
             {
 #if UNITY_EDITOR
@@ -48,7 +52,6 @@ namespace UnityEngine.InputSystem
 
                 var runInBackground =
 #if UNITY_EDITOR
-
                     // In the editor, the player loop will always be run even if the Game View does not have focus. This
                     // amounts to runInBackground being always true in the editor, regardless of what the setting in
                     // the Player Settings window is.
@@ -68,11 +71,11 @@ namespace UnityEngine.InputSystem
                 }
 
 #if UNITY_EDITOR
-
                 // Set the current update type while we process the focus changes to make sure we
                 // feed into the right buffer. No need to do this in the player as it doesn't have
                 // the editor/player confusion.
                 m_CurrentUpdate = m_UpdateMask.GetUpdateTypeForPlayer();
+                shouldClearCurrentUpdateInFinally = true;
 #endif
 
                 if (!focus)
@@ -123,13 +126,14 @@ namespace UnityEngine.InputSystem
                             ResetDevice(device);
                     }
                 }
-
-#if UNITY_EDITOR
-                m_CurrentUpdate = InputUpdateType.None;
-#endif
             }
             finally
             {
+#if UNITY_EDITOR
+                if (shouldClearCurrentUpdateInFinally)
+                    m_CurrentUpdate = InputUpdateType.None;
+#endif
+
                 m_IsHandlingFocusChange = false;
             }
         }
