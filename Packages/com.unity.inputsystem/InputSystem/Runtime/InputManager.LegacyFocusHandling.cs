@@ -35,98 +35,103 @@ namespace UnityEngine.InputSystem
             m_IsHandlingFocusChange = true;
             m_ApplicationHadFocus = !focus;
 
-#if UNITY_EDITOR
-            SyncAllDevicesWhenEditorIsActivated();
-
-            if (!m_Runtime.isInPlayMode)
+            try
             {
-                m_IsHandlingFocusChange = false;
-                return;
-            }
+#if UNITY_EDITOR
+                SyncAllDevicesWhenEditorIsActivated();
 
-            var gameViewFocus = m_Settings.editorInputBehaviorInPlayMode;
+                if (!m_Runtime.isInPlayMode)
+                    return;
+
+                var gameViewFocus = m_Settings.editorInputBehaviorInPlayMode;
 #endif
 
-            var runInBackground =
+                var runInBackground =
 #if UNITY_EDITOR
-                // In the editor, the player loop will always be run even if the Game View does not have focus. This
-                // amounts to runInBackground being always true in the editor, regardless of what the setting in
-                // the Player Settings window is.
-                //
-                // If, however, "Game View Focus" is set to "Exactly As In Player", we force code here down the same
-                // path as in the player.
-                gameViewFocus != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView || m_Runtime.runInBackground;
+
+                    // In the editor, the player loop will always be run even if the Game View does not have focus. This
+                    // amounts to runInBackground being always true in the editor, regardless of what the setting in
+                    // the Player Settings window is.
+                    //
+                    // If, however, "Game View Focus" is set to "Exactly As In Player", we force code here down the same
+                    // path as in the player.
+                    gameViewFocus != InputSettings.EditorInputBehaviorInPlayMode.AllDeviceInputAlwaysGoesToGameView || m_Runtime.runInBackground;
 #else
-                m_Runtime.runInBackground;
+                    m_Runtime.runInBackground;
 #endif
 
-            if (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
-            {
-                // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
-                // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
-                m_IsHandlingFocusChange = false;
-                return;
-            }
+                if (m_Settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus && runInBackground)
+                {
+                    // If runInBackground is true, no device changes should happen, even when focus is gained. So early out.
+                    // If runInBackground is false, we still want to sync devices when focus is gained. So we need to continue further.
+                    return;
+                }
 
 #if UNITY_EDITOR
-            // Set the current update type while we process the focus changes to make sure we
-            // feed into the right buffer. No need to do this in the player as it doesn't have
-            // the editor/player confusion.
-            m_CurrentUpdate = m_UpdateMask.GetUpdateTypeForPlayer();
+
+                // Set the current update type while we process the focus changes to make sure we
+                // feed into the right buffer. No need to do this in the player as it doesn't have
+                // the editor/player confusion.
+                m_CurrentUpdate = m_UpdateMask.GetUpdateTypeForPlayer();
 #endif
 
-            if (!focus)
-            {
-                // We only react to loss of focus when we will keep running in the background. If not,
-                // we'll do nothing and just wait for focus to come back (where we then try to sync all devices).
-                if (runInBackground)
+                if (!focus)
                 {
-                    for (var i = 0; i < m_DevicesCount; ++i)
+                    // We only react to loss of focus when we will keep running in the background. If not,
+                    // we'll do nothing and just wait for focus to come back (where we then try to sync all devices).
+                    if (runInBackground)
                     {
-                        // Determine whether to run this device in the background.
-                        var device = m_Devices[i];
-                        if (!device.enabled || ShouldRunDeviceInBackground(device))
-                            continue;
+                        for (var i = 0; i < m_DevicesCount; ++i)
+                        {
+                            // Determine whether to run this device in the background.
+                            var device = m_Devices[i];
+                            if (!device.enabled || ShouldRunDeviceInBackground(device))
+                                continue;
 
-                        // Disable the device. This will also soft-reset it.
-                        EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+                            // Disable the device. This will also soft-reset it.
+                            EnableOrDisableDevice(device, false, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
 
-                        // In case we invoked a callback that messed with our device array, adjust our index.
-                        var index = m_Devices.IndexOfReference(device, m_DevicesCount);
-                        if (index == -1)
-                            --i;
-                        else
-                            i = index;
+                            // In case we invoked a callback that messed with our device array, adjust our index.
+                            var index = m_Devices.IndexOfReference(device, m_DevicesCount);
+                            if (index == -1)
+                                --i;
+                            else
+                                i = index;
+                        }
                     }
                 }
-            }
-            else
-            {
-                m_DiscardOutOfFocusEvents = true;
-                m_FocusRegainedTime = m_Runtime.currentTime;
-                // On focus gain, reenable and sync devices.
-                for (var i = 0; i < m_DevicesCount; ++i)
+                else
                 {
-                    var device = m_Devices[i];
+                    m_DiscardOutOfFocusEvents = true;
+                    m_FocusRegainedTime = m_Runtime.currentTime;
 
-                    // Re-enable the device if we disabled it on focus loss. This will also issue a sync.
-                    if (device.disabledWhileInBackground)
-                        EnableOrDisableDevice(device, true, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
-                    // Try to sync. If it fails and we didn't run in the background, perform
-                    // a reset instead. This is to cope with backends that are unable to sync but
-                    // may still retain state which now may be outdated because the input device may
-                    // have changed state while we weren't running. So at least make the backend flush
-                    // its state (if any).
-                    else if (device.enabled && !runInBackground && !device.RequestSync() && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus)
-                        ResetDevice(device);
+                    // On focus gain, reenable and sync devices.
+                    for (var i = 0; i < m_DevicesCount; ++i)
+                    {
+                        var device = m_Devices[i];
+
+                        // Re-enable the device if we disabled it on focus loss. This will also issue a sync.
+                        if (device.disabledWhileInBackground)
+                            EnableOrDisableDevice(device, true, DeviceDisableScope.TemporaryWhilePlayerIsInBackground);
+
+                        // Try to sync. If it fails and we didn't run in the background, perform
+                        // a reset instead. This is to cope with backends that are unable to sync but
+                        // may still retain state which now may be outdated because the input device may
+                        // have changed state while we weren't running. So at least make the backend flush
+                        // its state (if any).
+                        else if (device.enabled && !runInBackground && !device.RequestSync() && m_Settings.backgroundBehavior != InputSettings.BackgroundBehavior.IgnoreFocus)
+                            ResetDevice(device);
+                    }
                 }
-            }
 
 #if UNITY_EDITOR
-            m_CurrentUpdate = InputUpdateType.None;
+                m_CurrentUpdate = InputUpdateType.None;
 #endif
-
-            m_IsHandlingFocusChange = false;
+            }
+            finally
+            {
+                m_IsHandlingFocusChange = false;
+            }
         }
 
         /// <summary>
