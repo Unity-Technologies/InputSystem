@@ -32,6 +32,9 @@
         ],
         "6000.6": [
           "com.unity.charactercontroller"
+        ],
+        "6000.7": [
+          "com.unity.charactercontroller"
         ]
       },
       "postPackCommands": []
