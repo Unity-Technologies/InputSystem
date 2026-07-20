@@ -115,61 +115,6 @@ inputsystem-editorfunctionaltests_-_6000_3_-_win10:
       paths:
       - artifacts/**/*
 
-# InputSystem-EditorFunctionalTests - 6000.4 - MacOs13
-inputsystem-editorfunctionaltests_-_6000_4_-_macos13:
-  name: InputSystem-EditorFunctionalTests - 6000.4 - MacOs13
-  agent:
-    image: package-ci/macos-13:v4
-    type: Unity::VM::osx
-    flavor: b1.xlarge
-  commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 6000.4/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_MacOS_6000.4_project;flags:inputsystem_MacOS_6000.4_project" --timeout=3600 --artifacts-path=artifacts
-  after:
-  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
-  artifacts:
-    artifacts:
-      paths:
-      - artifacts/**/*
-
-# InputSystem-EditorFunctionalTests - 6000.4 - Ubuntu2204
-inputsystem-editorfunctionaltests_-_6000_4_-_ubuntu2204:
-  name: InputSystem-EditorFunctionalTests - 6000.4 - Ubuntu2204
-  agent:
-    image: package-ci/ubuntu-22.04:v4
-    type: Unity::VM::GPU
-    flavor: b1.large
-  commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 6000.4/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Ubuntu_6000.4_project;flags:inputsystem_Ubuntu_6000.4_project" --timeout=3600 --artifacts-path=artifacts
-  after:
-  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
-  artifacts:
-    artifacts:
-      paths:
-      - artifacts/**/*
-
-# InputSystem-EditorFunctionalTests - 6000.4 - Win10
-inputsystem-editorfunctionaltests_-_6000_4_-_win10:
-  name: InputSystem-EditorFunctionalTests - 6000.4 - Win10
-  agent:
-    image: package-ci/win10:v4
-    type: Unity::VM
-    flavor: b1.large
-  commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u 6000.4/staging -c Editor --fast --wait
-  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:%YAMATO_SOURCE_DIR%/Packages;" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Windows_6000.4_project;flags:inputsystem_Windows_6000.4_project" --timeout=3600 --artifacts-path=artifacts
-  after:
-  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
-  artifacts:
-    artifacts:
-      paths:
-      - artifacts/**/*
-
 # InputSystem-EditorFunctionalTests - 6000.5 - MacOs13
 inputsystem-editorfunctionaltests_-_6000_5_-_macos13:
   name: InputSystem-EditorFunctionalTests - 6000.5 - MacOs13
@@ -235,7 +180,7 @@ inputsystem-editorfunctionaltests_-_6000_6_-_macos13arm:
     model: M1
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
+  - command: unity-downloader-cli -u 6000.6/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_MacOS_6000.6_project;flags:inputsystem_MacOS_6000.6_project" --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
@@ -253,7 +198,7 @@ inputsystem-editorfunctionaltests_-_6000_6_-_ubuntu2204:
     flavor: b1.large
   commands:
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
+  - command: unity-downloader-cli -u 6000.6/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Ubuntu_6000.6_project;flags:inputsystem_Ubuntu_6000.6_project" --timeout=3600 --artifacts-path=artifacts
   after:
   - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
@@ -272,8 +217,82 @@ inputsystem-editorfunctionaltests_-_6000_6_-_win10:
   commands:
   - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
   - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
-  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
+  - command: unity-downloader-cli -u 6000.6/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:%YAMATO_SOURCE_DIR%/Packages;" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Windows_6000.6_project;flags:inputsystem_Windows_6000.6_project" --timeout=3600 --artifacts-path=artifacts
+  after:
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
+  artifacts:
+    artifacts:
+      paths:
+      - artifacts/**/*
+
+# InputSystem-EditorFunctionalTests - 6000.7 - MacOs13
+inputsystem-editorfunctionaltests_-_6000_7_-_macos13:
+  name: InputSystem-EditorFunctionalTests - 6000.7 - MacOs13
+  agent:
+    image: package-ci/macos-13:v4
+    type: Unity::VM::osx
+    flavor: b1.xlarge
+  commands:
+  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_MacOS_6000.7_project;flags:inputsystem_MacOS_6000.7_project" --timeout=3600 --artifacts-path=artifacts
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
+  artifacts:
+    artifacts:
+      paths:
+      - artifacts/**/*
+
+# InputSystem-EditorFunctionalTests - 6000.7 - MacOs13Arm
+inputsystem-editorfunctionaltests_-_6000_7_-_macos13arm:
+  name: InputSystem-EditorFunctionalTests - 6000.7 - MacOs13Arm
+  agent:
+    image: package-ci/macos-13-arm64:v4
+    type: Unity::VM::osx
+    flavor: m1.mac
+    model: M1
+  commands:
+  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_MacOS_6000.7_project;flags:inputsystem_MacOS_6000.7_project" --timeout=3600 --artifacts-path=artifacts
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
+  artifacts:
+    artifacts:
+      paths:
+      - artifacts/**/*
+
+# InputSystem-EditorFunctionalTests - 6000.7 - Ubuntu2204
+inputsystem-editorfunctionaltests_-_6000_7_-_ubuntu2204:
+  name: InputSystem-EditorFunctionalTests - 6000.7 - Ubuntu2204
+  agent:
+    image: package-ci/ubuntu-22.04:v4
+    type: Unity::VM::GPU
+    flavor: b1.large
+  commands:
+  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:$YAMATO_SOURCE_DIR/Packages;" --coverage-results-path=$YAMATO_SOURCE_DIR/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Ubuntu_6000.7_project;flags:inputsystem_Ubuntu_6000.7_project" --timeout=3600 --artifacts-path=artifacts
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
+  artifacts:
+    artifacts:
+      paths:
+      - artifacts/**/*
+
+# InputSystem-EditorFunctionalTests - 6000.7 - Win10
+inputsystem-editorfunctionaltests_-_6000_7_-_win10:
+  name: InputSystem-EditorFunctionalTests - 6000.7 - Win10
+  agent:
+    image: package-ci/win10:v4
+    type: Unity::VM
+    flavor: b1.large
+  commands:
+  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
+  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
+  - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --enable-code-coverage --coverage-options="generateAdditionalMetrics;generateHtmlReport;assemblyFilters:+Unity.InputSystem*;pathReplacePatterns:@*,,**/PackageCache/,;sourcePaths:%YAMATO_SOURCE_DIR%/Packages;" --coverage-results-path=%YAMATO_SOURCE_DIR%/upm-ci~/CodeCoverage --coverage-upload-options="reportsDir:upm-ci~/CodeCoverage;name:inputsystem_Windows_6000.7_project;flags:inputsystem_Windows_6000.7_project" --timeout=3600 --artifacts-path=artifacts
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
   artifacts:
