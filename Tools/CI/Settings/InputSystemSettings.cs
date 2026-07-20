@@ -118,6 +118,13 @@ public class InputSystemSettings : AnnotatedSettingsBase
                 {
                     "com.unity.charactercontroller"
                 }
+            },
+            {
+                new Editor("6000.7",  ""),
+                new HashSet<string>()
+                {
+                    "com.unity.charactercontroller"
+                }
             }
         };
 
