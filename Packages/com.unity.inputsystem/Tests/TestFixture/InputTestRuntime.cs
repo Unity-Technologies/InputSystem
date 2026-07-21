@@ -8,6 +8,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine.Analytics;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngineInternal.Input;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -233,20 +234,20 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        public void InitializeFocusState()
+        {
+            // Testing should start in focus and individual tests can change this test runtime to lose focus
+            // by calling InvokePlayerFocusChanged via InputTestFixture.ScheduleFocusChangedEvent.
+            m_FocusState = FocusFlags.ApplicationFocus;
+        }
+
         public void InvokePlayerFocusChanged(bool newFocusState)
         {
-            m_HasFocus = newFocusState;
+            m_FocusState = newFocusState
+                ? m_FocusState | FocusFlags.ApplicationFocus
+                : m_FocusState & ~FocusFlags.ApplicationFocus;
+
             onPlayerFocusChanged?.Invoke(newFocusState);
-        }
-
-        public void PlayerFocusLost()
-        {
-            InvokePlayerFocusChanged(false);
-        }
-
-        public void PlayerFocusGained()
-        {
-            InvokePlayerFocusChanged(true);
         }
 
         public int ReportNewInputDevice(string deviceDescriptor, int deviceId = InputDevice.InvalidDeviceId)
@@ -358,7 +359,8 @@ namespace UnityEngine.InputSystem
         public Action<int, string> onDeviceDiscovered { get; set; }
         public Action onShutdown { get; set; }
         public Action<bool> onPlayerFocusChanged { get; set; }
-        public bool isPlayerFocused => m_HasFocus;
+        public FocusFlags focusState { get { return m_FocusState; } set { m_FocusState = value; } }
+        public bool isPlayerFocused => (m_FocusState & FocusFlags.ApplicationFocus) != 0;
         public float pollingFrequency { get; set; } = 60.0f; // At least 60 Hz by default
         public double currentTime { get; set; }
         public double currentTimeForFixedUpdate { get; set; }
@@ -405,26 +407,8 @@ namespace UnityEngine.InputSystem
         #if UNITY_EDITOR
         public bool isInPlayMode { get; set; } = true;
         public bool isEditorActive { get; set; } = true;
-        public Func<IntPtr, bool> onUnityRemoteMessage
-        {
-            get => m_UnityRemoteMessageHandler;
-            set => m_UnityRemoteMessageHandler = value;
-        }
-
-        public bool? unityRemoteGyroEnabled;
-        public float? unityRemoteGyroUpdateInterval;
-
-        public void SetUnityRemoteGyroEnabled(bool value)
-        {
-            unityRemoteGyroEnabled = value;
-        }
-
-        public void SetUnityRemoteGyroUpdateInterval(float interval)
-        {
-            unityRemoteGyroUpdateInterval = interval;
-        }
-
-        public Action<PlayModeStateChange> onPlayModeChanged { get; set; }
+        public bool isEditorPaused { get; set; }
+        public Action<InputPlayModeChange> onPlayModeChanged { get; set; }
         public Action onProjectChange { get; set; }
         #endif
 
@@ -432,7 +416,7 @@ namespace UnityEngine.InputSystem
 
         internal const int kDefaultEventBufferSize = 1024 * 512;
 
-        private bool m_HasFocus = true;
+        private FocusFlags m_FocusState = FocusFlags.ApplicationFocus;
         private int m_NextDeviceId = 1;
         private int m_NextEventId = 1;
         internal int m_EventCount;
@@ -443,7 +427,6 @@ namespace UnityEngine.InputSystem
         private List<KeyValuePair<int, DeviceCommandCallback>> m_DeviceCommandCallbacks;
         private object m_Lock = new object();
         private double m_CurrentTimeOffsetToRealtimeSinceStartup;
-        private Func<IntPtr, bool> m_UnityRemoteMessageHandler;
 
         #if UNITY_ANALYTICS || UNITY_EDITOR
 

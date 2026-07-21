@@ -163,7 +163,7 @@ internal class ProjectWideActionsTests : CoreTestsFixture
         Assert.That(ReferenceEquals(playerInput.actions, InputSystem.actions));
 
 #if UNITY_EDITOR
-        InputSystem.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.ExitingEditMode);
 #endif
 
         // This makes sure to call PlayerInput.OnEnable()
@@ -180,7 +180,7 @@ internal class ProjectWideActionsTests : CoreTestsFixture
         // We do this on the editor to make sure project-wide actions maintain the enabled state
         // after entering PlayMode.
 #if UNITY_EDITOR
-        InputSystem.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
+        InputSystemEditorInitializer.OnPlayModeChange(PlayModeStateChange.EnteredPlayMode);
         Assert.That(playerInput.actions.enabled, Is.EqualTo(expectedResult));
 #endif
 

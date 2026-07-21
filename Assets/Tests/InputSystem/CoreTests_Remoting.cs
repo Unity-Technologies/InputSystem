@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.Layouts;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.Networking.PlayerConnection;
@@ -268,13 +269,9 @@ partial class CoreTests
     public void Remote_CanConnectInputSystemsOverEditorPlayerConnection()
     {
 #if UNITY_EDITOR
-        // In the editor, RemoteInputPlayerConnection is a scriptable singleton. Creating multiple instances of it
-        // will cause an error messages - but will work nevertheless, so we expect those errors to let us run the test.
-        // We call RemoteInputPlayerConnection.instance once to make sure that we an instance is created, and we get
-        // a deterministic number of two errors.
         var instance = RemoteInputPlayerConnection.instance;
-        UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "ScriptableSingleton already exists. Did you query the singleton in a constructor?");
-        UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "ScriptableSingleton already exists. Did you query the singleton in a constructor?");
+        Assert.That(instance, Is.Not.Null);
+        Assert.That(ReferenceEquals(instance, RemoteInputPlayerConnectionEditor.GetInstance()), Is.True);
 #endif
         var connectionToEditor = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
         var connectionToPlayer = ScriptableObject.CreateInstance<RemoteInputPlayerConnection>();
@@ -297,7 +294,7 @@ partial class CoreTests
         connectionToPlayer.Bind(fakeEditorConnection, true);
 
         // Bind a local remote on the player side.
-        var local = new InputRemoting(InputSystem.s_Manager);
+        var local = new InputRemoting(InputSystem.manager);
         local.Subscribe(connectionToEditor);
 
         connectionToEditor.Subscribe(local);
@@ -477,17 +474,13 @@ partial class CoreTests
         public FakeRemote()
         {
             runtime = new InputTestRuntime();
-            var manager = new InputManager();
-            manager.m_Settings = ScriptableObject.CreateInstance<InputSettings>();
-            manager.InitializeData();
-            manager.InstallRuntime(runtime);
-            manager.ApplySettings();
+            var manager = InputManager.CreateAndInitialize(runtime, null, true);
 
-            local = new InputRemoting(InputSystem.s_Manager);
+            local = new InputRemoting(InputSystem.manager);
             remote = new InputRemoting(manager);
 
             var remoteInstaller = new GlobalsInstallerObserver(manager);
-            var localInstaller = new GlobalsInstallerObserver(InputSystem.s_Manager);
+            var localInstaller = new GlobalsInstallerObserver(InputSystem.manager);
 
             // The installers will ensure the globals environment is prepared right before
             // the receiver processes the message. There are some static fields, such as
@@ -505,14 +498,12 @@ partial class CoreTests
 
         public void SwitchToRemoteState()
         {
-            InputSystem.s_Manager = remoteManager;
-            InputStateBuffers.SwitchTo(remoteManager.m_StateBuffers, remoteManager.defaultUpdateType);
+            InputSystemTestHooks.TestHook_SwitchToDifferentInputManager(remoteManager);
         }
 
         public void SwitchToLocalState()
         {
-            InputSystem.s_Manager = localManager;
-            InputStateBuffers.SwitchTo(localManager.m_StateBuffers, localManager.defaultUpdateType);
+            InputSystemTestHooks.TestHook_SwitchToDifferentInputManager(localManager);
         }
 
         public void Dispose()
@@ -524,8 +515,8 @@ partial class CoreTests
             }
             if (remoteManager != null)
             {
-                Object.Destroy(remoteManager.m_Settings);
-                remoteManager.Destroy();
+                Object.Destroy(remoteManager.settings);
+                remoteManager.Dispose();
             }
         }
     }

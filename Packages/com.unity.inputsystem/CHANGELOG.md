@@ -5,6 +5,51 @@ All notable changes to the input system package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.20.0] - 2026-07-21
+
+### Fixed
+
+- Fixed input devices being lost (no keyboard, mouse, gamepad, etc.) after upgrading the package while the Editor is open (related to the recent fast enter playmode change). [ISX-2569]
+- Fixed `InputSystemProvider` disabling project-wide actions on shutdown when UI Toolkit destroys its objects mid-play. The provider now scopes its lifecycle to the UI action map only and does not disable project-wide actions [UUM-134130](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-134130)
+- Fixed `InputActionRebindingExtensions.GetBindingDisplayString(InputAction, InputBinding, ...)` returning an empty string for composite bindings when the binding mask filters by group [UUM-141423](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141423)
+- Fixed `InputEventPtr.handled` not preventing actions from triggering when switching devices. The default event handled policy has been changed from `SuppressStateUpdates` (now deprecated) to `SuppressActionEventNotifications`, which keeps device state synchronized while suppressing action callbacks for handled events. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
+- Fixed all `InputAction.WasXxxThisFrame()` and `WasXxxThisDynamicUpdate()` polling APIs to use per-action suppression tracking instead of a map-wide flag. Previously, when multiple events arrived in the same frame with mixed handled/unhandled states, the last event's suppression state could incorrectly affect all actions in the map. [ISXB-1097](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1097)
+- Fixed `InputRecorder` playback not starting when the Game View is not focused in the Editor [ISXB-1319](https://jira.unity3d.com/browse/ISXB-1319)
+- Fixed a `NullReferenceException` thrown when removing all action maps [UUM-137116](https://jira.unity3d.com/browse/UUM-137116)
+- Simplified default setting messaging by consolidating repetitive messages into a single HelpBox.
+- Fixed a `NullPointerReferenceException` thrown in `InputManagerStateMonitors.FireStateChangeNotifications` logging by adding validation [UUM-136095].
+- Fixed auto-save not working for Input System actions in Project Settings when both the Project Settings and Input System Actions windows were open [UUM-134035](https://jira.unity3d.com/browse/UUM-134035)
+- Improved New Input System warning dialog, Native Device Inputs Not Enabled [UUM-132151].
+- Fixed caching for InputControlPath display name [ISX-2501](https://jira.unity3d.com/browse/ISX-2501)
+- Fixed editor closing and not saving the input asset when clicking cancel in the dialog prompt [UUM-134748](https://jira.unity3d.com/browse/UUM-134748)
+- Fixed an incorrect ArraysHelper.Merge implementation that used the comparer incorrectly [ISXB-1790] (https://jira.unity3d.com/browse/ISXB-1790)
+- Fixed the input actions editor window entering a corrupt state when restarting Unity after the asset was edited. [UUM-134737](https://jira.unity3d.com/browse/UUM-134737)
+- Fixed the Input Actions Editor Window toolbar buttons overlapping each other when the window size is too small [ISXB-1783] (https://jira.unity3d.com/browse/ISXB-1783)
+- Fixed `buttonSouth` returning the state of the east button (and so on for all the compass named buttons) when using a Nintendo Switch Pro Controller on iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
+- Fixed `aButton` returning the state of the east button (and so on for all the letter named buttons) when using a Nintendo Switch Pro Controller on Standalone & iOS [ISXB-1632](issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1632)
+- Fixed an issue where `UIToolkit` `ClickEvent` could be fired on Android after device rotation due to inactive touch state being replayed during action initial state checks [UUM-100125](https://jira.unity3d.com/browse/UUM-100125).
+- Fixed InputSystem.onAnyButtonPress fails to trigger when the device receives a touch [UUM-137930](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137930).
+- Fixed an incorrect ArraysHelper.HaveDuplicateReferences implementation that didn't use its arguments right [ISXB-1792] (https://github.com/Unity-Technologies/InputSystem/pull/2376)
+- Fixed `InputAction.IsPressed`, `WasPressedThisFrame`, and `WasReleasedThisFrame` using a `ButtonControl`'s `pressPoint` when a binding also had an explicit `PressInteraction` with its own `pressPoint`, which could make those APIs disagree with the interaction's press and release behavior. Action-level press APIs now follow the interaction threshold when both are set explicitly.
+- Fixed `IndexOutOfRangeException` in `InputDeviceBuilder` when connecting an HID gamepad whose report descriptor declares a hat switch with Report Size 8 (e.g. ESP32-BLE-Gamepad). The HID layer now anchors the hat's directional sub-controls to the hat's own byte instead of letting the layout system auto-allocate a fresh byte for each [UUM-143659](https://jira.unity3d.com/browse/UUM-143659).
+- Fixed `OnMouseUpAsButton` and `OnMouseUp` being dropped in Play mode when the Game view's focus changes between a press and its release on Unity 6000.5.0a8 and newer. The legacy `SendMouseEvents` pipeline is no longer driven from `InputUpdateType.Editor` updates, which read the editor state buffer (position (0,0), not pressed) and produced a spurious mouse release that cleared the press target.
+- Fixed Input Debugger window's incorrect name. It is now called 'Input Debugger' instead of 'Input Debug' [UUM-137124](https://jira.unity3d.com/browse/UUM-137124).
+- Fixed `PoseControl.isTracked` always returning false when read through non-optimized code paths (e.g. Input Debugger) due to `sizeInBits = 8` causing the value to be normalized as `1/255` instead of `1.0`.
+
+### Changed
+
+- Action-level `IsPressed`, `WasPressedThisFrame`, and `WasReleasedThisFrame` for bindings to `Vector2Control` / `StickControl` no longer consult a per-control `pressPoint` on the vector (that field was removed). Use a `Press` interaction to set a custom threshold, or rely on `defaultButtonPressPoint`.
+- Removed 32-bit compilation check for HID on Windows players, which had no impact anymore. (ISX-2543)
+- Migrated sample scenes to use Universal Render Pipeline (URP) with Built-in Render Pipeline fallback shaders. The URP package is now required to run the samples. (ISX-2343)
+- Changed the UI for `Actions.inputactions` asset to use UI Toolkit framework.
+- Changed the UI for `InputSystem.inputsettings` asset to use UI Toolkit framework.
+- Added documentation for rumble support on Android and iOS.
+
+### Added
+
+- Added `InputSettings.shortcutKeysUseActionPriority` to opt into action-priority based shortcut overlap resolution. `shortcutKeysConsumeInput` enables complexity-based resolution when action priority is off (matching previous develop behavior). When both are enabled, action priority takes precedence. Serialized `InputAction` priority values are always kept; the Priority field in the Input Actions editor is shown only when action priority resolution is enabled. Both settings default to off.
+- Support for entering the play mode with domain reload turned off (i.e. Faster Enter Playmode feature) [ISX-2411]
+
 ## [1.19.0] - 2026-02-24
 
 ### Changed
@@ -19,6 +64,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Align title font size with toolbar style in `Input Action` window.
 - Updated Action Properties headers to use colors consistent with GameObject component headers.
 - Fixed misaligned Virtual Cursor when changing resolution [ISXB-1119](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1119)
+- Fixed OnScreenStick ignoring dynamic-origin presses when isolated input actions were enabled. [ISXB-1027](https://issuetracker.unity3d.com/product/unity/issues/guid/ISXB-1027)
 - Fixed an issue where `IndexOutOfRangeException` was thrown from `InputManagerStateMonitors.AddStateChangeMonitor` when attempting to enable an action map from within an `InputAction.cancel` callback when using control schemes. (ISXB-1767).
 
 ### Added

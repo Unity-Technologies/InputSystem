@@ -1,0 +1,19 @@
+{
+    "name": "Unity.InputSystem.ForUI.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Unity.InputSystem",
+        "Unity.InputSystem.ForUI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

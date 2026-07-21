@@ -189,6 +189,7 @@ namespace UnityEngine.InputSystem.Editor
                 supported_devices = settings.supportedDevices.ToArray();
                 disable_redundant_events_merging = settings.disableRedundantEventsMerging;
                 shortcut_keys_consume_input = settings.shortcutKeysConsumeInput;
+                shortcut_keys_use_action_priority = settings.shortcutKeysUseActionPriority;
 
                 feature_optimized_controls_enabled = settings.IsFeatureEnabled(InputFeatureNames.kUseOptimizedControls);
                 feature_read_value_caching_enabled = settings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching);
@@ -308,6 +309,11 @@ namespace UnityEngine.InputSystem.Editor
             /// </summary>
             public bool shortcut_keys_consume_input;
 
+            /// <summary>
+            /// Represents <see cref="InputSettings.shortcutKeysUseActionPriority"/>
+            /// </summary>
+            public bool shortcut_keys_use_action_priority;
+
             #endregion
 
             #region Feature flag settings
@@ -385,7 +391,7 @@ namespace UnityEngine.InputSystem.Editor
 
             public void OnPostprocessBuild(BuildReport report)
             {
-                InputSystem.s_Manager?.m_Runtime?.SendAnalytic(new InputBuildAnalytic(report));
+                InputSystem.manager?.runtime?.SendAnalytic(new InputBuildAnalytic(report));
             }
         }
     }

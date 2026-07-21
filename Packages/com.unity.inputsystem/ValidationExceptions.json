@@ -1,10 +1,72 @@
 {
     "ErrorExceptions": [
         {
-            "ValidationTest": "API Validation",
-            "ExceptionMessage": "Breaking changes require a new major version.",
-            "PackageVersion": "1.18.0",
-            "__comments": "starting from 2022.3 ugui is not added to the project by default. We have some APIs that are conditional on ugui being present, so the API Validation thinks we are breaking API, but that is not the case."
+          "ValidationTest": "API Validation",
+          "ExceptionMessage": "Breaking changes require a new major version.",
+          "PackageVersion": "1.20.0",
+          "__comments": "starting from 2022.3 ugui is not added to the project by default. We have some APIs that are conditional on ugui being present, so the API Validation thinks we are breaking API, but that is not the case."
+        },
+        {
+          "ValidationTest": "API Validation",
+          "ExceptionMessage": "New assembly \"Unity.InputSystem.TestFramework\" may only be added in a new minor or major version.",
+          "PackageVersion": "1.20.0"
+        },
+        {
+          "ValidationTest": "API Validation",
+          "ExceptionMessage": "Additions require a new minor or major version.",
+          "PackageVersion": "1.20.0"
+        },
+        {
+          "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "File 'InputSystem/Runtime/Plugins/iOS/IOSGameController.cs' contains keyword pattern '(?<!(BuildTarget|BuildTargetGroup|BuildSettings|AddressablesPlatform|RuntimePlatform|TargetPlatform|OpCodes|GraphicsDeviceType))\\.switch\\W' which indicates it is specific to restricted targets '-Switch'. It must not be published",
+          "PackageVersion": "1.20.0"
+        },
+        {
+          "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "using UnityEngine.InputSystem.Switch;",
+          "PackageVersion": "1.20.0"
+        },
+    
+        {
+          "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "File 'InputSystem/Runtime/Plugins/Switch/SwitchProController.cs' contains keyword pattern '(?<!(BuildTarget|BuildTargetGroup|BuildSettings|AddressablesPlatform|RuntimePlatform|TargetPlatform|OpCodes|GraphicsDeviceType))\\.switch\\W' which indicates it is specific to restricted targets '-Switch'. It must not be published",
+          "PackageVersion": "1.20.0"
+        },
+        {
+          "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "File 'InputSystem/Runtime/Plugins/Switch/SwitchProControllerHID.cs' contains keyword pattern '(?<!(BuildTarget|BuildTargetGroup|BuildSettings|AddressablesPlatform|RuntimePlatform|TargetPlatform|OpCodes|GraphicsDeviceType))\\.switch\\W' which indicates it is specific to restricted targets '-Switch'. It must not be published",
+          "PackageVersion": "1.20.0"
+        },
+    
+        {
+          "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "namespace UnityEngine.InputSystem.Switch",
+          "PackageVersion": "1.20.0"
+        },
+        {
+          "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "using UnityEngine.InputSystem.Switch.LowLevel;",
+          "PackageVersion": "1.20.0"
+        },
+        {
+          "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "namespace UnityEngine.InputSystem.Switch.LowLevel",
+          "PackageVersion": "1.20.0"
+        },
+        {
+          "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "File 'Documentation~/gamepads-s.md' contains keyword pattern '(?<!(BuildTarget|BuildTargetGroup|BuildSettings|AddressablesPlatform|RuntimePlatform|TargetPlatform|OpCodes|GraphicsDeviceType))\\.switch\\W' which indicates it is specific to restricted targets '-Switch'. It must not be published",
+          "PackageVersion": "1.20.0"
+        },
+        {
+          "ValidationTest": "NDA Keyword Validation",
+          "ExceptionMessage": "The Input System supports Switch Pro controllers on desktop computers with the [`SwitchProControllerHID`](xref:UnityEngine.InputSystem.Switch.SwitchProControllerHID) class, which implements basic gamepad functionality.",
+          "PackageVersion": "1.20.0"
+        },
+        {
+          "ValidationTest": "Assembly Definition Validation",
+          "ExceptionMessage": "For editor assemblies, 'Editor' should be present in the includePlatform section in: [{Package-Root}/InputSystem/Editor/Plugins/InputForUI/InputSystemForUI.Editor.asmdef]",
+          "PackageVersion": "1.20.0"
         }
     ],
     "WarningExceptions": []

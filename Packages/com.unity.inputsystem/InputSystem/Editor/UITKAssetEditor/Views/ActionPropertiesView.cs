@@ -89,6 +89,27 @@ namespace UnityEngine.InputSystem.Editor
                 Dispatch(Commands.ChangeActionControlType(inputAction, 0));
             }
 
+            var showPriority = InputSystem.settings != null && InputSystem.settings.shortcutKeysUseActionPriority;
+
+            var priorityField = new IntegerField("Priority")
+            {
+                tooltip = InputActionsEditorConstants.ActionPriorityTooltip
+            };
+            var priorityLabel = priorityField.Q<Label>();
+            priorityLabel.style.minWidth = m_DropdownLabelWidth;
+            priorityLabel.style.width = m_DropdownLabelWidth;
+            priorityField.SetValueWithoutNotify(inputAction.priority);
+            priorityField.RegisterCallback<FocusOutEvent>(_ => ScheduleCommitActionPriority(priorityField, inputAction));
+            priorityField.RegisterCallback<BlurEvent>(_ => ScheduleCommitActionPriority(priorityField, inputAction));
+            priorityField.RegisterCallback<KeyDownEvent>(evt =>
+            {
+                if (evt.keyCode != KeyCode.Return && evt.keyCode != KeyCode.KeypadEnter)
+                    return;
+                priorityField.Blur();
+            });
+            if (showPriority)
+                rootElement.Add(priorityField);
+
             if (inputAction.type != InputActionType.Value)
             {
                 var initialStateCheck = new Toggle("Initial State Check")
@@ -102,6 +123,39 @@ namespace UnityEngine.InputSystem.Editor
                 });
                 rootElement.Add(initialStateCheck);
             }
+        }
+
+        void ScheduleCommitActionPriority(IntegerField priorityField, SerializedInputAction inputAction)
+        {
+            // Coalesce FocusOut/Blur so we commit once after the IntegerField text is finalized.
+            priorityField.schedule.Execute(() => CommitActionPriorityIfChanged(priorityField, inputAction));
+        }
+
+        void CommitActionPriorityIfChanged(IntegerField priorityField, SerializedInputAction inputAction)
+        {
+            var priorityProperty = inputAction.wrappedProperty.FindPropertyRelative(nameof(InputAction.m_Priority));
+            var storedPriority = priorityProperty.intValue;
+            var clampedPriority = ReadClampedActionPriority(priorityField, storedPriority);
+
+            priorityField.SetValueWithoutNotify(clampedPriority);
+
+            if (clampedPriority == storedPriority)
+                return;
+
+            Dispatch(Commands.ChangeActionPriority(inputAction, clampedPriority));
+        }
+
+        static int ReadClampedActionPriority(IntegerField priorityField, int fallbackPriority)
+        {
+            // IntegerField only applies typed text to value on Enter; read text directly when clicking away.
+            if (!string.IsNullOrWhiteSpace(priorityField.text))
+            {
+                if (int.TryParse(priorityField.text, out var parsed))
+                    return InputAction.ClampPriority(parsed);
+                return fallbackPriority;
+            }
+
+            return InputAction.ClampPriority(priorityField.value);
         }
     }
 }

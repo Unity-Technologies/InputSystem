@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
-    <Style src="project://database/Packages/com.unity.inputsystem/InputSystem/Editor/UITKAssetEditor/PackageResources/InputActionsEditorStyles.uss?fileID=7433441132597879392&amp;guid=7dac9c49a90bca4499371d0adc9b617b&amp;type=3#InputActionsEditorStyles"/>
+    <Style src="project://database/Packages/com.unity.inputsystem/InputSystem/Editor/UITKAssetEditor/PackageResources/InputActionsEditorStyles.uss?fileID=7433441132597879392&amp;guid=7dac9c49a90bca4499371d0adc9b617b&amp;type=3#InputActionsEditorStyles" />
     <ui:VisualElement name="action-editor" style="flex-direction: column; flex-grow: 1;">
         <ui:VisualElement name="control-schemes-toolbar-container">
             <uie:Toolbar>
@@ -35,7 +35,7 @@
                             <ui:Button display-tooltip-when-elided="true" name="add-new-action-button" style="align-items: auto;"/>
                         </ui:VisualElement>
                         <ui:VisualElement name="body">
-                            <ui:TreeView view-data-key="unity-tree-view" focusable="true" name="actions-tree-view" show-border="false" reorderable="true" show-alternating-row-backgrounds="None" fixed-item-height="20"/>
+                            <ui:TreeView view-data-key="unity-tree-view" focusable="true" name="actions-tree-view" show-border="false" reorderable="true" show-alternating-row-backgrounds="None" />
                         </ui:VisualElement>
                         <ui:VisualElement name="rclick-area-to-add-new-action" style="flex-direction: column; flex-grow: 1;"/>
                     </ui:VisualElement>

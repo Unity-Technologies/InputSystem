@@ -39,3 +39,11 @@ comment:
 flag_management:
   default_rules:
     carryforward: true
+
+# Components configuration
+component_management:
+  individual_components:
+    - component_id: "com.unity.inputsystem"
+      name: "com.unity.inputsystem"
+      paths:
+        - Packages/com.unity.inputsystem

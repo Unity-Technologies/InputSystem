@@ -176,7 +176,7 @@ namespace UnityEngine.InputSystem.Editor
 
         private static unsafe void* TryGetDeviceState(InputDevice device, BufferSelector selector)
         {
-            var manager = InputSystem.s_Manager;
+            var manager = InputSystem.manager;
             var deviceIndex = device.m_DeviceIndex;
 
             switch (selector)
@@ -400,7 +400,7 @@ namespace UnityEngine.InputSystem.Editor
         // against any mutations.
         // When inspecting controls (as opposed to events), we copy all their various
         // state buffers and allow switching between them.
-        [SerializeField] private byte[][] m_StateBuffers;
+        [NonSerialized] private byte[][] m_StateBuffers;
         [SerializeField] private int m_SelectedStateBuffer;
         [SerializeField] private bool m_CompareStateBuffers;
         [SerializeField] private bool m_ShowDifferentOnly;

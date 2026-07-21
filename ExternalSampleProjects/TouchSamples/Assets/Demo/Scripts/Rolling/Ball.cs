@@ -1,6 +1,6 @@
 using System.Text;
-using Cinemachine;
 using InputSamples.Controller;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,7 +17,7 @@ namespace InputSamples.Demo.Rolling
         [SerializeField]
         private Transform cameraTransform;
         [SerializeField]
-        private CinemachineVirtualCamera cinemachineTrackingCamera;
+        private CinemachineCamera cinemachineTrackingCamera;
 
         [SerializeField]
         private float respawnY = -5.0f;

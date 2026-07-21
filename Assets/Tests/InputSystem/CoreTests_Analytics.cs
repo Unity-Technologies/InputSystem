@@ -409,7 +409,6 @@ partial class CoreTests
     {
         CollectAnalytics(InputBuildAnalytic.kEventName);
 
-        var storedSettings = InputSystem.s_Manager.settings;
         InputSettings defaultSettings = null;
 
         try
@@ -452,6 +451,7 @@ partial class CoreTests
             Assert.That(data.supported_devices, Is.EqualTo(defaultSettings.supportedDevices));
             Assert.That(data.disable_redundant_events_merging, Is.EqualTo(defaultSettings.disableRedundantEventsMerging));
             Assert.That(data.shortcut_keys_consume_input, Is.EqualTo(defaultSettings.shortcutKeysConsumeInput));
+            Assert.That(data.shortcut_keys_use_action_priority, Is.EqualTo(defaultSettings.shortcutKeysUseActionPriority));
 
             Assert.That(data.feature_optimized_controls_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseOptimizedControls)));
             Assert.That(data.feature_read_value_caching_enabled, Is.EqualTo(defaultSettings.IsFeatureEnabled(InputFeatureNames.kUseReadValueCaching)));
@@ -462,7 +462,6 @@ partial class CoreTests
         }
         finally
         {
-            InputSystem.s_Manager.settings = storedSettings;
             if (defaultSettings != null)
                 Object.DestroyImmediate(defaultSettings);
         }
@@ -474,7 +473,6 @@ partial class CoreTests
     {
         CollectAnalytics(InputBuildAnalytic.kEventName);
 
-        var storedSettings = InputSystem.s_Manager.settings;
         InputSettings customSettings = null;
 
         try
@@ -502,6 +500,7 @@ partial class CoreTests
             customSettings.supportedDevices = Array.Empty<string>();
             customSettings.disableRedundantEventsMerging = true;
             customSettings.shortcutKeysConsumeInput = true;
+            customSettings.shortcutKeysUseActionPriority = true;
 
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kUseOptimizedControls, true);
             customSettings.SetInternalFeatureFlag(InputFeatureNames.kParanoidReadValueCachingChecks, true);
@@ -548,6 +547,7 @@ partial class CoreTests
             Assert.That(data.supported_devices, Is.EqualTo(customSettings.supportedDevices));
             Assert.That(data.disable_redundant_events_merging, Is.EqualTo(customSettings.disableRedundantEventsMerging));
             Assert.That(data.shortcut_keys_consume_input, Is.EqualTo(customSettings.shortcutKeysConsumeInput));
+            Assert.That(data.shortcut_keys_use_action_priority, Is.EqualTo(customSettings.shortcutKeysUseActionPriority));
 
             Assert.That(data.feature_optimized_controls_enabled, Is.True);
             Assert.That(data.feature_read_value_caching_enabled, Is.True);
@@ -558,7 +558,6 @@ partial class CoreTests
         }
         finally
         {
-            InputSystem.s_Manager.settings = storedSettings;
             if (customSettings != null)
                 Object.DestroyImmediate(customSettings);
         }

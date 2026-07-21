@@ -50,7 +50,6 @@ namespace UnityEngine.InputSystem.Editor
             {
                 s_Instance = GetWindow<InputDebuggerWindow>();
                 s_Instance.Show();
-                s_Instance.titleContent = new GUIContent("Input Debug");
             }
             else
             {
@@ -80,6 +79,11 @@ namespace UnityEngine.InputSystem.Editor
                 s_Instance.UninstallHooks();
                 s_Instance.Refresh();
             }
+        }
+
+        private void OnEnable()
+        {
+            titleContent = new GUIContent("Input Debugger");
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
@@ -218,9 +222,9 @@ namespace UnityEngine.InputSystem.Editor
         {
             var playerUpdateType = InputDeviceDebuggerWindow.DetermineUpdateTypeToShow(device);
             var currentUpdateType = InputState.currentUpdateType;
-            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, playerUpdateType);
+            InputStateBuffers.SwitchTo(InputSystem.manager.m_StateBuffers, playerUpdateType);
             InputSystem.ResetDevice(device, alsoResetDontResetControls: hard);
-            InputStateBuffers.SwitchTo(InputSystem.s_Manager.m_StateBuffers, currentUpdateType);
+            InputStateBuffers.SwitchTo(InputSystem.manager.m_StateBuffers, currentUpdateType);
         }
 
         private static void ToggleAddDevicesNotSupportedByProject()
@@ -231,15 +235,15 @@ namespace UnityEngine.InputSystem.Editor
 
         private void ToggleDiagnosticMode()
         {
-            if (InputSystem.s_Manager.m_Diagnostics != null)
+            if (InputSystem.manager.m_Diagnostics != null)
             {
-                InputSystem.s_Manager.m_Diagnostics = null;
+                InputSystem.manager.m_Diagnostics = null;
             }
             else
             {
                 if (m_Diagnostics == null)
                     m_Diagnostics = new InputDiagnostics();
-                InputSystem.s_Manager.m_Diagnostics = m_Diagnostics;
+                InputSystem.manager.m_Diagnostics = m_Diagnostics;
             }
         }
 
@@ -319,7 +323,7 @@ namespace UnityEngine.InputSystem.Editor
 
                 menu.AddItem(Contents.addDevicesNotSupportedByProjectContent, InputEditorUserSettings.addDevicesNotSupportedByProject,
                     ToggleAddDevicesNotSupportedByProject);
-                menu.AddItem(Contents.diagnosticsModeContent, InputSystem.s_Manager.m_Diagnostics != null,
+                menu.AddItem(Contents.diagnosticsModeContent, InputSystem.manager.m_Diagnostics != null,
                     ToggleDiagnosticMode);
                 menu.AddItem(Contents.touchSimulationContent, InputEditorUserSettings.simulateTouch, ToggleTouchSimulation);
 

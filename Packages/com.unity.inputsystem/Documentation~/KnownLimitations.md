@@ -1,13 +1,13 @@
 ---
 uid: input-system-known-limitations
 ---
-# Known Limitations
+# Known limitations
 
 The following is a list of known limitations that the Input System currently has.
 
 ## Compatibility with other Unity features
 
-* Input processing in the background is tied to `Application.runInBackground` (i.e. the "Run In Background" setting in "Player Preferences") which, however, Unity always forces to `true` in __development__ players. This means that in development players, input will always be processed, even if the app is in the background. Of course, this only pertains to platforms where the player can actually run in the background (iOS and Android are thus unaffected).
+* Input processing in the background is tied to `Application.runInBackground` (That is, the "Run In Background" setting in "Player Preferences") which, however, Unity always forces to `true` in __development__ players. This means that in development players, input will always be processed, even if the app is in the background. Of course, this only pertains to platforms where the player can actually run in the background (iOS and Android are thus unaffected).
 * `PlayerInput` split-screen support does not work with Cinemachine virtual cameras.
 * The Input System cannot generate input for IMGUI.
 * UI Toolkit can be used with `InputSystemUIInputModule` but only pointer (mouse, pen, touch) and gamepad input is supported at the moment. XR support is coming.
@@ -29,8 +29,7 @@ The following is a list of known limitations that the Input System currently has
 * (Android) We only support a single Touchscreen at the moment.
 * Joy-Cons are only supported on Switch.
 * Sensors in the PS4 controller are currently only supported on PS4.
-    > [!NOTE]
-    > Support for NDA platforms is distributed as separate packages due to licensing restrictions. The packages, at this point, are made available separately to licensees for download and installation.
+  Note:   Support for NDA platforms is distributed as separate packages due to licensing restrictions. The packages, at this point, are made available separately to licensees for download and installation.
 
 ## Features Supported by Old Input Manager
 

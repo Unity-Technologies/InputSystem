@@ -34,6 +34,12 @@ namespace UnityEngine.InputSystem.Editor
             + "immediately trigger if any of its bound controls are currently in a non-default state. "
             + "This check happens implicitly for Value actions but can be explicitly enabled for Button and Pass-Through actions.";
 
+        public static readonly string ActionPriorityTooltip =
+            "Priority for this action when several bindings share the same control. Applies to all bindings on the action. "
+            + $"Values are clamped to {InputAction.MinPriority}–{InputAction.MaxPriority} when set (unsigned 16-bit at runtime). When Action Priority Shortcut Resolution is enabled, "
+            + "higher values are ordered first; when the action performs, priority 0 does not mark the input event as handled "
+            + "for overlap suppression, while any value greater than 0 can.";
+
         public struct CommandEvents
         {
             public const string Rename = "Rename";
