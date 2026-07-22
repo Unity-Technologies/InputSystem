@@ -93,7 +93,7 @@ A [`SlowTapInteraction`](xref:UnityEngine.InputSystem.Interactions.SlowTapIntera
 
 ## MultiTap
 
-A [`MultiTapInteraction`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) requires the user to press and release a Control within [`tapTime`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) seconds [`tapCount`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) times, with no more then [`tapDelay`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) seconds passing between taps, for the Interaction to trigger. You can use this to detect double-click or multi-click gestures.
+You can use `MultiTap` to detect double-click or multi-click gestures. For a [`MultiTapInteraction`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) to trigger, the user must press a control and release it within [`tapTime`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) seconds, repeating the press-and-release process [`tapCount`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) times. There can't be more than [`tapDelay`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction) seconds between taps. 
 
 |__Parameters__|Type|Default value|
 |---|---|---|
