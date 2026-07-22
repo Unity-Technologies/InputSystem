@@ -7,11 +7,11 @@ The Input System has a layered architecture that consists of a low-level layer a
 
 # Native backend
 
-The foundation of the Input System is the native backend code. This is platform-specific code which collects information about available Devices and input data from Devices. This code is not part of the Input System package, but is included with Unity itself. It has implementations for each runtime platform supported by Unity. This is why some platform-specific input bugs can only be fixed by an update to Unity, rather than a new version of the Input System package.
+The foundation of the Input System is the native backend code. This is platform-specific code that collects information about available devices and input data from devices. This code isn't part of the Input System package; it's included with Unity itself. It has implementations for each runtime platform supported by Unity. This is why some platform-specific input bugs can only be fixed by an update to Unity, rather than a new version of the Input System package.
 
-The Input System interfaces with the native backend using [events](input-events.md) that the native backend sends. These events notify the system of the creation and removal of [Input Devices](devices.md), as well as any updates to the Device states. For efficiency and to avoid creating any garbage, the native backend reports these events as a simple buffer of raw, unmanaged memory containing a stream of events.
+The Input System interfaces with the native backend using [events](input-events.md) that the native backend sends. These events notify the system of the creation and removal of [Input Devices](devices.md) and any updates to the Device states. For efficiency and to avoid creating garbage, the native backend reports these events as a simple buffer of raw, unmanaged memory containing a stream of events.
 
-The Input System can also send data back to the native backend in the form of [commands](device-commands.md) sent to Devices, which are also buffers of memory that the native backend interprets. These commands can have different meanings for different Device types and platforms.
+The Input System can also send data back to the native backend in the form of [commands](device-commands.md) sent to devices, which are also buffers of memory that the native backend interprets. These commands can have different meanings for different device types and platforms.
 
 # Input System (low-level)
 
@@ -90,11 +90,11 @@ flowchart TB
     class InputManager manager;
 ```
 
-The low-level Input System code processes and interprets the memory from the event stream that the native backend provides, and dispatches individual events.
+The low-level Input System code processes and interprets the memory from the event stream that the built-in back end provides, and dispatches individual events.
 
-The Input System creates Device representations for any newly discovered Device in the event stream. The low-level code sees a Device as a block of raw, unmanaged memory. If it receives a state event for a Device, it writes the data from the state event into the Device's [state representation](control-state.md) in memory, so that the state always contains an up-to-date representation of the Device and all its Controls.
+When the Input System discovers a device in the event stream, it creates a device representation for it. The low-level code sees a device as a block of raw, unmanaged memory. When the low-level code receives a state event for a device, it writes the data from the state event into the device's [state representation](control-state.md) in memory. This means that the state always contains an up-to-date representation of the device and all its controls.
 
-The low-level system code also contains structs which describe the data layout of commonly known Devices.
+The low-level system code also contains structs that describe the data layout of commonly known devices.
 
 # Input System (high-level)
 
