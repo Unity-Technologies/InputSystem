@@ -19,6 +19,6 @@ The other exception are [`BeforeRender`](xref:UnityEngine.InputSystem.LowLevel.I
 > [!NOTE]
 > Manually calling [`InputSystem.Update`](xref:UnityEngine.InputSystem.InputSystem) is strongly advised against except within tests employing [`InputTestFixture`](xref:UnityEngine.InputSystem.InputTestFixture) or when explicitly setting the system to [manual update mode](xref:UnityEngine.InputSystem.InputSettings.UpdateMode).
 
-Methods such as [`InputAction.WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction) and [`InputAction.WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction) operate implicitly based on the [`InputSystem.Update`] cadence described above. Meaning, that they refer to the state as per the __last__ fixed/dynamic/manual update happened.
+Methods such as [`InputAction.WasPerformedThisFrame`](xref:UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPerformedThisFrame) and [`WasPerformedThisDynamicUpdate`](xref:UnityEngine.InputSystem.InputAction.html#UnityEngine_InputSystem_InputAction_WasPerformedThisDynamicUpdate) operate implicitly based on the [`InputSystem.Update`] cadence described above. Meaning, that they refer to the state as per the __last__ fixed/dynamic/manual update happened.
 
 You can query the [current/last update type](xref:UnityEngine.InputSystem.LowLevel.InputState) and [count](xref:UnityEngine.InputSystem.LowLevel.InputState) from [`InputState`](xref:UnityEngine.InputSystem.LowLevel.InputState).
