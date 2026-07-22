@@ -23,7 +23,7 @@ Support for the following Devices doesn't require specialized support of particu
 > 1. Joysticks are supported as generic HIDs, refer to [Other gamepads, joysticks, and racing wheels](#other-gamepads-joysticks-and-racing-wheels) to learn more.
 > 2. Consoles are supported using separate packages. You need to install these packages in your Project to enable console support.
 > 3. Indirect touches are received from Siri Remote.
-> 4. Sensor support for Web on Android and iOS devices is available in Unity 2021.2
+> 4. Sensor support for WebGL on Android and iOS devices is available in Unity 2021.2
 
 ## Gamepads
 
