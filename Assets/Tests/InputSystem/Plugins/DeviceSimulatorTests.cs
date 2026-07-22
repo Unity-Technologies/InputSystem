@@ -64,6 +64,69 @@ public class DeviceSimulatorTests : InputTestFixture
         Assert.IsFalse(touchscreen.added);
     }
 
+    [Test]
+    [Category("Device Simulator")]
+    public void ConflictingDevicesAreNotDisabledOnCreate()
+    {
+        runtime.ReportNewInputDevice<Mouse>();
+        InputSystem.Update();
+        var mouse = Mouse.current;
+        Assert.That(mouse.native, Is.True);
+
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+
+        // Conflicting devices are only disabled once the Simulator gains focus, not on create.
+        Assert.That(mouse.enabled, Is.True);
+
+        plugin.OnDestroy();
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void ConflictingDeviceAddedWhileSimulatorFocused_IsDisabledThenReenabledOnDestroy()
+    {
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+
+        // Simulate the Simulator window being the focused window (bypasses the panel-based OnUpdate).
+        SetPrivateField(plugin, "m_ConflictingDevicesDisabled", true);
+
+        runtime.ReportNewInputDevice<Mouse>();
+        InputSystem.Update();
+        var mouse = Mouse.current;
+
+        Assert.That(mouse.native, Is.True);
+        Assert.That(mouse.enabled, Is.False);   // disabled via the OnDeviceChange gate
+
+        plugin.OnDestroy();
+        Assert.That(mouse.enabled, Is.True);     // ReenableConflictingDevices restores it
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void ConflictingDeviceAddedWhileSimulatorNotFocused_StaysEnabled()
+    {
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+        // m_ConflictingDevicesDisabled defaults to false (Simulator not focused).
+
+        runtime.ReportNewInputDevice<Mouse>();
+        InputSystem.Update();
+        var mouse = Mouse.current;
+
+        Assert.That(mouse.enabled, Is.True);
+
+        plugin.OnDestroy();
+    }
+
+    private static void SetPrivateField(object target, string name, object value)
+    {
+        var field = target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.NotNull(field, $"Field '{name}' not found on {target.GetType().Name}");
+        field.SetValue(target, value);
+    }
+
     private TouchEvent CreateTouch(int touchId, Vector2 position, UnityEditor.DeviceSimulation.TouchPhase phase)
     {
         var touch = new TouchEvent();

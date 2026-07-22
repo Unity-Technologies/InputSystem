@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed `OnMouseUpAsButton` and `OnMouseUp` being dropped in Play mode when the Game view's focus changes between a press and its release on Unity 6000.5.0a8 and newer. The legacy `SendMouseEvents` pipeline is no longer driven from `InputUpdateType.Editor` updates, which read the editor state buffer (position (0,0), not pressed) and produced a spurious mouse release that cleared the press target.
 - Fixed Input Debugger window's incorrect name. It is now called 'Input Debugger' instead of 'Input Debug' [UUM-137124](https://jira.unity3d.com/browse/UUM-137124).
 - Fixed `PoseControl.isTracked` always returning false when read through non-optimized code paths (e.g. Input Debugger) due to `sizeInBits = 8` causing the value to be normalized as `1/255` instead of `1.0`.
+- Fixed the Device Simulator plugin keeping the real mouse and pen disabled while working in other Editor windows. Conflicting native `Mouse`/`Pen` devices are now only disabled while the Simulator window is focused and re-enabled as soon as focus moves elsewhere [UUM-145509](https://jira.unity3d.com/browse/UUM-145509).
 
 ### Changed
 - Action-level `IsPressed`, `WasPressedThisFrame`, and `WasReleasedThisFrame` for bindings to `Vector2Control` / `StickControl` no longer consult a per-control `pressPoint` on the vector (that field was removed). Use a `Press` interaction to set a custom threshold, or rely on `defaultButtonPressPoint`.
