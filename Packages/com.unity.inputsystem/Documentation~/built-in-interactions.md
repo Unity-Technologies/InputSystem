@@ -98,7 +98,7 @@ You can use `MultiTap` to detect double-click or multi-click gestures. For a [`M
 |__Parameters__|Type|Default value|
 |---|---|---|
 |[`tapTime`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)|`float`|[`InputSettings.defaultTapTime`](xref:UnityEngine.InputSystem.InputSettings)|
-|[`tapDelay`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)|`float`|2 * [`tapTime`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)|
+|[`tapDelay`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)|`float`| Falls back to `InputSettings.multiTapDelayTime` when `tapDelay` is unset. |
 |[`tapCount`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)|`int`|2|
 |[`pressPoint`](xref:UnityEngine.InputSystem.Interactions.MultiTapInteraction)|`float`|[`InputSettings.defaultButtonPressPoint`](xref:UnityEngine.InputSystem.InputSettings)|
 
