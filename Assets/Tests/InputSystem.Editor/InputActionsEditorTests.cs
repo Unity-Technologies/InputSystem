@@ -190,6 +190,27 @@ internal class InputActionsEditorTests : UIToolkitBaseTestWindow<InputActionsEdi
     }
 
     [UnityTest]
+    public IEnumerator ActionMapsList_WhenMapDeletedViaKeyboard_ListRetainsFocus()
+    {
+        var actionMapsContainer = m_Window.rootVisualElement.Q("action-maps-container");
+        var listView = m_Window.rootVisualElement.Q<ListView>("action-maps-list-view");
+
+        // Select an action map and make sure the list holds keyboard focus before deleting.
+        var actionMapItem = actionMapsContainer.Query<InputActionMapsTreeViewItem>().ToList();
+        SimulateClickOn(actionMapItem[1]);
+        yield return WaitForFocus(listView);
+
+        SimulateDeleteCommand();
+
+        yield return WaitUntil(() => actionMapsContainer.Query<InputActionMapsTreeViewItem>().ToList().Count == 2, "wait for element to be deleted");
+
+        // After the post-delete rebuild destroys the previously focused row, focus must be
+        // returned to the list so keyboard shortcuts keep flowing without an extra click.
+        yield return WaitForFocus(listView);
+        Assert.That(listView.focusController.focusedElement, Is.EqualTo(listView));
+    }
+
+    [UnityTest]
     public IEnumerator CanRenameAction()
     {
         var actionContainer = m_Window.rootVisualElement.Q("actions-container");
