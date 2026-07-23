@@ -53,6 +53,7 @@ Support for the following Devices doesn't require specialized support of particu
 >       - On Android it's expected to be working from Android 12.
 >       - On iOS/tvOS it's currently recognized as a generic gamepad and most controls do work.
 > 13. To ensure all controller types are detected on UWP, enable the HumanInterfaceDevice setting in [UWP Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettingsWSA.html#Capabilities).
+> 14. In Unity 6.0, the WebGL build target was renamed to Web. However, to maintain backward compatibility, the Input System APIs, device layouts, and interface names retain the WebGL prefix (for example, WebGLGamepad).
 
 ### Web
 
@@ -61,7 +62,7 @@ The Input System supports the *Standard Gamepad* mapping as specified in the [W3
 Support varies between browsers, Devices, and operating systems, and further differs for different browser versions, so it's not feasible to provide an up-to-date compatibility list. At the time of this publication (September 2019), Safari, Chrome, Edge, and Firefox all support the gamepad API, but only Chrome reliably maps common gamepads (Xbox and PlayStation controllers) to the W3C Standard Gamepad mapping, which allows the Input System to correctly identify and map controls.
 
 > [!NOTE]
-> Web currently doesn't support rumble.
+> Unity's Web platform currently doesn't support rumble.
 
 ## Other gamepads, joysticks, and racing wheels
 
