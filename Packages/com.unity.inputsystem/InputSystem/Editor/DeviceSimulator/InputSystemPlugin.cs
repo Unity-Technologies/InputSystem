@@ -71,13 +71,20 @@ namespace UnityEngine.InputSystem.Editor
         private void OnUpdate()
         {
             if (!EditorApplication.isPlaying)
+            {
+                if (m_ConflictingDevicesDisabled)
+                {
+                    SetConflictingDevicesDisabled(false);
+                    m_LastFocusedWindow = null;
+                }
                 return;
+            }
 
             var focusedWindow = EditorWindow.focusedWindow;
             if (focusedWindow == m_LastFocusedWindow)
                 return;
-            
             m_LastFocusedWindow = focusedWindow;
+
             var simulatorFocused =
                 m_RootElement != null
                 && focusedWindow != null
