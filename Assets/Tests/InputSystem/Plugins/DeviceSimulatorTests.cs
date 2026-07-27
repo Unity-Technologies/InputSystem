@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.EnhancedTouch;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.TestTools;
 using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
@@ -68,9 +69,7 @@ public class DeviceSimulatorTests : InputTestFixture
     [Category("Device Simulator")]
     public void ConflictingDevicesAreNotDisabledOnCreate()
     {
-        runtime.ReportNewInputDevice<Mouse>();
-        InputSystem.Update();
-        var mouse = Mouse.current;
+        var mouse = AddNativeMouse();
         Assert.That(mouse.native, Is.True);
 
         var plugin = new InputSystemPlugin();
@@ -89,12 +88,10 @@ public class DeviceSimulatorTests : InputTestFixture
         var plugin = new InputSystemPlugin();
         plugin.OnCreate();
 
-        // Simulate the Simulator window being the focused window (bypasses the panel-based OnUpdate).
-        SetPrivateField(plugin, "m_ConflictingDevicesDisabled", true);
+        // Simulate the Simulator window being focused (bypasses the panel-based OnUpdate).
+        plugin.SetConflictingDevicesDisabled(true);
 
-        runtime.ReportNewInputDevice<Mouse>();
-        InputSystem.Update();
-        var mouse = Mouse.current;
+        var mouse = AddNativeMouse();
 
         Assert.That(mouse.native, Is.True);
         Assert.That(mouse.enabled, Is.False);   // disabled via the OnDeviceChange gate
@@ -105,26 +102,45 @@ public class DeviceSimulatorTests : InputTestFixture
 
     [Test]
     [Category("Device Simulator")]
+    public void ConflictingDevicesReenabledWhenSimulatorLosesFocus()
+    {
+        var mouse = AddNativeMouse();
+
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+
+        plugin.SetConflictingDevicesDisabled(true);    // Simulator gained focus
+        Assert.That(mouse.enabled, Is.False);
+
+        plugin.SetConflictingDevicesDisabled(false);   // Simulator lost focus
+        Assert.That(mouse.enabled, Is.True);
+
+        plugin.OnDestroy();
+    }
+
+    [Test]
+    [Category("Device Simulator")]
     public void ConflictingDeviceAddedWhileSimulatorNotFocused_StaysEnabled()
     {
         var plugin = new InputSystemPlugin();
         plugin.OnCreate();
         // m_ConflictingDevicesDisabled defaults to false (Simulator not focused).
 
-        runtime.ReportNewInputDevice<Mouse>();
-        InputSystem.Update();
-        var mouse = Mouse.current;
+        var mouse = AddNativeMouse();
 
         Assert.That(mouse.enabled, Is.True);
 
         plugin.OnDestroy();
     }
 
-    private static void SetPrivateField(object target, string name, object value)
+    // Reports a native Mouse through the test runtime (device.native == true, which the plugin's
+    // disable logic requires) and returns the resolved device rather than relying on Mouse.current.
+    private Mouse AddNativeMouse()
     {
-        var field = target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
-        Assert.NotNull(field, $"Field '{name}' not found on {target.GetType().Name}");
-        field.SetValue(target, value);
+        var deviceId = runtime.ReportNewInputDevice(
+            new InputDeviceDescription { deviceClass = "Mouse", interfaceName = "Test" });
+        InputSystem.Update();
+        return (Mouse)InputSystem.GetDeviceById(deviceId);
     }
 
     private TouchEvent CreateTouch(int touchId, Vector2 position, UnityEditor.DeviceSimulation.TouchPhase phase)
