@@ -78,23 +78,44 @@ namespace UnityEngine.InputSystem.Editor
                 return;
             
             m_LastFocusedWindow = focusedWindow;
-            var simulatorFocused = 
-                m_RootElement != null 
-                && focusedWindow != null 
+            var simulatorFocused =
+                m_RootElement != null
+                && focusedWindow != null
                 && focusedWindow.rootVisualElement.panel == m_RootElement.panel;
 
-            if (simulatorFocused && !m_ConflictingDevicesDisabled)
+            SetConflictingDevicesDisabled(simulatorFocused);
+        }
+
+        // Exposed internally so tests can drive the focus transition without a live SimulatorWindow.
+        // OnUpdate itself can't run in a unit test: it needs play mode and a real panel to compare against.
+        internal void SetConflictingDevicesDisabled(bool disabled)
+        {
+            if (disabled == m_ConflictingDevicesDisabled)
+                return;
+
+            if (disabled)
             {
                 // UGUI elements like a button don't get pressed when multiple pointers for example mouse and touchscreen are sending data at the same time
                 foreach (var device in InputSystem.devices)
                     DisableConflictingDevice(device);
-                m_ConflictingDevicesDisabled = true;
             }
-            else if (!simulatorFocused && m_ConflictingDevicesDisabled)
+            else
             {
-                ReenableConflictingDevices();
-                m_ConflictingDevicesDisabled = false;
+                foreach (var device in m_DisabledDevices)
+                {
+                    // Note that m_Quitting is used here to mitigate the problem reported in issue tracker:
+                    // https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-10774.
+                    // Enabling a device will call into IOCTL of backend which may be destroyed prior
+                    // to this callback on Unity version. This is not a fix for the actual problem
+                    // of shutdown order but a package fix to mitigate this problem.
+                    // The core problem with the destruction order was still there in Unity 6.5.
+                    if (device.added && !m_Quitting)
+                        InputSystem.EnableDevice(device);
+                }
+                m_DisabledDevices.Clear();
             }
+
+            m_ConflictingDevicesDisabled = disabled;
         }
 
         private void DisableConflictingDevice(InputDevice device)
@@ -104,22 +125,6 @@ namespace UnityEngine.InputSystem.Editor
                 InputSystem.DisableDevice(device);
                 m_DisabledDevices.Add(device);
             }
-        }
-
-        private void ReenableConflictingDevices()
-        {
-            foreach (var device in m_DisabledDevices)
-            {
-                // Note that m_Quitting is used here to mitigate the problem reported in issue tracker:
-                // https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-10774.
-                // Enabling a device will call into IOCTL of backend which may be destroyed prior
-                // to this callback on Unity version. This is not a fix for the actual problem
-                // of shutdown order but a package fix to mitigate this problem.
-                // The core problem with the destruction order was still there in Unity 6.5.
-                if (device.added && !m_Quitting)
-                    InputSystem.EnableDevice(device);
-            }
-            m_DisabledDevices.Clear();
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
@@ -166,7 +171,7 @@ namespace UnityEngine.InputSystem.Editor
                 if (SimulatorTouchscreen != null)
                     InputSystem.RemoveDevice(SimulatorTouchscreen);
 
-                ReenableConflictingDevices();
+                SetConflictingDevicesDisabled(false);
                 m_RootElement = null;
             }
         }
