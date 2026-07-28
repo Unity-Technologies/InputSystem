@@ -18,6 +18,6 @@ On other platforms, Unity uses derived classes to represent Xbox controllers:
 
 XInput controllers on macOS require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth. macOS natively supports these controllers as [HID devices](hid-specification-introduction.md) without any additional drivers when connected with Bluetooth.
 
-Unity supports Xbox controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) or [`Joystick`](xref:UnityEngine.InputSystem.Joystick) devices, and doesn't support rumble or any other Xbox-specific functionality.
+Unity supports Xbox controllers on Web in some browser and OS configurations, but treats them as basic [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) or [`Joystick`](xref:UnityEngine.InputSystem.Joystick) devices, and doesn't support rumble or any other Xbox-specific functionality.
 
 For more information on platform support for Xbox gamepads, refer to [Supported devices reference](supported-devices-reference.md).

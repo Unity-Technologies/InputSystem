@@ -6,7 +6,7 @@ uid: input-system-supported-sensors-ref
 
 Each sensor device implements a single control which represents the data read by the sensor. The following sensors are available:
 
-| Sensor | Description | Android | iOS | WebGL |
+| Sensor | Description | Android | iOS | Web |
 | :---- | :---- | :---- | :---- | :---- |
 | [`Accelerometer`](xref:UnityEngine.InputSystem.Accelerometer) | Measures the acceleration of a device. | Yes | Yes | Yes |
 | [`Gyroscope`](xref:UnityEngine.InputSystem.Gyroscope) | Measures the angular velocity of a device. | Yes | Yes | Yes |
