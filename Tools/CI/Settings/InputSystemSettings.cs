@@ -29,11 +29,27 @@ public class InputSystemSettings : AnnotatedSettingsBase
     // NOTE: Starting with PMDT 3.0.0, DocFX is no longer bundled with the package and must be
     // installed separately as a dotnet tool. See:
     // https://docs.unity3d.com/Packages/com.unity.package-manager-doctools@3.14/manual/installation.html
+    //
+    // dotnet SDK availability: confirmed present on package-ci images (Windows, Mac, and Ubuntu) via
+    // #devs-pets / #devs-ci Slack history - it's a centrally maintained, version-pinned component of
+    // the image family (e.g. package-ci/ubuntu-22.04:v4 SDK version pinning discussion, and a Windows
+    // package-ci job observed spawning a .NET 8 subprocess), not something jobs install themselves.
+    // So no extra .NET SDK install step is needed here.
+    //
+    // NuGet source reachability - `dotnet tool install` needs to resolve the docfx package from a feed.
+    // There's no nuget.config at the repo root (only Tools/CI/nuget.config, which NuGet won't discover
+    // from here since it only walks upward from the working directory), so we pin --add-source
+    // explicitly below to Unity's internal Artifactory NuGet proxy - the same source Tools/CI/nuget.config
+    // uses, and one we know CI agents can already reach since the recipe-regeneration job restores
+    // packages through it. Default sources (nuget.org) are likely unreachable from these locked-down
+    // build agents. Still worth confirming on the first real CI run that Artifactory actually mirrors
+    // the "docfx" package specifically (vs. only packages requested before).
     public static readonly string DocfxVersion = "2.70.0";
+    public static readonly string NugetInternalSource = "https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget";
 
     // Installs the DocFX version PMDT 3.x expects, as a dotnet tool, per-platform.
-    public static readonly string DocfxInstallCmdWindows = $"dotnet tool install docfx --version {DocfxVersion} --tool-path %USERPROFILE%/.pmdt";
-    public static readonly string DocfxInstallCmdUnix = $"dotnet tool install docfx --version {DocfxVersion} --tool-path $HOME/.pmdt";
+    public static readonly string DocfxInstallCmdWindows = $"dotnet tool install docfx --version {DocfxVersion} --tool-path %USERPROFILE%/.pmdt --add-source {NugetInternalSource}";
+    public static readonly string DocfxInstallCmdUnix = $"dotnet tool install docfx --version {DocfxVersion} --tool-path $HOME/.pmdt --add-source {NugetInternalSource}";
 
     public static readonly string DoctoolsInstallCmd = "git clone --branch \"3.14.8-preview\" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools";
 
