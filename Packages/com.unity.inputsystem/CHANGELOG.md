@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased] - yyyy-mm-dd
 
+
+
+## [1.20.0] - 2026-07-21
+
 ### Fixed
 
 - Fixed input devices being lost (no keyboard, mouse, gamepad, etc.) after upgrading the package while the Editor is open (related to the recent fast enter playmode change). [ISX-2569]
@@ -38,6 +42,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed the Device Simulator plugin keeping the real mouse and pen disabled while working in other Editor windows. Conflicting native `Mouse`/`Pen` devices are now only disabled while the Simulator window is focused and re-enabled as soon as focus moves elsewhere [UUM-145509](https://jira.unity3d.com/browse/UUM-145509).
 
 ### Changed
+
 - Action-level `IsPressed`, `WasPressedThisFrame`, and `WasReleasedThisFrame` for bindings to `Vector2Control` / `StickControl` no longer consult a per-control `pressPoint` on the vector (that field was removed). Use a `Press` interaction to set a custom threshold, or rely on `defaultButtonPressPoint`.
 - Removed 32-bit compilation check for HID on Windows players, which had no impact anymore. (ISX-2543)
 - Migrated sample scenes to use Universal Render Pipeline (URP) with Built-in Render Pipeline fallback shaders. The URP package is now required to run the samples. (ISX-2343)
@@ -48,7 +53,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - Added `InputSettings.shortcutKeysUseActionPriority` to opt into action-priority based shortcut overlap resolution. `shortcutKeysConsumeInput` enables complexity-based resolution when action priority is off (matching previous develop behavior). When both are enabled, action priority takes precedence. Serialized `InputAction` priority values are always kept; the Priority field in the Input Actions editor is shown only when action priority resolution is enabled. Both settings default to off.
-
 - Support for entering the play mode with domain reload turned off (i.e. Faster Enter Playmode feature) [ISX-2411]
 
 ## [1.19.0] - 2026-02-24
