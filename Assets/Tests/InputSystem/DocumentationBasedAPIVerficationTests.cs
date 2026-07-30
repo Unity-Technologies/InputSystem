@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using HtmlAgilityPack;
 using Mono.Cecil;
@@ -45,10 +44,50 @@ class DocumentationBasedAPIVerficationTests
         var inputSystemPackageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/com.unity.inputsystem");
 
         // PMDT 3.x generates API docs from .csproj files rather than compiled assemblies.
-        // On CI (fresh clone, no IDE installed), SyncAll() is a no-op and no .sln/.csproj files
-        // exist yet. Force solution generation via reflection since SyncVS is internal in Unity 6.x.
-        var syncVsType = Type.GetType("UnityEditor.SyncVS, UnityEditor");
-        syncVsType?.GetMethod("SyncSolution", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
+        // When no IDE is configured (CI fresh clones), no .csproj files exist and PMDT
+        // generates no API documentation. Generate minimal .csproj files for InputSystem
+        // package assemblies using the CompilationPipeline API.
+        var projectName = new DirectoryInfo(Directory.GetCurrentDirectory()).Name;
+        if (!File.Exists($"{projectName}.sln"))
+        {
+            var assemblies = UnityEditor.Compilation.CompilationPipeline.GetAssemblies(
+                UnityEditor.Compilation.AssembliesType.Editor);
+            foreach (var asm in assemblies)
+            {
+                if (asm.sourceFiles.Length == 0 ||
+                    !asm.sourceFiles.Any(f => f.Replace("\\", "/").Contains("Packages/com.unity.inputsystem/")))
+                    continue;
+                var csprojPath = $"{asm.name}.csproj";
+                if (File.Exists(csprojPath))
+                    continue;
+                var csprojContent = new StringBuilder();
+                csprojContent.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+                csprojContent.AppendLine("<Project ToolsVersion=\"4.0\" DefaultTargets=\"Build\" " +
+                    "xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
+                csprojContent.AppendLine("  <PropertyGroup Condition=\" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' \">");
+                csprojContent.AppendLine($"    <AssemblyName>{asm.name}</AssemblyName>");
+                csprojContent.AppendLine("    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>");
+                csprojContent.AppendLine("    <OutputType>Library</OutputType>");
+                csprojContent.AppendLine($"    <DefineConstants>{string.Join(";", asm.defines)}</DefineConstants>");
+                csprojContent.AppendLine("    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>");
+                csprojContent.AppendLine("    <LangVersion>9.0</LangVersion>");
+                csprojContent.AppendLine("    <NoConfig>true</NoConfig>");
+                csprojContent.AppendLine("    <NoStdLib>true</NoStdLib>");
+                csprojContent.AppendLine("  </PropertyGroup>");
+                csprojContent.AppendLine("  <ItemGroup>");
+                foreach (var src in asm.sourceFiles)
+                    csprojContent.AppendLine($"    <Compile Include=\"{src}\" />");
+                csprojContent.AppendLine("  </ItemGroup>");
+                csprojContent.AppendLine("  <ItemGroup>");
+                foreach (var refPath in asm.compiledAssemblyReferences)
+                    csprojContent.AppendLine(
+                        $"    <Reference Include=\"{Path.GetFileNameWithoutExtension(refPath)}\">" +
+                        $"<HintPath>{refPath}</HintPath></Reference>");
+                csprojContent.AppendLine("  </ItemGroup>");
+                csprojContent.AppendLine("</Project>");
+                File.WriteAllText(csprojPath, csprojContent.ToString(), Encoding.UTF8);
+            }
+        }
 
 #if HAVE_DOCTOOLS_INSTALLED
         (_documentationBuilderLogs, _docsFolder) = Documentation.Instance.GenerateEx(inputSystemPackageInfo, InputSystem.version.ToString(), docsPath);
