@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
 
+- Fixed the Action Maps list in the Input Actions editor losing keyboard focus after deleting a map, so that Delete, Duplicate, and arrow-key navigation kept working on the auto-selected replacement map without requiring an extra click [UUM-147152](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-147152)
 
 ## [1.20.0] - 2026-07-21
 
