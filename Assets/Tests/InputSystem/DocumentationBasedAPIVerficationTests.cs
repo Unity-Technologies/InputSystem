@@ -48,9 +48,7 @@ class DocumentationBasedAPIVerficationTests
         // On CI (fresh clone, no IDE installed), SyncAll() is a no-op and no .sln/.csproj files
         // exist yet. Force solution generation via reflection since SyncVS is internal in Unity 6.x.
         var syncVsType = Type.GetType("UnityEditor.SyncVS, UnityEditor");
-        syncVsType?.GetMethod("SyncSolution",
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
-            ?.Invoke(null, null);
+        syncVsType?.GetMethod("SyncSolution", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)?.Invoke(null, null);
 
 #if HAVE_DOCTOOLS_INSTALLED
         (_documentationBuilderLogs, _docsFolder) = Documentation.Instance.GenerateEx(inputSystemPackageInfo, InputSystem.version.ToString(), docsPath);
