@@ -1,5 +1,6 @@
 {
     "hideGlobalNamespace": true,
+    "DefineConstants": "UNITY_INPUT_SYSTEM_PROJECT_WIDE_ACTIONS",
     "xref": [
         "com.unity.xr.openxr",
         "com.unity.xr.interaction.toolkit"

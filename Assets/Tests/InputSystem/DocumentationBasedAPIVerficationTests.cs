@@ -44,6 +44,14 @@ class DocumentationBasedAPIVerficationTests
         Directory.CreateDirectory(docsPath);
         var inputSystemPackageInfo = UnityEditor.PackageManager.PackageInfo.FindForAssetPath("Packages/com.unity.inputsystem");
 
+        // PMDT 3.x generates API docs from .csproj files rather than compiled assemblies.
+        // On CI (fresh clone, no IDE installed), SyncAll() is a no-op and no .sln/.csproj files
+        // exist yet. Force solution generation via reflection since SyncVS is internal in Unity 6.x.
+        var syncVsType = Type.GetType("UnityEditor.SyncVS, UnityEditor");
+        syncVsType?.GetMethod("SyncSolution",
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+            ?.Invoke(null, null);
+
 #if HAVE_DOCTOOLS_INSTALLED
         (_documentationBuilderLogs, _docsFolder) = Documentation.Instance.GenerateEx(inputSystemPackageInfo, InputSystem.version.ToString(), docsPath);
         _docsFolder = Path.Combine(docsPath, _docsFolder);
@@ -392,6 +400,14 @@ class DocumentationBasedAPIVerficationTests
                 continue;
 
             if (link.StartsWith("https://"))
+                continue;
+
+            // javascript: URIs are used by the PMDT 3.x HTML theme for collapsible navigation elements
+            if (link.StartsWith("javascript:"))
+                continue;
+
+            // xref: URIs are unresolved DocFX cross-references to types outside this package
+            if (link.StartsWith("xref:"))
                 continue;
 
             if (link == "#top")
