@@ -26,7 +26,7 @@ public class MyExampleInteraction : IInputInteraction
         switch (context.phase)
         {
             case InputActionPhase.Waiting:
-                if (context.Control.ReadValue<float>() == 1)
+                if (context.control.ReadValue<float>() == 1)
                 {
                     context.Started();
                     context.SetTimeout(duration);
@@ -34,7 +34,7 @@ public class MyExampleInteraction : IInputInteraction
                 break;
 
             case InputActionPhase.Started:
-                if (context.Control.ReadValue<float>() == -1)
+                if (context.control.ReadValue<float>() == -1)
                     context.Performed();
                 break;
         }

@@ -241,7 +241,7 @@ namespace UnityEngine.InputSystem
                 // The solution here would be to make update calls explicitly specify the update type and no longer use this property.
                 if (!m_RunPlayerUpdatesInEditMode && (!gameIsPlaying || !gameHasFocus))
                     return InputUpdateType.Editor;
-                #endif
+#endif
 
                 return m_UpdateMask.GetUpdateTypeForPlayer();
             }
@@ -260,27 +260,6 @@ namespace UnityEngine.InputSystem
 #if UNITY_INPUT_SYSTEM_PLATFORM_SCROLL_DELTA
                 InputRuntime.s_Instance.normalizeScrollWheelDelta =
                     m_ScrollDeltaBehavior == InputSettings.ScrollDeltaBehavior.UniformAcrossAllPlatforms;
-#endif
-            }
-        }
-
-        public FocusFlags focusState
-        {
-            get
-            {
-#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-                return m_Runtime.focusState;
-#else
-                return m_FocusState;
-#endif
-            }
-            set
-            {
-#if UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-                if (m_Runtime != null)
-                    m_Runtime.focusState = value;
-#else
-                m_FocusState = value;
 #endif
             }
         }
@@ -557,7 +536,17 @@ namespace UnityEngine.InputSystem
 #else
             true;
 #endif
-        private bool applicationHasFocus => (focusState & FocusFlags.ApplicationFocus) != FocusFlags.None;
+        private bool applicationHasFocus
+        {
+            get
+            {
+#if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
+                if (m_IsHandlingFocusChange)
+                    return m_ApplicationHadFocus;
+#endif
+                return m_Runtime != null ? m_Runtime.isPlayerFocused : Application.isFocused;
+            }
+        }
 
         private bool gameHasFocus =>
 #if UNITY_EDITOR
@@ -2027,11 +2016,6 @@ namespace UnityEngine.InputSystem
             // we don't know which one the user is going to use. The user
             // can manually turn off one of them to optimize operation.
             m_UpdateMask = InputUpdateType.Dynamic | InputUpdateType.Fixed;
-            #if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-            m_FocusState = Application.isFocused
-                ? m_FocusState | FocusFlags.ApplicationFocus
-                : m_FocusState & ~FocusFlags.ApplicationFocus;
-            #endif
             #if UNITY_EDITOR
             m_EditorIsActive = true;
             m_UpdateMask |= InputUpdateType.Editor;
@@ -2277,9 +2261,7 @@ namespace UnityEngine.InputSystem
             #endif
             m_Runtime.pollingFrequency = pollingFrequency;
 
-            focusState = m_Runtime.isPlayerFocused
-                ? focusState | FocusFlags.ApplicationFocus
-                : focusState & ~FocusFlags.ApplicationFocus;
+            m_Runtime.InitializeFocusState();
 
             // We only hook NativeInputSystem.onBeforeUpdate if necessary.
             if (m_BeforeUpdateListeners.length > 0 || m_HaveDevicesWithStateCallbackReceivers)
@@ -2451,9 +2433,14 @@ namespace UnityEngine.InputSystem
         private bool m_NativeBeforeUpdateHooked;
         private bool m_HaveDevicesWithStateCallbackReceivers;
         #if !UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS
-        private FocusFlags m_FocusState = FocusFlags.ApplicationFocus;
         private bool m_DiscardOutOfFocusEvents;
         private double m_FocusRegainedTime;
+        // These two bools are used for overriding applicationHasFocus which affects gameHasFocus
+        // and thus defaultUpdateType. See comments in defaultUpdateType. While processing the
+        // focus change in the OnFocusChanged method, these are used to temporarily override
+        // those properties.
+        private bool m_IsHandlingFocusChange;
+        private bool m_ApplicationHadFocus;
         #endif
         private InputEventStream m_InputEventStream;
 
@@ -3938,8 +3925,7 @@ namespace UnityEngine.InputSystem
         private unsafe void ProcessFocusEvent(InputEvent* currentEventReadPtr)
         {
             var focusEventPtr = (InputFocusEvent*)currentEventReadPtr;
-            FocusFlags state = focusEventPtr->focusFlags;
-            focusState = state;
+            m_Runtime.focusState = focusEventPtr->focusFlags;
 
 #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();

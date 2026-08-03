@@ -12,7 +12,7 @@ The Input System implements PlayStation gamepads as different derived types of t
 * [`DualShock4GampadiOS`](xref:UnityEngine.InputSystem.iOS.DualShock4GampadiOS): A DualShock 4 controller connected to an iOS Device with Bluetooth. Requires iOS 13 or higher.
 * [`SetLightBarColor(Color)`](xref:UnityEngine.InputSystem.DualShock.DualShockGamepad.SetLightBarColor(UnityEngine.Color)): Used to set the color of the light bar on the controller.
 
-Unity supports PlayStation controllers on WebGL in some browser and OS configurations, but treats them as basic [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) or [`Joystick`](xref:UnityEngine.InputSystem.Joystick) devices, and doesn't support rumble or any other DualShock-specific functionality.
+Unity supports PlayStation controllers on Web in some browser and OS configurations, but treats them as basic [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) or [`Joystick`](xref:UnityEngine.InputSystem.Joystick) devices, and doesn't support rumble or any other DualShock-specific functionality.
 
 Unity doesn't support connecting a PlayStation controller to a desktop machine using the DualShock 4 USB wireless adaptor. Use USB or Bluetooth to connect it. For more information on platform support for PlayStation gamepads, refer to [Supported devices reference](supported-devices-reference.md).
 

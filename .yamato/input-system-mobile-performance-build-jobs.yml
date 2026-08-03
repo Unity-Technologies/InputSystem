@@ -184,96 +184,6 @@ inputsystem-mobileperformancebuildjobs_-_6000_3_-_tvos:
       paths:
       - build/players/**/*
 
-# InputSystem-MobilePerformanceBuildJobs - 6000.4 - Android - il2cpp
-inputsystem-mobileperformancebuildjobs_-_6000_4_-_android_-_il2cpp:
-  name: InputSystem-MobilePerformanceBuildJobs - 6000.4 - Android - il2cpp
-  agent:
-    image: package-ci/win10:default
-    type: Unity::VM
-    flavor: b1.xlarge
-  commands:
-  - command: unity-downloader-cli -u 6000.4/staging -c Editor -c Android --fast --wait
-  - command: |-
-      set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
-  after:
-  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
-  artifacts:
-    logs:
-      paths:
-      - build/logs/**/*
-    players:
-      paths:
-      - build/players/**/*
-
-# InputSystem-MobilePerformanceBuildJobs - 6000.4 - Android - mono
-inputsystem-mobileperformancebuildjobs_-_6000_4_-_android_-_mono:
-  name: InputSystem-MobilePerformanceBuildJobs - 6000.4 - Android - mono
-  agent:
-    image: package-ci/win10:default
-    type: Unity::VM
-    flavor: b1.xlarge
-  commands:
-  - command: unity-downloader-cli -u 6000.4/staging -c Editor -c Android --fast --wait
-  - command: |-
-      set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
-      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
-  after:
-  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
-  artifacts:
-    logs:
-      paths:
-      - build/logs/**/*
-    players:
-      paths:
-      - build/players/**/*
-
-# InputSystem-MobilePerformanceBuildJobs - 6000.4 - IOS
-inputsystem-mobileperformancebuildjobs_-_6000_4_-_ios:
-  name: InputSystem-MobilePerformanceBuildJobs - 6000.4 - IOS
-  agent:
-    image: package-ci/macos-13:default
-    type: Unity::VM::osx
-    flavor: m1.mac
-  commands:
-  - command: unity-downloader-cli -u 6000.4/staging -c Editor -c iOS --fast --wait
-  - command: |-
-      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
-      chmod u+x utr
-  - command: ./utr --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
-  after:
-  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
-  artifacts:
-    logs:
-      paths:
-      - build/logs/**/*
-    players:
-      paths:
-      - build/players/**/*
-  variables:
-    UNITY_HANDLEUIINTERRUPTIONS: 1
-    UTR_VERSION: 1.42.0
-
-# InputSystem-MobilePerformanceBuildJobs - 6000.4 - TvOS
-inputsystem-mobileperformancebuildjobs_-_6000_4_-_tvos:
-  name: InputSystem-MobilePerformanceBuildJobs - 6000.4 - TvOS
-  agent:
-    image: package-ci/macos-13:default
-    type: Unity::VM::osx
-    flavor: m1.mac
-  commands:
-  - command: unity-downloader-cli -u 6000.4/staging -c Editor -c AppleTV --fast --wait
-  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=tvOS
-  after:
-  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
-  artifacts:
-    logs:
-      paths:
-      - build/logs/**/*
-    players:
-      paths:
-      - build/players/**/*
-
 # InputSystem-MobilePerformanceBuildJobs - 6000.5 - Android - il2cpp
 inputsystem-mobileperformancebuildjobs_-_6000_5_-_android_-_il2cpp:
   name: InputSystem-MobilePerformanceBuildJobs - 6000.5 - Android - il2cpp
@@ -372,7 +282,7 @@ inputsystem-mobileperformancebuildjobs_-_6000_6_-_android_-_il2cpp:
     type: Unity::VM
     flavor: b1.xlarge
   commands:
-  - command: unity-downloader-cli -u trunk -c Editor -c Android --fast --wait
+  - command: unity-downloader-cli -u 6000.6/staging -c Editor -c Android --fast --wait
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
       UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
@@ -394,7 +304,7 @@ inputsystem-mobileperformancebuildjobs_-_6000_6_-_android_-_mono:
     type: Unity::VM
     flavor: b1.xlarge
   commands:
-  - command: unity-downloader-cli -u trunk -c Editor -c Android --fast --wait
+  - command: unity-downloader-cli -u 6000.6/staging -c Editor -c Android --fast --wait
   - command: |-
       set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
       UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
@@ -411,6 +321,96 @@ inputsystem-mobileperformancebuildjobs_-_6000_6_-_android_-_mono:
 # InputSystem-MobilePerformanceBuildJobs - 6000.6 - IOS
 inputsystem-mobileperformancebuildjobs_-_6000_6_-_ios:
   name: InputSystem-MobilePerformanceBuildJobs - 6000.6 - IOS
+  agent:
+    image: package-ci/macos-13:default
+    type: Unity::VM::osx
+    flavor: m1.mac
+  commands:
+  - command: unity-downloader-cli -u 6000.6/staging -c Editor -c iOS --fast --wait
+  - command: |-
+      curl -s https://artifactory-slo.bf.unity3d.com/artifactory/unity-tools-local/utr-standalone/utr --output utr
+      chmod u+x utr
+  - command: ./utr --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=ios
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
+  artifacts:
+    logs:
+      paths:
+      - build/logs/**/*
+    players:
+      paths:
+      - build/players/**/*
+  variables:
+    UNITY_HANDLEUIINTERRUPTIONS: 1
+    UTR_VERSION: 1.42.0
+
+# InputSystem-MobilePerformanceBuildJobs - 6000.6 - TvOS
+inputsystem-mobileperformancebuildjobs_-_6000_6_-_tvos:
+  name: InputSystem-MobilePerformanceBuildJobs - 6000.6 - TvOS
+  agent:
+    image: package-ci/macos-13:default
+    type: Unity::VM::osx
+    flavor: m1.mac
+  commands:
+  - command: unity-downloader-cli -u 6000.6/staging -c Editor -c AppleTV --fast --wait
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=tvOS
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
+  artifacts:
+    logs:
+      paths:
+      - build/logs/**/*
+    players:
+      paths:
+      - build/players/**/*
+
+# InputSystem-MobilePerformanceBuildJobs - 6000.7 - Android - il2cpp
+inputsystem-mobileperformancebuildjobs_-_6000_7_-_android_-_il2cpp:
+  name: InputSystem-MobilePerformanceBuildJobs - 6000.7 - Android - il2cpp
+  agent:
+    image: package-ci/win10:default
+    type: Unity::VM
+    flavor: b1.xlarge
+  commands:
+  - command: unity-downloader-cli -u trunk -c Editor -c Android --fast --wait
+  - command: |-
+      set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android --scripting-backend=il2cpp
+  after:
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
+  artifacts:
+    logs:
+      paths:
+      - build/logs/**/*
+    players:
+      paths:
+      - build/players/**/*
+
+# InputSystem-MobilePerformanceBuildJobs - 6000.7 - Android - mono
+inputsystem-mobileperformancebuildjobs_-_6000_7_-_android_-_mono:
+  name: InputSystem-MobilePerformanceBuildJobs - 6000.7 - Android - mono
+  agent:
+    image: package-ci/win10:default
+    type: Unity::VM
+    flavor: b1.xlarge
+  commands:
+  - command: unity-downloader-cli -u trunk -c Editor -c Android --fast --wait
+  - command: |-
+      set ANDROID_DEVICE_CONNECTION=%BOKKEN_DEVICE_IP%
+      UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --category=Performance --clean-library --reruncount=1 --clean-library-on-rerun --build-only --report-performance-data --performance-project-id=InputSystem --player-save-path=build/players --timeout=3600 --artifacts-path=build/logs --platform=android
+  after:
+  - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
+  artifacts:
+    logs:
+      paths:
+      - build/logs/**/*
+    players:
+      paths:
+      - build/players/**/*
+
+# InputSystem-MobilePerformanceBuildJobs - 6000.7 - IOS
+inputsystem-mobileperformancebuildjobs_-_6000_7_-_ios:
+  name: InputSystem-MobilePerformanceBuildJobs - 6000.7 - IOS
   agent:
     image: package-ci/macos-13:default
     type: Unity::VM::osx
@@ -434,9 +434,9 @@ inputsystem-mobileperformancebuildjobs_-_6000_6_-_ios:
     UNITY_HANDLEUIINTERRUPTIONS: 1
     UTR_VERSION: 1.42.0
 
-# InputSystem-MobilePerformanceBuildJobs - 6000.6 - TvOS
-inputsystem-mobileperformancebuildjobs_-_6000_6_-_tvos:
-  name: InputSystem-MobilePerformanceBuildJobs - 6000.6 - TvOS
+# InputSystem-MobilePerformanceBuildJobs - 6000.7 - TvOS
+inputsystem-mobileperformancebuildjobs_-_6000_7_-_tvos:
+  name: InputSystem-MobilePerformanceBuildJobs - 6000.7 - TvOS
   agent:
     image: package-ci/macos-13:default
     type: Unity::VM::osx
