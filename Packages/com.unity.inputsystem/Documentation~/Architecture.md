@@ -16,79 +16,147 @@ The Input System interfaces with the built-in back end in one of two ways:
 
 ## Low-level diagram
 
-The diagram of the low-level Input System reads top-to-bottom as a layered pipeline: 
+The low-level Input System reads top-to-bottom as a layered pipeline. It's shown here as three linked diagrams, one per stage:
 
 1. The built-in platform back ends feed the InputManager.
-1. The InputManager uses layouts to build devices. 
+1. The InputManager uses layouts to build devices.
 1. The device's state is stored in Input State Memory.
+
+Each diagram ends with a signpost (the flag-shaped node) that shows where it hands off to the next.
+
+### 1. Platform back ends feed the InputManager
+
+The built-in back ends push discovery and state events into queues that drive the InputManager. The InputManager, in turn, sends commands back to the back ends.
 
 ```mermaid
 flowchart TB
-    %% ---------- Input State Memory (top) ----------
-    StateMemory["Input State Memory
-    (unmanaged raw memory — each device and control
-    gets a chunk that stores its current state)"]
-
-    %% ---------- Devices (built from layouts) ----------
-    Gamepad_D["Gamepad (device)"] --> leftStick
-    leftStick --> x & y & up & down & left & right
-    Keyboard_D["Keyboard (device)"] --> a & b & c & d
-    leftStick -->|"state written to"| StateMemory
-    Keyboard_D -->|"state written to"| StateMemory
-
-    %% ---------- Layouts (describe how to build controls and devices) ----------
-    Mouse -->|derives| Pointer
-    Pen -->|derives| Pointer
-    Touchscreen -->|derives| Pointer
-    DS_PS4["DualShock (PS4)"] --> DualShock
-    DS_HID["DualShock (HID)"] --> DualShock
-    DualShock --> Gamepad_L["Gamepad (layout)"]
-    Keyboard_L["Keyboard (layout)"]
-    Stick(("Stick"))
-    Axis(("Axis"))
-    Button(("Button"))
-    Dpad(("Dpad"))
-
-    %% Layout building blocks build the individual device controls
-    Gamepad_L -.->|builds| Gamepad_D
-    Stick -.->|builds| leftStick
-    Axis -.->|builds| x & y
-    Button -.->|builds| up & down & left & right
-    Keyboard_L -.->|builds| Keyboard_D
-
-    %% ---------- InputManager (middle) ----------
-    InputManager(["<b>InputManager</b>
-    Matches layouts to devices (InputDeviceMatcher),
-    builds devices (InputDeviceBuilder), creates & updates them"])
-    Gamepad_L -->|"searched by"| InputManager
-    InputManager -->|"creates & updates"| Gamepad_D
-    InputManager -->|"creates & updates"| Keyboard_D
-
-    %% ---------- Input Runtime (bottom) ----------
+    %% Diagram 1 of 3: Platform back ends feed the InputManager
+    backends["Platform back ends
+    Windows · macOS · Linux · UWP · iOS · Android
+    · Switch · Xbox · PS4 · Web · XR"]
     DDQ["Device Discovery Queue"]
     EQ["Event Queue"]
     BEQ["Background Event Queue
     (async; flushes into the foreground queue)"]
-    back ends["Platform back ends
-    Windows · macOS · Linux · UWP · iOS · Android
-    · Switch · Xbox · PS4 · WebGL · XR"]
-    back ends --> DDQ & EQ & BEQ
+    InputManager(["<b>InputManager</b>
+    Matches layouts to devices (InputDeviceMatcher),
+    builds devices (InputDeviceBuilder), creates & updates them"])
+
+    backends --> DDQ & EQ & BEQ
     DDQ -->|"Device Discovered"| InputManager
     EQ -->|"Update (flushes event buffers)"| InputManager
     InputManager -->|"Queue Event"| EQ
-    InputManager -->|"Device Command (IOCTL-style)"| back ends
+    InputManager -->|"Device Command (IOCTL-style)"| backends
 
-    %% ---------- Grouping by color ----------
+    InputManager -.-> out1>"→ Diagram 2: the InputManager builds devices from layouts"]
+
+    classDef runtime fill:#fdf3d0,stroke:#b9962e,color:#000;
+    classDef manager fill:#ffffff,stroke:#e0403f,stroke-width:2px,color:#000;
+    classDef signpost fill:#f2f2f2,stroke:#999,color:#000;
+    class backends,DDQ,EQ,BEQ runtime;
+    class InputManager manager;
+    class out1 signpost;
+```
+
+### 2. The InputManager uses layouts to build devices
+
+Layouts derive from one another and, together with reusable control building blocks, describe how to build devices and their controls. The InputManager searches these layouts and creates the concrete devices.
+
+```mermaid
+flowchart TB
+    %% Diagram 2 of 3: The InputManager uses layouts to build devices
+    %% Portrait layout: bands stack top-to-bottom; each band is compact left-to-right.
+
+    in2>"→ from Diagram 1: the InputManager"] -.-> InputManager
+    InputManager(["<b>InputManager</b>
+    Matches layouts to devices,
+    then creates & updates them"])
+
+    %% ---- Band A: layouts derive from one another ----
+    subgraph LAYOUTS["Layouts describe how to build devices"]
+        direction LR
+        Mouse -->|derives| Pointer
+        Pen -->|derives| Pointer
+        Touchscreen -->|derives| Pointer
+        DS_PS4["DualShock (PS4)"] --> DualShock
+        DS_HID["DualShock (HID)"] --> DualShock
+        DualShock --> Gamepad_L["Gamepad (layout)"]
+        Keyboard_L["Keyboard (layout)"]
+    end
+
+    %% ---- Band B: reusable building blocks build the controls ----
+    subgraph BLOCKS["Reusable building blocks build the controls"]
+        direction LR
+        Stick(("Stick")) -.-> leftStick["leftStick"]
+        Axis(("Axis")) -.-> axes["x · y"]
+        Button(("Button")) -.-> buttons["up · down
+        left · right"]
+        Dpad(("Dpad"))
+    end
+
+    %% ---- Band C: the devices the InputManager creates ----
+    subgraph DEVICES["Devices"]
+        direction LR
+        Gamepad_D["Gamepad (device)"]
+        Keyboard_D["Keyboard (device)"]
+    end
+
+    %% ---- Cross-band flow (top-to-bottom) ----
+    InputManager -->|"searches"| LAYOUTS
+    LAYOUTS -.->|"build"| DEVICES
+    BLOCKS -.->|"build the controls in"| DEVICES
+    InputManager -->|"creates & updates"| DEVICES
+
+    DEVICES -.-> out2>"→ Diagram 3: device state is stored in memory"]
+
     classDef layout fill:#e6f0ff,stroke:#4a78c0,color:#000;
     classDef device fill:#e8f7e8,stroke:#4aa04a,color:#000;
-    classDef runtime fill:#fdf3d0,stroke:#b9962e,color:#000;
-    classDef mem fill:#f0e6f6,stroke:#8a5ea0,color:#000;
     classDef manager fill:#ffffff,stroke:#e0403f,stroke-width:2px,color:#000;
+    classDef signpost fill:#f2f2f2,stroke:#999,color:#000;
     class Mouse,Pen,Touchscreen,Pointer,DS_PS4,DS_HID,DualShock,Gamepad_L,Keyboard_L,Stick,Axis,Button,Dpad layout;
-    class Gamepad_D,leftStick,x,y,up,down,left,right,Keyboard_D,a,b,c,d device;
-    class DDQ,EQ,BEQ,back ends runtime;
-    class StateMemory mem;
+    class Gamepad_D,Keyboard_D,leftStick,axes,buttons device;
     class InputManager manager;
+    class in2,out2 signpost;
+```
+
+### 3. The device's state is stored in Input State Memory
+
+Each built device exposes a tree of controls. When state events arrive, the device and control state is written into Input State Memory, where each device and control has its own chunk of unmanaged memory.
+
+```mermaid
+flowchart LR
+    %% Diagram 3 of 3: The device's state is stored in Input State Memory
+    %% Left-to-right flow so each device's controls stack vertically at a readable size.
+    in3>"→ from Diagram 2: the built devices"] -.-> GP & KB
+
+    subgraph GP["Gamepad (device)"]
+        direction LR
+        leftStick["leftStick"] --> x & y & up & down & left & right
+    end
+
+    subgraph KB["Keyboard (device)"]
+        direction LR
+        a
+        b
+        c
+        d
+    end
+
+    StateMemory["Input State Memory
+    (unmanaged raw memory — each device and
+    control gets a chunk that stores its current state)"]
+
+    GP -->|"state written to"| StateMemory
+    KB -->|"state written to"| StateMemory
+
+    classDef device fill:#e8f7e8,stroke:#4aa04a,color:#000;
+    classDef mem fill:#f0e6f6,stroke:#8a5ea0,color:#000;
+    classDef signpost fill:#f2f2f2,stroke:#999,color:#000;
+    class leftStick,x,y,up,down,left,right,a,b,c,d device;
+    class StateMemory mem;
+    class in3 signpost;
+    style GP fill:#f4faf4,stroke:#4aa04a,color:#000;
+    style KB fill:#f4faf4,stroke:#4aa04a,color:#000;
 ```
 
 The low-level Input System code processes and interprets the memory from the event stream that the built-in back end provides, and dispatches individual events.
@@ -114,7 +182,7 @@ The first diagram is for the runtime data flow:
 1. The resulting action fires a callback on the `PlayerInput` component in the scene.
 
 ```mermaid
-flowchart LR
+flowchart TB
     %% ---------- Devices ----------
     Keyboard["Keyboard"] --> space["space"]
 
@@ -125,7 +193,7 @@ flowchart LR
 
     %% ---------- Runtime ----------
     StateEvent["StateEvent (KeyboardState)
-    built-inInputSystem.onUpdate"] -->|feeds| OnUpdate["InputManager.OnUpdate()"]
+    built-in InputSystem.onUpdate"] -->|feeds| OnUpdate["InputManager.OnUpdate()"]
 
     %% ---------- Action state ----------
     AState(["InputActionState
@@ -161,7 +229,7 @@ The second diagram is for the asset structure:
 1. At runtime these populate the arrays inside the `InputActionState` shown in the previous diagram (`m_State`).
 
 ```mermaid
-flowchart LR
+flowchart TB
     %% ---------- Asset hierarchy ----------
     Asset["InputActionAsset: MyGame.inputactions
     devices = [ Keyboard ]
