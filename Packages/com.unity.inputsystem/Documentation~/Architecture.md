@@ -3,23 +3,24 @@ uid: input-system-architecture
 ---
 # Architecture
 
-The Input System has a layered architecture that consists of a low-level layer and a high-level layer.
+The Input System architecture has two layers: low-level high-level. It interacts with the built-in back end in the Unity Editor.
 
-# Native backend
+## The built-in back end
 
-The foundation of the Input System is the native backend code. This is platform-specific code that collects information about available devices and input data from devices. This code isn't part of the Input System package; it's included with Unity itself. It has implementations for each runtime platform supported by Unity. This is why some platform-specific input bugs can only be fixed by an update to Unity, rather than a new version of the Input System package.
+The foundation of the Input System is the built-in back end code. This is platform-specific code that collects information about available devices and input data from devices. This code isn't part of the Input System package; it's included with Unity itself. It has implementations for each runtime platform supported by Unity. This is why some platform-specific input bugs can only be fixed by an update to Unity, rather than a new version of the Input System package.
 
-The Input System interfaces with the native backend using [events](input-events.md) that the native backend sends. These events notify the system of the creation and removal of [Input Devices](devices.md) and any updates to the Device states. For efficiency and to avoid creating garbage, the native backend reports these events as a simple buffer of raw, unmanaged memory containing a stream of events.
+The Input System interfaces with the built-in back end in one of two ways:
 
-The Input System can also send data back to the native backend in the form of [commands](device-commands.md) sent to devices, which are also buffers of memory that the native backend interprets. These commands can have different meanings for different device types and platforms.
+- With [events](input-events.md) that the built-in back end sends. These events notify the system of the creation and removal of [Input devices](devices.md) and any updates to the device states. For efficiency, the built-in back end reports these events as a simple buffer of raw, unmanaged memory containing a stream of events.
+- Sending data back to the built-in back end in the form of [commands](device-commands.md) sent to devices, which are also buffers of memory that the built-in back end interprets. These commands can have different meanings for different device types and platforms.
 
-# Input System (low-level)
+## Low-level diagram
 
 The diagram of the low-level Input System reads top-to-bottom as a layered pipeline: 
 
-1. The native platform backends at the bottom feed the InputManager.
+1. The built-in platform back ends feed the InputManager.
 1. The InputManager uses layouts to build devices. 
-1. The device's state is stored in Input State Memory at the top.
+1. The device's state is stored in Input State Memory.
 
 ```mermaid
 flowchart TB
@@ -68,14 +69,14 @@ flowchart TB
     EQ["Event Queue"]
     BEQ["Background Event Queue
     (async; flushes into the foreground queue)"]
-    Backends["Platform Backends
+    back ends["Platform back ends
     Windows · macOS · Linux · UWP · iOS · Android
     · Switch · Xbox · PS4 · WebGL · XR"]
-    Backends --> DDQ & EQ & BEQ
+    back ends --> DDQ & EQ & BEQ
     DDQ -->|"Device Discovered"| InputManager
     EQ -->|"Update (flushes event buffers)"| InputManager
     InputManager -->|"Queue Event"| EQ
-    InputManager -->|"Device Command (IOCTL-style)"| Backends
+    InputManager -->|"Device Command (IOCTL-style)"| back ends
 
     %% ---------- Grouping by color ----------
     classDef layout fill:#e6f0ff,stroke:#4a78c0,color:#000;
@@ -85,7 +86,7 @@ flowchart TB
     classDef manager fill:#ffffff,stroke:#e0403f,stroke-width:2px,color:#000;
     class Mouse,Pen,Touchscreen,Pointer,DS_PS4,DS_HID,DualShock,Gamepad_L,Keyboard_L,Stick,Axis,Button,Dpad layout;
     class Gamepad_D,leftStick,x,y,up,down,left,right,Keyboard_D,a,b,c,d device;
-    class DDQ,EQ,BEQ,Backends runtime;
+    class DDQ,EQ,BEQ,back ends runtime;
     class StateMemory mem;
     class InputManager manager;
 ```
@@ -96,7 +97,7 @@ When the Input System discovers a device in the event stream, it creates a devic
 
 The low-level system code also contains structs that describe the data layout of commonly known devices.
 
-# Input System (high-level)
+## High-level diagram
 
 The high-level system is easiest to understand in two parts:
 
@@ -124,7 +125,7 @@ flowchart LR
 
     %% ---------- Runtime ----------
     StateEvent["StateEvent (KeyboardState)
-    NativeInputSystem.onUpdate"] -->|feeds| OnUpdate["InputManager.OnUpdate()"]
+    built-inInputSystem.onUpdate"] -->|feeds| OnUpdate["InputManager.OnUpdate()"]
 
     %% ---------- Action state ----------
     AState(["InputActionState
@@ -192,8 +193,11 @@ flowchart LR
     class trig,bind,ctrl,State astate;
 ```
 
-The high-level Input System code interprets the data in a Device's state buffers by using [layouts](layouts.md), which describe the data layout of a Device and its Controls in memory. The Input System creates layouts from either the pre-defined structs of commonly known Devices supplied by the low level system, or dynamically at runtime, as in the case of [generic HIDs](hid-specification.md).
+The high-level Input System code uses [layouts](layouts.md) to interpret the data in a device's state buffers. The layouts describe a device's data and its controls in memory. The Input System creates layouts from either the predefined structs of commonly known devices supplied by the low-level system, or dynamically at runtime, for example, for [generic HIDs](hid-specification.md).
 
-Based on the information in the layouts, the Input System then creates [Control](controls.md) representations for each of the Device's controls, which let you read the state of each individual Control in a Device.
+Based on the information in the layouts, the Input System creates representations for each of the device's [controls](controls.md). You can now read the state of each of the device's controls individually.
 
-As part of the high-level system, you can also build another abstraction layer to map Input Controls to your application mechanics. Use [Actions](actions.md) to [bind](bindings.md) one or more Controls to an input in your application. The Input System then monitors these Controls for state changes, and notifies your game logic using [callbacks](set-callbacks-on-actions.md). You can also specify more complex behaviors for your Actions using [Processors](processors.md) (which perform processing on the input data before sending it to you) and [Interactions](Interactions.md) (which let you specify patterns of input on a Control to listen to, such as multi-taps).
+As part of the high-level system, you can also:
+
+- Build another abstraction layer to map controls to your application mechanics: Use [actions](actions.md) to [bind](bindings.md) one or more controls to an input in your application. The Input System then monitors these controls for state changes, and notifies your game logic using [callbacks](set-callbacks-on-actions.md). 
+- Specify more complex behaviors for your actions using [processors](processors.md), which perform processing on the input data before sending it to you, and [interactions](Interactions.md), which let you specify patterns of input on a control to listen to, such as multi-taps.
