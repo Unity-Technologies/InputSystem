@@ -66,7 +66,7 @@ class DocumentationBasedAPIVerficationTests
                 csprojContent.AppendLine("<Project ToolsVersion=\"4.0\" DefaultTargets=\"Build\" " +
                     "xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
                 // DefineConstants must be in an unconditional PropertyGroup so DocFX reads them
-                // regardless of whether MSBuild's Platform property is set. 
+                // regardless of whether MSBuild's Platform property is set.
                 csprojContent.AppendLine("  <PropertyGroup>");
                 csprojContent.AppendLine($"    <DefineConstants>{string.Join(";", asm.defines)}</DefineConstants>");
                 csprojContent.AppendLine("  </PropertyGroup>");
