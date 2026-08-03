@@ -65,11 +65,15 @@ class DocumentationBasedAPIVerficationTests
                 csprojContent.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
                 csprojContent.AppendLine("<Project ToolsVersion=\"4.0\" DefaultTargets=\"Build\" " +
                     "xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
+                // DefineConstants must be in an unconditional PropertyGroup so DocFX reads them
+                // regardless of whether MSBuild's Platform property is set. 
+                csprojContent.AppendLine("  <PropertyGroup>");
+                csprojContent.AppendLine($"    <DefineConstants>{string.Join(";", asm.defines)}</DefineConstants>");
+                csprojContent.AppendLine("  </PropertyGroup>");
                 csprojContent.AppendLine("  <PropertyGroup Condition=\" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' \">");
                 csprojContent.AppendLine($"    <AssemblyName>{asm.name}</AssemblyName>");
                 csprojContent.AppendLine("    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>");
                 csprojContent.AppendLine("    <OutputType>Library</OutputType>");
-                csprojContent.AppendLine($"    <DefineConstants>{string.Join(";", asm.defines)}</DefineConstants>");
                 csprojContent.AppendLine("    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>");
                 csprojContent.AppendLine("    <LangVersion>9.0</LangVersion>");
                 csprojContent.AppendLine("    <NoConfig>true</NoConfig>");
