@@ -90,5 +90,3 @@ namepace MyNamespace
     {
         //...
 ```
-
-The namespace of the generated layout will correspond to the

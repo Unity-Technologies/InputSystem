@@ -75,6 +75,12 @@ namespace UnityEngine.InputSystem.LowLevel
         long DeviceCommand(int deviceId, InputDeviceCommand* commandPtr);
 
         /// <summary>
+        /// Initialize the focus state based on current conditions of the application.
+        /// </summary>
+        /// <seealso cref="focusState"/>
+        void InitializeFocusState();
+
+        /// <summary>
         /// Set delegate to be called on input updates.
         /// </summary>
         InputUpdateDelegate onUpdate { get; set; }
@@ -113,11 +119,15 @@ namespace UnityEngine.InputSystem.LowLevel
         /// <summary>
         /// Set delegate to call when the application changes focus.
         /// </summary>
-        /// <seealso cref="Application.onFocusChanged"/>
+        /// <seealso cref="Application.focusChanged"/>
         Action<bool> onPlayerFocusChanged { get; set; }
 #endif
 
+        /// <summary>
+        /// Flags indicating various focus states for the application and editor.
+        /// </summary>
         FocusFlags focusState { get; set; }
+
         /// <summary>
         /// Is true when the player or game view has focus.
         /// </summary>

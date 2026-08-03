@@ -118,6 +118,13 @@ public class InputSystemSettings : AnnotatedSettingsBase
                 {
                     "com.unity.charactercontroller"
                 }
+            },
+            {
+                new Editor("6000.7",  ""),
+                new HashSet<string>()
+                {
+                    "com.unity.charactercontroller"
+                }
             }
         };
 
@@ -126,11 +133,6 @@ public class InputSystemSettings : AnnotatedSettingsBase
         Wrench.PvpProfilesToCheck = new HashSet<string>() { "supported" };
 
         OverridePackagePlatform(InputSystemPackage);
-
-        foreach ((string name, WrenchPackage package) in Wrench.Packages)
-        {
-            Wrench.Packages[name].EditorPlatforms[SystemType.MacOS] = new Platform(new Agent("package-ci/macos-13-arm64:v4", FlavorType.MacDefault, ResourceType.VmOsx, "M1"), SystemType.MacOS);
-        }
 
         ReadMobileConfig();
 
