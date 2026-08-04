@@ -33,11 +33,10 @@ public class InputSystemSettings : AnnotatedSettingsBase
     // There's no nuget.config at the repo root (only Tools/CI/nuget.config, which NuGet won't discover
     // from here since it only walks upward from the working directory).
     public static readonly string DocfxVersion = "2.70.0";
-    public static readonly string NugetInternalSource = "https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget";
 
     // Installs the DocFX version PMDT 3.x expects, as a dotnet tool, per-platform.
-    public static readonly string DocfxInstallCmdWindows = $"dotnet tool install docfx --version {DocfxVersion} --tool-path %USERPROFILE%/.pmdt --add-source {NugetInternalSource}";
-    public static readonly string DocfxInstallCmdUnix = $"dotnet tool install docfx --version {DocfxVersion} --tool-path $HOME/.pmdt --add-source {NugetInternalSource}";
+    public static readonly string DocfxInstallCmdWindows = $"dotnet tool install docfx --version {DocfxVersion} --tool-path %USERPROFILE%/.pmdt";
+    public static readonly string DocfxInstallCmdUnix = $"dotnet tool install docfx --version {DocfxVersion} --tool-path $HOME/.pmdt";
 
     public static readonly string DoctoolsInstallCmd = "git clone --branch \"3.14.8-preview\" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools";
 
