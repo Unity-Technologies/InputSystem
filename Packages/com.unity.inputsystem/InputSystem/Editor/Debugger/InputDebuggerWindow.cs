@@ -84,6 +84,7 @@ namespace UnityEngine.InputSystem.Editor
         private void OnEnable()
         {
             titleContent = new GUIContent("Input Debugger");
+            minSize = new Vector2(270, 300);
         }
 
         private void OnDeviceChange(InputDevice device, InputDeviceChange change)
