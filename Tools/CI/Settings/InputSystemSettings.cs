@@ -21,29 +21,17 @@ public class InputSystemSettings : AnnotatedSettingsBase
     public static readonly string BranchName = "develop";
     public static readonly string InputSystemPackageName = "com.unity.inputsystem";
 
-    // PMDT (Package Manager Doctools) 2.3 has been unmaintained for ~3 years and its bundled DocFX
-    // started failing intermittently on CI (the "manual" folder silently not being generated) due to
-    // unrelated tooling backports on the Yamato images. Per USF Docs Engineering guidance, the recommended fix is
-    // to upgrade to a current PMDT release rather than continue pinning the old version.
-    //
     // NOTE: Starting with PMDT 3.0.0, DocFX is no longer bundled with the package and must be
     // installed separately as a dotnet tool. See:
     // https://docs.unity3d.com/Packages/com.unity.package-manager-doctools@3.14/manual/installation.html
     //
     // dotnet SDK availability: confirmed present on package-ci images (Windows, Mac, and Ubuntu) via
     // #devs-pets / #devs-ci Slack history - it's a centrally maintained, version-pinned component of
-    // the image family (e.g. package-ci/ubuntu-22.04:v4 SDK version pinning discussion, and a Windows
-    // package-ci job observed spawning a .NET 8 subprocess), not something jobs install themselves.
-    // So no extra .NET SDK install step is needed here.
+    // the image family. So extra .NET SDK install step is needed here.
     //
     // NuGet source reachability - `dotnet tool install` needs to resolve the docfx package from a feed.
     // There's no nuget.config at the repo root (only Tools/CI/nuget.config, which NuGet won't discover
-    // from here since it only walks upward from the working directory), so we pin --add-source
-    // explicitly below to Unity's internal Artifactory NuGet proxy - the same source Tools/CI/nuget.config
-    // uses, and one we know CI agents can already reach since the recipe-regeneration job restores
-    // packages through it. Default sources (nuget.org) are likely unreachable from these locked-down
-    // build agents. Still worth confirming on the first real CI run that Artifactory actually mirrors
-    // the "docfx" package specifically (vs. only packages requested before).
+    // from here since it only walks upward from the working directory).
     public static readonly string DocfxVersion = "2.70.0";
     public static readonly string NugetInternalSource = "https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget";
 
