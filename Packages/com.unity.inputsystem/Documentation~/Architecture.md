@@ -12,7 +12,7 @@ This page describes the built-in back end that supplies the input, then the low-
 
 ## The built-in back end
 
-The foundation of the Input System is the built-in back-end code. This platform-specific code collects information about the available devices, and the input data from those devices. The code isn't part of the Input System package; it ships with Unity itself, and it has an implementation for each runtime platform that Unity supports. As a result, Unity must release an update to fix some platform-specific input issues. A new version of the Input System package can't fix them.
+The foundation of the Input System is the built-in back-end code. This platform-specific code collects information about the available devices, and the input data from those devices. The code isn't part of the Input System package; it ships with Unity itself, and it has an implementation for each runtime platform that Unity supports. 
 
 The Input System interfaces with the built-in back end in two ways:
 
@@ -29,19 +29,17 @@ The low-level system code also contains structs that describe the data layout of
 
 The low-level system works as a layered pipeline. The following three diagrams each show one stage of that pipeline:
 
-1. The platform back ends queue events for the `InputManager` class.
+1. The platforms' back ends queue events for the `InputManager` class.
 2. The `InputManager` class uses layouts to build devices.
 3. Each device writes its state into input state memory.
 
-Each diagram ends with a node that names the diagram it hands off to.
-
-**Note**: `InputManager` is the Input System class that owns devices and drives updates. Don't confuse it with the **Input Manager** window, which configures Unity's legacy input settings.
+**Note**: `InputManager` is the Input System class that owns devices and drives updates. It's not the **Input Manager** window, which configures Unity's legacy input settings.
 
 The following table describes the color coding that all the diagrams on this page use:
 
 | **Color** | **Represents** |
 | :--- | :--- |
-| Yellow | Platform back ends, and the runtime plumbing that carries events between them and the Input System. |
+| Yellow | Platform back ends, and the runtime pipes that carry events between them and the Input System. |
 | White with a red border | The `InputManager` class. |
 | Blue | Layouts, and the reusable control building blocks that layouts are made from. |
 | Green | Devices and their controls. |
@@ -50,7 +48,7 @@ The following table describes the color coding that all the diagrams on this pag
 | Orange | Action assets, action maps, actions, and bindings. |
 | Gray | Scene GameObjects, and the nodes that link one diagram to the next. |
 
-### 1. Platform back ends queue events
+### Diagram 1: Platform back ends queue events
 
 The built-in back ends push discovery and state events into three queues that drive the `InputManager` class. The `InputManager` class sends commands back to the back ends.
 
@@ -84,11 +82,15 @@ flowchart TB
     class out1 signpost;
 ```
 
-### 2. Layouts build devices
+### Diagram 2: Layouts build devices
 
 Layouts derive from one another. Together with reusable control building blocks, they describe how to build devices and their controls. The `InputManager` class searches these layouts and creates the concrete devices.
 
-For example, the `Mouse`, `Pen`, and `Touchscreen` layouts all derive from the `Pointer` layout, and the PS4 and HID variants of `DualShock` both derive from a shared `DualShock` layout that in turn derives from `Gamepad`. Building blocks such as `Stick`, `Axis`, `Button`, and `Dpad` supply the individual controls that each device exposes.
+For example:
+
+- The `Mouse`, `Pen`, and `Touchscreen` layouts all derive from the `Pointer` layout.
+- The PS4 and HID variants of `DualShock` both derive from a shared `DualShock` layout, which itself derives from `Gamepad`. 
+- Building blocks such as `Stick`, `Axis`, `Button`, and `Dpad` supply the individual controls that each device exposes.
 
 ```mermaid
 flowchart TB
@@ -147,11 +149,16 @@ flowchart TB
     class in2,out2 signpost;
 ```
 
-### 3. Devices store their state in memory
+### Diagram 3: Devices store their state in memory
 
 Each built device exposes a tree of controls. When state events arrive, the Input System writes the device and control state into input state memory, where each device and control has its own chunk of unmanaged memory.
 
-For example, a `Gamepad` device exposes a `leftStick` control that resolves to the `x`, `y`, `up`, `down`, `left`, and `right` controls, and a `Keyboard` device exposes one control per key. Both devices write into the same input state memory.
+For example:
+
+- A `Gamepad` device exposes a `leftStick` control that resolves to the `x`, `y`, `up`, `down`, `left`, and `right` controls.
+- A `Keyboard` device exposes one control for each key. 
+
+Both devices write into the same input state memory.
 
 ```mermaid
 flowchart TB
@@ -200,9 +207,17 @@ The high-level system also lets you do the following:
 - Map controls to your application's mechanics. Use [actions](Actions.md) to [bind](bindings.md) one or more controls to an input in your application. The Input System monitors these controls for state changes, and notifies your application logic through [callbacks](set-callbacks-on-actions.md).
 - Specify more complex behaviors for your actions. [Processors](Processors.md) transform the input data before the Input System sends it to you, and [interactions](Interactions.md) let you specify patterns of input on a control to listen for, such as multi-taps.
 
-Two diagrams describe the high-level system: one for how input flows through the system at runtime, and one for how you author actions as assets. Both diagrams show a single player. Each additional player has its own `InputActionState` object. Each additional player also has a cloned `InputActionAsset` object with its own device list and binding mask.
+Two diagrams describe the high-level system:
 
-### Runtime input flow
+1. How input flows through the system at runtime.
+1. How you author actions as assets. 
+
+Both diagrams show a single player. Each additional player has:
+
+- Its own `InputActionState` object.
+- A cloned `InputActionAsset` object with its own device list and binding mask.
+
+### Diagram 4: Runtime input flow
 
 At runtime, input reaches your scene through four steps:
 
@@ -211,7 +226,13 @@ At runtime, input reaches your scene through four steps:
 3. The Input System updates the `InputActionState` object.
 4. The resulting action fires a callback on the `PlayerInput` component in the scene.
 
-The following diagram traces those steps for a single control, the space key on a keyboard. The keyboard's space control stores its value as one bit of `KeyboardState`. A `StateEvent` object carrying that state feeds `InputManager.OnUpdate()`, which calls `NotifyControlStateChanged()` on the `InputActionState` object. That object holds three arrays: `triggerStates[]`, `bindingStates[]`, and `controls[]`. State change monitors update the binding and control arrays, and the trigger array notifies `InputUser`, which calls `OnActionTriggered()` on the `PlayerInput` component.
+The following diagram traces those steps for a single control, the space key on a keyboard:
+
+1. The keyboard's space control stores its value as one bit of `KeyboardState`. 
+1. A `StateEvent` object carrying that state feeds `InputManager.OnUpdate()`, which calls `NotifyControlStateChanged()` on the `InputActionState` object. 
+    That object holds three arrays: `triggerStates[]`, `bindingStates[]`, and `controls[]`. 
+1. State change monitors update the binding and control arrays.
+1. The trigger array notifies `InputUser`, which calls `OnActionTriggered()` on the `PlayerInput` component.
 
 ```mermaid
 flowchart TB
@@ -255,11 +276,18 @@ flowchart TB
     class IU,PI go;
 ```
 
-### Action asset structure
+### Diagram 5: Action asset structure
 
 An `InputActionAsset` object contains action maps, actions, and bindings. At runtime, these populate the arrays inside the `InputActionState` object that the previous diagram shows.
 
-The following diagram shows an asset named `MyGame.inputactions` that lists `Keyboard` as its device and masks bindings to the `KeyboardMouse` group. The asset contains a `gameplay` action map, which contains a `jump` action and two bindings for that action: `<Keyboard>/space` in the `KeyboardMouse` group, and `<Gamepad>/buttonSouth` in the `Gamepad` group. The action populates `triggerStates[]`, the bindings populate `bindingStates[]`, and the binding states resolve to `controls[]`.
+The following diagram shows an asset named `MyGame.inputactions` that lists `Keyboard` as its device and masks bindings to the `KeyboardMouse` group:
+
+1. The asset contains a `gameplay` action map, which contains a `jump` action and two bindings for that action: 
+    - `<Keyboard>/space` in the `KeyboardMouse` group.
+    - `<Gamepad>/buttonSouth` in the `Gamepad` group. 
+1. The action populates `triggerStates[]`.
+1. The bindings populate `bindingStates[]`.
+1. The binding states resolve to `controls[]`.
 
 ```mermaid
 flowchart TB
