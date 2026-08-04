@@ -182,10 +182,11 @@ namespace UnityEngine.InputSystem.Editor
             else
             {
                 // Hide the expand arrow and disable picking on the header toggle; the move/delete buttons are
-                // separate child elements and remain clickable.
+                // separate child elements and remain clickable. Use visibility (not display) so the arrow keeps
+                // its layout box and the header label stays aligned with the foldout items' labels.
                 var checkmark = header.Q(className: "unity-toggle__checkmark");
                 if (checkmark != null)
-                    checkmark.style.display = DisplayStyle.None;
+                    checkmark.style.visibility = Visibility.Hidden;
                 header.pickingMode = PickingMode.Ignore;
             }
         }
