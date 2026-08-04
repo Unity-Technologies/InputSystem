@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - Fixed parameter-less processors and interactions (e.g. "Invert") in the Input Actions editor's Action Properties view showing an expandable foldout whose arrow animated on click but revealed no content; such items are now rendered as a plain, non-collapsible header [UUM-144325](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-144325)
+- Fixed the Input Actions editor toolbar buttons being clipped when the Action Properties panel grew tall enough to show a scrollbar
 - Fixed the Input Debugger window (Window > Analysis > Input Debugger) being resizable arbitrarily small until its toolbar and device/action/layout tree view were no longer usably visible; it now enforces a minimum window size [UUM-137119](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137119)
 - Fixed the Action Maps list in the Input Actions editor losing keyboard focus after deleting a map, so that Delete, Duplicate, and arrow-key navigation kept working on the auto-selected replacement map without requiring an extra click [UUM-147152](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-147152)
 
