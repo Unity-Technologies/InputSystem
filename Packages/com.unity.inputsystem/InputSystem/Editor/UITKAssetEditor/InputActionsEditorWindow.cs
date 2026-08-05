@@ -208,7 +208,14 @@ namespace UnityEngine.InputSystem.Editor
                     var asset = AssetDatabase.LoadAssetAtPath<InputActionAsset>(assetPath);
 
                     if (asset == null)
-                        throw new Exception($"Failed to load asset \"{assetPath}\". The file may have been deleted or moved.");
+                    {
+                        // The persisted asset GUID can resolve to no asset when the window layout is
+                        // restored in a different project. Close quietly instead of throwing, but defer
+                        // the close: calling Close() synchronously here tears down the window's panel
+                        // while CreateGUI runs inside the UITK repaint, which then null-refs on repaint.
+                        EditorApplication.delayCall += Close;
+                        return;
+                    }
 
                     m_AssetJson = InputActionsEditorWindowUtils.ToJsonWithoutName(asset);
 
