@@ -28,10 +28,6 @@ public class InputSystemSettings : AnnotatedSettingsBase
     // dotnet SDK availability: confirmed present on package-ci images (Windows, Mac, and Ubuntu) via
     // #devs-pets / #devs-ci Slack history - it's a centrally maintained, version-pinned component of
     // the image family. So extra .NET SDK install step is needed here.
-    //
-    // NuGet source reachability - `dotnet tool install` needs to resolve the docfx package from a feed.
-    // There's no nuget.config at the repo root (only Tools/CI/nuget.config, which NuGet won't discover
-    // from here since it only walks upward from the working directory).
     public static readonly string DocfxVersion = "2.70.0";
 
     // Installs the DocFX version PMDT 3.x expects, as a dotnet tool, per-platform.
