@@ -13,7 +13,7 @@ inputsystem-standalonefunctionaltests_-_6000_0_-_macos13:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -32,7 +32,7 @@ inputsystem-standalonefunctionaltests_-_6000_0_-_ubuntu2204:
     type: Unity::VM::GPU
     flavor: b1.large
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -51,7 +51,7 @@ inputsystem-standalonefunctionaltests_-_6000_0_-_win10:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneWindows64 --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -70,7 +70,7 @@ inputsystem-standalonefunctionaltests_-_6000_3_-_macos13:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -89,7 +89,7 @@ inputsystem-standalonefunctionaltests_-_6000_3_-_ubuntu2204:
     type: Unity::VM::GPU
     flavor: b1.large
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -108,7 +108,7 @@ inputsystem-standalonefunctionaltests_-_6000_3_-_win10:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneWindows64 --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -127,7 +127,7 @@ inputsystem-standalonefunctionaltests_-_6000_5_-_macos13:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.5/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -146,7 +146,7 @@ inputsystem-standalonefunctionaltests_-_6000_5_-_ubuntu2204:
     type: Unity::VM::GPU
     flavor: b1.large
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.5/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -165,7 +165,7 @@ inputsystem-standalonefunctionaltests_-_6000_5_-_win10:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.5/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneWindows64 --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -185,7 +185,7 @@ inputsystem-standalonefunctionaltests_-_6000_6_-_macos13arm:
     flavor: m1.mac
     model: M1
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.6/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -204,7 +204,7 @@ inputsystem-standalonefunctionaltests_-_6000_6_-_ubuntu2204:
     type: Unity::VM::GPU
     flavor: b1.large
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.6/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -223,7 +223,7 @@ inputsystem-standalonefunctionaltests_-_6000_6_-_win10:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.6/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneWindows64 --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -242,7 +242,7 @@ inputsystem-standalonefunctionaltests_-_6000_7_-_macos13:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -262,7 +262,7 @@ inputsystem-standalonefunctionaltests_-_6000_7_-_macos13arm:
     flavor: m1.mac
     model: M1
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneOSX --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -281,7 +281,7 @@ inputsystem-standalonefunctionaltests_-_6000_7_-_ubuntu2204:
     type: Unity::VM::GPU
     flavor: b1.large
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneLinux64 --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
@@ -300,7 +300,7 @@ inputsystem-standalonefunctionaltests_-_6000_7_-_win10:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt --add-source https://artifactory.prd.it.unity3d.com/artifactory/api/nuget/v3/nuget
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt
   - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=playmode --platform=StandaloneWindows64 --category=!Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --timeout=3600 --artifacts-path=artifacts
