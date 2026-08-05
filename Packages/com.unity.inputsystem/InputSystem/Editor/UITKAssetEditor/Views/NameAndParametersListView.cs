@@ -171,9 +171,6 @@ namespace UnityEngine.InputSystem.Editor
             var foldout = container.Q<Foldout>("Foldout");
             foldout.text = parameterListView.name;
 
-            // A parameter-less processor/interaction (e.g. "Invert") has no content to reveal, so render it as
-            // a plain, non-collapsible header rather than an empty foldout whose arrow animates but shows nothing.
-            // Mirrors the IMGUI editor, which uses the same hasUIToShow predicate to choose foldout-vs-label.
             if (parameterListView.hasUIToShow)
             {
                 parameterListView.OnDrawVisualElements(foldout);
@@ -181,9 +178,6 @@ namespace UnityEngine.InputSystem.Editor
             }
             else
             {
-                // Hide the expand arrow and disable picking on the header toggle; the move/delete buttons are
-                // separate child elements and remain clickable. Use visibility (not display) so the arrow keeps
-                // its layout box and the header label stays aligned with the foldout items' labels.
                 var checkmark = header.Q(className: "unity-toggle__checkmark");
                 if (checkmark != null)
                     checkmark.style.visibility = Visibility.Hidden;
