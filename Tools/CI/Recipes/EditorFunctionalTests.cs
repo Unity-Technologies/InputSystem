@@ -60,8 +60,8 @@ public class EditorFunctionalTests: BaseRecipe
         SystemType.Windows =>
             @".Editor\Unity.exe -projectPath . -batchmode -nographics -quit -executeMethod Packages.Rider.Editor.RiderScriptEditor.SyncSolution -logFile -",
         SystemType.MacOS =>
-            ".Editor/Unity.app/Contents/MacOS/Unity -projectPath . -batchmode -nographics -quit -executeMethod Packages.Rider.Editor.RiderScriptEditor.SyncSolution -logFile /dev/stdout",
+            ".Editor/Unity.app/Contents/MacOS/Unity -projectPath . -batchmode -nographics -quit -executeMethod Packages.Rider.Editor.RiderScriptEditor.SyncSolution -logFile -",
         _ =>
-            ".Editor/Unity -projectPath . -batchmode -nographics -quit -executeMethod Packages.Rider.Editor.RiderScriptEditor.SyncSolution -logFile /dev/stdout"
+            ".Editor/Unity -projectPath . -batchmode -nographics -quit -executeMethod Packages.Rider.Editor.RiderScriptEditor.SyncSolution -logFile -"
     };
 }
