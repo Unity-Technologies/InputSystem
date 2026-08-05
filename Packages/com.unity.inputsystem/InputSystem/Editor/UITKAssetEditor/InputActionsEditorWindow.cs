@@ -209,10 +209,8 @@ namespace UnityEngine.InputSystem.Editor
 
                     if (asset == null)
                     {
-                        // The persisted asset GUID can resolve to no asset when the window layout is
-                        // restored in a different project. Close quietly instead of throwing, but defer
-                        // the close: calling Close() synchronously here tears down the window's panel
-                        // while CreateGUI runs inside the UITK repaint, which then null-refs on repaint.
+                        // Can happen when an asset is deleted while the window is open.
+                        // Delay the closure to avoid null-refs on repaint.
                         EditorApplication.delayCall += Close;
                         return;
                     }
