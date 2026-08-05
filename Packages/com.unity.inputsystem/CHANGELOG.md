@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Fixed
 
+- Fixed an `OverflowException` when creating a control scheme (or other named item) whose all-numeric name exceeds `Int32.MaxValue`, which previously discarded the entered name and fell back to the default [UUM-145766](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-145766)
+- Fixed the Input Actions editor window logging a "Failed to load asset" exception on editor startup when its saved window layout was restored in a project where the referenced asset GUID did not resolve; the window now closes quietly instead [UUM-144318](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-144318)
+- Empty foldouts are no longer shown for processors and interactions that have no settings (e.g. "Invert") [UUM-144325](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-144325)
+- Fixed the Input Actions editor toolbar buttons being clipped when the Action Properties panel grew tall enough to show a scrollbar
+- Fixed the Control Schemes dropdown in the Input Actions editor continuing to display a deleted scheme's name after the last control scheme was removed, instead of resetting to "No Control Schemes" until the asset was saved or the editor reopened. [UUM-141563](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141563)
+- Fixed the Input Debugger window (Window > Analysis > Input Debugger) being resizable arbitrarily small until its toolbar and device/action/layout tree view were no longer usably visible; it now enforces a minimum window size [UUM-137119](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137119)
+- Fixed the Action Maps list in the Input Actions editor losing keyboard focus after deleting a map, so that Delete, Duplicate, and arrow-key navigation kept working on the auto-selected replacement map without requiring an extra click [UUM-147152](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-147152)
 
 ## [1.20.0] - 2026-07-21
 

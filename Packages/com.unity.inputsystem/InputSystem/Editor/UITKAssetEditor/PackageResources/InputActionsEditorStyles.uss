@@ -233,3 +233,7 @@
 #action-editor {
     min-width: 520px;
 }
+
+#control-schemes-toolbar-container {
+    flex-shrink: 0;
+}
