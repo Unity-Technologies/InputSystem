@@ -337,9 +337,9 @@ namespace UnityEngine.InputSystem.Utilities
                 while (lastDigit > 0 && char.IsDigit(baseName[lastDigit - 1]))
                     --lastDigit;
                 if (lastDigit != baseName.Length &&
-                    int.TryParse(baseName.Substring(lastDigit), out var trailingNumber))
+                    long.TryParse(baseName.Substring(lastDigit), out var trailingNumber))
                 {
-                    namesTried = (long)trailingNumber + 1;
+                    namesTried = trailingNumber + 1;
                     baseName = baseName.Substring(0, lastDigit);
                 }
             }
