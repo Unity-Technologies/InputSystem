@@ -152,8 +152,8 @@ public class InputSystemSettings : AnnotatedSettingsBase
                 = new EditorPlatform(EditorPlatformType.Win10,
                 new Agent("package-ci/win10:v4", FlavorType.BuildLarge, ResourceType.Vm));
 
-            // Unity 6.6 defaults to MacOs13Arm in Wrench 2.12.0 — don't override it back to Intel.
-            if (unityEditor.Version.Version != "6000.6")
+            // Unity 6.6+ defaults to MacOs13Arm in Wrench 2.12.0 — don't override it back to Intel.
+            if (unityEditor.Version.Version != "6000.6" && unityEditor.Version.Version != "6000.7")
             {
                 unityEditor.EditorPlatforms.Items[EditorPlatformType.MacOs13]
                     = new EditorPlatform(EditorPlatformType.MacOs13,
