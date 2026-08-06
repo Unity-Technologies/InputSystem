@@ -10,7 +10,8 @@ test_sample_projects_{{ editor.version }}:
   commands:
     - {{ upm_ci_install }}
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
+    - curl -sSL https://dot.net/v1/dotnet-install.sh | bash -s -- --channel 8.0 --runtime dotnet
+    - DOTNET_ROOT="$HOME/.dotnet" PATH="$HOME/.dotnet:$PATH" upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
     - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=DryRun sh ExternalSampleProjects/publish.sh 
   triggers:
     cancel_old_ci: true
