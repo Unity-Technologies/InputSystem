@@ -820,7 +820,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// A user can grant permission while the service is not running. If permission is denied,
-        /// the service does not reach <see cref="LocationServiceStatus.Running"/>.
+        /// the service won't reach <see cref="LocationServiceStatus.Running"/>.
         /// </remarks>
         public bool isEnabledByUser
         {
@@ -840,11 +840,10 @@ namespace UnityEngine.InputSystem
         /// <param name="updateDistanceInMeters">Minimum distance the device must move before a new reading is reported, in meters.</param>
         /// <remarks>
         /// By default, the sensor is configured with the values from <see cref="InputSettings.locationAccuracy"/>
-        /// and <see cref="InputSettings.locationDistanceThreshold"/>; call <see cref="ResetConfiguration"/>
-        /// to return to those defaults.
+        /// and <see cref="InputSettings.locationDistanceThreshold"/>. <see cref="ResetConfiguration"/> return to those defaults.
         ///
         /// If the sensor is already enabled, readings may briefly pause while they are applied.
-        /// Otherwise, they apply the next time it is enabled.
+        /// If the sensor is disabled, values apply when device is enabled.
         /// </remarks>
         public void Configure(float desiredAccuracyInMeters, float updateDistanceInMeters)
         {
