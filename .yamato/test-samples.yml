@@ -10,7 +10,7 @@ test_sample_projects_{{ editor.version }}:
   commands:
     - {{ upm_ci_install }}
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - curl -sSL https://dot.net/v1/dotnet-install.sh | sudo bash -s -- --channel 8.0 --runtime dotnet --install-dir /usr/local/share/dotnet
+    - curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh && sudo bash /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir /usr/local/share/dotnet
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
     - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=DryRun sh ExternalSampleProjects/publish.sh 
   triggers:
