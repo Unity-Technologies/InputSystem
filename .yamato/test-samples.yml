@@ -10,7 +10,10 @@ test_sample_projects_{{ editor.version }}:
   commands:
     - {{ upm_ci_install }}
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
-    - curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh && sudo bash /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir /usr/local/share/dotnet
+    - curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+    - sudo bash /tmp/dotnet-install.sh --channel 6.0 --runtime dotnet --install-dir /usr/local/share/dotnet
+    - sudo bash /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir /usr/local/share/dotnet
+    - ls /usr/local/share/dotnet/shared/ 2>&1 || echo "WARNING dotnet shared directory not found"
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
     - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=DryRun sh ExternalSampleProjects/publish.sh 
   triggers:
