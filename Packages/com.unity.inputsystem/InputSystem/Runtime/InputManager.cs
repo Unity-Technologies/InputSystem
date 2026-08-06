@@ -2073,6 +2073,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("HumiditySensor", typeof(HumiditySensor));
             RegisterControlLayout("AmbientTemperatureSensor", typeof(AmbientTemperatureSensor));
             RegisterControlLayout("StepCounter", typeof(StepCounter));
+            RegisterControlLayout("LocationSensor", typeof(LocationSensor));
             RegisterControlLayout("TrackedDevice", typeof(TrackedDevice));
 
             // Precompiled layouts.
