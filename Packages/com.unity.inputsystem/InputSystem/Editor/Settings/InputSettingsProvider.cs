@@ -128,6 +128,8 @@ namespace UnityEngine.InputSystem.Editor
 
                 EditorGUILayout.Space();
                 EditorGUILayout.PropertyField(m_CompensateForScreenOrientation, m_CompensateForScreenOrientationContent);
+                EditorGUILayout.PropertyField(m_LocationAccuracy, m_LocationAccuracyContent);
+                EditorGUILayout.PropertyField(m_LocationDistanceThreshold, m_LocationDistanceThresholdContent);
 
                 // NOTE: We do NOT make showing this one conditional on whether runInBackground is actually set in the
                 //       player settings as regardless of whether it's on or not, Unity will force it on in standalone
@@ -302,6 +304,8 @@ namespace UnityEngine.InputSystem.Editor
             m_UpdateMode = m_SettingsObject.FindProperty("m_UpdateMode");
             m_ScrollDeltaBehavior = m_SettingsObject.FindProperty("m_ScrollDeltaBehavior");
             m_CompensateForScreenOrientation = m_SettingsObject.FindProperty("m_CompensateForScreenOrientation");
+            m_LocationAccuracy = m_SettingsObject.FindProperty("m_LocationAccuracy");
+            m_LocationDistanceThreshold = m_SettingsObject.FindProperty("m_LocationDistanceThreshold");
             m_BackgroundBehavior = m_SettingsObject.FindProperty("m_BackgroundBehavior");
             m_EditorInputBehaviorInPlayMode = m_SettingsObject.FindProperty("m_EditorInputBehaviorInPlayMode");
             m_DefaultDeadzoneMin = m_SettingsObject.FindProperty("m_DefaultDeadzoneMin");
@@ -321,6 +325,8 @@ namespace UnityEngine.InputSystem.Editor
             m_ScrollDeltaBehaviorContent = new GUIContent("Scroll Delta Behavior", "Controls whether the value returned by the Scroll Wheel Delta is normalized (to be uniform across all platforms), or returns the non-normalized platform-specific range which can vary between platforms.");
 #endif
             m_CompensateForScreenOrientationContent = new GUIContent("Compensate Orientation", "Whether sensor input on mobile devices should be transformed to be relative to the current device orientation.");
+            m_LocationAccuracyContent = new GUIContent("Location Accuracy", "Default desired accuracy of LocationSensor updates, in meters. The accuracy achieved is hardware and platform-dependent, and a finer accuracy can increase power use.");
+            m_LocationDistanceThresholdContent = new GUIContent("Location Distance Threshold", "Default minimum distance, in meters, the device must move before LocationSensor reports an update. A larger threshold reports updates less often, which can lower power use.");
             m_BackgroundBehaviorContent = new GUIContent("Background Behavior", "If runInBackground is true (and in standalone *development* players and the editor), "
                 + "determines what happens to InputDevices and events when the application moves in and out of running in the foreground.\n\n"
                 + "'Reset And Disable Non-Background Devices' soft-resets and disables devices that cannot run in the background while the application does not have focus. Devices "
@@ -446,6 +452,8 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_UpdateMode;
         [NonSerialized] private SerializedProperty m_ScrollDeltaBehavior;
         [NonSerialized] private SerializedProperty m_CompensateForScreenOrientation;
+        [NonSerialized] private SerializedProperty m_LocationAccuracy;
+        [NonSerialized] private SerializedProperty m_LocationDistanceThreshold;
         [NonSerialized] private SerializedProperty m_BackgroundBehavior;
         [NonSerialized] private SerializedProperty m_EditorInputBehaviorInPlayMode;
         [NonSerialized] private SerializedProperty m_DefaultDeadzoneMin;
@@ -473,6 +481,8 @@ namespace UnityEngine.InputSystem.Editor
         private GUIContent m_ScrollDeltaBehaviorContent;
 #endif
         private GUIContent m_CompensateForScreenOrientationContent;
+        private GUIContent m_LocationAccuracyContent;
+        private GUIContent m_LocationDistanceThresholdContent;
         private GUIContent m_BackgroundBehaviorContent;
         private GUIContent m_EditorInputBehaviorInPlayModeContent;
         private GUIContent m_DefaultDeadzoneMinContent;
