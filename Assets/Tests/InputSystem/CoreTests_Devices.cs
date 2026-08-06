@@ -3820,6 +3820,145 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_CanGetLocationSensorReading()
+    {
+        var location = InputSystem.AddDevice<LocationSensor>();
+        InputSystem.EnableDevice(location); // Sensors start disabled.
+        InputSystem.QueueStateEvent(location, new LocationState
+        {
+            latitude = 59.3293f,
+            longitude = 18.0686f,
+            altitude = 28.0f,
+            horizontalAccuracy = 5.0f,
+            verticalAccuracy = 8.0f,
+            timestamp = 1_700_000_000.0
+        });
+        InputSystem.Update();
+
+        Assert.That(location.latitude.ReadValue(), Is.EqualTo(59.3293f).Within(1e-4));
+        Assert.That(location.longitude.ReadValue(), Is.EqualTo(18.0686f).Within(1e-4));
+        Assert.That(location.altitude.ReadValue(), Is.EqualTo(28.0f).Within(1e-4));
+        Assert.That(location.horizontalAccuracy.ReadValue(), Is.EqualTo(5.0f).Within(1e-4));
+        Assert.That(location.verticalAccuracy.ReadValue(), Is.EqualTo(8.0f).Within(1e-4));
+        Assert.That(location.timestamp.ReadValue(), Is.EqualTo(1_700_000_000.0).Within(1e-6));
+        Assert.That(LocationSensor.current, Is.SameAs(location));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanQueryLocationSensorStatus()
+    {
+        var location = InputSystem.AddDevice<LocationSensor>();
+        runtime.SetDeviceCommandCallback(location.deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == QueryLocationStatusCommand.Type)
+                {
+                    ((QueryLocationStatusCommand*)commandPtr)->status = (int)LocationServiceStatus.Running;
+                    return InputDeviceCommand.GenericSuccess;
+                }
+
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        Assert.That(location.status, Is.EqualTo(LocationServiceStatus.Running));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanConfigureLocationSensor()
+    {
+        var location = InputSystem.AddDevice<LocationSensor>();
+
+        // The callback below is registered after AddDevice, so OnAdded's seed ConfigureLocationCommand
+        // (the 10f/10f InputSettings defaults) fires before any callback exists and is dropped.
+        // The 5f/2f value-gate below distinguishes our explicit Configure() call from those defaults.
+        var received = false;
+        runtime.SetDeviceCommandCallback(location.deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == ConfigureLocationCommand.Type)
+                {
+                    var command = (ConfigureLocationCommand*)commandPtr;
+                    if (Mathf.Approximately(command->desiredAccuracyInMeters, 5f) &&
+                        Mathf.Approximately(command->updateDistanceInMeters, 2f))
+                        received = true;
+                    return InputDeviceCommand.GenericSuccess;
+                }
+
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        location.Configure(5f, 2f);
+
+        Assert.That(received, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanQueryLocationSensorIsEnabledByUser()
+    {
+        var location = InputSystem.AddDevice<LocationSensor>();
+        runtime.SetDeviceCommandCallback(location.deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == QueryLocationEnabledByUserCommand.Type)
+                {
+                    ((QueryLocationEnabledByUserCommand*)commandPtr)->enabledByUser = true;
+                    return InputDeviceCommand.GenericSuccess;
+                }
+
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        Assert.That(location.isEnabledByUser, Is.True);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_LocationSensorDegradesWhenNoNativeHandler()
+    {
+        var location = InputSystem.AddDevice<LocationSensor>();
+
+        // No command callback is installed, so both queries fall through to the
+        // "no native impl (editor/desktop)" degradation paths.
+        Assert.That(location.status, Is.EqualTo(LocationServiceStatus.Stopped));
+        Assert.That(location.isEnabledByUser, Is.False);
+    }
+
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CanResetLocationConfig()
+    {
+        InputSystem.settings.locationAccuracy = 33f;
+        InputSystem.settings.locationDistanceThreshold = 7f;
+
+        var location = InputSystem.AddDevice<LocationSensor>();
+
+        var lastAccuracy = 0f;
+        var lastDistanceThreshold = 0f;
+        runtime.SetDeviceCommandCallback(location.deviceId,
+            (id, commandPtr) =>
+            {
+                if (commandPtr->type == ConfigureLocationCommand.Type)
+                {
+                    var command = (ConfigureLocationCommand*)commandPtr;
+                    lastAccuracy = command->desiredAccuracyInMeters;
+                    lastDistanceThreshold = command->updateDistanceInMeters;
+                    return InputDeviceCommand.GenericSuccess;
+                }
+
+                return InputDeviceCommand.GenericFailure;
+            });
+
+        location.ResetConfiguration();
+
+        Assert.That(lastAccuracy, Is.EqualTo(33f).Within(1e-4));
+        Assert.That(lastDistanceThreshold, Is.EqualTo(7f).Within(1e-4));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanGetGyroReading()
     {
         var gyro = InputSystem.AddDevice<Gyroscope>();
