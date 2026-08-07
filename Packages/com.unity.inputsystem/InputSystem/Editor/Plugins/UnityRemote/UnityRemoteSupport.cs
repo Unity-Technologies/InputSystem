@@ -125,6 +125,8 @@ namespace UnityEngine.InputSystem
                     s_State.touchscreen.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
                     s_State.accelerometer = InputSystem.AddDevice<Accelerometer>();
                     s_State.accelerometer.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
+                    s_State.orientation = InputSystem.AddDevice<OrientationSensor>();
+                    s_State.orientation.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
                     // Gryo etc. added only when we receive GyroSettingsMessage.
 
                     s_State.connected = true;
@@ -248,6 +250,17 @@ namespace UnityEngine.InputSystem
                             accelerometerMessage->accelerationZ)
                     });
                     break;
+
+                case (byte)MessageType.DeviceOrientation:
+                    if (s_State.orientation == null)
+                        break;
+                    var orientationMessage = (DeviceOrientationMessage*)messageData;
+                    // The remote sends the DeviceOrientation enum value directly (same values as ours).
+                    InputSystem.QueueStateEvent(s_State.orientation, new OrientationState
+                    {
+                        orientation = orientationMessage->orientation
+                    });
+                    break;
             }
 
             return false;
@@ -257,6 +270,8 @@ namespace UnityEngine.InputSystem
         {
             InputSystem.RemoveDevice(s_State.touchscreen);
             InputSystem.RemoveDevice(s_State.accelerometer);
+            if (s_State.orientation != null)
+                InputSystem.RemoveDevice(s_State.orientation);
             if (s_State.gyroscope != null)
                 InputSystem.RemoveDevice(s_State.gyroscope);
             if (s_State.attitude != null)
@@ -287,6 +302,8 @@ namespace UnityEngine.InputSystem
                         s_State.touchscreen = null;
                     else if (device == s_State.linearAcceleration)
                         s_State.linearAcceleration = null;
+                    else if (device == s_State.orientation)
+                        s_State.orientation = null;
                     break;
 
                 case InputDeviceChange.Enabled:
@@ -534,6 +551,17 @@ namespace UnityEngine.InputSystem
             public byte staticType => (byte)MessageType.AccelerometerInput;
         }
 
+        // See HandleOrientationMessage() in Editor/Src/RemoteInput/GenericRemote.cpp: a single int32 holding
+        // the DeviceOrientation enum value.
+        [StructLayout(LayoutKind.Explicit)]
+        internal struct DeviceOrientationMessage : IUnityRemoteMessage
+        {
+            [FieldOffset(0)] public MessageHeader header;
+            [FieldOffset(5)] public int orientation;
+
+            public byte staticType => (byte)MessageType.DeviceOrientation;
+        }
+
         private struct State
         {
             public bool connected;
@@ -548,6 +576,7 @@ namespace UnityEngine.InputSystem
             // Devices that we create for receiving input from the remote.
             public Touchscreen touchscreen;
             public Accelerometer accelerometer;
+            public OrientationSensor orientation;
             public Gyroscope gyroscope;
             public AttitudeSensor attitude;
             public GravitySensor gravity;

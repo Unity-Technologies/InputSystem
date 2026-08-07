@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.TestTools.Utils;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
+using DeviceOrientation = UnityEngine.InputSystem.DeviceOrientation;
 
 internal class UnityRemoteTests : CoreTestsFixture
 {
@@ -267,6 +268,42 @@ internal class UnityRemoteTests : CoreTestsFixture
         SendUnityRemoteMessage(new UnityRemoteSupport.GoodbyeMessage());
 
         Assert.That(Accelerometer.current, Is.Null);
+    }
+
+    [Test]
+    [Category("Remote")]
+    public void Remote_CanReceiveDeviceOrientationFromUnityRemote()
+    {
+        SendUnityRemoteMessage(UnityRemoteSupport.HelloMessage.Create());
+
+        // Like the accelerometer, the orientation sensor is assumed present on every device running the
+        // Unity Remote and does not require explicit enabling.
+        Assert.That(OrientationSensor.current, Is.Not.Null);
+        Assert.That(OrientationSensor.current.remote, Is.True);
+        Assert.That(OrientationSensor.current.enabled, Is.True);
+
+        SendUnityRemoteMessage(new UnityRemoteSupport.DeviceOrientationMessage
+        {
+            orientation = (int)DeviceOrientation.LandscapeLeft
+        });
+        InputSystem.Update();
+
+        Assert.That(OrientationSensor.current.orientation.ReadValue(), Is.EqualTo(DeviceOrientation.LandscapeLeft));
+
+        // Disabling it should stop updates.
+        InputSystem.DisableDevice(OrientationSensor.current);
+
+        SendUnityRemoteMessage(new UnityRemoteSupport.DeviceOrientationMessage
+        {
+            orientation = (int)DeviceOrientation.FaceUp
+        });
+        InputSystem.Update();
+
+        Assert.That(OrientationSensor.current.orientation.ReadValue(), Is.EqualTo(DeviceOrientation.LandscapeLeft));
+
+        SendUnityRemoteMessage(new UnityRemoteSupport.GoodbyeMessage());
+
+        Assert.That(OrientationSensor.current, Is.Null);
     }
 
     // We don't currently support joystick input coming from the Unity Remote.
