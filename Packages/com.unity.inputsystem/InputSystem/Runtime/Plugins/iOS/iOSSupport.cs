@@ -55,6 +55,10 @@ namespace UnityEngine.InputSystem.iOS
                 new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("LinearAcceleration"));
+            InputSystem.RegisterLayoutMatcher("OrientationSensor",
+                new InputDeviceMatcher()
+                    .WithInterface("iOS")
+                    .WithDeviceClass("Orientation"));
 #if UNITY_EDITOR || UNITY_IOS
             InputSystem.RegisterLayout<iOSStepCounter>();
             // Don't add devices for InputTestRuntime
