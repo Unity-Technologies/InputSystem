@@ -25,6 +25,7 @@ using UnityEngine.TestTools.Constraints;
 using Is = NUnit.Framework.Is;
 using Quaternion = UnityEngine.Quaternion;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
+using DeviceOrientation = UnityEngine.InputSystem.DeviceOrientation;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
@@ -2649,6 +2650,7 @@ partial class CoreTests
     [TestCase("Joystick", typeof(Joystick))]
     [TestCase("Accelerometer", typeof(Accelerometer))]
     [TestCase("Gyroscope", typeof(Gyroscope))]
+    [TestCase("OrientationSensor", typeof(OrientationSensor))]
     public void Devices_CanCreateDevice(string layout, System.Type type)
     {
         var device = InputSystem.AddDevice(layout);
@@ -3868,6 +3870,18 @@ partial class CoreTests
 
         Assert.That(sensor.acceleration.ReadValue(), Is.EqualTo(value).Within(0.00001));
         Assert.That(LinearAccelerationSensor.current, Is.SameAs(sensor));
+    }
+
+    [Test]
+    [Category("Devices")]
+    public void Devices_CanGetDeviceOrientationReading()
+    {
+        var sensor = InputSystem.AddDevice<OrientationSensor>();
+        InputSystem.QueueStateEvent(sensor, new OrientationState { orientation = (int)DeviceOrientation.LandscapeLeft });
+        InputSystem.Update();
+
+        Assert.That(sensor.orientation.ReadValue(), Is.EqualTo(DeviceOrientation.LandscapeLeft));
+        Assert.That(OrientationSensor.current, Is.SameAs(sensor));
     }
 
     [Test]

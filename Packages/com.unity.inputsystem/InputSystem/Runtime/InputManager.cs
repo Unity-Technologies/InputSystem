@@ -2053,6 +2053,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("Touch", typeof(TouchControl));
             RegisterControlLayout("TouchPhase", typeof(TouchPhaseControl));
             RegisterControlLayout("TouchPress", typeof(TouchPressControl));
+            RegisterControlLayout("Orientation", typeof(OrientationControl));
 
             RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
             RegisterControlLayout("Joystick", typeof(Joystick));
@@ -2073,6 +2074,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("HumiditySensor", typeof(HumiditySensor));
             RegisterControlLayout("AmbientTemperatureSensor", typeof(AmbientTemperatureSensor));
             RegisterControlLayout("StepCounter", typeof(StepCounter));
+            RegisterControlLayout("OrientationSensor", typeof(OrientationSensor));
             RegisterControlLayout("TrackedDevice", typeof(TrackedDevice));
 
             // Precompiled layouts.

@@ -60,6 +60,18 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public FourCC format => kFormat;
     }
+
+    internal struct OrientationState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat => new FourCC('O', 'R', 'N', 'T');
+
+        // Note: unlike the other sensors this value is *not* compensated for screen orientation. It reports
+        // the physical orientation of the device and thus must be independent of how the content is rendered.
+        [InputControl(name = "orientation", displayName = "Orientation", layout = "Orientation")]
+        public int orientation;
+
+        public FourCC format => kFormat;
+    }
 }
 
 namespace UnityEngine.InputSystem
@@ -691,6 +703,111 @@ namespace UnityEngine.InputSystem
         protected override void FinishSetup()
         {
             angle = GetChildControl<AxisControl>("angle");
+            base.FinishSetup();
+        }
+    }
+
+    /// <summary>
+    /// Enum describing the physical orientation of a device as reported by <see cref="OrientationSensor"/>.
+    /// </summary>
+    /// <remarks>
+    /// The values mirror the legacy <c>UnityEngine.DeviceOrientation</c> enum so that content migrating from
+    /// <c>UnityEngine.Input.deviceOrientation</c> to the Input System observes identical semantics. Note that this
+    /// is a package-local enum, kept independent of the legacy input module.
+    /// </remarks>
+    /// <seealso cref="OrientationSensor"/>
+    public enum DeviceOrientation
+    {
+        /// <summary>The orientation of the device cannot be determined.</summary>
+        Unknown = 0,
+
+        /// <summary>The device is in portrait mode, with the device held upright and the home button at the bottom.</summary>
+        Portrait = 1,
+
+        /// <summary>The device is in portrait mode but upside down, with the device held upright and the home button at the top.</summary>
+        PortraitUpsideDown = 2,
+
+        /// <summary>The device is in landscape mode, with the device held upright and the home button on the right side.</summary>
+        LandscapeLeft = 3,
+
+        /// <summary>The device is in landscape mode, with the device held upright and the home button on the left side.</summary>
+        LandscapeRight = 4,
+
+        /// <summary>The device is held parallel to the ground with the screen facing upwards.</summary>
+        FaceUp = 5,
+
+        /// <summary>The device is held parallel to the ground with the screen facing downwards.</summary>
+        FaceDown = 6,
+    }
+
+    /// <summary>
+    /// Input device representing the physical orientation of the device playing the content.
+    /// </summary>
+    /// <remarks>
+    /// The orientation sensor reports the physical orientation of the device (for example, whether it is held in
+    /// portrait or landscape, or lying face up or face down) as a discrete <see cref="DeviceOrientation"/> value.
+    /// It provides feature parity with the legacy <c>UnityEngine.Input.deviceOrientation</c> property.
+    ///
+    /// Unlike the other motion sensors, the reported value is not compensated for screen orientation; it always
+    /// describes the physical orientation of the hardware.
+    ///
+    /// <example>
+    /// <code>
+    /// class MyBehavior : MonoBehaviour
+    /// {
+    ///     protected void OnEnable()
+    ///     {
+    ///         InputSystem.EnableDevice(OrientationSensor.current);
+    ///     }
+    ///
+    ///     protected void OnDisable()
+    ///     {
+    ///         InputSystem.DisableDevice(OrientationSensor.current);
+    ///     }
+    ///
+    ///     protected void Update()
+    ///     {
+    ///         var orientation = OrientationSensor.current.orientation.ReadValue();
+    ///         //...
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    /// </remarks>
+    [InputControlLayout(stateType = typeof(OrientationState), displayName = "Orientation")]
+    public class OrientationSensor : Sensor
+    {
+        /// <summary>
+        /// The physical orientation of the device.
+        /// </summary>
+        /// <value>Control reporting the current <see cref="DeviceOrientation"/>.</value>
+        public OrientationControl orientation { get; protected set; }
+
+        /// <summary>
+        /// The orientation sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current orientation sensor or <c>null</c>.</value>
+        public static OrientationSensor current { get; private set; }
+
+        /// <inheritdoc />
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        /// <inheritdoc />
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        /// <inheritdoc />
+        protected override void FinishSetup()
+        {
+            orientation = GetChildControl<OrientationControl>("orientation");
             base.FinishSetup();
         }
     }
