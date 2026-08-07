@@ -13,7 +13,8 @@ inputsystem-editorperformancetests_-_6000_0_-_macos13:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -31,7 +32,8 @@ inputsystem-editorperformancetests_-_6000_0_-_ubuntu2204:
     type: Unity::VM::GPU
     flavor: b1.large
   commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -49,8 +51,8 @@ inputsystem-editorperformancetests_-_6000_0_-_win10:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.0/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -68,7 +70,8 @@ inputsystem-editorperformancetests_-_6000_3_-_macos13:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -86,7 +89,8 @@ inputsystem-editorperformancetests_-_6000_3_-_ubuntu2204:
     type: Unity::VM::GPU
     flavor: b1.large
   commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -104,8 +108,8 @@ inputsystem-editorperformancetests_-_6000_3_-_win10:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.3/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -123,7 +127,8 @@ inputsystem-editorperformancetests_-_6000_5_-_macos13:
     type: Unity::VM::osx
     flavor: b1.xlarge
   commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.5/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -141,7 +146,8 @@ inputsystem-editorperformancetests_-_6000_5_-_ubuntu2204:
     type: Unity::VM::GPU
     flavor: b1.large
   commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.5/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -159,8 +165,8 @@ inputsystem-editorperformancetests_-_6000_5_-_win10:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.5/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -179,7 +185,8 @@ inputsystem-editorperformancetests_-_6000_6_-_macos13arm:
     flavor: m1.mac
     model: M1
   commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.6/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -197,7 +204,8 @@ inputsystem-editorperformancetests_-_6000_6_-_ubuntu2204:
     type: Unity::VM::GPU
     flavor: b1.large
   commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.6/staging -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -215,12 +223,31 @@ inputsystem-editorperformancetests_-_6000_6_-_win10:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u 6000.6/staging -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
   - command: .yamato\generated-scripts\infrastructure-instability-detection-win.cmd
+  artifacts:
+    artifacts:
+      paths:
+      - artifacts/**/*
+
+# InputSystem-EditorPerformanceTests - 6000.7 - MacOs13
+inputsystem-editorperformancetests_-_6000_7_-_macos13:
+  name: InputSystem-EditorPerformanceTests - 6000.7 - MacOs13
+  agent:
+    image: package-ci/macos-13:v4
+    type: Unity::VM::osx
+    flavor: b1.xlarge
+  commands:
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: unity-downloader-cli -u trunk -c Editor --fast --wait
+  - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-mac.sh
   artifacts:
     artifacts:
       paths:
@@ -235,7 +262,8 @@ inputsystem-editorperformancetests_-_6000_7_-_macos13arm:
     flavor: m1.mac
     model: M1
   commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -253,7 +281,8 @@ inputsystem-editorperformancetests_-_6000_7_-_ubuntu2204:
     type: Unity::VM::GPU
     flavor: b1.large
   commands:
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path $HOME/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:
@@ -271,8 +300,8 @@ inputsystem-editorperformancetests_-_6000_7_-_win10:
     type: Unity::VM
     flavor: b1.large
   commands:
-  - command: '%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes'
-  - command: git clone --branch "2.3.0-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
+  - command: dotnet tool install docfx --version 2.70.0 --tool-path %USERPROFILE%/.pmdt
+  - command: git clone --branch "3.14.8-preview" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools
   - command: unity-downloader-cli -u trunk -c Editor --fast --wait
   - command: UnifiedTestRunner.exe --testproject=. --editor-location=.Editor --suite=Editor --suite=Playmode --category=Performance --clean-library --api-profile=NET_4_6 --reruncount=1 --clean-library-on-rerun --report-performance-data --performance-project-id=InputSystem --timeout=3600 --artifacts-path=artifacts
   after:

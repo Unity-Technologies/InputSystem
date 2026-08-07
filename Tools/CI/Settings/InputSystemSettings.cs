@@ -21,9 +21,20 @@ public class InputSystemSettings : AnnotatedSettingsBase
     public static readonly string BranchName = "develop";
     public static readonly string InputSystemPackageName = "com.unity.inputsystem";
 
-    // Command to install .NET Framework 4.7.1 Developer Pack which is used by doctools on Windows.
-    public static readonly string NetfxInstallCmd = "%GSUDO% choco install netfx-4.7.1-devpack -y --ignore-detected-reboot --ignore-package-codes";
-    public static readonly string DoctoolsInstallCmd = "git clone --branch \"2.3.0-preview\" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools";
+    // NOTE: Starting with PMDT 3.0.0, DocFX is no longer bundled with the package and must be
+    // installed separately as a dotnet tool. See:
+    // https://docs.unity3d.com/Packages/com.unity.package-manager-doctools@3.14/manual/installation.html
+    //
+    // dotnet SDK availability: confirmed present on package-ci images (Windows, Mac, and Ubuntu) via
+    // #devs-pets / #devs-ci Slack history - it's a centrally maintained, version-pinned component of
+    // the image family. So extra .NET SDK install step is needed here.
+    public static readonly string DocfxVersion = "2.70.0";
+
+    // Installs the DocFX version PMDT 3.x expects, as a dotnet tool, per-platform.
+    public static readonly string DocfxInstallCmdWindows = $"dotnet tool install docfx --version {DocfxVersion} --tool-path %USERPROFILE%/.pmdt";
+    public static readonly string DocfxInstallCmdUnix = $"dotnet tool install docfx --version {DocfxVersion} --tool-path $HOME/.pmdt";
+
+    public static readonly string DoctoolsInstallCmd = "git clone --branch \"3.14.8-preview\" git@github.cds.internal.unity3d.com:unity/com.unity.package-manager-doctools.git Packages/com.unity.package-manager-doctools";
 
     public WrenchPackage InputSystemPackage => Wrench.Packages[InputSystemPackageName];
 
