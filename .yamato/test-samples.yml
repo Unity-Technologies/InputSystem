@@ -11,8 +11,8 @@ test_sample_projects_{{ editor.version }}:
     - {{ upm_ci_install }}
     - upm-ci package pack --package-path ./Packages/com.unity.inputsystem/
     - curl -fsSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
-    - unity-downloader-cli -u {{ editor.version }} -c Editor --fast --wait
-    - sudo bash /tmp/dotnet-install.sh --channel 10.0 --runtime dotnet --install-dir .Editor/Unity.app/Contents/Resources/Scripting/NetCoreRuntime
+    - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }} || true
+    - sudo bash /tmp/dotnet-install.sh --channel 6.0 --runtime dotnet --install-dir .Editor/Unity.app/Contents/Resources/Scripting/NetCoreRuntime
     - ls .Editor/Unity.app/Contents/Resources/Scripting/NetCoreRuntime/shared/ 2>&1 || echo "WARNING NetCoreRuntime shared directory not found"
     - upm-ci package test --package-path ./Packages/com.unity.inputsystem/ -u {{ editor.version }}
     - Editor=.Editor/Unity.app/Contents/MacOS/Unity Method=DryRun sh ExternalSampleProjects/publish.sh 
