@@ -12,7 +12,9 @@ Unity supports input through two separate systems, one older, and one newer.
 
 The older system, which is built-in to the editor, is called the [Input Manager](https://docs.unity3d.com/Manual/class-InputManager.html). The Input Manager is part of the core Unity platform and is the default, if you do not install the Input System package.
 
-This **Input System package** is a newer, more flexible system, which allows you to use any kind of Input Device to control your Unity content. It's intended to be a replacement for Unity's classic Input Manager. It is referred to as the "Input" System Package, or just **The Input System**. To use it, you must [install it into your project using the Package Manager](Installation.md).
+This **Input System package** is a newer, more flexible system, which allows you to use any kind of Input Device to control your Unity content. It's intended to be a replacement for Unity's classic Input Manager. It is referred to as the "Input" System Package, or just **The Input System**. 
+
+The Unity Editor 6.7 and newer includes the Input System package by default. For older versions of the Editor, please install the package [using the Package Manager](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/Installation.html).
 
 > [!TIP]
 > During the installation process for the **Input System** package, the installer offers to automatically deactivate the older built-in system.
