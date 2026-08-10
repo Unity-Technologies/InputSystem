@@ -10,22 +10,21 @@ The **Input System** allows your users to control your game or app using a devic
 
 Unity supports input through two separate systems, one older, and one newer.
 
-The older system, which is built-in to the editor, is called the [Input Manager](https://docs.unity3d.com/Manual/class-InputManager.html). The Input Manager is part of the core Unity platform and is the default, if you do not install the Input System package.
-
-This **Input System package** is a newer, more flexible system, which allows you to use any kind of Input Device to control your Unity content. It's intended to be a replacement for Unity's classic Input Manager. It is referred to as the "Input" System Package, or just **The Input System**. 
+- The [Input Manager](https://docs.unity3d.com/Manual/class-InputManager.html), documented in the main Unity manual. This system is available for backward compatibility. For new projects, use the Input System.
+- The Input System package described in this documentation. This is a more flexible system than the Input Manager, supporting 
 
 The Unity Editor 6.7 and newer includes the Input System package by default. For older versions of the Editor, please install the package [using the Package Manager](https://docs.unity3d.com/Packages/com.unity.inputsystem@1.20/manual/Installation.html).
 
 > [!TIP]
 > During the installation process for the **Input System** package, the installer offers to automatically deactivate the older built-in system.
 
-To get started, refer to the [Workflows](workflows.md) section to decide how to use Input:
+To get started, refer to the [Workflows](workflows.md) section to decide how to use the Input System:
 
-* Using actions, which is the recommended workflow.
-* Using both actions and the PlayerInput component, which provides features for callbacks and multiplayer.
-* Directly read device states with a script for fast prototyping or single-platform applications.
+- Using actions, which is the recommended workflow.
+- Using both actions and the PlayerInput component, which provides features for callbacks and multiplayer.
+- Directly read device states with a script for fast prototyping or single-platform applications.
 
 For a demo project, refer to the [Warriors demo](https://github.com/UnityTechnologies/InputSystem_Warriors) on GitHub.
 
 ![Screenshot of the Input Actions Editor window displaying the default action map, Actions, and Action Properties. They are displayed in 3 columns side-by-side in that order.](Images/ActionsEditor.png)<br/>
-*The Input Actions Editor, displaying some of the default actions that come pre-configured with the Input System package.*
+*The Input Actions Editor, displaying several default actions from the Input System package.*
