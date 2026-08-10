@@ -55,7 +55,7 @@ namespace UnityEngine.InputSystem.iOS
                 new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("LinearAcceleration"));
-            InputSystem.RegisterLayoutMatcher("OrientationSensor",
+            InputSystem.RegisterLayoutMatcher("DeviceOrientationSensor",
                 new InputDeviceMatcher()
                     .WithInterface("iOS")
                     .WithDeviceClass("Orientation"));

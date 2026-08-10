@@ -125,7 +125,7 @@ namespace UnityEngine.InputSystem
                     s_State.touchscreen.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
                     s_State.accelerometer = InputSystem.AddDevice<Accelerometer>();
                     s_State.accelerometer.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
-                    s_State.orientation = InputSystem.AddDevice<OrientationSensor>();
+                    s_State.orientation = InputSystem.AddDevice<DeviceOrientationSensor>();
                     s_State.orientation.m_DeviceFlags |= InputDevice.DeviceFlags.Remote;
                     // Gryo etc. added only when we receive GyroSettingsMessage.
 
@@ -576,7 +576,7 @@ namespace UnityEngine.InputSystem
             // Devices that we create for receiving input from the remote.
             public Touchscreen touchscreen;
             public Accelerometer accelerometer;
-            public OrientationSensor orientation;
+            public DeviceOrientationSensor orientation;
             public Gyroscope gyroscope;
             public AttitudeSensor attitude;
             public GravitySensor gravity;

@@ -708,14 +708,14 @@ namespace UnityEngine.InputSystem
     }
 
     /// <summary>
-    /// Enum describing the physical orientation of a device as reported by <see cref="OrientationSensor"/>.
+    /// Enum describing the physical orientation of a device as reported by <see cref="DeviceOrientationSensor"/>.
     /// </summary>
     /// <remarks>
     /// The values mirror the legacy <c>UnityEngine.DeviceOrientation</c> enum so that content migrating from
     /// <c>UnityEngine.Input.deviceOrientation</c> to the Input System observes identical semantics. Note that this
     /// is a package-local enum, kept independent of the legacy input module.
     /// </remarks>
-    /// <seealso cref="OrientationSensor"/>
+    /// <seealso cref="DeviceOrientationSensor"/>
     public enum DeviceOrientation
     {
         /// <summary>The orientation of the device cannot be determined.</summary>
@@ -757,17 +757,17 @@ namespace UnityEngine.InputSystem
     /// {
     ///     protected void OnEnable()
     ///     {
-    ///         InputSystem.EnableDevice(OrientationSensor.current);
+    ///         InputSystem.EnableDevice(DeviceOrientationSensor.current);
     ///     }
     ///
     ///     protected void OnDisable()
     ///     {
-    ///         InputSystem.DisableDevice(OrientationSensor.current);
+    ///         InputSystem.DisableDevice(DeviceOrientationSensor.current);
     ///     }
     ///
     ///     protected void Update()
     ///     {
-    ///         var orientation = OrientationSensor.current.orientation.ReadValue();
+    ///         var orientation = DeviceOrientationSensor.current.orientation.ReadValue();
     ///         //...
     ///     }
     /// }
@@ -775,7 +775,7 @@ namespace UnityEngine.InputSystem
     /// </example>
     /// </remarks>
     [InputControlLayout(stateType = typeof(OrientationState), displayName = "Orientation")]
-    public class OrientationSensor : Sensor
+    public class DeviceOrientationSensor : Sensor
     {
         /// <summary>
         /// The physical orientation of the device.
@@ -787,7 +787,7 @@ namespace UnityEngine.InputSystem
         /// The orientation sensor that was last added or had activity last.
         /// </summary>
         /// <value>Current orientation sensor or <c>null</c>.</value>
-        public static OrientationSensor current { get; private set; }
+        public static DeviceOrientationSensor current { get; private set; }
 
         /// <inheritdoc />
         public override void MakeCurrent()

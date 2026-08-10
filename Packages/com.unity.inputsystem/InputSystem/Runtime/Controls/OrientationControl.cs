@@ -7,11 +7,11 @@ namespace UnityEngine.InputSystem.Controls
     /// A control reading a <see cref="DeviceOrientation"/> value.
     /// </summary>
     /// <remarks>
-    /// This is used by <see cref="OrientationSensor"/> to report the physical orientation of the device
-    /// (see <see cref="OrientationSensor.orientation"/>). It provides feature parity with the legacy
+    /// This is used by <see cref="DeviceOrientationSensor"/> to report the physical orientation of the device
+    /// (see <see cref="DeviceOrientationSensor.orientation"/>). It provides feature parity with the legacy
     /// <c>UnityEngine.Input.deviceOrientation</c> property.
     /// </remarks>
-    /// <seealso cref="OrientationSensor"/>
+    /// <seealso cref="DeviceOrientationSensor"/>
     [InputControlLayout(hideInUI = true)]
     public class OrientationControl : InputControl<DeviceOrientation>
     {

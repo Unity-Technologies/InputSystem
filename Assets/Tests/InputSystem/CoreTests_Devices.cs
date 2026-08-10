@@ -2650,7 +2650,7 @@ partial class CoreTests
     [TestCase("Joystick", typeof(Joystick))]
     [TestCase("Accelerometer", typeof(Accelerometer))]
     [TestCase("Gyroscope", typeof(Gyroscope))]
-    [TestCase("OrientationSensor", typeof(OrientationSensor))]
+    [TestCase("DeviceOrientationSensor", typeof(DeviceOrientationSensor))]
     public void Devices_CanCreateDevice(string layout, System.Type type)
     {
         var device = InputSystem.AddDevice(layout);
@@ -3876,12 +3876,12 @@ partial class CoreTests
     [Category("Devices")]
     public void Devices_CanGetDeviceOrientationReading()
     {
-        var sensor = InputSystem.AddDevice<OrientationSensor>();
+        var sensor = InputSystem.AddDevice<DeviceOrientationSensor>();
         InputSystem.QueueStateEvent(sensor, new OrientationState { orientation = (int)DeviceOrientation.LandscapeLeft });
         InputSystem.Update();
 
         Assert.That(sensor.orientation.ReadValue(), Is.EqualTo(DeviceOrientation.LandscapeLeft));
-        Assert.That(OrientationSensor.current, Is.SameAs(sensor));
+        Assert.That(DeviceOrientationSensor.current, Is.SameAs(sensor));
     }
 
     [Test]

@@ -112,8 +112,8 @@ namespace UnityEngine.InputSystem.Android
                     .WithCapability("sensorType", AndroidSensorType.HingeAngle));
 
             // Device orientation is not an Android hardware sensor; it is reported as its own device
-            // class and maps directly to the base OrientationSensor layout.
-            InputSystem.RegisterLayoutMatcher("OrientationSensor",
+            // class and maps directly to the base DeviceOrientationSensor layout.
+            InputSystem.RegisterLayoutMatcher("DeviceOrientationSensor",
                 new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
                     .WithDeviceClass("Orientation"));
