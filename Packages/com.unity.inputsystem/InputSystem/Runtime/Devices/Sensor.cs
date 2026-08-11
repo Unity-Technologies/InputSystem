@@ -840,10 +840,10 @@ namespace UnityEngine.InputSystem
         /// <param name="updateDistanceInMeters">Minimum distance the device must move before a new reading is reported, in meters.</param>
         /// <remarks>
         /// By default, the sensor is configured with the values from <see cref="InputSettings.locationAccuracy"/>
-        /// and <see cref="InputSettings.locationDistanceThreshold"/>. <see cref="ResetConfiguration"/> return to those defaults.
+        /// and <see cref="InputSettings.locationDistanceThreshold"/>. <see cref="ResetConfiguration"/> returns to those defaults.
         ///
         /// If the sensor is already enabled, readings may briefly pause while they are applied.
-        /// If the sensor is disabled, values apply when device is enabled.
+        /// If the sensor is disabled, values apply when the device is enabled.
         /// </remarks>
         public void Configure(float desiredAccuracyInMeters, float updateDistanceInMeters)
         {
