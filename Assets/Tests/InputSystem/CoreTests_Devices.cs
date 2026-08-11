@@ -3877,7 +3877,7 @@ partial class CoreTests
     public void Devices_CanGetDeviceOrientationReading()
     {
         var sensor = InputSystem.AddDevice<DeviceOrientationSensor>();
-        InputSystem.QueueStateEvent(sensor, new OrientationState { orientation = (int)DeviceOrientation.LandscapeLeft });
+        InputSystem.QueueStateEvent(sensor, new DeviceOrientationState { orientation = (int)DeviceOrientation.LandscapeLeft });
         InputSystem.Update();
 
         Assert.That(sensor.orientation.ReadValue(), Is.EqualTo(DeviceOrientation.LandscapeLeft));

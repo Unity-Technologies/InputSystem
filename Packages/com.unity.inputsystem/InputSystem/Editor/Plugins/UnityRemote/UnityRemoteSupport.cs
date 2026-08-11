@@ -256,7 +256,7 @@ namespace UnityEngine.InputSystem
                         break;
                     var orientationMessage = (DeviceOrientationMessage*)messageData;
                     // The remote sends the DeviceOrientation enum value directly (same values as ours).
-                    InputSystem.QueueStateEvent(s_State.orientation, new OrientationState
+                    InputSystem.QueueStateEvent(s_State.orientation, new DeviceOrientationState
                     {
                         orientation = orientationMessage->orientation
                     });

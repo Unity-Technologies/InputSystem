@@ -61,7 +61,7 @@ namespace UnityEngine.InputSystem.LowLevel
         public FourCC format => kFormat;
     }
 
-    internal struct OrientationState : IInputStateTypeInfo
+    internal struct DeviceOrientationState : IInputStateTypeInfo
     {
         public static FourCC kFormat => new FourCC('O', 'R', 'N', 'T');
 
@@ -774,7 +774,7 @@ namespace UnityEngine.InputSystem
     /// </code>
     /// </example>
     /// </remarks>
-    [InputControlLayout(stateType = typeof(OrientationState), displayName = "Orientation")]
+    [InputControlLayout(stateType = typeof(DeviceOrientationState), displayName = "Orientation")]
     public class DeviceOrientationSensor : Sensor
     {
         /// <summary>
