@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed the Inspector help button for a selected `.inputactions` asset ("Open Reference for Input Action Importer") opening a missing documentation page; it now links to the Action Assets manual page [UUM-149518](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-149518)
 - Fixed an `OverflowException` when creating a control scheme (or other named item) whose all-numeric name exceeds `Int32.MaxValue`, which previously discarded the entered name and fell back to the default [UUM-145766](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-145766)
 - Fixed the Input Actions editor window logging a "Failed to load asset" exception on editor startup when its saved window layout was restored in a project where the referenced asset GUID did not resolve; the window now closes quietly instead [UUM-144318](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-144318)
 - Empty foldouts are no longer shown for processors and interactions that have no settings (e.g. "Invert") [UUM-144325](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-144325)
