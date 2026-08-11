@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+
+- Added `LocationSensor`, exposing GPS position, `status`, and permission state as the parity equivalent of `UnityEngine.Input.location`.
+- Added `InputSettings.locationAccuracy` and `InputSettings.locationDistanceThreshold` project defaults for location updates.
+
 ### Fixed
 
 - Fixed an `OverflowException` when creating a control scheme (or other named item) whose all-numeric name exceeds `Int32.MaxValue`, which previously discarded the entered name and fell back to the default [UUM-145766](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-145766)
