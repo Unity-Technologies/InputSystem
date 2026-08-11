@@ -68,7 +68,7 @@ namespace UnityEngine.InputSystem.LowLevel
     {
         public static FourCC kFormat => new FourCC('L', 'O', 'C', ' ');
 
-        // Order matches native LocationInfo (timestamp first). Do not reorder.
+        // Order matches native LocationInfo. Do not reorder.
         [InputControl(displayName = "Timestamp", layout = "Double")]
         public double timestamp;
         [InputControl(displayName = "Latitude", layout = "Axis", noisy = true)]
