@@ -1,26 +1,29 @@
+using UnityEngine;
 #region using
 using UnityEngine.InputSystem;
 #endregion
-using UnityEngine.InputSystem;
 
-public class Example : MonoBehaviour
+namespace DocCodeSamples.Tests
 {
-    #region InputAction_variables
-    InputAction moveAction;
-    InputAction jumpAction;
-    #endregion
+    internal class UsingActionsWorkflowExamples : MonoBehaviour
+    {
+        #region InputAction_variables
+        InputAction moveAction;
+        InputAction jumpAction;
+        #endregion
 
-    private void Start() {
-    #region FindAction
-    moveAction = InputSystem.actions.FindAction("Move");
-    jumpAction = InputSystem.actions.FindAction("Jump");
-    #endregion
-    }
+        private void Start() {
+        #region FindAction
+        moveAction = InputSystem.actions.FindAction("Move");
+        jumpAction = InputSystem.actions.FindAction("Jump");
+        #endregion
+        }
 
-    private void Update() {
-    #region ReadActionValues
-    Vector2 moveValue = moveAction.ReadValue<Vector2>();
-    bool jumpValue = jumpAction.IsPressed();
-    #endregion
+        private void Update() {
+        #region ReadActionValues
+        Vector2 moveValue = moveAction.ReadValue<Vector2>();
+        bool jumpValue = jumpAction.IsPressed();
+        #endregion
+        }
     }
 }
