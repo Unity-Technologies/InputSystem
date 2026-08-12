@@ -755,6 +755,10 @@ namespace UnityEngine.InputSystem
     /// seconds to acquire valid data, so readings are only valid once <see cref="status"/> reaches
     /// <see cref="LocationServiceStatus.Running"/>. Accessing location requires the user to have
     /// granted permission (<see cref="isEnabledByUser"/>).
+    ///
+    /// Do not drive location from both this device and the legacy <c>UnityEngine.Input.location</c> API in the
+    /// same project. Both share the same underlying platform location service, so disabling this device also
+    /// stops updates for the legacy API (and vice versa). Use a single location API per project.
     /// </remarks>
     [InputControlLayout(stateType = typeof(LocationState), displayName = "Location")]
     public class LocationSensor : Sensor
