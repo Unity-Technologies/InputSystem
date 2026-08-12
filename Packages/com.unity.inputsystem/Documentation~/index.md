@@ -11,7 +11,7 @@ The **Input System** allows your users to control your game or app using a devic
 Unity supports input through two systems:
 
 - The [Input Manager](https://docs.unity3d.com/Manual/class-InputManager.html), documented in the main Unity manual. This system is available for backward compatibility. For new projects, use the Input System.
-- The Input System package described in this documentation. This is a more flexible system than the Input Manager.
+- The Input System package described in this documentation. This is a more flexible system than the Input Manager and replaces it for new projects.
 
 The Unity Editor 6.7 and newer installs the Input System package for projects created from some of the template. For empty projects and for older versions of the Editor, please install the package [using the Package Manager](Installation.md).
 
