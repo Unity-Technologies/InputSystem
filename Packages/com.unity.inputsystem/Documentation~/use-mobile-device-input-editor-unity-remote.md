@@ -6,7 +6,7 @@ uid: input-system-unity-remote
 
 The Unity Remote is an app available for iOS and Android which allows using a mobile device for input while running in the Unity Editor. You can find details about the app and how to install it in the [Unity manual](https://docs.unity3d.com/Manual/UnityRemote5.html).
 
-If you would like to try out the Unity Remote app, you can [install](Installation.md#install-samples) the "Unity Remote" sample that is provided with the Input System package.
+If you would like to try out the Unity Remote app, you can [install](Installation.md#import-samples-and-demos) the "Unity Remote" sample that is provided with the Input System package.
 
 > [!NOTE]
 > Joysticks/gamepads are not yet supported over the Unity Remote. No joystick/gamepad input from the mobile device will come through in the editor.

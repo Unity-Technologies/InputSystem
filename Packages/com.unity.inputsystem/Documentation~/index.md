@@ -18,7 +18,7 @@ The Unity Editor 6.7 and newer installs the Input System package for projects cr
 > [!TIP]
 > During the installation process for the **Input System** package, the installer offers to automatically deactivate the older built-in system.
 
-To get started, refer to the [Workflows](workflows.md) section to decide how to use the Input System:
+To get started, refer to the [Workflows](Workflows.md) section to decide how to use the Input System:
 
 - Using actions, which is the recommended workflow.
 - Using both actions and the PlayerInput component, which provides features for callbacks and multiplayer.

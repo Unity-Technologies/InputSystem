@@ -12,4 +12,4 @@ At runtime, the component adds a virtual [Mouse](xref:UnityEngine.InputSystem.Mo
 
 Note that the resulting [Mouse](xref:UnityEngine.InputSystem.Mouse) input is visible in all code that picks up input from the mouse device. You can therefore use the component for mouse simulation elsewhere, not just with [InputSystemUIInputModule](xref:UnityEngine.InputSystem.UI.InputSystemUIInputModule).
 
-To see an example of the Virtual Mouse in a project, see the [Gamepad Mouse Cursor sample](Installation.md#install-samples) included with the Input System package.
+To see an example of the Virtual Mouse in a project, refer to the [Gamepad Mouse Cursor sample](Installation.md#import-samples-and-demos) included with the Input System package.
