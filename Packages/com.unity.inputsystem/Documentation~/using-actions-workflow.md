@@ -61,7 +61,7 @@ To use `FindAction` to get references to your Actions and read user input in you
 
 The following example script shows all these steps combined together into a single script:
 
-[!code-cs[fullexmaple](Packages\com.unity.inputsystem\DocCodeSamples.Tests\UsingActionsWorkflowFullExample.cs)]
+[!code-cs[fullexmaple](Packages/com.unity.inputsystem/DocCodeSamples.Tests/UsingActionsWorkflowFullExample.cs)]
 
 > [!TIP]
 > Aavoid using `FindAction` in your `Update()` loop, because it performs a string-based lookup which could impact performance. This is why the Action references in the example above are found during the Start() function, and stored in variables after finding them.
