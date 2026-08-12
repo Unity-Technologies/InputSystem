@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-- Added `LocationSensor`, exposing GPS position, `status`, and permission state as the parity equivalent of `UnityEngine.Input.location`.
+- Added `LocationSensor`, exposing GPS position, `status`, and permission state as the parity equivalent of `UnityEngine.Input.location`. Reports status via a new Input System `LocationServiceStatus` enum, so the package does not depend on the legacy input module.
 - Added `InputSettings.locationAccuracy` and `InputSettings.locationDistanceThreshold` project defaults for location updates.
 
 ### Fixed

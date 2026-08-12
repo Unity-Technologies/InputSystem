@@ -21,6 +21,7 @@ using UnityEngine.TestTools;
 using UnityEngine.TestTools.Utils;
 using UnityEngineInternal.Input;
 using Gyroscope = UnityEngine.InputSystem.Gyroscope;
+using LocationServiceStatus = UnityEngine.InputSystem.LocationServiceStatus;
 using UnityEngine.TestTools.Constraints;
 using Is = NUnit.Framework.Is;
 using Quaternion = UnityEngine.Quaternion;

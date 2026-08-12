@@ -16,7 +16,7 @@ namespace UnityEngine.InputSystem.LowLevel
         [FieldOffset(0)]
         public InputDeviceCommand baseCommand;
 
-        // 0 Stopped, 1 Initializing, 2 Running, 3 Failed (matches UnityEngine.LocationServiceStatus).
+        // 0 Stopped, 1 Initializing, 2 Running, 3 Failed (matches LocationServiceStatus).
         [FieldOffset(InputDeviceCommand.kBaseCommandSize)]
         public int status;
 

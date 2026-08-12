@@ -720,6 +720,32 @@ namespace UnityEngine.InputSystem
     }
 
     /// <summary>
+    /// Status of the location service backing a <see cref="LocationSensor"/>.
+    /// </summary>
+    public enum LocationServiceStatus
+    {
+        /// <summary>
+        /// The location service is not running.
+        /// </summary>
+        Stopped = 0,
+
+        /// <summary>
+        /// The location service is initializing and does not yet have a valid reading.
+        /// </summary>
+        Initializing = 1,
+
+        /// <summary>
+        /// The location service is running and the sensor readings are valid.
+        /// </summary>
+        Running = 2,
+
+        /// <summary>
+        /// The location service failed to start, for example because the user denied permission.
+        /// </summary>
+        Failed = 3
+    }
+
+    /// <summary>
     /// Input device representing a GPS location sensor.
     /// </summary>
     /// <remarks>
