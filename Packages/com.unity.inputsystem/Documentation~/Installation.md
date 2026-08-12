@@ -5,54 +5,50 @@ uid: input-system-installation
 
 This page describes how to install and activate the **Input System** package for your Unity Project.
 
-> [!NOTE]
-> This version of the new Input System requires the .NET 4 runtime. It doesn't work in projects using the old .NET 3.5 runtime.
->
-> This package is only compatible with Unity Editor release versions 2021.3 and later. If you are working in a release version of the Editor prior to 2021.3, you need to use the package version that works with that version of the Editor, indicated by the **Release** tag in the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window.
-
 ## Install the package
 
-To install the new Input System:
+From Unity 6.7, Input System is automatically included for new projects from templates. 
 
-1. In the main menu of the Unity Editor, go to __Window__ > __Package Manager__ to open the Unity Package Manager.
+If you've created an empty project, or are upgrading an existing project's input, install the Input System package:
 
-2. Select **Unity Registry** from the navigation panel.
+1. Go to **Main Menu** > **Window** > **Package Manager**. 
+1. Go to **Unity Registry**. 
+1. From the package list, select **Input System**.
+1. Select **Install**.
+1. Follow any prompts to [enable the backends](#enable-the-new-input-backends).
 
-3. Select the __Input System__ package from the list.
+## Select a back end
 
-    The Package Manager automatically selects that version to install by default.
+The Unity Editor has two back end options: 
 
-4. Select __Install__, follow any prompts to [enable the backends](#) for the new Input System.
+- The legacy Input Manager for backwards compatibility.
+- The Input System package for new or upgraded projects.
 
-This package also provides several samples that demonstrate how to work with the new Input System, which are also available on the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window. Refer to [Install samples](#install-samples).
+When you install the Input System package in your project, Unity will ask whether you want to enable the new backends. Click **Yes** to enable the new backends and disable the old backends. The Editor restarts to complete the change.
 
-## Enable the new input backends
+To manually select a back end:
 
-By default, Unity's classic Input Manager (`UnityEngine.Input`) is active, and support for the new Input System is inactive. This allows existing Unity Projects to keep working as they are.
+1. Go to **Project Settings** > **Player** > **Other Settings**. 
+1. In **Active Input Handling**, select a back end:
+    - Input Manager (Old). Builds have the `ENABLE_LEGACY_INPUT_MANAGER=1` C# `#define`.
+    - Input System Package (New). Builds have the `ENABLE_INPUT_SYSTEM=1` C# `#define`.
+    - Both. Builds have both of the C# `#define`.
+1. The Editor restarts with a new back end.
 
-When you install the Input System package, Unity will ask whether you want to enable the new backends. Click **Yes** to enable the new backends and disable the old backends. The Editor restarts during this process.
+## Compatibility notes for existing projects
 
-![Editor Restart Warning](Images/EditorRestartWarning.png)
+Before upgrading existing projects to use Input System, please ensure:
 
-You can find the corresponding setting in __Edit__ > __Project Settings__ > __Player__ > __Other Settings__ > __Active Input Handling__. If you change this setting you must restart the Editor for it to take effect.
+* You're using .NET 4 runtime or newer.
+* You're using an Editor version of 2021.3 or newer. For older versions, match the package version to the Editor version as indicated by the **Release** tag in the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window.
 
-> [!NOTE]
-> You can enable __both__ the old __and__ the new system at the same time. To do so, set **Active Input Handling** to **Both**.
+## Samples and demos
 
-![Active Input Handling](Images/ActiveInputHandling.png)
+The Input System package includes several samples. To import a sample into your project:
 
-When the new input backends are enabled, the `ENABLE_INPUT_SYSTEM=1` C# `#define` is added to builds. Similarly, when the old input backends are enabled, the `ENABLE_LEGACY_INPUT_MANAGER=1` C# `#define` is added. Because both can be enabled at the same time, it is possible for __both__ defines to be 1 at the same time.
+1. Go to the **Package Manager** window.
+1. Select the Input System package.
+1. Go to the **Samples** tab. 
+1. To import a sample, select **Import** next to its name.
 
-## Install samples
-
-The package comes with a number of samples. You can install these directly from the Package Manager window in Unity (__Window > Package Manager__).
-
-To view the list of samples:
-
-1. Select the package in the **Package Manager** window.
-1. Select the __Samples__ tab.
-1. Select __Import__ next to any sample name to import that sample into the current project.
-
-![Install Samples](Images/InstallSamples.png)
-
-For a more comprehensive demo project for the Input System, refer to the [InputSystem_Warriors](https://github.com/UnityTechnologies/InputSystem_Warriors) GitHub repository.
+For a more comprehensive demo, use the [Warriors](https://github.com/UnityTechnologies/InputSystem_Warriors) project.
