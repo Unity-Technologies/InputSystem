@@ -5,18 +5,11 @@ uid: input-system-installation
 
 Install the Input System package and enable the input back end for your project.
 
-## Compatibility notes for existing projects
-
-Before you upgrade an existing project, check the following requirements:
-
-- You're using .NET 4 runtime or newer.
-- You're using an Editor version of 2021.3 or newer. For older versions, match the package version to the Editor version as indicated by the **Release** tag in the [Unity Package Manager](https://docs.unity3d.com/Manual/upm-ui.html) window.
-
 ## Install the package
 
-Unity 6.7 and later include the Input System package in projects created from templates.
+Unity 6.1 and later include the Input System package in projects created from some templates.
 
-If you've created an empty project, or are upgrading an existing project's input, install the Input System package:
+If your project doesn't include the Input System package, you can install it:
 
 1. In the main menu, go to **Window** > **Package Manager**.
 1. Go to **Unity Registry**.
