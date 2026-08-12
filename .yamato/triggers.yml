@@ -19,7 +19,6 @@ all_functional_tests:
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_6_-_macos13arm
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_6_-_ubuntu2204
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_6_-_win10
-  - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_7_-_macos13
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_7_-_macos13arm
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_7_-_ubuntu2204
   - path: .yamato/input-system-editor-functional-tests.yml#inputsystem-editorfunctionaltests_-_6000_7_-_win10
@@ -55,7 +54,6 @@ all_functional_tests:
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_6_-_macos13arm
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_6_-_ubuntu2204
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_6_-_win10
-  - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_7_-_macos13
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_7_-_macos13arm
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_7_-_ubuntu2204
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_7_-_win10
@@ -67,7 +65,6 @@ all_functional_tests:
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_5_-_win10
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_6_-_macos13arm
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_6_-_win10
-  - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_7_-_macos13
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_7_-_macos13arm
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_7_-_win10
   - path: .yamato/wrench/promotion-jobs.yml#publish_dry_run_inputsystem
@@ -93,7 +90,6 @@ all_performance_tests:
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_6_-_macos13arm
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_6_-_ubuntu2204
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_6_-_win10
-  - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_7_-_macos13
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_7_-_macos13arm
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_7_-_ubuntu2204
   - path: .yamato/input-system-editor-performance-tests.yml#inputsystem-editorperformancetests_-_6000_7_-_win10
@@ -129,7 +125,6 @@ all_performance_tests:
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_6_-_macos13arm
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_6_-_ubuntu2204
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_6_-_win10
-  - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_7_-_macos13
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_7_-_macos13arm
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_7_-_ubuntu2204
   - path: .yamato/input-system-standalone-il2-cpp-performance-tests.yml#inputsystem-standaloneil2cppperformancetests_-_6000_7_-_win10
@@ -145,7 +140,6 @@ all_performance_tests:
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_6_-_macos13arm
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_6_-_ubuntu2204
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_6_-_win10
-  - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_7_-_macos13
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_7_-_macos13arm
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_7_-_ubuntu2204
   - path: .yamato/input-system-standalone-performance-tests.yml#inputsystem-standaloneperformancetests_-_6000_7_-_win10

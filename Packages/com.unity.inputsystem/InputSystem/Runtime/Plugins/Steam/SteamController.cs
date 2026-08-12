@@ -21,12 +21,12 @@ namespace UnityEngine.InputSystem.Steam
     ///
     /// Note that as the Steam controller API supports PS4 and Xbox controllers as well,
     /// the actual hardware device behind a SteamController instance may not be a
-    /// Steam Controller. The <see cref="steamControllerType"/> property can be used what kind
+    /// Steam Controller. The steamControllerType property can be used what kind
     /// of controller the Steam runtime is talking to internally.
     ///
     /// This class is abstract. Specific Steam controller interfaces can either be implemented
     /// manually based on this class or generated automatically from Steam IGA files using
-    /// <see cref="SteamIGAConverter"/>. This can be done in the editor by right-clicking
+    /// <see cref="UnityEngine.InputSystem.Steam.Editor.SteamIGAConverter"/>. This can be done in the editor by right-clicking
     /// a .VDF file containing the actions and then selecting "Steam >> Generate Unity Input Device...".
     /// The result is a newly generated device layout that will automatically register itself
     /// with the input system and will represent a Steam controller with the specific action
