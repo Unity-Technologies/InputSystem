@@ -40,6 +40,7 @@ The following table describes the color coding that all the diagrams on this pag
 | **Color** | **Represents** |
 | :--- | :--- |
 | Yellow | Platform back ends, and the runtime pipes that carry events between them and the Input System. |
+| Teal | Background threads that queue events from outside the main thread. |
 | White with a red border | The `InputManager` class. |
 | Blue | Layouts, and the reusable control building blocks that layouts are made from. |
 | Green | Devices and their controls. |
@@ -50,7 +51,7 @@ The following table describes the color coding that all the diagrams on this pag
 
 ### Diagram 1: Platform back ends queue events
 
-The built-in back ends push discovery and state events into three queues that drive the `InputManager` class. The `InputManager` class sends commands back to the back ends.
+The built-in back ends push discovery and state events into the device discovery queue and the foreground event queue, which drive the `InputManager` class. Events that come from background threads go into the background event queue, which the main thread flushes into the foreground queue. The `InputManager` class sends commands back to the back ends.
 
 ```mermaid
 flowchart TB
@@ -59,16 +60,19 @@ flowchart TB
     Windows · macOS · Linux · UWP · iOS · Android
     · Switch · Xbox · PS4 · Web · XR"]
     DDQ["Device discovery queue"]
-    EQ["Event queue"]
-    BEQ["Background event queue
-    (async; flushes into the foreground queue)"]
+    EQ["Event queue (foreground)"]
+    BEQ["Background event queue"]
+    threads["Background threads
+    Any code that queues events off the main thread"]
     InputManager(["<b>InputManager</b>
     Matches layouts to devices (InputDeviceMatcher),
     builds devices (InputDeviceBuilder), creates and updates them"])
 
-    backends --> DDQ & EQ & BEQ
+    backends --> DDQ & EQ
+    threads -->|"Queue event (thread-safe)"| BEQ
     DDQ -->|"Device discovered"| InputManager
     EQ -->|"Update (flushes event buffers)"| InputManager
+    BEQ -->|"Flushed by the main thread"| EQ
     InputManager -->|"Queue event"| EQ
     InputManager -->|"Device command (IOCTL-style)"| backends
 
@@ -77,7 +81,9 @@ flowchart TB
     classDef runtime fill:#fdf3d0,stroke:#b9962e,color:#000;
     classDef manager fill:#ffffff,stroke:#e0403f,stroke-width:2px,color:#000;
     classDef signpost fill:#f2f2f2,stroke:#999,color:#000;
+    classDef threaded fill:#d8f0ee,stroke:#3a8a83,color:#000;
     class backends,DDQ,EQ,BEQ runtime;
+    class threads threaded;
     class InputManager manager;
     class out1 signpost;
 ```
