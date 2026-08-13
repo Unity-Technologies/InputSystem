@@ -25,8 +25,4 @@ To remove an Interaction, select the minus (-) button next to it. To change the 
 
 To add Interactions to bindings that you created in code, you can use the following code sample as a template:
 
-```CSharp
-var Action = new InputAction();
-action.AddBinding("<Gamepad>/leftStick")
-    .WithInteractions("tap(duration=0.8)");
-```
+[!code-cs[interactionbindings](Packages/com.unity.inputsystem/DocCodeSamples.Tests/IntroductionInteractions.cs#interactionbindings)]

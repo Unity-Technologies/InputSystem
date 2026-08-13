@@ -82,22 +82,8 @@ If you enter a control path as text, you can use the wildcard asterisk character
 You can access the literal path of a given control with its [`InputControl.path`](xref:UnityEngine.InputSystem.InputControl.path) property. If you need to, you can manually parse a control path into its components using the [`InputControlPath.Parse(path)`](xref:UnityEngine.InputSystem.InputControlPath.Parse(System.String)) API:
 
 
-```CSharp
-var parsed = InputControlPath.Parse("<XRController>{LeftHand}/trigger").ToArray();
-
-Debug.Log(parsed.Length); // Prints 2.
-Debug.Log(parsed[0].layout); // Prints "XRController".
-Debug.Log(parsed[0].name); // Prints an empty string.
-Debug.Log(parsed[0].usages.First()); // Prints "LeftHand".
-Debug.Log(parsed[1].layout); // Prints null.
-Debug.Log(parsed[1].name); // Prints "trigger".
-```
+[!code-cs[parse](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ControlPaths.cs#parse)]
 
 You can use control paths to directly reference controls, or to let the Input System search for Controls among all devices using [`InputSystem.FindControls`](xref:UnityEngine.InputSystem.InputSystem).
 
-```CSharp
-var gamepad = Gamepad.all[0];
-var leftStickX = gamepad["leftStick/x"];
-var submitButton = gamepad["{Submit}"];
-var allSubmitButtons = InputSystem.FindControls("*/{Submit}");
-```
+[!code-cs[findcontrols](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ControlPaths.cs#findcontrols)]
