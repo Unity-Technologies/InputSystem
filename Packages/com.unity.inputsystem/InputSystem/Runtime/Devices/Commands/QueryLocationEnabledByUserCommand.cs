@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Command to query whether the user has granted OS-level permission for a <see cref="LocationSensor"/> to access location data.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct QueryLocationEnabledByUserCommand : IInputDeviceCommandInfo
+    internal struct QueryLocationEnabledByUserCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('L', 'U', 'S', 'R');
 

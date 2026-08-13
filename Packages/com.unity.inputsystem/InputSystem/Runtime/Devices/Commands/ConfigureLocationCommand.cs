@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Command to set the desired accuracy and update-distance threshold of a <see cref="LocationSensor"/>.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct ConfigureLocationCommand : IInputDeviceCommandInfo
+    internal struct ConfigureLocationCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('L', 'C', 'F', 'G');
 

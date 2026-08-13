@@ -7,7 +7,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// Command to query the current status of a <see cref="LocationSensor"/>'s underlying platform location service.
     /// </summary>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
-    public struct QueryLocationStatusCommand : IInputDeviceCommandInfo
+    internal struct QueryLocationStatusCommand : IInputDeviceCommandInfo
     {
         public static FourCC Type => new FourCC('L', 'S', 'T', 'A');
 
