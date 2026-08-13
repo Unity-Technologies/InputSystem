@@ -16,18 +16,7 @@ To create a custom processor:
 
 **1.** Add a class derived from [`InputProcessor<TValue>`](xref:UnityEngine.InputSystem.InputProcessor`1), and implement the [`Process`](xref:UnityEngine.InputSystem.InputProcessor`1) method:
 
-```CSharp
-public class MyValueShiftProcessor : InputProcessor<float>
-{
-    [Tooltip("Number to add to incoming values.")]
-    public float valueShift = 0;
-
-    public override float Process(float value, InputControl control)
-    {
-        return value + valueShift;
-    }
-}
-```
+[!code-cs[myvalueprocessor](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ProcessorsExamples.cs#myvalueprocessor)]
 
 > [!IMPORTANT]
 > Processors must be __stateless__, because they are not part of the [input state](control-state.md) that the Input System keeps. For this reason, you can't store local states in a processor if the processor changes based on the input value.
@@ -36,61 +25,14 @@ public class MyValueShiftProcessor : InputProcessor<float>
 
 Register the new processor to the Input System. Call [`InputSystem.RegisterProcessor`](xref:UnityEngine.InputSystem.InputSystem) in your initialization code. You can do this locally within the Processor class:
 
-```CSharp
-#if UNITY_EDITOR
-[InitializeOnLoad]
-#endif
-public class MyValueShiftProcessor : InputProcessor<float>
-{
-    #if UNITY_EDITOR
-    static MyValueShiftProcessor()
-    {
-        Initialize();
-    }
-    #endif
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    static void Initialize()
-    {
-        InputSystem.RegisterProcessor<MyValueShiftProcessor>();
-    }
-
-    //...
-}
-```
+[!code-cs[registernewprocessor](Packages/com.unity.inputsystem/DocCodeSamples.Tests/CustomProcessors.cs#registernewprocessor)]
 
 Your new Processor is now available in the in the [Input Actions Editor](actions-editor.md) and you can also add it in code like this:
 
-```CSharp
-var action = new InputAction(processors: "myvalueshift(valueShift=2.3)");
-```
+[!code-cs[inputactionwithprocessor](Packages/com.unity.inputsystem/DocCodeSamples.Tests/CustomProcessors.cs#inputactionwithprocessor)]
 
 ## Customize the Editor UI
 
 To customize the UI for editing your Processor, create a custom [`InputParameterEditor`](xref:UnityEngine.InputSystem.Editor.InputParameterEditor`1) class for it:
 
-```CSharp
-// No registration is necessary for an InputParameterEditor.
-// The system automatically finds subclasses based on the
-// <..> type parameter.
-#if UNITY_EDITOR
-public class MyValueShiftProcessorEditor : InputParameterEditor<MyValueShiftProcessor>
-{
-    private GUIContent m_SliderLabel = new GUIContent("Shift By");
-
-    public override void OnEnable()
-    {
-        // Put initialization code here. Use 'target' to refer
-        // to the instance of MyValueShiftProcessor that is being
-        // edited.
-    }
-
-    public override void OnGUI()
-    {
-        // Define your custom UI here using EditorGUILayout.
-        target.valueShift = EditorGUILayout.Slider(m_SliderLabel,
-            target.valueShift, 0, 10);
-    }
-}
-#endif
-```
+[!code-cs[customizeUI](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ProcessorsExamples.cs#customizeUI)]
