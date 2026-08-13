@@ -38,6 +38,31 @@
         ]
       },
       "postPackCommands": []
+    },
+    "com.unity.package-manager-doctools": {
+      "directory": "Packages/com.unity.package-manager-doctools/",
+      "prePackCommands": [],
+      "preTestCommands": {
+        "MacOs13": [],
+        "MacOs13Arm": [],
+        "Ubuntu1804": [],
+        "Ubuntu2004": [],
+        "Ubuntu2204": [],
+        "Win10": [],
+        "Win10GPU": [],
+        "Win11": [],
+        "Win11Arm": [],
+        "Win11GPU": []
+      },
+      "InternalOnly": false,
+      "NeverPublish": false,
+      "MaxEditorVersion": "",
+      "coverageEnabled": false,
+      "coverageCommands": [
+        "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:ASSEMBLY_NAME;"
+      ],
+      "dependantsToIgnoreInPreviewApv": {},
+      "postPackCommands": []
     }
   },
   "releasing_packages": [

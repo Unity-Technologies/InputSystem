@@ -151,16 +151,6 @@ publish_dry_run_inputsystem:
       UTR:
         location: results/UTR/validate-inputsystem-6000.6-win10
         unzip: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_7_-_macos13
-    specific_options:
-      packages:
-        ignore_artifact: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-6000.7-macos13
-        unzip: true
-      UTR:
-        location: results/UTR/validate-inputsystem-6000.7-macos13
-        unzip: true
   - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_7_-_macos13arm
     specific_options:
       packages:
@@ -342,16 +332,6 @@ publish_inputsystem:
         unzip: true
       UTR:
         location: results/UTR/validate-inputsystem-6000.6-win10
-        unzip: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_7_-_macos13
-    specific_options:
-      packages:
-        ignore_artifact: true
-      pvp-results:
-        location: results/pvp/validate-inputsystem-6000.7-macos13
-        unzip: true
-      UTR:
-        location: results/UTR/validate-inputsystem-6000.7-macos13
         unzip: true
   - path: .yamato/wrench/validation-jobs.yml#validate_-_inputsystem_-_6000_7_-_macos13arm
     specific_options:

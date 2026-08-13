@@ -33,3 +33,28 @@ package_pack_-_inputsystem:
     Job Maintainers: '#rm-packageworks'
     Wrench: 3.2.1.0
 
+# Pack Package Manager DocTools
+package_pack_-_package-manager-doctools:
+  name: Package Pack - package-manager-doctools
+  agent:
+    image: package-ci/ubuntu-22.04:v4
+    type: Unity::VM::GPU
+    flavor: b1.large
+  commands:
+  - command: npm install upm-ci-utils@stable -g --registry https://artifactory.prd.cds.internal.unity3d.com/artifactory/api/npm/upm-npm
+    timeout: 20
+    retries: 10
+  - command: upm-ci package pack --package-path Packages/com.unity.package-manager-doctools
+  - command: cp upm-ci~/packages/packages.json upm-ci~/packages/com.unity.package-manager-doctools_packages.json
+  after:
+  - command: bash .yamato/generated-scripts/infrastructure-instability-detection-linux.sh
+  artifacts:
+    packages:
+      paths:
+      - upm-ci~/packages/**/*
+  variables:
+    UPMCI_ACK_LARGE_PACKAGE: 1
+  metadata:
+    Job Maintainers: '#rm-packageworks'
+    Wrench: 3.2.1.0
+
