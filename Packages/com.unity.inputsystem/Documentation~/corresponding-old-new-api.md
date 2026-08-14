@@ -91,7 +91,6 @@ Directly reading hardware controls bypasses the new Input System's action-based 
 [`Input.touches`](https://docs.unity3d.com/scriptreference/input-touches.html)|[`EnhancedTouch.Touch.activeTouches`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch)<br/> **Note:** Enable enhanced touch support first by calling [`EnhancedTouch.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport)
 [`Input.touchPressureSupported`](https://docs.unity3d.com/ScriptReference/Input-touchPressureSupported.html)|No corresponding API yet.
 [`Input.touchSupported`](https://docs.unity3d.com/ScriptReference/Input-touchSupported.html)|[`Touchscreen.current != null`](xref:UnityEngine.InputSystem.Touchscreen)
-[`Input.backButtonLeavesApp`](https://docs.unity3d.com/ScriptReference/Input-backButtonLeavesApp.html)|No corresponding API yet.
 [`GetPenEvent`](https://docs.unity3d.com/ScriptReference/Input.GetPenEvent.html)<br/>[`GetLastPenContactEvent`](https://docs.unity3d.com/ScriptReference/Input.GetLastPenContactEvent.html)<br/>[`ResetPenEvents`](https://docs.unity3d.com/ScriptReference/Input.ResetPenEvents.html)<br/>[`ClearLastPenContactEvent`](https://docs.unity3d.com/ScriptReference/Input.ClearLastPenContactEvent.html)|Use: [`Pen.current`](xref:UnityEngine.InputSystem.Pen)<br/>See the [Pen, tablet and stylus support](devices-pen.md) docs for more information.
 <hr/>
 
@@ -117,3 +116,11 @@ Note: [`UnityEngine.TouchScreenKeyboard`](https://docs.unity3d.com/ScriptReferen
 [`Input.gyro.userAcceleration`](https://docs.unity3d.com/ScriptReference/Gyroscope-userAcceleration.html)|[`LinearAccelerationSensor.current.acceleration.ReadValue()`](xref:UnityEngine.InputSystem.LinearAccelerationSensor)
 [`Input.location`](https://docs.unity3d.com/ScriptReference/Input-location.html)|No corresponding API yet.
 [`Input.GetAccelerationEvent`](https://docs.unity3d.com/ScriptReference/Input.GetAccelerationEvent.html)|See notes for `Input.accelerationEvents` above.
+
+## Application
+
+Some members of the old `Input` class control application behavior rather than reading input, so the Input System package doesn't replace them. Their replacements are on [`Application`](https://docs.unity3d.com/ScriptReference/Application.html), in the `UnityEngine` namespace rather than `UnityEngine.InputSystem`.
+
+|Input Manager (Old)|Input System (New)|
+|--|--|
+[`Input.backButtonLeavesApp`](https://docs.unity3d.com/ScriptReference/Input-backButtonLeavesApp.html)|Use [`Application.backButtonLeavesApp`](https://docs.unity3d.com/ScriptReference/Application-backButtonLeavesApp.html), available in Unity 6.7 and later. Android and UWP only. On other platforms the getter always returns false and the setter has no effect. Both properties read and write the same flag, so migrating doesn't change behavior.<br/><br/> **Note:** In Unity 6.7 and later, `Input.backButtonLeavesApp` is deprecated and produces a compiler warning. The API updater rewrites existing call sites to `Application.backButtonLeavesApp` for you.
