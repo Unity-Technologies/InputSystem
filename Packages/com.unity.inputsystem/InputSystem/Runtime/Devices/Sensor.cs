@@ -755,10 +755,19 @@ namespace UnityEngine.InputSystem
     /// seconds to acquire valid data, so readings are only valid once <see cref="status"/> reaches
     /// <see cref="LocationServiceStatus.Running"/>. Accessing location requires the user to have
     /// granted permission (<see cref="isEnabledByUser"/>).
+    /// The sensor's presence (<see cref="current"/> being non-null) does not guarantee the location service is
+    /// available or running; query <see cref="status"/> and <see cref="isEnabledByUser"/> to determine that.
     ///
     /// Do not drive location from both this device and the legacy <c>UnityEngine.Input.location</c> API in the
     /// same project. Both share the same underlying platform location service, so disabling this device also
     /// stops updates for the legacy API (and vice versa). Use a single location API per project.
+    ///
+    /// On Android and iOS the required location permission (Android) and usage description (iOS) are added to the
+    /// build automatically only when your compiled code references <see cref="LocationSensor"/> directly. If you
+    /// access the sensor solely through an <c>.inputactions</c> asset binding and never reference the type in code,
+    /// this detection does not trigger and the build ships without them, so the service fails to start at runtime.
+    /// Reference <see cref="LocationSensor"/> in code (for example by accessing <see cref="current"/> once),
+    /// or add the platform permission and usage description manually.
     /// </remarks>
     [InputControlLayout(stateType = typeof(LocationState), displayName = "Location")]
     public class LocationSensor : Sensor
