@@ -12,6 +12,7 @@ Each sensor device implements a single control which represents the data read by
 | [`Gyroscope`](xref:UnityEngine.InputSystem.Gyroscope) | Measures the angular velocity of a device. | Yes | Yes | Yes |
 | [`GravitySensor`](xref:UnityEngine.InputSystem.GravitySensor) | Determines the direction of the gravity vector relative to the device. | Yes | Yes | Yes |
 | [`AttitudeSensor`](xref:UnityEngine.InputSystem.AttitudeSensor) | Determine the orientation of a device. | Yes | Yes | Yes |
+| [`DeviceOrientationSensor`](xref:UnityEngine.InputSystem.DeviceOrientationSensor) | Reports the physical orientation of the device as a discrete value (for example portrait, landscape, face up or face down). | Yes | Yes | Yes |
 | [`LinearAccelerationSensor`](xref:UnityEngine.InputSystem.LinearAccelerationSensor) | Measures the acceleration of a device unaffected by gravity. | Yes | Yes | Yes |
 | [`MagneticFieldSensor`](xref:UnityEngine.InputSystem.MagneticFieldSensor) | Represents the magnetic field that affects the device. | Yes | No | No |
 | [`LightSensor`](xref:UnityEngine.InputSystem.LightSensor) | Represents the ambient light measured by the device. | Yes | No | No |

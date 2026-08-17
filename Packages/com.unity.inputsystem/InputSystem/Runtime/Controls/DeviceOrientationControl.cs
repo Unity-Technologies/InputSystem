@@ -13,7 +13,7 @@ namespace UnityEngine.InputSystem.Controls
     /// </remarks>
     /// <seealso cref="DeviceOrientationSensor"/>
     [InputControlLayout(hideInUI = true)]
-    public class OrientationControl : InputControl<DeviceOrientation>
+    public class DeviceOrientationControl : InputControl<DeviceOrientation>
     {
         /// <summary>
         /// Default-initialize the control.
@@ -22,7 +22,7 @@ namespace UnityEngine.InputSystem.Controls
         /// Format of the control is <see cref="InputStateBlock.FormatInt"/>
         /// by default.
         /// </remarks>
-        public OrientationControl()
+        public DeviceOrientationControl()
         {
             m_StateBlock.format = InputStateBlock.FormatInt;
         }

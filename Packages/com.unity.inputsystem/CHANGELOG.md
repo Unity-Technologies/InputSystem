@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+
+- Added `DeviceOrientationSensor`, a sensor that reports the physical orientation of the device as a discrete value (portrait, landscape, face up or face down), providing parity with the legacy `UnityEngine.Input.deviceOrientation` property. Read it via `DeviceOrientationSensor.current.orientation.ReadValue()`.
+
 ### Fixed
 
 - Fixed an `OverflowException` when creating a control scheme (or other named item) whose all-numeric name exceeds `Int32.MaxValue`, which previously discarded the entered name and fell back to the default [UUM-145766](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-145766)

@@ -2053,7 +2053,7 @@ namespace UnityEngine.InputSystem
             RegisterControlLayout("Touch", typeof(TouchControl));
             RegisterControlLayout("TouchPhase", typeof(TouchPhaseControl));
             RegisterControlLayout("TouchPress", typeof(TouchPressControl));
-            RegisterControlLayout("Orientation", typeof(OrientationControl));
+            RegisterControlLayout("DeviceOrientation", typeof(DeviceOrientationControl));
 
             RegisterControlLayout("Gamepad", typeof(Gamepad)); // Devices.
             RegisterControlLayout("Joystick", typeof(Joystick));

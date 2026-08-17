@@ -67,7 +67,7 @@ namespace UnityEngine.InputSystem.LowLevel
 
         // Note: unlike the other sensors this value is *not* compensated for screen orientation. It reports
         // the physical orientation of the device and thus must be independent of how the content is rendered.
-        [InputControl(name = "orientation", displayName = "Orientation", layout = "Orientation")]
+        [InputControl(name = "orientation", displayName = "Orientation", layout = "DeviceOrientation")]
         public int orientation;
 
         public FourCC format => kFormat;
@@ -774,14 +774,14 @@ namespace UnityEngine.InputSystem
     /// </code>
     /// </example>
     /// </remarks>
-    [InputControlLayout(stateType = typeof(DeviceOrientationState), displayName = "Orientation")]
+    [InputControlLayout(stateType = typeof(DeviceOrientationState), displayName = "DeviceOrientation")]
     public class DeviceOrientationSensor : Sensor
     {
         /// <summary>
         /// The physical orientation of the device.
         /// </summary>
         /// <value>Control reporting the current <see cref="DeviceOrientation"/>.</value>
-        public OrientationControl orientation { get; protected set; }
+        public DeviceOrientationControl orientation { get; protected set; }
 
         /// <summary>
         /// The orientation sensor that was last added or had activity last.
@@ -807,7 +807,7 @@ namespace UnityEngine.InputSystem
         /// <inheritdoc />
         protected override void FinishSetup()
         {
-            orientation = GetChildControl<OrientationControl>("orientation");
+            orientation = GetChildControl<DeviceOrientationControl>("orientation");
             base.FinishSetup();
         }
     }
