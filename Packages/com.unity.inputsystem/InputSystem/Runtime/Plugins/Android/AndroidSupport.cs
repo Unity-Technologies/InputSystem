@@ -116,7 +116,7 @@ namespace UnityEngine.InputSystem.Android
             InputSystem.RegisterLayoutMatcher("DeviceOrientationSensor",
                 new InputDeviceMatcher()
                     .WithInterface(kAndroidInterface)
-                    .WithDeviceClass("Orientation"));
+                    .WithDeviceClass("DeviceOrientation"));
 
             InputSystem.onFindLayoutForDevice += OnFindLayoutForDevice;
         }
