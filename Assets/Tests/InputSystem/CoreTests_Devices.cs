@@ -4384,6 +4384,24 @@ partial class CoreTests
         Assert.That(InputSystem.pollingFrequency, Is.EqualTo(120).Within(0.000001));
     }
 
+    [Test]
+    [Category("Devices")]
+    public void Devices_CannotSetPollingFrequencyToNonFiniteValue()
+    {
+        // A plain `value <= 0` guard misses NaN (which compares false against everything) and
+        // +Infinity, leaving pollingFrequency stuck at that value on every read. (ISX-2837)
+        InputSystem.pollingFrequency = 120;
+
+        Assert.That(() => InputSystem.pollingFrequency = float.NaN, Throws.ArgumentException);
+        Assert.That(() => InputSystem.pollingFrequency = float.PositiveInfinity, Throws.ArgumentException);
+        Assert.That(() => InputSystem.pollingFrequency = float.NegativeInfinity, Throws.ArgumentException);
+        Assert.That(() => InputSystem.pollingFrequency = 0f, Throws.ArgumentException);
+        Assert.That(() => InputSystem.pollingFrequency = -1f, Throws.ArgumentException);
+
+        // A rejected assignment must leave the previous value untouched.
+        Assert.That(InputSystem.pollingFrequency, Is.EqualTo(120).Within(0.000001));
+    }
+
     #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
     [Test]
     [Category("Devices")]

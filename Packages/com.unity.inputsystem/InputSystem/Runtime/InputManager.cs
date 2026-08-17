@@ -278,8 +278,11 @@ namespace UnityEngine.InputSystem
             set
             {
                 ////REVIEW: allow setting to zero to turn off polling altogether?
-                if (value <= 0)
-                    throw new ArgumentException("Polling frequency must be greater than zero", "value");
+                // NaN slips past a plain `value <= 0` check (NaN compares false against everything),
+                // and +Infinity does too; either would be cached and read back forever. Reject
+                // non-finite values explicitly. (float.IsFinite is unavailable on netstandard2.0.)
+                if (value <= 0 || float.IsNaN(value) || float.IsInfinity(value))
+                    throw new ArgumentException("Polling frequency must be a finite value greater than zero", "value");
 
                 #if UNITY_INPUT_SYSTEM_PLATFORM_POLLING_FREQUENCY
                 m_Runtime.pollingFrequency = value;
