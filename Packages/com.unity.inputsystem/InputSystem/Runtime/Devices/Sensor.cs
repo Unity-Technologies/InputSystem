@@ -842,6 +842,7 @@ namespace UnityEngine.InputSystem
         /// After the sensor is enabled the service starts asynchronously, passing through
         /// <see cref="LocationServiceStatus.Initializing"/> before it reaches
         /// <see cref="LocationServiceStatus.Running"/>. Readings are only valid while running.
+        /// Must be accessed from the main thread only.
         /// </remarks>
         public LocationServiceStatus status
         {
@@ -860,6 +861,7 @@ namespace UnityEngine.InputSystem
         /// <remarks>
         /// A user can grant permission while the service is not running. If permission is denied,
         /// the service won't reach <see cref="LocationServiceStatus.Running"/>.
+        /// Must be accessed from the main thread only.
         /// </remarks>
         public bool isEnabledByUser
         {
@@ -883,6 +885,7 @@ namespace UnityEngine.InputSystem
         ///
         /// If the sensor is already enabled, readings may briefly pause while they are applied.
         /// If the sensor is disabled, values apply when the device is enabled.
+        /// Must be called from the main thread only.
         /// </remarks>
         public void Configure(float desiredAccuracyInMeters, float updateDistanceInMeters)
         {
@@ -895,6 +898,7 @@ namespace UnityEngine.InputSystem
         /// </summary>
         /// <remarks>
         /// Subject to the same application timing as <see cref="Configure"/>.
+        /// Must be called from the main thread only.
         /// </remarks>
         public void ResetConfiguration()
         {
