@@ -143,7 +143,8 @@ The [Clamp Processor](#clamp) clamps the input value to a specified range. The m
 
 #### Example: Racing game speed control
 
-In a case where the player is not supposed to fall below a certain base speed, but also cannot exceed a certain maximum speed, the Clamp Processor is the one you may want to use.Collapse commentComment on line R136ekcoh commented on Jun 11, 2025 ekcohon Jun 11, 2025CollaboratorMore actionsGenerally, IMO this to be game-logic and not input logic, but its fine as-is to show as example.ReactWrite a replyResolve comment
+In a case where the player is not supposed to fall below a certain base speed, but also cannot exceed a certain maximum speed, the Clamp Processor is the one you may want to use.
+
 In the following image, you can see how a Clamp Processor can be used to restrict input values within a defined minimum and maximum range.
 
 ![An example of a Clamp Processor setup in the Input Action Asset Editor](./Images/Processors-Clamp-Editor.png)
