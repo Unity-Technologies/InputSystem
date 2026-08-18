@@ -257,6 +257,66 @@ namespace UnityEngine.InputSystem
         /// </remarks>
         public new static Mouse current { get; private set; }
 
+#if UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES
+        /// <summary>
+        /// Whether the current platform can deliver mouse input at all, regardless of whether a
+        /// mouse is connected right now.
+        /// </summary>
+        /// <value>True if the platform supports mouse input.</value>
+        /// <remarks>
+        /// This answers "could a mouse work here", which is the question to ask when deciding
+        /// whether to offer mouse-specific functionality in a UI. To ask whether a mouse is
+        /// available to read from right now, check both <see cref="current"/> and
+        /// <see cref="InputDevice.enabled"/>, as described below.
+        ///
+        /// Legacy <c>UnityEngine.Input</c> conflated the two under <c>Input.mousePresent</c>, which is
+        /// a hardcoded true on Windows, macOS, Linux and WebGL, and genuine detection only on iOS,
+        /// Android, UWP and the consoles.
+        ///
+        /// A false value means either that the platform does not support mouse input or that it could
+        /// not determine the answer. The two are deliberately not distinguished, because a caller
+        /// deciding whether to offer functionality wants the same behaviour in both cases. It does not
+        /// mean the Editor was unable to ask, since this property only exists on Editor versions that
+        /// can.
+        ///
+        /// The answer cannot change while the application runs, so it is queried once and cached.
+        ///
+        /// Three checks are easy to confuse, in increasing strictness. This property asks whether the
+        /// platform could ever deliver mouse input. <c>Mouse.current != null</c> asks only whether a device
+        /// object is registered, which is not the same as hardware being attached, since several
+        /// platforms register unconditionally. <c>Mouse.current != null &amp;&amp; Mouse.current.enabled</c>
+        /// adds whether it is currently active, and that is the check to make before acting on input.
+        ///
+        /// The two clauses catch different things. <c>current != null</c> is what catches a disconnect,
+        /// since removal nulls <c>current</c>, though that relies on the platform reporting removal at all.
+        /// <c>enabled</c> does not become false on unplug: it tracks whether the device is enabled for
+        /// input, through <see cref="InputSystem.EnableDevice"/> and <see cref="InputSystem.DisableDevice"/>.
+        ///
+        /// The Device Simulator makes that visible: while simulating a touch device it disables the native
+        /// Mouse without removing it, so <c>current</c> stays non-null while <c>enabled</c> is false.
+        /// Read it from the main thread: resolving mouse support can require a platform API that is
+        /// main-thread only, and the first read is the one that resolves it.
+        /// </remarks>
+        /// <example>
+        ///
+        /// <code>
+        /// // Whether a mouse could work here, which is the question to ask when deciding whether to
+        /// // show mouse-specific settings. True on desktop platforms with no mouse plugged in.
+        /// if (Mouse.isSupported)
+        ///     ShowMouseSensitivitySetting();
+        ///
+        /// // Whether one is usable right now, which needs both parts: a non-null current only means a
+        /// // device object is registered, and enabled is what tells you it is active.
+        /// if (Mouse.current != null &amp;&amp; Mouse.current.enabled)
+        ///     Debug.Log(Mouse.current.position.ReadValue());
+        /// </code>
+        /// </example>
+        /// <seealso cref="current"/>
+        /// <seealso cref="Pen.isSupported"/>
+        /// <seealso cref="Touchscreen.isPressureSupported"/>
+        public static bool isSupported => InputSystem.manager.IsMouseSupported();
+#endif // UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES
+
         /// <summary>
         /// Called when the mouse becomes the current mouse.
         /// </summary>

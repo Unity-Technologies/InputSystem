@@ -322,6 +322,79 @@ namespace UnityEngine.InputSystem
         /// </summary>
         public new static Pen current { get; internal set; }
 
+#if UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES
+        /// <summary>
+        /// Whether the current platform can deliver pen input at all, regardless of whether a pen is
+        /// connected right now.
+        /// </summary>
+        /// <value>True if the platform supports pen input.</value>
+        /// <remarks>
+        /// This answers "could a pen work here", which is the question to ask when deciding whether
+        /// to offer pen-specific functionality in a UI. To ask whether a pen is available to read
+        /// from right now, check both <see cref="current"/> and <see cref="InputDevice.enabled"/>,
+        /// as described below.
+        ///
+        /// Legacy <c>UnityEngine.Input</c> conflated the two: <c>Input.stylusTouchSupported</c>
+        /// reports true on any iPad new enough to pair an Apple Pencil, whether or not one is paired.
+        ///
+        /// A false value means either that the platform does not support pen input or that it could not
+        /// determine the answer. The two are deliberately not distinguished, because a caller deciding
+        /// whether to offer functionality wants the same behaviour in both cases. It does not mean the
+        /// Editor was unable to ask, since this property only exists on Editor versions that can.
+        ///
+        /// The answer cannot change while the application runs, so it is queried once and cached.
+        ///
+        /// Three checks are easy to confuse, in increasing strictness. This property asks whether the
+        /// platform could ever deliver pen input. <c>Pen.current != null</c> asks only whether a device
+        /// object is registered, which is not the same as hardware being attached, since several
+        /// platforms register unconditionally. <c>Pen.current != null &amp;&amp; Pen.current.enabled</c>
+        /// adds whether it is currently active, and that is the check to make before acting on input.
+        ///
+        /// The two clauses catch different things. <c>current != null</c> is what catches a disconnect,
+        /// since removal nulls <c>current</c>, though that relies on the platform reporting removal at all.
+        /// <c>enabled</c> does not become false on unplug: it tracks whether the device is enabled for
+        /// input, through <see cref="InputSystem.EnableDevice"/> and <see cref="InputSystem.DisableDevice"/>.
+        ///
+        /// The Device Simulator makes that visible: while simulating a touch device it disables the native
+        /// Pen without removing it, so <c>current</c> stays non-null while <c>enabled</c> is false.
+        /// Read it from the main thread: resolving pen support can require a platform API that is
+        /// main-thread only, and the first read is the one that resolves it.
+        /// </remarks>
+        /// <example>
+        ///
+        /// <code>
+        /// using UnityEngine;
+        /// using UnityEngine.InputSystem;
+        ///
+        /// public class ExampleScript : MonoBehaviour
+        /// {
+        ///     private bool m_ShowPenSettings;
+        ///
+        ///     void Start()
+        ///     {
+        ///         // Decide once whether to offer pen-specific functionality at all. This is true on
+        ///         // a platform that can deliver pen input, even when no pen is connected yet.
+        ///         m_ShowPenSettings = Pen.isSupported;
+        ///     }
+        ///
+        ///     void Update()
+        ///     {
+        ///         // Whether a pen is usable right now is a different question, and needs both a
+        ///         // registered device and that device being enabled.
+        ///         if (Pen.current != null &amp;&amp; Pen.current.enabled &amp;&amp; Pen.current.tip.wasPressedThisFrame)
+        ///         {
+        ///             // handle the pen tip being pressed
+        ///         }
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// <seealso cref="current"/>
+        /// <seealso cref="Mouse.isSupported"/>
+        /// <seealso cref="Touchscreen.isPressureSupported"/>
+        public static bool isSupported => InputSystem.manager.IsPenSupported();
+#endif // UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES
+
         /// <summary>
         /// Return the given pen button.
         /// </summary>

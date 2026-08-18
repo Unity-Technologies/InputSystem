@@ -5895,4 +5895,168 @@ partial class CoreTests
                 BeginTouch(i, new Vector2(i * 1.0f, i * 2.0f), time: 0);
         }, Throws.Nothing);
     }
+
+#if UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES
+    // Platform capability queries. These are addressed to the engine's system endpoint rather than
+    // to a device, because they answer "can this platform do X" rather than "is an X connected".
+    // What a given platform actually answers is asserted natively in the engine repository, from
+    // PlatformDependent, where the file location gates the test to that platform.
+
+    private unsafe void AnswerCapabilityQuery(FourCC type, InputCapabilitySupport answer)
+    {
+        runtime.SetDeviceCommandCallback(NativeInputCapabilities.systemDeviceId,
+            (id, command) =>
+            {
+                if (command->type != type)
+                    return InputDeviceCommand.GenericFailure;
+
+                *(InputCapabilitySupport*)((byte*)command + InputDeviceCommand.kBaseCommandSize) = answer;
+                return InputDeviceCommand.GenericSuccess;
+            });
+    }
+
+    [Test]
+    [Category("Devices")]
+    [TestCase(InputCapabilitySupport.Supported, true)]
+    [TestCase(InputCapabilitySupport.NotSupported, false)]
+    // Unknown collapses to false: the platform has not answered, and a maybe is not something a
+    // bool property can express.
+    [TestCase(InputCapabilitySupport.Unknown, false)]
+    public void Devices_PenIsSupported_ReflectsWhatThePlatformAnswers(InputCapabilitySupport answer, bool expected)
+    {
+        AnswerCapabilityQuery(QueryPenSupportedCommand.Type, answer);
+
+        Assert.That(Pen.isSupported, Is.EqualTo(expected));
+    }
+
+    [Test]
+    [Category("Devices")]
+    [TestCase(InputCapabilitySupport.Supported, true)]
+    [TestCase(InputCapabilitySupport.NotSupported, false)]
+    [TestCase(InputCapabilitySupport.Unknown, false)]
+    public void Devices_MouseIsSupported_ReflectsWhatThePlatformAnswers(InputCapabilitySupport answer, bool expected)
+    {
+        AnswerCapabilityQuery(QueryMouseSupportedCommand.Type, answer);
+
+        Assert.That(Mouse.isSupported, Is.EqualTo(expected));
+    }
+
+    [Test]
+    [Category("Devices")]
+    [TestCase(InputCapabilitySupport.Supported, true)]
+    [TestCase(InputCapabilitySupport.NotSupported, false)]
+    [TestCase(InputCapabilitySupport.Unknown, false)]
+    public void Devices_TouchscreenIsPressureSupported_ReflectsWhatThePlatformAnswers(InputCapabilitySupport answer, bool expected)
+    {
+        AnswerCapabilityQuery(QueryTouchPressureSupportedCommand.Type, answer);
+
+        Assert.That(Touchscreen.isPressureSupported, Is.EqualTo(expected));
+    }
+
+    // The properties describe the platform, not a device, so they must answer without one. This is
+    // the case that separates them from Device.current != null.
+    [Test]
+    [Category("Devices")]
+    public void Devices_CapabilityQueries_AreAnsweredWithNoDeviceAdded()
+    {
+        AnswerCapabilityQuery(QueryPenSupportedCommand.Type, InputCapabilitySupport.Supported);
+
+        Assert.That(InputSystem.devices, Is.Empty);
+        Assert.That(Pen.isSupported, Is.True);
+        Assert.That(Pen.current, Is.Null);
+    }
+
+    // The endpoint is addressed by a reserved id. A capability query must not be delivered to a
+    // real device, which would let a device answer a question about the platform.
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CapabilityQueries_AreNotDeliveredToDevices()
+    {
+        var pen = InputSystem.AddDevice<Pen>();
+        var receivedByDevice = 0;
+        runtime.SetDeviceCommandCallback(pen,
+            (id, command) =>
+            {
+                if (command->type == QueryPenSupportedCommand.Type)
+                    ++receivedByDevice;
+                return InputDeviceCommand.GenericFailure;
+            });
+        AnswerCapabilityQuery(QueryPenSupportedCommand.Type, InputCapabilitySupport.Supported);
+
+        Assert.That(Pen.isSupported, Is.True);
+        Assert.That(receivedByDevice, Is.Zero);
+    }
+
+    // A platform capability cannot change while the application runs, so reading the property
+    // repeatedly must not keep issuing commands.
+    [Test]
+    [Category("Devices")]
+    public unsafe void Devices_CapabilityQueries_AreOnlyIssuedOnce()
+    {
+        var queryCount = 0;
+        runtime.SetDeviceCommandCallback(NativeInputCapabilities.systemDeviceId,
+            (id, command) =>
+            {
+                if (command->type != QueryPenSupportedCommand.Type)
+                    return InputDeviceCommand.GenericFailure;
+
+                ++queryCount;
+                *(InputCapabilitySupport*)((byte*)command + InputDeviceCommand.kBaseCommandSize) =
+                    InputCapabilitySupport.Supported;
+                return InputDeviceCommand.GenericSuccess;
+            });
+
+        Assert.That(Pen.isSupported, Is.True);
+        Assert.That(Pen.isSupported, Is.True);
+        Assert.That(Pen.isSupported, Is.True);
+
+        Assert.That(queryCount, Is.EqualTo(1));
+    }
+
+    // Nothing answers, which is what an engine without the endpoint looks like. The property must
+    // report false rather than throwing, and must not retry on every read.
+    [Test]
+    [Category("Devices")]
+    public void Devices_CapabilityQueries_ReportFalseWhenNothingAnswers()
+    {
+        Assert.That(Pen.isSupported, Is.False);
+        Assert.That(Mouse.isSupported, Is.False);
+        Assert.That(Touchscreen.isPressureSupported, Is.False);
+    }
+
+    // Nothing generates the mirror of the engine's enum, and a reordering would silently invert
+    // Supported and NotSupported across the boundary. The engine pins the same values from its side.
+    [Test]
+    [Category("Devices")]
+    public void Devices_CapabilitySupport_MatchesTheEngineWireValues()
+    {
+        Assert.That((byte)InputCapabilitySupport.Unknown, Is.EqualTo((byte)CapabilityState.Unknown));
+        Assert.That((byte)InputCapabilitySupport.NotSupported, Is.EqualTo((byte)CapabilityState.NotSupported));
+        Assert.That((byte)InputCapabilitySupport.Supported, Is.EqualTo((byte)CapabilityState.Supported));
+    }
+
+    // Same reasoning for the codes: the package spells them as FourCC characters, matching every
+    // other command in the Commands folder, while the engine declares them as integer constants.
+    [Test]
+    [Category("Devices")]
+    public void Devices_CapabilityQueryCodes_MatchTheEngineCodes()
+    {
+        Assert.That((int)QueryPenSupportedCommand.Type, Is.EqualTo(NativeInputCapabilities.queryPenSupported));
+        Assert.That((int)QueryMouseSupportedCommand.Type, Is.EqualTo(NativeInputCapabilities.queryMouseSupported));
+        Assert.That((int)QueryTouchPressureSupportedCommand.Type,
+            Is.EqualTo(NativeInputCapabilities.queryTouchPressureSupported));
+    }
+
+    // The payload the package sends must be exactly the one byte the engine's payload validation
+    // accepts. The base command header is stripped before it reaches native.
+    [Test]
+    [Category("Devices")]
+    public void Devices_CapabilityQueryPayload_IsOneByteAfterTheCommandHeader()
+    {
+        Assert.That(QueryPenSupportedCommand.kSize - InputDeviceCommand.kBaseCommandSize, Is.EqualTo(1));
+        Assert.That(QueryMouseSupportedCommand.kSize - InputDeviceCommand.kBaseCommandSize, Is.EqualTo(1));
+        Assert.That(QueryTouchPressureSupportedCommand.kSize - InputDeviceCommand.kBaseCommandSize, Is.EqualTo(1));
+    }
+
+#endif // UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES
 }

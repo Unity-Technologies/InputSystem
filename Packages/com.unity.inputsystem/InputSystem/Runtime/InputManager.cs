@@ -3125,13 +3125,78 @@ namespace UnityEngine.InputSystem
             DelegateHelpers.InvokeCallbacksSafe(ref m_ActionsChangedListeners, k_InputOnActionsChangeMarker, "InputSystem.onActionsChange");
         }
 
-        internal unsafe long ExecuteGlobalCommand<TCommand>(ref TCommand command)
+#if UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES
+        /// <summary>
+        /// Sends a command to the engine's system endpoint, which answers questions about the
+        /// platform rather than about any one device.
+        /// </summary>
+        /// <remarks>
+        /// This replaces an earlier ExecuteGlobalCommand, which addressed device id 0 on the premise
+        /// that the engine routes such commands by FourCC alone. It does not: InputDeviceIOCTL
+        /// resolves the id against the device registry and 0 is the invalid-device sentinel, so a
+        /// command sent there could never be answered. That helper had no callers, having been
+        /// orphaned when UseWindowsGamingInputCommand was removed.
+        ///
+        /// The endpoint is addressed by a reserved device id that is deliberately never registered,
+        /// so it never appears in the device list. On an engine without the endpoint the id is simply
+        /// unknown and the command fails, which callers read as "we do not know".
+        /// </remarks>
+        internal unsafe long ExecuteSystemCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
             var ptr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
-            // device id is irrelevant as we route it based on fourcc internally
-            return InputRuntime.s_Instance.DeviceCommand(0, ptr);
+            return InputRuntime.s_Instance.DeviceCommand(NativeInputCapabilities.systemDeviceId, ptr);
         }
+
+        // Platform capabilities cannot change while the process runs, so each is queried at most
+        // once. These are instance fields rather than statics on purpose: a domain reload or a test
+        // installing a different runtime builds a new InputManager, which discards the cache without
+        // needing an explicit reset hook. A failed query caches as Unknown so that an engine which
+        // cannot answer is asked once rather than on every read.
+        private InputCapabilitySupport? m_PenSupported;
+        private InputCapabilitySupport? m_MouseSupported;
+        private InputCapabilitySupport? m_TouchPressureSupported;
+
+        internal bool IsPenSupported()
+        {
+            if (!m_PenSupported.HasValue)
+            {
+                var command = QueryPenSupportedCommand.Create();
+                m_PenSupported = ExecuteSystemCommand(ref command) >= 0
+                    ? command.isSupported
+                    : InputCapabilitySupport.Unknown;
+            }
+
+            return m_PenSupported.Value == InputCapabilitySupport.Supported;
+        }
+
+        internal bool IsMouseSupported()
+        {
+            if (!m_MouseSupported.HasValue)
+            {
+                var command = QueryMouseSupportedCommand.Create();
+                m_MouseSupported = ExecuteSystemCommand(ref command) >= 0
+                    ? command.isSupported
+                    : InputCapabilitySupport.Unknown;
+            }
+
+            return m_MouseSupported.Value == InputCapabilitySupport.Supported;
+        }
+
+        internal bool IsTouchPressureSupported()
+        {
+            if (!m_TouchPressureSupported.HasValue)
+            {
+                var command = QueryTouchPressureSupportedCommand.Create();
+                m_TouchPressureSupported = ExecuteSystemCommand(ref command) >= 0
+                    ? command.isSupported
+                    : InputCapabilitySupport.Unknown;
+            }
+
+            return m_TouchPressureSupported.Value == InputCapabilitySupport.Supported;
+        }
+
+#endif // UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES
 
         internal void AddAvailableDevicesThatAreNowRecognized()
         {

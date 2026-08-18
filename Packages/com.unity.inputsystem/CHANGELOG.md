@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+
+- Added `Pen.isSupported`, `Mouse.isSupported` and `Touchscreen.isPressureSupported`, reporting what the current platform is capable of rather than what is connected right now. Use them to decide whether to offer device-specific functionality at all. These are not drop-in replacements for the legacy `UnityEngine.Input.stylusTouchSupported` and `Input.mousePresent`: those conflated capability with presence, and on platforms where legacy did real hardware detection the new properties report capability instead, so they can be `true` where legacy was `false`. To act on input, check `Device.current != null && Device.current.enabled` rather than `Device.current != null` alone; a non-null `current` means a device object is registered, which several platforms do unconditionally, and `enabled` is what tells you it is active. The properties require an Editor version that can answer the query and are not compiled in on older versions. `Pen.isSupported` and `Touchscreen.isPressureSupported` come from [ISX-2046](https://jira.unity3d.com/browse/ISX-2046); `Mouse.isSupported` is the short-term scope of [ISX-2079](https://jira.unity3d.com/browse/ISX-2079), whose remaining half is a real presence primitive rather than a capability one
+
+  ```csharp
+  // Before, legacy input. Reported true on any iPad new enough to pair a Pencil, whether or
+  // not one was paired, so the two questions could not be told apart.
+  if (Input.stylusTouchSupported) { }
+  if (Input.mousePresent) { }
+
+  // After. Capability is its own question with its own answer.
+  if (Pen.isSupported) { }   // could a pen ever work on this platform
+  if (Mouse.isSupported) { } // could a mouse ever work on this platform
+
+  // Acting on input is a different question, and needs both parts. A non-null current means a
+  // device object is registered, not that hardware is attached; enabled is what says it is active.
+  if (Pen.current != null && Pen.current.enabled) { }
+  ```
+
 ### Fixed
 
 - Fixed the Inspector help button for a selected `.inputactions` asset ("Open Reference for Input Action Importer") opening a missing documentation page; it now links to the Action Assets manual page [UUM-149518](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-149518)

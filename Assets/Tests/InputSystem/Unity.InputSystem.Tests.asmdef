@@ -81,6 +81,11 @@
             "name": "Unity",
             "expression": "6000.5.0a8",
             "define": "UNITY_INPUTSYSTEM_SUPPORTS_FOCUS_EVENTS"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.7.0a6",
+            "define": "UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES"
         }
     ],
     "noEngineReferences": false
