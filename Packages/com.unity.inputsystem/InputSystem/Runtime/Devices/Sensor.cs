@@ -60,6 +60,30 @@ namespace UnityEngine.InputSystem.LowLevel
 
         public FourCC format => kFormat;
     }
+
+    /// <summary>
+    /// Low-level input state for <see cref="LocationSensor"/>.
+    /// </summary>
+    internal struct LocationState : IInputStateTypeInfo
+    {
+        public static FourCC kFormat => new FourCC('L', 'O', 'C', ' ');
+
+        // Order matches native LocationInfo. Do not reorder.
+        [InputControl(displayName = "Timestamp", layout = "Double")]
+        public double timestamp;
+        [InputControl(displayName = "Latitude", layout = "Axis", noisy = true)]
+        public float latitude;
+        [InputControl(displayName = "Longitude", layout = "Axis", noisy = true)]
+        public float longitude;
+        [InputControl(displayName = "Altitude", layout = "Axis", noisy = true)]
+        public float altitude;
+        [InputControl(displayName = "Horizontal Accuracy", layout = "Axis", noisy = true)]
+        public float horizontalAccuracy;
+        [InputControl(displayName = "Vertical Accuracy", layout = "Axis", noisy = true)]
+        public float verticalAccuracy;
+
+        public FourCC format => kFormat;
+    }
 }
 
 namespace UnityEngine.InputSystem
@@ -692,6 +716,203 @@ namespace UnityEngine.InputSystem
         {
             angle = GetChildControl<AxisControl>("angle");
             base.FinishSetup();
+        }
+    }
+
+    /// <summary>
+    /// Status of the location service backing a <see cref="LocationSensor"/>.
+    /// </summary>
+    public enum LocationServiceStatus
+    {
+        /// <summary>
+        /// The location service is not running.
+        /// </summary>
+        Stopped = 0,
+
+        /// <summary>
+        /// The location service is initializing and does not yet have a valid reading.
+        /// </summary>
+        Initializing = 1,
+
+        /// <summary>
+        /// The location service is running and the sensor readings are valid.
+        /// </summary>
+        Running = 2,
+
+        /// <summary>
+        /// The location service failed to start, for example because the user denied permission.
+        /// </summary>
+        Failed = 3
+    }
+
+    /// <summary>
+    /// Input device representing a GPS location sensor.
+    /// </summary>
+    /// <remarks>
+    /// A location sensor reports the device's geographic position (<see cref="latitude"/>,
+    /// <see cref="longitude"/>, <see cref="altitude"/>).
+    /// After enabling it with <see cref="InputSystem.EnableDevice"/>, the location service may take several
+    /// seconds to acquire valid data, so readings are only valid once <see cref="status"/> reaches
+    /// <see cref="LocationServiceStatus.Running"/>. Accessing location requires the user to have
+    /// granted permission (<see cref="isEnabledByUser"/>).
+    /// The sensor's presence (<see cref="current"/> being non-null) does not guarantee the location service is
+    /// available or running; query <see cref="status"/> and <see cref="isEnabledByUser"/> to determine that.
+    ///
+    /// Do not drive location from both this device and the legacy <c>UnityEngine.Input.location</c> API in the
+    /// same project. Both share the same underlying platform location service, so disabling this device also
+    /// stops updates for the legacy API (and vice versa). Use a single location API per project.
+    ///
+    /// On Android and iOS the required location permission (Android) and usage description (iOS) are added to the
+    /// build automatically only when your compiled code references <see cref="LocationSensor"/> directly. If you
+    /// access the sensor solely through an <c>.inputactions</c> asset binding and never reference the type in code,
+    /// this detection does not trigger and the build ships without them, so the service fails to start at runtime.
+    /// Reference <see cref="LocationSensor"/> in code (for example by accessing <see cref="current"/> once),
+    /// or add the platform permission and usage description manually.
+    /// </remarks>
+    [InputControlLayout(stateType = typeof(LocationState), displayName = "Location")]
+    public class LocationSensor : Sensor
+    {
+        /// <summary>
+        /// Latitude in degrees.
+        /// </summary>
+        public AxisControl latitude { get; protected set; }
+
+        /// <summary>
+        /// Longitude in degrees.
+        /// </summary>
+        public AxisControl longitude { get; protected set; }
+
+        /// <summary>
+        /// Altitude in meters.
+        /// </summary>
+        public AxisControl altitude { get; protected set; }
+
+        /// <summary>
+        /// Horizontal accuracy of the reading in meters.
+        /// </summary>
+        public AxisControl horizontalAccuracy { get; protected set; }
+
+        /// <summary>
+        /// Vertical accuracy of the reading in meters.
+        /// </summary>
+        public AxisControl verticalAccuracy { get; protected set; }
+
+        /// <summary>
+        /// Time the reading was taken, in seconds since the epoch used by the platform location service.
+        /// </summary>
+        public DoubleControl timestamp { get; protected set; }
+
+        /// <summary>
+        /// The location sensor that was last added or had activity last.
+        /// </summary>
+        /// <value>Current location sensor or <c>null</c>.</value>
+        public static LocationSensor current { get; private set; }
+
+        /// <inheritdoc />
+        public override void MakeCurrent()
+        {
+            base.MakeCurrent();
+            current = this;
+        }
+
+        /// <inheritdoc />
+        protected override void OnRemoved()
+        {
+            base.OnRemoved();
+            if (current == this)
+                current = null;
+        }
+
+        /// <inheritdoc />
+        protected override void FinishSetup()
+        {
+            latitude = GetChildControl<AxisControl>("latitude");
+            longitude = GetChildControl<AxisControl>("longitude");
+            altitude = GetChildControl<AxisControl>("altitude");
+            horizontalAccuracy = GetChildControl<AxisControl>("horizontalAccuracy");
+            verticalAccuracy = GetChildControl<AxisControl>("verticalAccuracy");
+            timestamp = GetChildControl<DoubleControl>("timestamp");
+            base.FinishSetup();
+        }
+
+        /// <summary>
+        /// Current status of the location service.
+        /// </summary>
+        /// <remarks>
+        /// After the sensor is enabled the service starts asynchronously, passing through
+        /// <see cref="LocationServiceStatus.Initializing"/> before it reaches
+        /// <see cref="LocationServiceStatus.Running"/>. Readings are only valid while running.
+        /// Must be accessed from the main thread only.
+        /// </remarks>
+        public LocationServiceStatus status
+        {
+            get
+            {
+                var command = QueryLocationStatusCommand.Create();
+                if (ExecuteCommand(ref command) >= 0)
+                    return (LocationServiceStatus)command.status;
+                return LocationServiceStatus.Stopped; // no native impl (editor/desktop) -> degrades
+            }
+        }
+
+        /// <summary>
+        /// Whether the user has granted the app permission to access the device location.
+        /// </summary>
+        /// <remarks>
+        /// A user can grant permission while the service is not running. If permission is denied,
+        /// the service won't reach <see cref="LocationServiceStatus.Running"/>.
+        /// Must be accessed from the main thread only.
+        /// </remarks>
+        public bool isEnabledByUser
+        {
+            get
+            {
+                var command = QueryLocationEnabledByUserCommand.Create();
+                if (ExecuteCommand(ref command) >= 0)
+                    return command.enabledByUser;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Sets the desired accuracy and update-distance threshold for location readings.
+        /// </summary>
+        /// <param name="desiredAccuracyInMeters">Desired horizontal accuracy, in meters.</param>
+        /// <param name="updateDistanceInMeters">Minimum distance the device must move before a new reading is reported, in meters.</param>
+        /// <remarks>
+        /// By default, the sensor is configured with the values from <see cref="InputSettings.locationAccuracy"/>
+        /// and <see cref="InputSettings.locationDistanceThreshold"/>. <see cref="ResetConfiguration"/> returns to those defaults.
+        ///
+        /// If the sensor is already enabled, readings may briefly pause while they are applied.
+        /// If the sensor is disabled, values apply when the device is enabled.
+        /// Must be called from the main thread only.
+        /// </remarks>
+        public void Configure(float desiredAccuracyInMeters, float updateDistanceInMeters)
+        {
+            var command = ConfigureLocationCommand.Create(desiredAccuracyInMeters, updateDistanceInMeters);
+            ExecuteCommand(ref command);
+        }
+
+        /// <summary>
+        /// Reverts the accuracy and update-distance threshold to the <see cref="InputSettings"/> defaults.
+        /// </summary>
+        /// <remarks>
+        /// Subject to the same application timing as <see cref="Configure"/>.
+        /// Must be called from the main thread only.
+        /// </remarks>
+        public void ResetConfiguration()
+        {
+            var settings = InputSystem.settings;
+            Configure(settings.locationAccuracy, settings.locationDistanceThreshold);
+        }
+
+        /// <inheritdoc />
+        protected override void OnAdded()
+        {
+            base.OnAdded();
+
+            // Seed InputSettings defaults into native once on add.
+            ResetConfiguration();
         }
     }
 }

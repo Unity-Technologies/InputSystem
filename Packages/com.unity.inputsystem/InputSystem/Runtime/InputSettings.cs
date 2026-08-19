@@ -467,6 +467,55 @@ namespace UnityEngine.InputSystem
         }
 
         /// <summary>
+        /// The desired accuracy of location updates reported by <see cref="LocationSensor"/>, in meters.
+        /// </summary>
+        /// <value>Desired horizontal accuracy in meters. Default is 10 meters.</value>
+        /// <remarks>
+        /// Note that the accuracy achieved is hardware and platform-dependent. A finer accuracy can increase power use.
+        /// </remarks>
+        /// <seealso cref="locationDistanceThreshold"/>
+        public float locationAccuracy
+        {
+            get => m_LocationAccuracy;
+            set
+            {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (m_LocationAccuracy == value)
+                    return;
+                m_LocationAccuracy = ClampLocationSetting(value);
+                OnChange();
+            }
+        }
+
+        /// <summary>
+        /// The minimum distance, in meters, the device must move before <see cref="LocationSensor"/> reports an update.
+        /// </summary>
+        /// <value>Minimum update distance in meters. Default is 10 meters.</value>
+        /// <remarks>
+        /// A larger threshold reports updates less often as the device moves, which can lower power use.
+        /// </remarks>
+        /// <seealso cref="locationAccuracy"/>
+        public float locationDistanceThreshold
+        {
+            get => m_LocationDistanceThreshold;
+            set
+            {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (m_LocationDistanceThreshold == value)
+                    return;
+                m_LocationDistanceThreshold = ClampLocationSetting(value);
+                OnChange();
+            }
+        }
+
+        private static float ClampLocationSetting(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value))
+                return 0f;
+            return Mathf.Max(0f, value);
+        }
+
+        /// <summary>
         /// When <c>Application.runInBackground</c> is true, this property determines what happens when application focus changes
         /// (see <a href="https://docs.unity3d.com/ScriptReference/Application-isFocused.html">Application.isFocused</a>) changes and how we handle
         /// input while running the background.
@@ -793,6 +842,8 @@ namespace UnityEngine.InputSystem
         [SerializeField] private float m_DefaultHoldTime = 0.4f;
         [SerializeField] private float m_TapRadius = 5;
         [SerializeField] private float m_MultiTapDelayTime = 0.75f;
+        [SerializeField] private float m_LocationAccuracy = 10f;
+        [SerializeField] private float m_LocationDistanceThreshold = 10f;
         [SerializeField] private bool m_DisableRedundantEventsMerging = false;
         [SerializeField] private bool m_ShortcutKeysConsumeInputs = false; // This is the shortcut support from v1.4. Temporarily moved here as an opt-in feature, while it's issues are investigated.
         [SerializeField] private bool m_ShortcutKeysUseActionPriority = false;
@@ -1087,6 +1138,8 @@ namespace UnityEngine.InputSystem
                 CompareFloats(a.defaultHoldTime, b.defaultHoldTime) &&
                 CompareFloats(a.tapRadius, b.tapRadius) &&
                 CompareFloats(a.multiTapDelayTime, b.multiTapDelayTime) &&
+                CompareFloats(a.locationAccuracy, b.locationAccuracy) &&
+                CompareFloats(a.locationDistanceThreshold, b.locationDistanceThreshold) &&
                 a.backgroundBehavior == b.backgroundBehavior &&
                 a.editorInputBehaviorInPlayMode == b.editorInputBehaviorInPlayMode &&
                 a.inputActionPropertyDrawerMode == b.inputActionPropertyDrawerMode &&
