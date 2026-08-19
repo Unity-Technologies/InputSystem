@@ -3960,6 +3960,23 @@ partial class CoreTests
 
     [Test]
     [Category("Devices")]
+    public void Devices_LocationSettingsClampNaNAndInfinityToZero()
+    {
+        InputSystem.settings.locationAccuracy = float.NaN;
+        Assert.That(InputSystem.settings.locationAccuracy, Is.EqualTo(0f));
+
+        InputSystem.settings.locationAccuracy = float.PositiveInfinity;
+        Assert.That(InputSystem.settings.locationAccuracy, Is.EqualTo(0f));
+
+        InputSystem.settings.locationDistanceThreshold = float.NaN;
+        Assert.That(InputSystem.settings.locationDistanceThreshold, Is.EqualTo(0f));
+
+        InputSystem.settings.locationDistanceThreshold = float.NegativeInfinity;
+        Assert.That(InputSystem.settings.locationDistanceThreshold, Is.EqualTo(0f));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanGetGyroReading()
     {
         var gyro = InputSystem.AddDevice<Gyroscope>();

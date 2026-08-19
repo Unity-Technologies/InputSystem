@@ -482,7 +482,7 @@ namespace UnityEngine.InputSystem
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_LocationAccuracy == value)
                     return;
-                m_LocationAccuracy = Mathf.Max(0f, value);
+                m_LocationAccuracy = ClampLocationSetting(value);
                 OnChange();
             }
         }
@@ -503,9 +503,16 @@ namespace UnityEngine.InputSystem
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (m_LocationDistanceThreshold == value)
                     return;
-                m_LocationDistanceThreshold = Mathf.Max(0f, value);
+                m_LocationDistanceThreshold = ClampLocationSetting(value);
                 OnChange();
             }
+        }
+
+        private static float ClampLocationSetting(float value)
+        {
+            if (float.IsNaN(value) || float.IsInfinity(value))
+                return 0f;
+            return Mathf.Max(0f, value);
         }
 
         /// <summary>
