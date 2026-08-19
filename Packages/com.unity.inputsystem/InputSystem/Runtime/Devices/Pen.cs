@@ -330,34 +330,19 @@ namespace UnityEngine.InputSystem
         /// <value>True if the platform supports pen input.</value>
         /// <remarks>
         /// This answers "could a pen work here", which is the question to ask when deciding whether
-        /// to offer pen-specific functionality in a UI. To ask whether a pen is available to read
-        /// from right now, check both <see cref="current"/> and <see cref="InputDevice.enabled"/>,
-        /// as described below.
-        ///
-        /// Legacy <c>UnityEngine.Input</c> conflated the two: <c>Input.stylusTouchSupported</c>
-        /// reports true on any iPad new enough to pair an Apple Pencil, whether or not one is paired.
+        /// to offer pen-specific functionality in a UI. The answer cannot change while the application
+        /// runs.
         ///
         /// A false value means either that the platform does not support pen input or that it could not
         /// determine the answer. The two are deliberately not distinguished, because a caller deciding
-        /// whether to offer functionality wants the same behaviour in both cases. It does not mean the
-        /// Editor was unable to ask, since this property only exists on Editor versions that can.
+        /// whether to offer functionality wants the same behaviour in both cases. It never means the
+        /// Editor was unable to ask, since the property only exists where it can.
         ///
-        /// The answer cannot change while the application runs, so it is queried once and cached.
+        /// Whether a pen is available to read from right now is a separate question, and needs both
+        /// <see cref="current"/> and <see cref="InputDevice.enabled"/>. See the "Device capability and
+        /// device availability" section of the Input Manager migration documentation.
         ///
-        /// Three checks are easy to confuse, in increasing strictness. This property asks whether the
-        /// platform could ever deliver pen input. <c>Pen.current != null</c> asks only whether a device
-        /// object is registered, which is not the same as hardware being attached, since several
-        /// platforms register unconditionally. <c>Pen.current != null &amp;&amp; Pen.current.enabled</c>
-        /// adds whether it is currently active, and that is the check to make before acting on input.
-        ///
-        /// The two clauses catch different things. <c>current != null</c> is what catches a disconnect,
-        /// since removal nulls <c>current</c>, though that relies on the platform reporting removal at all.
-        /// <c>enabled</c> does not become false on unplug: it tracks whether the device is enabled for
-        /// input, through <see cref="InputSystem.EnableDevice"/> and <see cref="InputSystem.DisableDevice"/>.
-        ///
-        /// The Device Simulator makes that visible: while simulating a touch device it disables the native
-        /// Pen without removing it, so <c>current</c> stays non-null while <c>enabled</c> is false.
-        /// Read it from the main thread: resolving pen support can require a platform API that is
+        /// Read this from the main thread: resolving the answer can require a platform API that is
         /// main-thread only, and the first read is the one that resolves it.
         /// </remarks>
         /// <example>

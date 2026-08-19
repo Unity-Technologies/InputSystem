@@ -1,10 +1,3 @@
-////TODO: the UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES version expression in
-////      Unity.InputSystem.asmdef and Unity.InputSystem.Tests.asmdef is still a local development
-////      Editor version. It must be set to the version that actually ships the engine side of
-////      ISX-2046 before this merges, or the gate will enable code referencing engine symbols that
-////      standard builds of that version do not have. Recorded here because asmdef files are JSON
-////      and cannot carry a comment of their own.
-
 #if UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES
 namespace UnityEngine.InputSystem.LowLevel
 {

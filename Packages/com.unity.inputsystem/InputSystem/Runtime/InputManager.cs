@@ -3130,22 +3130,11 @@ namespace UnityEngine.InputSystem
         /// Sends a command to the engine's system endpoint, which answers questions about the
         /// platform rather than about any one device.
         /// </summary>
-        /// <remarks>
-        /// This replaces an earlier ExecuteGlobalCommand, which addressed device id 0 on the premise
-        /// that the engine routes such commands by FourCC alone. It does not: InputDeviceIOCTL
-        /// resolves the id against the device registry and 0 is the invalid-device sentinel, so a
-        /// command sent there could never be answered. That helper had no callers, having been
-        /// orphaned when UseWindowsGamingInputCommand was removed.
-        ///
-        /// The endpoint is addressed by a reserved device id that is deliberately never registered,
-        /// so it never appears in the device list. On an engine without the endpoint the id is simply
-        /// unknown and the command fails, which callers read as "we do not know".
-        /// </remarks>
         internal unsafe long ExecuteSystemCommand<TCommand>(ref TCommand command)
             where TCommand : struct, IInputDeviceCommandInfo
         {
             var ptr = (InputDeviceCommand*)UnsafeUtility.AddressOf(ref command);
-            return InputRuntime.s_Instance.DeviceCommand(NativeInputCapabilities.systemDeviceId, ptr);
+            return m_Runtime.DeviceCommand(NativeInputCapabilities.systemDeviceId, ptr);
         }
 
         // Platform capabilities cannot change while the process runs, so each is queried at most

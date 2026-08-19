@@ -13,10 +13,6 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <see cref="InputManager.ExecuteSystemCommand{TCommand}"/> rather than
     /// <see cref="InputDevice.ExecuteCommand{TCommand}"/>.
     ///
-    /// This is answered at platform scope rather than per touchscreen, because that is the scope at
-    /// which the answer exists: every platform sources it from a device-model or OS-API property
-    /// rather than by enumerating digitizers.
-    ///
     /// The FourCC must match <c>kInputFourCCIOCTLQueryTouchPressureSupported</c> in the engine's
     /// <c>Modules/Input/InputFourCC.h</c>.
     /// </remarks>

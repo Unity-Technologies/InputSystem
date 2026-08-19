@@ -11,7 +11,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <remarks>
     /// Addressed to the engine's system endpoint rather than to a device, so it is sent through
     /// <see cref="InputManager.ExecuteSystemCommand{TCommand}"/> rather than
-    /// <see cref="InputDevice.ExecuteCommand{TCommand}"/>. Presence is answered by the device list.
+    /// <see cref="InputDevice.ExecuteCommand{TCommand}"/>.
     ///
     /// The FourCC must match <c>kInputFourCCIOCTLQueryMouseSupported</c> in the engine's
     /// <c>Modules/Input/InputFourCC.h</c>.
