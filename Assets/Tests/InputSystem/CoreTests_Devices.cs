@@ -5897,13 +5897,6 @@ partial class CoreTests
     }
 
 #if UNITY_INPUTSYSTEM_SUPPORTS_CAPABILITY_QUERIES
-    // Platform capability queries. These are addressed to the engine's system endpoint rather than
-    // to a device, because they answer "can this platform do X" rather than "is an X connected".
-    // The tests below drive the answer through a mocked runtime, so they cover this side of the
-    // exchange only. The engine's own tests assert that whichever platform they run on returns a
-    // valid state and that the endpoint rejects malformed payloads. No test asserts the answer a
-    // named platform gives, so a wrong per-platform answer is caught by review, not by CI.
-
     private unsafe void AnswerCapabilityQuery(FourCC type, InputCapabilitySupport answer)
     {
         runtime.SetDeviceCommandCallback(NativeInputCapabilities.systemDeviceId,
