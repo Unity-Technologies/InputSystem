@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
-- Added `Pen.isSupported`, `Mouse.isSupported` and `Touchscreen.isPressureSupported`, reporting what the current platform is capable of rather than what is connected right now. These are not drop-in replacements for the legacy `UnityEngine.Input` equivalents; see the "Device capability and device availability" section of the migration documentation for how they differ, and for how to check whether a device is available to read from. [ISX-2046] [ISX-2079]
+- Added `Mouse.isSupported`, `Pen.isSupported` and `Touchscreen.isPressureSupported`, which report what the current platform is capable of rather than which devices are connected. Refer to [Corresponding old and new APIs](xref:input-system-old-new-apis). [ISX-2046] [ISX-2079]
 
 ### Fixed
 

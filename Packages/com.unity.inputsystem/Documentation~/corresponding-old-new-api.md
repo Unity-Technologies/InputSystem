@@ -76,20 +76,42 @@ hardcoded constant meaning roughly "this platform has this kind of device", and 
 hardware detection.
 
 The new Input System separates the two:
-- **Does this platform even support this input interface?**
-  Use the capability properties: [`Mouse.isSupported`](xref:UnityEngine.InputSystem.Mouse),
-  [`Pen.isSupported`](xref:UnityEngine.InputSystem.Pen) and [`Touchscreen.isPressureSupported`](xref:UnityEngine.InputSystem.Touchscreen).
-  These never change while the application runs, so read them once and decide whether to offer device-specific
-  functionality.
-- **Is a device available to read from right now?** Use `Device.current != null && Device.current.enabled`.
-  Both parts matter. A non-null `current` only means a device object is registered, which some platforms do
-  unconditionally regardless of whether hardware is attached, and `enabled` is what tells you the device is
-  active. The Device Simulator is a good example of the difference: while simulating a touch device it disables
-  the native mouse and pen without removing them, so `current` stays non-null while `enabled` becomes false.
 
-Because the old properties mixed these two meanings, the capability properties are **not drop-in replacements**.
-On platforms where the old property performed real detection, the new property answers the capability question
-instead, so it can be `true` where the old one was `false`. The tables below note this per API.
+- **Does this platform support this kind of input at all?**
+  Use the capability properties: [`Mouse.isSupported`](xref:UnityEngine.InputSystem.Mouse),
+  [`Pen.isSupported`](xref:UnityEngine.InputSystem.Pen) and
+  [`Touchscreen.isPressureSupported`](xref:UnityEngine.InputSystem.Touchscreen). These don't change while the
+  application runs, so read them once and decide whether to offer device-specific functionality.
+- **Can a device deliver input right now?**
+  Use `Device.current != null && Device.current.enabled`. A non-null `current` only means a device object is
+  registered, which some platforms do whether or not hardware is attached, and
+  [`enabled`](xref:UnityEngine.InputSystem.InputDevice) is what tells you the device delivers input. The Device
+  Simulator shows the difference: while simulating a touch device it disables the native mouse and pen without
+  removing them, so `current` stays non-null while `enabled` becomes false.
+
+Read `current` each time rather than caching a device reference. Removing a device doesn't disable it, so a device
+that has been removed still reports `enabled` as `true`. A cached reference therefore needs
+[`added`](xref:UnityEngine.InputSystem.InputDevice) as well:
+
+```csharp
+// Cached once, for example in a field holding the pad assigned to a player.
+var gamepad = Gamepad.current;
+
+// The pad is then unplugged, so the Input System removes the device.
+Debug.Log(gamepad.enabled);   // True. Removing a device does not disable it.
+Debug.Log(gamepad.added);     // False. It is no longer in InputSystem.devices.
+
+// So a cached reference needs both checks, where reading current needs only enabled.
+if (gamepad.added && gamepad.enabled)
+    Debug.Log(gamepad.leftStick.ReadValue());
+```
+
+Reading `current` at the point of use avoids this, because removing a device resets `current` to `null`.
+
+The capability properties answer a different question from the Input Manager properties they replace, so the two
+can report different values. On platforms where an Input Manager property performed real hardware detection, the
+capability property reports what the platform supports instead, which can be `true` where the old property was
+`false`. The tables below note where this applies.
 
 ## Mouse
 
@@ -101,7 +123,7 @@ instead, so it can be `true` where the old one was `false`. The tables below not
 [`Input.GetMouseButtonDown`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonDown.html)<br/>Example: `Input.GetMouseButtonDown(0)`|Use [`wasPressedThisFrame`](xref:UnityEngine.InputSystem.Controls.ButtonControl) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasPressedThisFrame`
 [`Input.GetMouseButtonUp`](https://docs.unity3d.com/ScriptReference/Input.GetMouseButtonUp.html)<br/>Example: `Input.GetMouseButtonUp(0)`|Use [`wasReleasedThisFrame`](xref:UnityEngine.InputSystem.Controls.ButtonControl) on the corresponding mouse button.<br/>Example: `InputSystem.Mouse.current.leftButton.wasReleasedThisFrame`
 [`Input.mousePosition`](https://docs.unity3d.com/ScriptReference/Input-mousePosition.html)|Use [`Mouse.current.position.ReadValue()`](xref:UnityEngine.InputSystem.Mouse)<br/>Example: `Vector2 position = Mouse.current.position.ReadValue();`<br/> **Note:** Mouse simulation from touch isn't implemented yet.
-[`Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)|Use [`Mouse.isSupported`](xref:UnityEngine.InputSystem.Mouse) to check whether the platform supports mouse input at all.<br/>Example: `if (Mouse.isSupported) ShowMouseSettings();`<br/>**Note:** Not a drop-in replacement; see [Device capability and device availability](#device-capability-and-device-availability) above. Input System does not currently deliver mouse input on iOS, iPadOS or visionOS, so `Mouse.isSupported` is `false` there even though the platform itself supports indirect mice. Requires a recent Editor version.
+[`Input.mousePresent`](https://docs.unity3d.com/ScriptReference/Input-mousePresent.html)|Use [`Mouse.isSupported`](xref:UnityEngine.InputSystem.Mouse) to check whether the platform supports mouse input at all.<br/>Example: `if (Mouse.isSupported) ShowMouseSettings();`<br/>**Note:** Answers a different question from the Input Manager property. Refer to [Device capability and device availability](#device-capability-and-device-availability). Input System does not currently deliver mouse input on iOS, iPadOS or visionOS, so `Mouse.isSupported` is `false` there even though the platform itself supports indirect mice. Requires a recent Editor version.
 
 ## Touch and Pen
 
@@ -110,7 +132,7 @@ instead, so it can be `true` where the old one was `false`. The tables below not
 [`Input.GetTouch`](https://docs.unity3d.com/ScriptReference/Input.GetTouch.html)<br/>For example:<br/>`Touch touch = Input.GetTouch(0);`<br/>`Vector2 touchPos = touch.position;`|Use [`EnhancedTouch.Touch.activeTouches[i]`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch)<br/>Example: `Vector2 touchPos = EnhancedTouch.Touch.activeTouches[0].position;`<br/> **Note:** Enable enhanced touch support first by calling [`EnhancedTouch.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport).
 [`Input.multiTouchEnabled`](https://docs.unity3d.com/ScriptReference/Input-multiTouchEnabled.html)|There is no direct equivalent, because this is a setting rather than a hardware capability. To get the same first-touch-wins behaviour, read [`primaryTouch`](xref:UnityEngine.InputSystem.Touchscreen) instead of iterating all touches, or bind to `<Touchscreen>/primaryTouch`.<br/>Example: `if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)`<br/>**Note:** Two differences from setting `Input.multiTouchEnabled = false`. First, `primaryTouch` filters only itself: [`touches`](xref:UnityEngine.InputSystem.Touchscreen), the `<Touchscreen>/touch*` bindings and [`EnhancedTouch`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch) still report every finger, whereas the legacy setting suppressed additional touches globally. Second, when the finger that started the primary touch lifts while other fingers are still down, the primary touch is retained rather than ended until the last finger is released, so a control bound to it stays actuated in the meantime.
 [`Input.simulateMouseWithTouches`](https://docs.unity3d.com/ScriptReference/Input-multiTouchEnabled.html)|No corresponding API yet.
-[`Input.stylusTouchSupported`](https://docs.unity3d.com/ScriptReference/Input-stylusTouchSupported.html)|Use [`Pen.isSupported`](xref:UnityEngine.InputSystem.Pen) to check whether the platform supports pen input at all.<br/>Example: `if (Pen.isSupported) ShowPenSettings();`<br/>**Note:** Not a drop-in replacement; see [Device capability and device availability](#device-capability-and-device-availability) above. Requires a recent Editor version.
+[`Input.stylusTouchSupported`](https://docs.unity3d.com/ScriptReference/Input-stylusTouchSupported.html)|Use [`Pen.isSupported`](xref:UnityEngine.InputSystem.Pen) to check whether the platform supports pen input at all.<br/>Example: `if (Pen.isSupported) ShowPenSettings();`<br/>**Note:** Answers a different question from the Input Manager property. Refer to [Device capability and device availability](#device-capability-and-device-availability). Requires a recent Editor version.
 [`Input.touchCount`](https://docs.unity3d.com/ScriptReference/Input-touchCount.html)|[`EnhancedTouch.Touch.activeTouches.Count`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch)<br/> **Note:** Enable enhanced touch support first by calling [`EnhancedTouchSupport.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport)
 [`Input.touches`](https://docs.unity3d.com/scriptreference/input-touches.html)|[`EnhancedTouch.Touch.activeTouches`](xref:UnityEngine.InputSystem.EnhancedTouch.Touch)<br/> **Note:** Enable enhanced touch support first by calling [`EnhancedTouch.Enable()`](xref:UnityEngine.InputSystem.EnhancedTouch.EnhancedTouchSupport)
 [`Input.touchPressureSupported`](https://docs.unity3d.com/ScriptReference/Input-touchPressureSupported.html)|Use [`Touchscreen.isPressureSupported`](xref:UnityEngine.InputSystem.Touchscreen) to check whether the platform delivers a real pressure value with touch input.<br/>Example: `if (Touchscreen.isPressureSupported) UsePressureForBrushWidth();`<br/>**Note:** When this is `false`, [`pressure`](xref:UnityEngine.InputSystem.Controls.TouchControl) reports a constant `1` while a finger is down rather than a measured value. This is a platform-wide answer rather than a per-device one. Requires a recent Editor version.
