@@ -598,6 +598,12 @@ namespace UnityEngine.InputSystem.Editor
                             isListening = isListeningNew;
                         }
                     }
+                    else
+                    {
+                        // In PickDevice mode there is no leading "Listen" block, so inset the search
+                        // field from the popup's left edge to match its right-side spacing.
+                        GUILayout.Space(3f);
+                    }
 
                     ////FIXME: the search box doesn't clear out when listening; no idea why the new string isn't taking effect
                     EditorGUI.BeginDisabledGroup(isListening);
