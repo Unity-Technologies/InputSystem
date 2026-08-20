@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
-- Fixed `InputSystem.pollingFrequency` accepting non-finite values: `NaN` (and `+Infinity`) slipped past the `value <= 0` guard, leaving the property returning `NaN` on every read and disabling background polling. Non-finite values are now rejected with an `ArgumentException`. [ISX-2837](https://jira.unity3d.com/browse/ISX-2837)
-
+- Fixed `InputSystem.pollingFrequency` accepting non-finite values. Both `NaN` and `+Infinity` slipped past the `value <= 0` guard - `NaN` left the property returning `NaN` on every read and disabled background polling, while `+Infinity` set the backend to poll continuously and occupy a CPU core. Since both are almost always the result of an arithmetic accident at the call site (`0f/0f` and `1f/0f` respectively), they are now rejected with an `ArgumentException`. [ISX-2837](https://jira.unity3d.com/browse/ISX-2837)
 - Fixed the Inspector help button for a selected `.inputactions` asset ("Open Reference for Input Action Importer") opening a missing documentation page; it now links to the Action Assets manual page [UUM-149518](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-149518)
 - Fixed an `OverflowException` when creating a control scheme (or other named item) whose all-numeric name exceeds `Int32.MaxValue`, which previously discarded the entered name and fell back to the default [UUM-145766](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-145766)
 - Fixed the Input Actions editor window logging a "Failed to load asset" exception on editor startup when its saved window layout was restored in a project where the referenced asset GUID did not resolve; the window now closes quietly instead [UUM-144318](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-144318)

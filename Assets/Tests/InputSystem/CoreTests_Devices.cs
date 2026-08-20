@@ -4393,6 +4393,10 @@ partial class CoreTests
         InputSystem.pollingFrequency = 120;
 
         Assert.That(() => InputSystem.pollingFrequency = float.NaN, Throws.ArgumentException);
+
+        // The native backend does accept +Infinity, as "poll continuously". This public API
+        // deliberately does not - it pins a core, and is far more likely to be a `1f/0f` accident
+        // at the call site than a deliberate choice.
         Assert.That(() => InputSystem.pollingFrequency = float.PositiveInfinity, Throws.ArgumentException);
         Assert.That(() => InputSystem.pollingFrequency = float.NegativeInfinity, Throws.ArgumentException);
         Assert.That(() => InputSystem.pollingFrequency = 0f, Throws.ArgumentException);

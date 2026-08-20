@@ -1337,7 +1337,13 @@ namespace UnityEngine.InputSystem
         ///
         /// Also note that the polling frequency applies to all devices that are polled. It is not possible
         /// to set polling frequency on a per-device basis.
+        ///
+        /// Only finite values greater than zero are accepted. Non-finite values are rejected rather than
+        /// passed through, as they are almost always the result of an arithmetic accident at the call site
+        /// (<c>0f/0f</c> yields <c>NaN</c>, <c>1f/0f</c> yields <c>+Infinity</c>) and would otherwise leave
+        /// polling in an unusable state.
         /// </remarks>
+        /// <exception cref="ArgumentException">Value is not a finite number greater than zero.</exception>
         public static float pollingFrequency
         {
             get => s_Manager.pollingFrequency;

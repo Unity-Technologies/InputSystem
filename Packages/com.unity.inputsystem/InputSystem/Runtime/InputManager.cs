@@ -277,10 +277,15 @@ namespace UnityEngine.InputSystem
 
             set
             {
-                ////REVIEW: allow setting to zero to turn off polling altogether?
-                // NaN slips past a plain `value <= 0` check (NaN compares false against everything),
-                // and +Infinity does too; either would be cached and read back forever. Reject
-                // non-finite values explicitly. (float.IsFinite is unavailable on netstandard2.0.)
+                // Non-finite values almost always arrive by accident - `0f/0f` gives NaN and `1f/0f`
+                // gives +Infinity - and both slip past a plain `value <= 0` check. NaN gets cached
+                // and read back forever. +Infinity means continuous polling in the native backend,
+                // which leaves the polling thread nothing to wait on and pins a core. Neither is
+                // something a public setter should accept. Zero is likewise supported by the native
+                // backend, where it disables polling outright, but is not exposed here - silently
+                // stopping all polled-device input from a frequency setter is a footgun rather than
+                // a discoverable off switch.
+                // (float.IsFinite is unavailable on netstandard2.0.)
                 if (value <= 0 || float.IsNaN(value) || float.IsInfinity(value))
                     throw new ArgumentException("Polling frequency must be a finite value greater than zero", "value");
 
