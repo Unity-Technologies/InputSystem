@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <see cref="InputDevice.ExecuteCommand{TCommand}"/>.
     ///
     /// The FourCC must match <c>kInputFourCCIOCTLQueryTouchPressureSupported</c> in the engine's
-    /// <c>Modules/Input/InputFourCC.h</c>.
+    /// input module.
     /// </remarks>
     /// <seealso cref="Touchscreen.isPressureSupported"/>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]

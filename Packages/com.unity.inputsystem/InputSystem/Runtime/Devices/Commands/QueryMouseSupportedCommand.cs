@@ -14,7 +14,7 @@ namespace UnityEngine.InputSystem.LowLevel
     /// <see cref="InputDevice.ExecuteCommand{TCommand}"/>.
     ///
     /// The FourCC must match <c>kInputFourCCIOCTLQueryMouseSupported</c> in the engine's
-    /// <c>Modules/Input/InputFourCC.h</c>.
+    /// input module.
     /// </remarks>
     /// <seealso cref="Mouse.isSupported"/>
     [StructLayout(LayoutKind.Explicit, Size = kSize)]
