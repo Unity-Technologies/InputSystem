@@ -524,36 +524,25 @@ namespace UnityEngine.InputSystem
         /// <summary>
         /// Whether the current platform delivers a real pressure value with touch input.
         /// </summary>
-        /// <value>True if the platform supports touch pressure.</value>
         /// <remarks>
-        /// When this is false, <see cref="TouchControl.pressure"/> reports a constant 1 while a
-        /// finger is down rather than a measured value, so treating it as an analog signal produces
-        /// no variation. Platforms with no touchscreen at all also report false.
+        /// Use this to decide whether to treat <see cref="TouchControl.pressure"/> as an analog signal.
+        /// When it is false, <see cref="TouchControl.pressure"/> reports a constant 1 while a finger is
+        /// down instead of a measured value. It doesn't change while the application runs.
         ///
-        /// Read this as "this platform delivers pressure" rather than "this particular touchscreen
-        /// does": it is a platform-scoped answer, not a per-device one. The answer cannot change while
-        /// the application runs.
+        /// The answer covers the platform, not an individual touchscreen. Platforms with no touchscreen
+        /// at all also report false.
         ///
-        /// A false value means either that the platform does not deliver touch pressure or that it could
-        /// not determine the answer. The two are deliberately not distinguished, because a caller
-        /// deciding whether to treat pressure as an analog signal wants the same behaviour in both
-        /// cases. It never means the Editor was unable to ask, since the property only exists where it
-        /// can. The "could not determine" case is real: on some platforms the OS supplies a pressure
-        /// value whether or not the attached digitizer measures one, so only a per-device query could
-        /// tell a real reading from a constant.
+        /// A false value means the platform doesn't deliver touch pressure, or that it couldn't
+        /// determine an answer. The two cases aren't distinguished. On some platforms the OS supplies a
+        /// pressure value whether or not the attached digitizer measures one, and there is no per-device
+        /// query to tell a real reading from a constant.
         ///
-        /// Whether a touchscreen is available to read from right now is a separate question, and needs
-        /// both <see cref="current"/> and <see cref="InputDevice.enabled"/>. See the "Device capability
-        /// and device availability" section of the Input Manager migration documentation.
-        ///
-        /// Read this from the main thread: resolving the answer can require a platform API that is
-        /// main-thread only, and the first read is the one that resolves it.
+        /// To find out whether a touchscreen is connected and delivering input, use
+        /// <see cref="current"/> and <see cref="InputDevice.enabled"/> instead.
         /// </remarks>
         /// <example>
         ///
         /// <code>
-        /// // Only treat pressure as an analog signal where the platform actually measures it.
-        /// // Elsewhere it is a constant 1 while the finger is down, so this would do nothing.
         /// var brushWidth = Touchscreen.isPressureSupported
         ///     &amp;&amp; Touchscreen.current != null &amp;&amp; Touchscreen.current.enabled
         ///     ? Touchscreen.current.primaryTouch.pressure.ReadValue() * maxBrushWidth

@@ -327,23 +327,16 @@ namespace UnityEngine.InputSystem
         /// Whether the current platform can deliver pen input at all, regardless of whether a pen is
         /// connected right now.
         /// </summary>
-        /// <value>True if the platform supports pen input.</value>
         /// <remarks>
-        /// This answers "could a pen work here", which is the question to ask when deciding whether
-        /// to offer pen-specific functionality in a UI. The answer cannot change while the application
-        /// runs.
+        /// Use this to decide whether to offer pen-specific functionality, such as a pressure or tilt
+        /// setting. It is true on a platform where a pen can work even when none is connected, and it
+        /// doesn't change while the application runs.
         ///
-        /// A false value means either that the platform does not support pen input or that it could not
-        /// determine the answer. The two are deliberately not distinguished, because a caller deciding
-        /// whether to offer functionality wants the same behaviour in both cases. It never means the
-        /// Editor was unable to ask, since the property only exists where it can.
+        /// To find out whether a pen is connected and delivering input, use <see cref="current"/> and
+        /// <see cref="InputDevice.enabled"/> instead.
         ///
-        /// Whether a pen is available to read from right now is a separate question, and needs both
-        /// <see cref="current"/> and <see cref="InputDevice.enabled"/>. See the "Device capability and
-        /// device availability" section of the Input Manager migration documentation.
-        ///
-        /// Read this from the main thread: resolving the answer can require a platform API that is
-        /// main-thread only, and the first read is the one that resolves it.
+        /// A false value means the platform doesn't support pen input, or that it couldn't determine an
+        /// answer. The two cases aren't distinguished.
         /// </remarks>
         /// <example>
         ///
@@ -357,15 +350,12 @@ namespace UnityEngine.InputSystem
         ///
         ///     void Start()
         ///     {
-        ///         // Decide once whether to offer pen-specific functionality at all. This is true on
-        ///         // a platform that can deliver pen input, even when no pen is connected yet.
+        ///         // True on a platform that can deliver pen input, even when no pen is connected yet.
         ///         m_ShowPenSettings = Pen.isSupported;
         ///     }
         ///
         ///     void Update()
         ///     {
-        ///         // Whether a pen is usable right now is a different question, and needs both a
-        ///         // registered device and that device being enabled.
         ///         if (Pen.current != null &amp;&amp; Pen.current.enabled &amp;&amp; Pen.current.tip.wasPressedThisFrame)
         ///         {
         ///             // handle the pen tip being pressed

@@ -262,34 +262,24 @@ namespace UnityEngine.InputSystem
         /// Whether the current platform can deliver mouse input at all, regardless of whether a
         /// mouse is connected right now.
         /// </summary>
-        /// <value>True if the platform supports mouse input.</value>
         /// <remarks>
-        /// This answers "could a mouse work here", which is the question to ask when deciding
-        /// whether to offer mouse-specific functionality in a UI. The answer cannot change while the
-        /// application runs.
+        /// Use this to decide whether to offer mouse-specific functionality, such as a sensitivity
+        /// setting. It is true on a platform where a mouse can work even when none is connected, and
+        /// it doesn't change while the application runs.
         ///
-        /// A false value means either that the platform does not support mouse input or that it could
-        /// not determine the answer. The two are deliberately not distinguished, because a caller
-        /// deciding whether to offer functionality wants the same behaviour in both cases. It never
-        /// means the Editor was unable to ask, since the property only exists where it can.
+        /// To find out whether a mouse is connected and delivering input, use <see cref="current"/>
+        /// and <see cref="InputDevice.enabled"/> instead.
         ///
-        /// Whether a mouse is available to read from right now is a separate question, and needs both
-        /// <see cref="current"/> and <see cref="InputDevice.enabled"/>. See the "Device capability and
-        /// device availability" section of the Input Manager migration documentation.
-        ///
-        /// Read this from the main thread: resolving the answer can require a platform API that is
-        /// main-thread only, and the first read is the one that resolves it.
+        /// A false value means the platform doesn't support mouse input, or that it couldn't determine
+        /// an answer. The two cases aren't distinguished.
         /// </remarks>
         /// <example>
         ///
         /// <code>
-        /// // Whether a mouse could work here, which is the question to ask when deciding whether to
-        /// // show mouse-specific settings. True on desktop platforms with no mouse plugged in.
+        /// // True on a desktop platform with no mouse plugged in.
         /// if (Mouse.isSupported)
         ///     ShowMouseSensitivitySetting();
         ///
-        /// // Whether one is usable right now, which needs both parts: a non-null current only means a
-        /// // device object is registered, and enabled is what tells you it is active.
         /// if (Mouse.current != null &amp;&amp; Mouse.current.enabled)
         ///     Debug.Log(Mouse.current.position.ReadValue());
         /// </code>
