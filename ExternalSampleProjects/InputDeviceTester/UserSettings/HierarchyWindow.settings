@@ -1,0 +1,57 @@
+{
+    "ValidContent": 8,
+    "ViewModelState": [],
+    "SearchText": "",
+    "Columns": [
+        {
+            "ColumnId": "Visibility",
+            "Visible": true,
+            "Width": 20.0,
+            "Index": 0
+        },
+        {
+            "ColumnId": "Picking",
+            "Visible": true,
+            "Width": 20.0,
+            "Index": 1
+        },
+        {
+            "ColumnId": "HierarchyViewColumn Name",
+            "Visible": true,
+            "Width": 231.60000610351563,
+            "Index": 2
+        },
+        {
+            "ColumnId": "GameObject/Active",
+            "Visible": false,
+            "Width": 50.0,
+            "Index": 3
+        },
+        {
+            "ColumnId": "HierarchyViewColumn Navigate",
+            "Visible": true,
+            "Width": 18.0,
+            "Index": 3
+        },
+        {
+            "ColumnId": "GameObject/Static",
+            "Visible": false,
+            "Width": 75.0,
+            "Index": 5
+        },
+        {
+            "ColumnId": "GameObject/Layer",
+            "Visible": false,
+            "Width": 150.0,
+            "Index": 6
+        },
+        {
+            "ColumnId": "GameObject/Tag",
+            "Visible": false,
+            "Width": 100.0,
+            "Index": 7
+        }
+    ],
+    "ScrollPositionX": -1.0,
+    "ScrollPositionY": -1.0
+}

@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &1
+MonoBehaviour:
+  m_ObjectHideFlags: 53
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 15008, guid: 0000000000000000e000000000000000, type: 0}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEditor.dll::UnityEditor.EditorToolsSettingsData
+  m_DefaultState:
+    m_StateToolOwnerTypeName: UnityEditor.SceneView, UnityEditor.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    m_GroupsSettingsList:
+    - groupType: UnityEngine.CircleCollider2D, UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.HingeJoint2D, UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.BoxCollider2D, UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.PolygonCollider2D, UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.EdgeCollider2D, UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.CapsuleCollider2D, UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.ArticulationBody, UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.CharacterJoint, UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.CapsuleCollider, UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.ConfigurableJoint, UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.HingeJoint, UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.BoxCollider, UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.SphereCollider, UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.LightProbeGroup, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.ParticleSystem, UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.LightProbeProxyVolume, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.LineRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    - groupType: UnityEngine.TrailRenderer, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+      collapsed: 0
+    m_LastPivotModeTypeString: UnityEditor.CenterPivotMode, UnityEditor.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+    m_LastPivotRotationTypeString: UnityEditor.LocalPivotRotation, UnityEditor.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  m_CustomStates: []
+  m_GroupsSettingsList: []
+  m_LastPivotModeTypeString: 
+  m_LastPivotRotationTypeString: 

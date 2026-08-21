@@ -24,7 +24,7 @@ You can optionally choose a path name, class name, and namespace for the generat
 
 Once applied, the Input System creates a C# script containing API that matches the actions defined in the asset which you can access directly in code. The following example demonstrates this, assuming there is an action map named "gameplay" containing two actions, "use" and "move" defined in the action asset:
 
-[!code-cs[generate-cs-api](Packages/com.unity.inputsystem/DocCodeSamples.Tests/GenerateCsApiFromActions.cs)]
+[!code-cs[generate-cs-api](Packages/com.unity.inputsystem/DocCodeSamples.Tests/GenerateCsApiFromActions.cs#generate-cs-api)]
 
 > [!NOTE]
 > To regenerate the .cs file, right-click the .inputactions asset in the Project Browser and select **Reimpor**.

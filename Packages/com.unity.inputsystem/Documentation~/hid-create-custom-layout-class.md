@@ -6,37 +6,7 @@ uid: input-system-custom-class-layout
 
 You can create your own [`InputDevice`](xref:UnityEngine.InputSystem.InputDevice) class and state layouts in C# to create a custom layout as follows:
 
-```c#
-
-   public struct MyDeviceState : IInputStateTypeInfo
-    {
-        // FourCC type codes are used to identify the memory layouts of state blocks.
-        public FourCC format => new FourCC('M', 'D', 'E', 'V');
-
-        [InputControl(name = "firstButton", layout = "Button", bit = 0)]
-        [InputControl(name = "secondButton", layout = "Button", bit = 1)]
-        public int buttons;
-        [InputControl(layout = "Analog", parameters="clamp=true,clampMin=0,clampMax=1")]
-        public float axis;
-    }
-
-    [InputState(typeof(MyDeviceState)]
-    public class MyDevice : InputDevice
-    {
-        public ButtonControl firstButton { get; private set; }
-        public ButtonControl secondButton { get; private set; }
-        public AxisControl axis { get; private set; }
-
-        protected override void FinishSetup(InputControlSetup setup)
-        {
-             firstButton = setup.GetControl<ButtonControl>(this, "firstButton");
-             secondButton = setup.GetControl<ButtonControl>(this, "secondButton");
-             axis = setup.GetControl<AxisControl>(this, "axis");
-             base.FinishSetup(setup);
-        }
-    }
-
-```
+[!code-cs[customDeviceClass](Packages/com.unity.inputsystem/DocCodeSamples.Tests/HidCreateCustomLayoutClass.cs#customDeviceClass)]
 
 To create an instance of your device, register it as a layout and then instantiate it:
 
