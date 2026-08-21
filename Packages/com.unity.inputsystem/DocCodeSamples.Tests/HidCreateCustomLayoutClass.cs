@@ -20,19 +20,20 @@ namespace DocCodeSamples.Tests
         public float axis;
     }
 
-    [InputState(typeof(MyDeviceState))]
+    [InputControlLayout(stateType = typeof(MyDeviceState))]
     public class MyDevice : InputDevice
     {
         public ButtonControl firstButton { get; private set; }
         public ButtonControl secondButton { get; private set; }
         public AxisControl axis { get; private set; }
 
-        protected override void FinishSetup(InputControlSetup setup)
+        protected override void FinishSetup()
         {
-            firstButton = setup.GetControl<ButtonControl>(this, "firstButton");
-            secondButton = setup.GetControl<ButtonControl>(this, "secondButton");
-            axis = setup.GetControl<AxisControl>(this, "axis");
-            base.FinishSetup(setup);
+            base.FinishSetup();
+
+            firstButton = GetChildControl<ButtonControl>("firstButton");
+            secondButton = GetChildControl<ButtonControl>("secondButton");
+            axis = GetChildControl<AxisControl>("axis");
         }
     }
     #endregion

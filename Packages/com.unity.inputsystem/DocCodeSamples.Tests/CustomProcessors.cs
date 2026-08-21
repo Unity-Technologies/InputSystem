@@ -24,7 +24,10 @@ namespace DocCodeSamples.Tests
             InputSystem.RegisterProcessor<MyValueShiftProcessor>();
         }
 
-        //...
+        public override float Process(float value, InputControl control)
+        {
+            return value;
+        }
     }
     #endregion
 

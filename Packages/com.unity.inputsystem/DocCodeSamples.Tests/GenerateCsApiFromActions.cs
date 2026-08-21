@@ -9,7 +9,7 @@ namespace DocCodeSamples.Tests
     // you change the default values for the action map, the name of the interface
     // will be different.
 
-    public class MyPlayerScript : MonoBehaviour, IGameplayActions
+    public class MyPlayerScript : MonoBehaviour, MyPlayerControls.IGameplayActions
     {
         // MyPlayerControls is the C# class that Unity generated.
         // It encapsulates the data from the .inputactions asset we created

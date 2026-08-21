@@ -5,7 +5,7 @@ namespace DocCodeSamples.Tests
     using UnityEngine.InputSystem;
     using UnityEngine.InputSystem.Interactions;
 
-    public class ExampleScript : MonoBehaviour
+    public class InteractionsExampleScript : MonoBehaviour
     {
         InputAction jumpAction;
 

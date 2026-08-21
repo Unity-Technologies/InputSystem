@@ -58,7 +58,7 @@ public class MyValueShiftProcessorEditor : InputParameterEditor<MyValueShiftProc
 {
     private GUIContent m_SliderLabel = new GUIContent("Shift By");
 
-    public override void OnEnable()
+    protected override void OnEnable()
     {
         // Put initialization code here. Use 'target' to refer
         // to the instance of MyValueShiftProcessor that is being
