@@ -3760,6 +3760,29 @@ namespace UnityEngine.InputSystem
             Update(InputUpdateType.None);
         }
 
+#if UNITY_PLAYDOUGH
+        // Playdough force-loads the project-wide actions asset during engine init, AFTER
+        // InitializeInPlayer ran at SubsystemRegistration (when no InputActionAsset was loaded yet, so
+        // m_Actions stayed null and EnableActions() was a no-op). BeforeSceneLoad runs after that
+        // force-load and before the first scene's Awake, so re-resolve + enable the actions here — the
+        // same "re-initialize when data lands late" pattern Playdough uses for the render pipeline.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void PlaydoughInitializeProjectWideActions()
+        {
+            if (s_Manager == null)
+                return;
+            if (s_Manager.actions == null)
+                s_Manager.ReinitializeProjectWideActionsForPlaydough();
+
+            // Push native devices FIRST (RunInitialUpdate may run after this hook), so EnableActions
+            // resolves+binds the project-wide actions once against present devices. Otherwise the
+            // device-add re-resolve that follows a device-less enable rebuilds the action state and
+            // its enabled-status restore can leave the actions disabled in the player.
+            Update(InputUpdateType.None);
+            EnableActions();
+        }
+#endif
+
 #if !UNITY_DISABLE_DEFAULT_INPUT_PLUGIN_INITIALIZATION
         private static void PerformDefaultPluginInitialization()
         {

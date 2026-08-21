@@ -113,6 +113,13 @@ namespace UnityEngine.InputSystem
             }
         }
 
+#if UNITY_PLAYDOUGH
+        // The Playdough player force-loads the project-wide actions asset AFTER this manager is created
+        // (at SubsystemRegistration, before the asset exists). InputSystem re-runs this at BeforeSceneLoad,
+        // once the asset is loaded and before the first scene's Awake reads InputSystem.actions.
+        internal void ReinitializeProjectWideActionsForPlaydough() { InitializeActions(); }
+#endif
+
         public InputActionAsset actions
         {
             get
@@ -1885,6 +1892,7 @@ namespace UnityEngine.InputSystem
             m_Actions = ProjectWideActionsBuildProvider.actionsToIncludeInPlayerBuild;
 #else
             m_Actions = null;
+            InputActionAsset playdoughFallback = null;
             var candidates = Resources.FindObjectsOfTypeAll<InputActionAsset>();
             foreach (var candidate in candidates)
             {
@@ -1893,7 +1901,25 @@ namespace UnityEngine.InputSystem
                     m_Actions = candidate;
                     break;
                 }
+#if UNITY_PLAYDOUGH
+                // The Playdough player force-loads the project-wide actions asset by guid, but the
+                // served (imported) artifact does not carry m_IsProjectWide (set only by the build
+                // provider at build time). At BeforeSceneLoad the only loaded InputActionAsset is that
+                // force-loaded one, so accept it when no flagged asset is present.
+                if (playdoughFallback == null)
+                    playdoughFallback = candidate;
+#endif
             }
+#if UNITY_PLAYDOUGH
+            if (m_Actions == null && playdoughFallback != null)
+            {
+                // Flag the force-loaded imported asset as project-wide; otherwise its binding
+                // resolution never settles and per-input-event re-resolution keeps dropping the
+                // enabled state of gameplay actions (Player/Move).
+                playdoughFallback.m_IsProjectWide = true;
+                m_Actions = playdoughFallback;
+            }
+#endif
 #endif // UNITY_EDITOR
         }
 
@@ -2960,6 +2986,14 @@ namespace UnityEngine.InputSystem
 
         internal void OnFocusChanged(bool focus)
         {
+#if UNITY_PLAYDOUGH
+            // The Playdough player's native NSApp active-state toggles spuriously, firing
+            // Application.focusChanged repeatedly. Each event would ResetDevice + re-resolve bindings,
+            // knocking enabled project-wide actions back to disabled (Player/Move ReadValue -> 0).
+            // Treat the player as always-focused so the churn cannot reset/disable input.
+            m_HasFocus = true;
+            return;
+#endif
             #if UNITY_EDITOR
             SyncAllDevicesWhenEditorIsActivated();
 
