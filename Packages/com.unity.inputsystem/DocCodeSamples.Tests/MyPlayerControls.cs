@@ -239,6 +239,7 @@ namespace DocCodeSamples.Tests
             /// Implicitly converts to the underlying action map.
             /// </summary>
             /// <param name="set">Accessor to convert.</param>
+            /// <returns>The underlying "gameplay" action map.</returns>
             public static implicit operator InputActionMap(GameplayActions set) { return set.Get(); }
 
             /// <summary>

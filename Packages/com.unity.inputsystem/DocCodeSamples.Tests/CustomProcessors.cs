@@ -28,6 +28,12 @@ namespace DocCodeSamples.Tests
             InputSystem.RegisterProcessor<MyValueShiftProcessor>();
         }
 
+        /// <summary>
+        /// Returns <paramref name="value"/> unchanged.
+        /// </summary>
+        /// <param name="value">Value to process.</param>
+        /// <param name="control">Control from which the value originates.</param>
+        /// <returns>The unchanged value.</returns>
         public override float Process(float value, InputControl control)
         {
             return value;
