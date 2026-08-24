@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-class BindingConflictsExample : InputTestFixture
+class BindingConflictsExample
 {
     public void Example()
     {
@@ -24,9 +24,12 @@ class BindingConflictsExample : InputTestFixture
         // Start listening to input.
         map.Enable();
 
+        var keyboard = Keyboard.current ?? InputSystem.AddDevice<Keyboard>();
+
         // Now, let's assume the left shift key on the keyboard is pressed (here, we manually
-        // press it with the InputTestFixture API).
-        Press(Keyboard.current.leftShiftKey);
+        // press it by queueing a state event for the control).
+        InputSystem.QueueDeltaStateEvent(keyboard.leftShiftKey, 1f);
+        InputSystem.Update();
 
         // And then the B is pressed. This is a valid input for both
         // bAction as well as shiftbAction.
@@ -34,7 +37,8 @@ class BindingConflictsExample : InputTestFixture
         // What will happen now is that shiftbAction will do its processing first. In response,
         // it will *perform* the action (That is, we see the `performed` callback being invoked) and
         // thus "consume" the input. bAction will stay silent as it will in turn be skipped over.
-        Press(Keyboard.current.bKey);
+        InputSystem.QueueDeltaStateEvent(keyboard.bKey, 1f);
+        InputSystem.Update();
         #endregion
     }
 }
