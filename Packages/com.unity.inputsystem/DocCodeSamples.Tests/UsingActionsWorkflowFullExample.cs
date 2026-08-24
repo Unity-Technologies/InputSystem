@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Example script demonstrating the full actions-based workflow.
+/// </summary>
 public class Example : MonoBehaviour
 {
     // These variables are to hold the Action references

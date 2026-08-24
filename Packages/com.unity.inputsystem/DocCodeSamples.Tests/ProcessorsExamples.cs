@@ -4,6 +4,9 @@ using UnityEngine.InputSystem.Editor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Example script demonstrating reading a Vector2 action value via <c>PlayerInput</c>.
+/// </summary>
 public class Boat : MonoBehaviour
 {
     void OnMove(InputValue value)
@@ -37,11 +40,23 @@ class ProcessorsExamples : MonoBehaviour
 }
 
 #region myvalueprocessor
+/// <summary>
+/// Example custom processor that adds a fixed offset to incoming float values.
+/// </summary>
 public class MyValueShiftProcessor : InputProcessor<float>
 {
+    /// <summary>
+    /// Number to add to incoming values.
+    /// </summary>
     [Tooltip("Number to add to incoming values.")]
     public float valueShift = 0;
 
+    /// <summary>
+    /// Adds <see cref="valueShift"/> to <paramref name="value"/>.
+    /// </summary>
+    /// <param name="value">Value to process.</param>
+    /// <param name="control">Control from which the value originates.</param>
+    /// <returns>The shifted value.</returns>
     public override float Process(float value, InputControl control)
     {
         return value + valueShift;
@@ -54,6 +69,9 @@ public class MyValueShiftProcessor : InputProcessor<float>
 // The system automatically finds subclasses based on the
 // <..> type parameter.
 #if UNITY_EDITOR
+/// <summary>
+/// Example custom Editor UI for <see cref="MyValueShiftProcessor"/>.
+/// </summary>
 public class MyValueShiftProcessorEditor : InputParameterEditor<MyValueShiftProcessor>
 {
     private GUIContent m_SliderLabel = new GUIContent("Shift By");
@@ -65,6 +83,9 @@ public class MyValueShiftProcessorEditor : InputParameterEditor<MyValueShiftProc
         // edited.
     }
 
+    /// <summary>
+    /// Draws the custom Editor UI for the processor's parameters.
+    /// </summary>
     public override void OnGUI()
     {
         // Define your custom UI here using EditorGUILayout.

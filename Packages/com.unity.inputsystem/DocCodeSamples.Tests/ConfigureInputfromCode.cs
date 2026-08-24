@@ -4,9 +4,19 @@ namespace DocCodeSamples.Tests
     using UnityEngine;
     using UnityEngine.InputSystem;
 
+    /// <summary>
+    /// Example script exposing serialized action references.
+    /// </summary>
     public class ExampleScript : MonoBehaviour
     {
+        /// <summary>
+        /// Reference to the "move" action.
+        /// </summary>
         public InputAction move;
+
+        /// <summary>
+        /// Reference to the "jump" action.
+        /// </summary>
         public InputAction jump;
     }
     #endregion

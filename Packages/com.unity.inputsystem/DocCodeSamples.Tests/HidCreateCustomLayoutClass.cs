@@ -8,25 +8,55 @@ namespace DocCodeSamples.Tests
     using UnityEngine.InputSystem.Utilities;
 
     #region customDeviceClass
+    /// <summary>
+    /// Example state struct describing the memory layout of <see cref="MyDevice"/>.
+    /// </summary>
     public struct MyDeviceState : IInputStateTypeInfo
     {
         // FourCC type codes are used to identify the memory layouts of state blocks.
+        /// <summary>
+        /// The memory format identifier for this state struct.
+        /// </summary>
         public FourCC format => new FourCC('M', 'D', 'E', 'V');
 
+        /// <summary>
+        /// Bit-packed state for <c>firstButton</c> and <c>secondButton</c>.
+        /// </summary>
         [InputControl(name = "firstButton", layout = "Button", bit = 0)]
         [InputControl(name = "secondButton", layout = "Button", bit = 1)]
         public int buttons;
+
+        /// <summary>
+        /// Raw state for the device's analog axis control.
+        /// </summary>
         [InputControl(layout = "Analog", parameters = "clamp=true,clampMin=0,clampMax=1")]
         public float axis;
     }
 
+    /// <summary>
+    /// Example custom device class using <see cref="MyDeviceState"/> as its state layout.
+    /// </summary>
     [InputControlLayout(stateType = typeof(MyDeviceState))]
     public class MyDevice : InputDevice
     {
+        /// <summary>
+        /// The device's first button control.
+        /// </summary>
         public ButtonControl firstButton { get; private set; }
+
+        /// <summary>
+        /// The device's second button control.
+        /// </summary>
         public ButtonControl secondButton { get; private set; }
+
+        /// <summary>
+        /// The device's analog axis control.
+        /// </summary>
         public AxisControl axis { get; private set; }
 
+        /// <summary>
+        /// Looks up the device's child controls after they have been created.
+        /// </summary>
         protected override void FinishSetup()
         {
             base.FinishSetup();
@@ -146,6 +176,9 @@ namespace DocCodeSamples.Tests.DualShock4GamepadHidBasic
     // struct we created, which includes where to find all the InputControl
     // attributes that we placed on there. This is how the Input System knows
     // what controls to create and how to configure them.
+    /// <summary>
+    /// Example device layout for a PS4 DualShock controller reported as a generic HID.
+    /// </summary>
     [InputControlLayout(stateType = typeof(DualShock4HIDInputReport))]
     public class DualShock4GamepadHID : Gamepad
     {
@@ -162,6 +195,10 @@ namespace DocCodeSamples.Tests.DualShock4GamepadHidRegister
     using UnityEngine.InputSystem.Layouts;
 
     #region dualShock4GamepadHidRegister
+    /// <summary>
+    /// Example device layout for a PS4 DualShock controller that registers itself
+    /// as a match for the corresponding HID device description.
+    /// </summary>
     [InputControlLayout(stateType = typeof(DualShock4HIDInputReport))]
     #if UNITY_EDITOR
     [InitializeOnLoad] // Make sure static constructor is called during startup.

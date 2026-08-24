@@ -4,6 +4,9 @@ namespace DocCodeSamples.Tests
     using UnityEngine;
     using UnityEngine.InputSystem; // 1. The Input System "using" statement
 
+    /// <summary>
+    /// Example script demonstrating the quick-start workflow for reading actions.
+    /// </summary>
     public class Example : MonoBehaviour
     {
         // 2. These variables are to hold the Action references

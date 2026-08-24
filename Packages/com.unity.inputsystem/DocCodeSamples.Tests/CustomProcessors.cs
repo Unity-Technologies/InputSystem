@@ -9,6 +9,9 @@ namespace DocCodeSamples.Tests
     #if UNITY_EDITOR
     [InitializeOnLoad]
     #endif
+    /// <summary>
+    /// Example custom processor that registers itself with the Input System.
+    /// </summary>
     public class MyValueShiftProcessor : InputProcessor<float>
     {
         #if UNITY_EDITOR

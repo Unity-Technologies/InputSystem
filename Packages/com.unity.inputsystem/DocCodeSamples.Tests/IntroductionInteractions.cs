@@ -5,6 +5,9 @@ namespace DocCodeSamples.Tests
     using UnityEngine.InputSystem;
     using UnityEngine.InputSystem.Interactions;
 
+    /// <summary>
+    /// Example script demonstrating how to react to interactions on an action's callbacks.
+    /// </summary>
     public class InteractionsExampleScript : MonoBehaviour
     {
         InputAction jumpAction;
@@ -70,10 +73,21 @@ namespace DocCodeSamples.Tests
     #region custominteraction
     // Interaction which performs when you quickly move an
     // axis all the way from extreme to the other.
+    /// <summary>
+    /// Example custom interaction that performs when an axis moves quickly
+    /// from one extreme to the other.
+    /// </summary>
     public class MyExampleInteraction : IInputInteraction
     {
+        /// <summary>
+        /// Time window, in seconds, within which the axis must move from one extreme to the other.
+        /// </summary>
         public float duration = 0.2f;
 
+        /// <summary>
+        /// Processes the current state of the control(s) the interaction is bound to.
+        /// </summary>
+        /// <param name="context">Context giving access to the control state and phase transition methods.</param>
         public void Process(ref InputInteractionContext context)
         {
             if (context.timerHasExpired)
@@ -103,6 +117,9 @@ namespace DocCodeSamples.Tests
         // local state that changes over time as input is received. The system might
         // invoke the Reset() method to ask Interactions to reset to the local state
         // at certain points.
+        /// <summary>
+        /// Resets the interaction's local state.
+        /// </summary>
         public void Reset()
         {
         }

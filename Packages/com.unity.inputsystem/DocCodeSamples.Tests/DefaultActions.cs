@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Example script demonstrating how to use the generated default actions class.
+/// </summary>
 public class DefaultActions : MonoBehaviour
 {
     #region default-actions

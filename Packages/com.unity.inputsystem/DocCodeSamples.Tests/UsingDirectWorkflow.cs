@@ -1,6 +1,9 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Example script demonstrating the direct workflow of polling devices in <c>Update</c>.
+/// </summary>
 public class MyPlayerScript : MonoBehaviour
 {
     void Update()
