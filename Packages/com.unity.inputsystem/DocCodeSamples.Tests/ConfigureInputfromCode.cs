@@ -61,7 +61,7 @@ namespace DocCodeSamples.Tests
                 var asset = ScriptableObject.CreateInstance<InputActionAsset>();
                 var gameplayMap = new InputActionMap("gameplay");
                 asset.AddActionMap(gameplayMap);
-                var lookAction = gameplayMap.AddAction("look", "<Gamepad>/leftStick");
+                var lookAction = gameplayMap.AddAction("look", binding: "<Gamepad>/leftStick");
             }
             #endregion
         }
