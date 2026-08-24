@@ -42,7 +42,6 @@ namespace DocCodeSamples.Tests
         {
             // 'Move' code here.
         }
-
     }
     #endregion
 }

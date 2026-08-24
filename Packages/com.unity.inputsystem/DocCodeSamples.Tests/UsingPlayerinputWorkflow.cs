@@ -24,5 +24,4 @@ public class ExampleScript : MonoBehaviour
         // to use the Vector2 value from the "move" action each
         // frame, use the "moveAmount" variable here.
     }
-
 }

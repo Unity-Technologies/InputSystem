@@ -14,7 +14,7 @@ public class Boat : MonoBehaviour
         transform.Rotate(Vector3.up, direction);
         // To move the boat forwards, this code block uses the Y value of the stick
         var speed = stick.y;
-        transform.Translate(new Vector3(0,0,speed),Space.Self);
+        transform.Translate(new Vector3(0, 0, speed), Space.Self);
     }
 }
 #endregion

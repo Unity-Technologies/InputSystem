@@ -12,6 +12,7 @@ public class DefaultActions : MonoBehaviour
         actions.Player.Move.performed += OnMove;
         actions.Enable();
     }
+
     #endregion
 
     void OnLook(InputAction.CallbackContext context)

@@ -38,7 +38,6 @@ namespace DocCodeSamples.Tests
             {
                 // Hide "charging" UI
             };
-
         }
     }
     #endregion
@@ -121,5 +120,3 @@ namespace DocCodeSamples.Tests
     }
     #endregion
 }
-
-

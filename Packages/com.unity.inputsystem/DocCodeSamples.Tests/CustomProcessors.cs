@@ -16,6 +16,7 @@ namespace DocCodeSamples.Tests
         {
             Initialize();
         }
+
         #endif
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -31,7 +32,7 @@ namespace DocCodeSamples.Tests
     }
     #endregion
 
-    class ProcessorExamples: MonoBehaviour
+    class ProcessorExamples : MonoBehaviour
     {
         void Start()
         {
@@ -45,7 +46,7 @@ namespace DocCodeSamples.Tests
             #region processorbindings
             var action = new InputAction();
             action.AddBinding("<Gamepad>/leftStick")
-            .WithProcessor("invertVector2(invertX=false)");
+                .WithProcessor("invertVector2(invertX=false)");
             #endregion
         }
 
