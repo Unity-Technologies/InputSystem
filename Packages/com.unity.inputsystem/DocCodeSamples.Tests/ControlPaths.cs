@@ -29,17 +29,17 @@ class ControlPathsExample
     {
         #region pathExamples
         // Matches all gamepads (also gamepads *based* on the Gamepad layout):
-        "<Gamepad>";
+        var allGamepads = "<Gamepad>";
         // Matches the "Submit" control on all devices:
-        "*/";
+        var allSubmit = "*/";
         // Matches the key that prints the "a" character on the current keyboard layout:
-        "<Keyboard>/#(a)";
+        var aKey = "<Keyboard>/#(a)";
         // Matches the X axis of the left stick on a gamepad.
-        "<Gamepad>/leftStick/x";
+        var leftStickXPath = "<Gamepad>/leftStick/x";
         // Matches the orientation control of the right-hand XR controller:
-        "<XRController>/orientation";
+        var xrOrientation = "<XRController>/orientation";
         // Matches all buttons on a gamepad.
-        "<Gamepad>/<Button>";
+        var allButtons = "<Gamepad>/<Button>";
         #endregion
     }
 }

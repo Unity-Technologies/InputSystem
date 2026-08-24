@@ -34,7 +34,7 @@ class BindingConflictsExample : InputTestFixture
         // What will happen now is that shiftbAction will do its processing first. In response,
         // it will *perform* the action (That is, we see the `performed` callback being invoked) and
         // thus "consume" the input. bAction will stay silent as it will in turn be skipped over.
-        Press(Keyboard.bKey);
+        Press(Keyboard.current.bKey);
         #endregion
     }
 }
