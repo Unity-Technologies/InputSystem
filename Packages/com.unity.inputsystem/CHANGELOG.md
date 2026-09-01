@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed the search field in the "Add supported device" popup (Input System Package Settings > Supported Devices > "+") drawing flush against the popup's left edge with no left margin, unlike its right-side spacing; it is now inset to match [UUM-150217](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-150217)
 - Fixed the "Supported Devices" list in the Input System Package Settings sitting flush against the panel edge with no left/right margin, unlike the surrounding fields; it is now inset to line up with the other settings controls [UUM-150207](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-150207)
 - Fixed the Inspector help button for a selected `.inputactions` asset ("Open Reference for Input Action Importer") opening a missing documentation page; it now links to the Action Assets manual page [UUM-149518](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-149518)
 - Fixed an `OverflowException` when creating a control scheme (or other named item) whose all-numeric name exceeds `Int32.MaxValue`, which previously discarded the entered name and fell back to the default [UUM-145766](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-145766)
