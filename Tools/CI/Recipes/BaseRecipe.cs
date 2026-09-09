@@ -39,6 +39,11 @@ public abstract class BaseRecipe : RecipeBase
         foreach (var unityEditor in package.UnityEditors)
         {
             var version = unityEditor.Version.Version;
+
+            // 6000.7 CI jobs are disabled for now.
+            if (version == "6000.7")
+                continue;
+
             foreach (var (platformType, editorPlatform) in unityEditor.EditorPlatforms.Items)
             {
                 var platform = new Platform(editorPlatform.Agent, editorPlatform.System);
