@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed the Input Debugger window (Window > Analysis > Input Debugger) being resizable arbitrarily small until its toolbar and device/action/layout tree view were no longer usably visible; it now enforces a minimum window size [UUM-137119](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137119)
 - Fixed the Action Maps list in the Input Actions editor losing keyboard focus after deleting a map, so that Delete, Duplicate, and arrow-key navigation kept working on the auto-selected replacement map without requiring an extra click [UUM-147152](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-147152)
 - Fixed the Device Simulator plugin keeping the real mouse and pen disabled while working in other Editor windows. Conflicting native `Mouse`/`Pen` devices are now only disabled while the Simulator window is focused and re-enabled as soon as focus moves elsewhere [UUM-145509](https://jira.unity3d.com/browse/UUM-145509).
+- Fixed the Input Actions editor in Project Settings losing the selected action or binding when opening the control picker from the Path field [UUM-151771](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-151771).
 
 ### Changed
 
