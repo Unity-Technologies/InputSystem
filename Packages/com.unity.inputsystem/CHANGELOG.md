@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed the Device Simulator plugin keeping the real mouse and pen disabled while working in other Editor windows. Conflicting native `Mouse`/`Pen` devices are now only disabled while the Simulator window is focused and re-enabled as soon as focus moves elsewhere [UUM-145509](https://jira.unity3d.com/browse/UUM-145509).
 - Fixed the Input Actions editor in Project Settings losing the selected action or binding when opening the control picker from the Path field [UUM-151771](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-151771).
 
+### Changed
+
+- Removing InputSystem gizmo / icons from scene view window [UUM-151780](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-151780).
+
+
 ## [1.20.0] - 2026-07-21
 
 ### Fixed
