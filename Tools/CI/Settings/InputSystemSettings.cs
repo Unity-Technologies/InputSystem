@@ -69,6 +69,11 @@ public class InputSystemSettings : AnnotatedSettingsBase
             InputSystemPackageName,
             new PackageOptions()
             {
+                // 6000.7 CI is disabled for now. This caps the editor versions the whole cookbook
+                // generates jobs for: both Wrench's own jobs (Validate, Preview APV, promotion, ...)
+                // and the custom recipes in Recipes/, which iterate the package's editor list.
+                // Raise or clear this to bring 6000.7 back.
+                MaximumEditorVersion = "6000.6",
                 ReleaseOptions = new ReleaseOptions() { IsReleasing = true },
                 ValidationOptions = new ValidationOptions()
                 {
