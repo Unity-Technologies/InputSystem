@@ -45,57 +45,23 @@ To use `FindAction` to get references to your Actions and read user input in you
 1. Create a new C# script in Unity.
 1. Add the Input System's "using" statement to the top of your script. This allows you to use the Input System API throughout the rest of your script:
 
-        using UnityEngine.InputSystem
+        [!code-cs[using](Packages/com.unity.inputsystem/DocCodeSamples.Tests/UsingActionsWorkflowExamples.cs#using)]
 
 1. Create some variables of type `InputAction` in your class body, one for each Action that you want to use in your script. These will store the references to each Action. A good naming convention is to add the word Action to the name of the action. For example:
 
-        InputAction moveAction;
-        InputAction jumpAction;
+        [!code-cs[InputAction_variables](Packages/com.unity.inputsystem/DocCodeSamples.Tests/UsingActionsWorkflowExamples.cs#InputAction_variables)]
 
 1. In your Start() method, use `FindAction` to find the reference to each action and store it in its respective variable, for example:
 
-        moveAction = InputSystem.actions.FindAction("Move");
-        jumpAction = InputSystem.actions.FindAction("Jump");
+        [!code-cs[FindAction](Packages/com.unity.inputsystem/DocCodeSamples.Tests/UsingActionsWorkflowExamples.cs#FindAction)]
 
 1. In your Update() method, read the value from your action variables. This allows you to write code that reads the latest values coming from your Actions each frame and respond accordingly.<br/><br/>The way you read a value depends on the Action's **value type**. For example some actions might return a 1D or 2D axis value, and other actions might return a Boolean true/false value. In this example, the **Move** action returns a 2D axis, and the **Jump** action returns a Boolean.
 
-        Vector2 moveValue = moveAction.ReadValue<Vector2>();
-        bool jumpValue = jumpAction.IsPressed();
+        [!code-cs[ReadActionValues](Packages/com.unity.inputsystem/DocCodeSamples.Tests/UsingActionsWorkflowExamples.cs#ReadActionValues)]
 
 The following example script shows all these steps combined together into a single script:
 
-```CSharp
-using UnityEngine;
-using UnityEngine.InputSystem;
-
-public class Example : MonoBehaviour
-{
-    // These variables are to hold the Action references
-    InputAction moveAction;
-    InputAction jumpAction;
-
-    private void Start()
-    {
-        // Find the references to the "Move" and "Jump" actions
-        moveAction = InputSystem.actions.FindAction("Move");
-        jumpAction = InputSystem.actions.FindAction("Jump");
-    }
-
-    void Update()
-    {
-        // Read the "Move" action value, which is a 2D vector
-        // and the "Jump" action state, which is a boolean value
-
-        Vector2 moveValue = moveAction.ReadValue<Vector2>();
-        // your movement code here
-
-        if (jumpAction.IsPressed())
-        {
-            // your jump code here
-        }
-    }
-}
-```
+[!code-cs[fullexmaple](Packages/com.unity.inputsystem/DocCodeSamples.Tests/UsingActionsWorkflowFullExample.cs)]
 
 > [!TIP]
 > Aavoid using `FindAction` in your `Update()` loop, because it performs a string-based lookup which could impact performance. This is why the Action references in the example above are found during the Start() function, and stored in variables after finding them.

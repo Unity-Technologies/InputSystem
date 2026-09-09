@@ -11,32 +11,7 @@ It can be useful if you want a quick implementation with one specific type of de
 
 You can directly read the values from connected devices by referring to the device’s [controls](controls.md) and reading the values they are currently generating, using code like this:
 
-```CSharp
-using UnityEngine;
-using UnityEngine.InputSystem;
-
-public class MyPlayerScript : MonoBehaviour
-{
-    void Update()
-    {
-        var gamepad = Gamepad.current;
-        if (gamepad == null)
-        {
-            return; // No gamepad connected.
-        }
-
-        if (gamepad.rightTrigger.wasPressedThisFrame)
-        {
-            // 'Use' code here
-        }
-
-        Vector2 move = gamepad.leftStick.ReadValue();
-        {
-            // 'Move' code here
-        }
-    }
-}
-```
+[!code-cs[using-direct-workflow](Packages/com.unity.inputsystem/DocCodeSamples.Tests/UsingDirectWorkflow.cs)]
 
 The example above reads values directly from  the right trigger, and the left stick, of the currently connected [gamepad](devices-gamepads.md). It does not use the input system’s "Action" class, and instead the conceptual actions in your game or app, such as "move" and "use", are implicitly defined by what your code does in response to the input. You can use the same approach for other Device types such as the [keyboard](xref:UnityEngine.InputSystem.Keyboard) or [mouse](xref:UnityEngine.InputSystem.Mouse).
 

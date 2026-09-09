@@ -16,11 +16,7 @@ However in some scenarios you might want to directly read the actuation of a con
 
 You can query whether a control is currently actuated using [`IsActuated`](xref:UnityEngine.InputSystem.InputControlExtensions).
 
-```CSharp
-// Check if leftStick is currently actuated.
-if (Gamepad.current.leftStick.IsActuated())
-    Debug.Log("Left Stick is actuated");
-```
+[!code-cs[actuation](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ControlActuation.cs#actuation)]
 
 It can be useful to determine not just whether a control is actuated at all, but also the amount by which it is actuated (that is, its magnitude). For example, for a [`Vector2Control`](xref:UnityEngine.InputSystem.Controls.Vector2Control) this is the length of the vector, whereas for a button it is the raw, absolute floating-point value.
 
@@ -28,11 +24,7 @@ In general, the current magnitude of a control is always greater than or equal t
 
 You can query the current amount of actuation using [`EvaluateMagnitude`](xref:UnityEngine.InputSystem.InputControl).
 
-```CSharp
-// Check if left stick is actuated more than a quarter of its motion range.
-if (Gamepad.current.leftStick.EvaluateMagnitude() > 0.25f)
-    Debug.Log("Left Stick actuated past 25%");
-```
+[!code-cs[actuation2](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ControlActuation.cs#actuation2)]
 
 These two mechanisms use control actuation:
 

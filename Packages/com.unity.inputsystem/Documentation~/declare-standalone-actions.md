@@ -6,16 +6,7 @@ uid: input-system-declare-standalone-actions
 
 You can declare individual [`InputAction`](xref:UnityEngine.InputSystem.InputAction) and [`InputActionMap`](xref:UnityEngine.InputSystem.InputActionMap) objects as fields directly inside `MonoBehaviour` components.
 
-```CSharp
-using UnityEngine;
-using UnityEngine.InputSystem;
-
-public class ExampleScript : MonoBehaviour
-{
-    public InputAction move;
-    public InputAction jump;
-}
-```
+[!code-cs[declaration](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ConfigureInputfromCode.cs#declaration)]
 
 The result is similar to using an action defined in the Input Actions Editor, except that you define the actions in the GameObject's properties and save them as scene or prefab data, instead of in a dedicated asset.
 
