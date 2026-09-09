@@ -19,10 +19,6 @@ public abstract class MobileBaseRecipe : BaseRecipe
             var supportedVersions = package.SupportedEditorVersions;
             foreach (var version in supportedVersions)
             {
-                // 6000.7 CI jobs are disabled for now.
-                if (version == "6000.7")
-                    continue;
-
                 if (platform.System == SystemType.Android)
                 {
                     builders.AddRange(ProduceJobsForAndroid(package, platform, version));
