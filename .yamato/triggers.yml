@@ -57,10 +57,10 @@ all_functional_tests:
   - path: .yamato/input-system-standalone-il2-cpp-functional-tests.yml#inputsystem-standaloneil2cppfunctionaltests_-_6000_6_-_win10
   - path: .yamato/wrench/promotion-jobs.yml#publish_dry_run_inputsystem
   triggers:
-    expression: |-
+    expression: |
       NOT pull_request.draft AND
       pull_request.target eq "develop" AND
-      NOT pull_request.changes.all match "**/*.md"
+      pull_request.changes.any NOT match "**/*.md"
     cancel_old_ci: true
     cancel_leftover_jobs: Always
 all_performance_tests:
