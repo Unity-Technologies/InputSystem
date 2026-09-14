@@ -8,7 +8,7 @@ The Input System package comes with a __Visualizers__ sample, which provides com
 
 To install the sample:
 
-1. Navigate to the Input System package in the Package Manager window (refer to [Installation](Installation.md)).
+1. Navigate to the Input System package in the Package Manager window (refer to [Install the Input System package](Installation.md)).
 1. Next to the __Visualizers__ sample, select __Import in project__.
 
 The sample provides two visualizer components:

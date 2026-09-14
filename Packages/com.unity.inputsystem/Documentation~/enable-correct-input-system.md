@@ -4,7 +4,7 @@ uid: input-system-enable-correct-input-system
 
 # Enable the correct input system
 
-When installing the new Input System, Unity prompts you to enable the new input system and disable the old one. You can change this setting at any time later, by going to **Edit > Project Settings > Player > Other Settings > Active Input Handling**, [as described here](./Installation.md#enable-the-new-input-backends).
+When installing the new Input System, Unity prompts you to enable the new input system and disable the old one. You can change this setting at any time later, by going to **Edit > Project Settings > Player > Other Settings > Active Input Handling**. For more information, refer to [Install the Input System package](./Installation.md#select-a-back-end).
 
 There are scripting symbols defined which allow you to use conditional compilation based on which system is enabled, as shown in the example below.
 

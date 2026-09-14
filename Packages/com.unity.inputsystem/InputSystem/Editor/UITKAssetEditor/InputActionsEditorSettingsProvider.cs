@@ -204,7 +204,19 @@ namespace UnityEngine.InputSystem.Editor
             // Construct from InputSystem.actions asset
             var asset = InputSystem.actions;
             var hasAsset = asset != null;
-            m_State = (asset != null) ? new InputActionsEditorState(m_ActionEditorAnalytics, new SerializedObject(asset)) : default;
+            var assetGUID = hasAsset ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset)) : string.Empty;
+
+            if (hasAsset)
+            {
+                // Seeding from the previous state preserves the action selection by GUID across asset saves, reimports, and initial builds.
+                var previousState = m_StateContainer?.assetGUID == assetGUID ? m_StateContainer.GetState() : default;
+                m_State = new InputActionsEditorState(previousState, new SerializedObject(asset));
+
+                // The seed carries the analytics session of whoever created it, so always use the current one.
+                m_State.m_Analytics = m_ActionEditorAnalytics;
+            }
+            else
+                m_State = default;
 
             // Dynamically show a section indicating that an asset is missing if not currently having an associated asset
             var missingAssetSection = m_RootVisualElement.Q<VisualElement>("missing-asset-section");
@@ -252,7 +264,7 @@ namespace UnityEngine.InputSystem.Editor
             // If the editor is associated with an asset we show input action editor
             if (hasAsset)
             {
-                m_StateContainer = new StateContainer(m_State, AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(asset)));
+                m_StateContainer = new StateContainer(m_State, assetGUID);
                 m_View = new InputActionsEditorView(m_RootVisualElement, m_StateContainer, true, null);
                 m_StateContainer.Initialize(m_RootVisualElement.Q("action-editor"));
             }

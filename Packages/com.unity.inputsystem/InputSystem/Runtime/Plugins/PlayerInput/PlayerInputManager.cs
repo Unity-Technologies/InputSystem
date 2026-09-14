@@ -31,6 +31,7 @@ namespace UnityEngine.InputSystem
     /// device for pairing. If additional devices are required, the input system selects them from the pool of currently
     /// unpaired devices.
     /// </remarks>
+    [Icon("Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png")]
     [AddComponentMenu("Input/Player Input Manager")]
     [HelpURL(InputSystem.kDocUrl + "/manual/player-input-manager-component.html")]
     public class PlayerInputManager : MonoBehaviour

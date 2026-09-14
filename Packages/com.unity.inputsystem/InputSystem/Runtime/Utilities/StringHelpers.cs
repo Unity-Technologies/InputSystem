@@ -328,7 +328,7 @@ namespace UnityEngine.InputSystem.Utilities
 
             var name = baseName;
             var nameIsUnique = false;
-            var namesTried = 1;
+            var namesTried = 1L;
 
             // If the name ends in digits, start counting from the given number.
             if (baseName.Length > 0)
@@ -336,9 +336,10 @@ namespace UnityEngine.InputSystem.Utilities
                 var lastDigit = baseName.Length;
                 while (lastDigit > 0 && char.IsDigit(baseName[lastDigit - 1]))
                     --lastDigit;
-                if (lastDigit != baseName.Length)
+                if (lastDigit != baseName.Length &&
+                    long.TryParse(baseName.Substring(lastDigit), out var trailingNumber))
                 {
-                    namesTried = int.Parse(baseName.Substring(lastDigit)) + 1;
+                    namesTried = trailingNumber + 1;
                     baseName = baseName.Substring(0, lastDigit);
                 }
             }

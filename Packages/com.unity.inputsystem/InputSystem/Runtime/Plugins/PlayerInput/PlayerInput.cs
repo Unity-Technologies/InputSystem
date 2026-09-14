@@ -214,6 +214,7 @@ namespace UnityEngine.InputSystem
     /// </example>
     /// <seealso cref="PlayerInputManager"/>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces")]
+    [Icon("Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputAction.png")]
     [AddComponentMenu("Input/Player Input")]
     [DisallowMultipleComponent]
     [HelpURL(InputSystem.kDocUrl + "/manual/player-input-component.html")]

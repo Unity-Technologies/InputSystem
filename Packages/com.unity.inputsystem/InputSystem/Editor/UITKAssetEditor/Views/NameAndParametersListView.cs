@@ -170,9 +170,19 @@ namespace UnityEngine.InputSystem.Editor
 
             var foldout = container.Q<Foldout>("Foldout");
             foldout.text = parameterListView.name;
-            parameterListView.OnDrawVisualElements(foldout);
 
-            foldout.Add(new IMGUIContainer(parameterListView.OnGUI));
+            if (parameterListView.hasUIToShow)
+            {
+                parameterListView.OnDrawVisualElements(foldout);
+                foldout.Add(new IMGUIContainer(parameterListView.OnGUI));
+            }
+            else
+            {
+                var checkmark = header.Q(className: "unity-toggle__checkmark");
+                if (checkmark != null)
+                    checkmark.style.visibility = Visibility.Hidden;
+                header.pickingMode = PickingMode.Ignore;
+            }
         }
     }
 }

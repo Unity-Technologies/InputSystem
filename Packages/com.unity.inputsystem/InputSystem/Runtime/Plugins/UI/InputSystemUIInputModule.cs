@@ -104,6 +104,7 @@ namespace UnityEngine.InputSystem.UI
     /// }
     /// </code>
     /// </example>
+    [Icon("Packages/com.unity.inputsystem/InputSystem/Editor/Icons/InputSystemUIInputModule@64.png")]
     [HelpURL(InputSystem.kDocUrl + "/manual/ui-input-module-reference.html")]
     public class InputSystemUIInputModule : BaseInputModule
     {
