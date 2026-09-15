@@ -64,7 +64,7 @@ The following example script shows all these steps combined together into a sing
 [!code-cs[fullexmaple](Packages/com.unity.inputsystem/DocCodeSamples.Tests/UsingActionsWorkflowFullExample.cs)]
 
 > [!TIP]
-> Aavoid using `FindAction` in your `Update()` loop, because it performs a string-based lookup which could impact performance. This is why the Action references in the example above are found during the Start() function, and stored in variables after finding them.
+> Avoid using `FindAction` in your `Update()` loop, because it performs a string-based lookup which could impact performance. This is why the Action references in the example above are found during the Start() function, and stored in variables after finding them.
 
 > [!NOTE]
 > The [InputSystem.actions](xref:UnityEngine.InputSystem.InputSystem) API refers specifically to the action asset assigned as the [project-wide actions](about-project-wide-actions.md). Most projects only require one action asset, but if you are using more than one action asset, you must create a reference using the type InputActionAsset to the asset you want to access.
