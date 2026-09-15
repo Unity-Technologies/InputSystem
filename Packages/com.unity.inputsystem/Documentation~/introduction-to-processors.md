@@ -17,16 +17,7 @@ Each Processor is [registered](xref:UnityEngine.InputSystem.InputSystem) using a
 
 Processors can have parameters which can be booleans, integers, or floating-point numbers. When created in data such as [bindings](./bindings.md), processors are described as strings that look like function calls:
 
-```CSharp
-    // This references the processor registered as "scale" and sets its "factor"
-    // parameter (a floating-point value) to a value of 2.5.
-    "scale(factor=2.5)"
-
-    // Multiple processors can be chained together. They are processed
-    // from left to right.
-    // Example: First invert the value, then normalize [0..10] values to [0..1].
-    "invert,normalize(min=0,max=10)"
-```
+[!code-cs[processors](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ProcessorsExamples.cs#processors)]
 
 ## Choose the right ProcessorCollapse comment
 
@@ -53,24 +44,7 @@ You can achieve this by using an Invert Processor on the Action or the binding. 
 
 Finally, attach the following script to a GameObject with a PlayerInput component that references the corresponding Action Asset:
 
-```csharp
-using UnityEngine;
-using UnityEngine.InputSystem;
-
-public class Boat : MonoBehaviour
-{
-    void OnMove(InputValue value)
-    {
-        // The X value will be used to rotate the boat
-        var stick = value.Get<Vector2>();
-        var direction = stick.x;
-        transform.Rotate(Vector3.up, direction);
-        // To move the boat forwards, this code block uses the Y value of the stick
-        var speed = stick.y;
-        transform.Translate(new Vector3(0,0,speed),Space.Self);
-    }
-}
-```
+[!code-cs[boat](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ProcessorsExamples.cs#boat)]
 
 ### Normalize
 

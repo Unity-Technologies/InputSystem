@@ -28,20 +28,7 @@ The Player Input component automatically handles enabling and disabling Actions,
 
 While we advise against using it, if you **really need or want** to use `InputSystem.actions` for single player use cases, it is advisible to manually disable them and manually enable the default map that **Player Input** sets, during `Start()`, like so:
 
-```csharp
-public class MyPlayerScript : MonoBehaviour
-{
-    PlayerInput playerInput;
-
-    void Start()
-    {
-        playerInput = GetComponent<PlayerInput>();
-        InputSystem.actions.Disable();
-        playerInput.currentActionMap?.Enable();
-    }
-}
-
-```
+[!code-cs[manualEnableSingleton](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ConfigureUnityEvents.cs#manualEnableSingleton)]
 
 When first enabled, the Player Input component enables all Actions from the the [`Default Action Map`](xref:UnityEngine.InputSystem.PlayerInput). If no default Action Map exists, the Player Input component does not enable any Actions. To manually enable Actions, you can call [`Enable`](xref:UnityEngine.InputSystem.InputActionMap) and [`Disable`](xref:UnityEngine.InputSystem.InputActionMap) on the action maps or Actions, like you would do [without `PlayerInput`](actions.md). To check which Action Map is currently enabled, or to switch to a different one, use the  [`PlayerInput.currentActionMap`](xref:UnityEngine.InputSystem.PlayerInput) property. To switch actions maps with an action map name, you can also call [`PlayerInput.SwitchCurrentActionMap`](xref:UnityEngine.InputSystem.PlayerInput).
 
@@ -55,29 +42,7 @@ See the [notification behaviors](select-notification-behavior.md) section below 
 
 When the [notification behavior](select-notification-behavior.md) of `PlayerInput` is set to **Send Messages** or **Broadcast Messages**, you can set your app to respond to Actions by defining methods in components like so:
 
-```CSharp
-public class MyPlayerScript : MonoBehaviour
-{
-    // "jump" action becomes "OnJump" method.
-
-    // If you're not interested in the value from the control that triggers the action, use a method without arguments.
-    public void OnJump()
-    {
-        // your Jump code here
-    }
-
-    // If you are interested in the value from the control that triggers an action, you can declare a parameter of type InputValue.
-    public void OnMove(InputValue value)
-    {
-        // Read value from control. The type depends on what type of controls.
-        // the action is bound to.
-        var v = value.Get<Vector2>();
-
-        // IMPORTANT:
-        // The given InputValue is only valid for the duration of the callback. Storing the InputValue references somewhere and calling Get<T>() later does not work correctly.
-    }
-}
-```
+[!code-cs[sendMessages](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ConfigureUnityEvents.cs#sendMessages)]
 
 The component must be on the same `GameObject` if you are using `Send Messages`, or on the same or any child `GameObject` if you are using `Broadcast Messages`.
 
@@ -85,16 +50,4 @@ The component must be on the same `GameObject` if you are using `Send Messages`,
 
 When the [notification behavior](select-notification-behavior.md) of `PlayerInput` is set to `Invoke Unity Events`, each Action has to be routed to a target method. The methods have the same format as the [`started`, `performed`, and `canceled` callbacks](set-callbacks-on-actions.md#action-callbacks) on [`InputAction`](xref:UnityEngine.InputSystem.InputAction).
 
-```CSharp
-public class MyPlayerScript : MonoBehaviour
-{
-    public void OnFire(InputAction.CallbackContext context)
-    {
-    }
-
-    public void OnMove(InputAction.CallbackContext context)
-    {
-        var value = context.ReadValue<Vector2>();
-    }
-}
-```
+[!code-cs[invokeUnityEvents](Packages/com.unity.inputsystem/DocCodeSamples.Tests/ConfigureUnityEvents.cs#invokeUnityEvents)]

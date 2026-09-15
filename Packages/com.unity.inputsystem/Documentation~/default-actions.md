@@ -21,13 +21,4 @@ These default actions mean that in many cases, you can start scripting with the 
 The Input System package provides an asset called `DefaultInputActions.inputactions` which you can reference directly in your projects like any other Unity asset. The asset is also available in code form through the [`DefaultInputActions`](xref:UnityEngine.InputSystem.DefaultInputActions) class.
 
 
-```CSharp
-void Start()
-{
-    // Create an instance of the default actions.
-    var actions = new DefaultInputActions();
-    actions.Player.Look.performed += OnLook;
-    actions.Player.Move.performed += OnMove;
-    actions.Enable();
-}
-```
+[!code-cs[default-actions](Packages/com.unity.inputsystem/DocCodeSamples.Tests/DefaultActions.cs#default-actions)]

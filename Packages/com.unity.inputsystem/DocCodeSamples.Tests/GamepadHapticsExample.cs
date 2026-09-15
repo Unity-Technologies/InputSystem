@@ -44,5 +44,28 @@ namespace DocCodeSamples.Tests
             if (gamepad.startButton.wasPressedThisFrame)
                 gamepad.ResetHaptics();
         }
+
+        void SetMotorSpeedsExample()
+        {
+            #region setMotorSpeeds
+            // Rumble the  low-frequency (left) motor at 1/4 speed and the high-frequency
+            // (right) motor at 3/4 speed.
+            Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
+            #endregion
+        }
+
+        void GlobalHapticsExample()
+        {
+            #region globalHaptics
+            // Pause haptics globally.
+            InputSystem.PauseHaptics();
+
+            // Resume haptics globally.
+            InputSystem.ResumeHaptics();
+
+            // Stop haptics globally.
+            InputSystem.ResetHaptics();
+            #endregion
+        }
     }
 }

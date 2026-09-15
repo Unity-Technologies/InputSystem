@@ -6,13 +6,7 @@ uid: input-system-gamepad-haptics
 
 The [`Gamepad`](xref:UnityEngine.InputSystem.Gamepad) class implements the [`IDualMotorRumble`](xref:UnityEngine.InputSystem.Haptics.IDualMotorRumble) interface that allows you to control the left and right motor speeds. In most common gamepads, the left motor emits a low-frequency rumble, and the right motor emits a high-frequency rumble.
 
-```c#
-
-// Rumble the  low-frequency (left) motor at 1/4 speed and the high-frequency
-// (right) motor at 3/4 speed.
-Gamepad.current.SetMotorSpeeds(0.25f, 0.75f);
-
-```
+[!code-cs[setMotorSpeeds](Packages/com.unity.inputsystem/DocCodeSamples.Tests/GamepadHapticsExample.cs#setMotorSpeeds)]
 
 Only the following combinations of devices/OSes currently support rumble:
 
@@ -43,17 +37,6 @@ In certain situations, you might want to globally pause or stop haptics for all 
 
 You can use the corresponding methods on [`InputSystem`](xref:UnityEngine.InputSystem.InputSystem) to achieve this result. These methods work the same way as device-specific methods, but affect all devices:
 
-```c#
-
-// Pause haptics globally.
-InputSystem.PauseHaptics();
-
-// Resume haptics globally.
-InputSystem.ResumeHaptics();
-
-// Stop haptics globally.
-InputSystem.ResetHaptics();
-
-```
+[!code-cs[globalHaptics](Packages/com.unity.inputsystem/DocCodeSamples.Tests/GamepadHapticsExample.cs#globalHaptics)]
 
 The difference between `PauseHaptics` and `ResetHaptics` is that the latter resets haptics playback state on each device to its initial state, whereas `PauseHaptics` preserves playback state in memory and only stops playback on the hardware.

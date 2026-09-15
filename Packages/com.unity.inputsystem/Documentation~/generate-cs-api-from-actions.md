@@ -24,51 +24,7 @@ You can optionally choose a path name, class name, and namespace for the generat
 
 Once applied, the Input System creates a C# script containing API that matches the actions defined in the asset which you can access directly in code. The following example demonstrates this, assuming there is an action map named "gameplay" containing two actions, "use" and "move" defined in the action asset:
 
-```CSharp
-using UnityEngine;
-using UnityEngine.InputSystem;
-
-// IGameplayActions is an interface generated from the newly added "gameplay"
-// action map, triggered by the "Generate Interfaces" checkbox. Note that if
-// you change the default values for the action map, the name of the interface
-// will be different.
-
-public class MyPlayerScript : MonoBehaviour, IGameplayActions
-{
-    // MyPlayerControls is the C# class that Unity generated.
-    // It encapsulates the data from the .inputactions asset we created
-    // and automatically looks up all the maps and actions for us.
-    MyPlayerControls controls;
-
-    public void OnEnable()
-    {
-        if (controls == null)
-        {
-            controls = new MyPlayerControls();
-            // Tell the "gameplay" action map that we want to be
-            // notified when actions get triggered.
-            controls.gameplay.SetCallbacks(this);
-        }
-        controls.gameplay.Enable();
-    }
-
-    public void OnDisable()
-    {
-        controls.gameplay.Disable();
-    }
-
-    public void OnUse(InputAction.CallbackContext context)
-    {
-        // 'Use' code here.
-    }
-
-    public void OnMove(InputAction.CallbackContext context)
-    {
-        // 'Move' code here.
-    }
-
-}
-```
+[!code-cs[generate-cs-api](Packages/com.unity.inputsystem/DocCodeSamples.Tests/GenerateCsApiFromActions.cs#generate-cs-api)]
 
 > [!NOTE]
 > To regenerate the .cs file, right-click the .inputactions asset in the Project Browser and select **Reimpor**.

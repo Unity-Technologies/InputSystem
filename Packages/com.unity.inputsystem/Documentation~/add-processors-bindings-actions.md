@@ -23,11 +23,7 @@ To remove a Processor, click the Remove (-) icon next to it. You can also use th
 
 If you create your bindings in code, you can add Processors like this:
 
-```CSharp
-var action = new InputAction();
-action.AddBinding("<Gamepad>/leftStick")
-    .WithProcessor("invertVector2(invertX=false)");
-```
+[!code-cs[processorbindings](Packages/com.unity.inputsystem/DocCodeSamples.Tests/CustomProcessors.cs#processorbindings)]
 
 ## Processors on Actions
 
@@ -37,6 +33,4 @@ You can add and edit Processors on Actions in the [Input Actions Editor](actions
 
 If you create your Actions in code, you can add Processors like this:
 
-```CSharp
-var action = new InputAction(processors: "invertVector2(invertX=false)");
-```
+[!code-cs[addprocessor](Packages/com.unity.inputsystem/DocCodeSamples.Tests/CustomProcessors.cs#addprocessor)]

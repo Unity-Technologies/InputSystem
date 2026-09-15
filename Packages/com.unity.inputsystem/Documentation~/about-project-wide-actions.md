@@ -24,8 +24,6 @@ The benefit of assign an action asset as the project-wide actions is that you ca
 
 For example, you can get a reference to an action named "Move" in your project-wide actions using a line of code like this:
 
-```
-  InputSystem.actions.FindAction("Move");
-```
+  [!code-cs[project-wide actions](Packages/com.unity.inputsystem/DocCodeSamples.Tests/AboutProjectWideActions.cs#about-project-wide-actions)]
 
 Project-wide actions are also enabled by default.

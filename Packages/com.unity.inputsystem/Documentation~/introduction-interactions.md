@@ -32,48 +32,7 @@ While `Performed` is typically the phase that triggers the actual response to an
 
 The following example demonstrates this using a [Slow Tap interaction](./built-in-interactions.md#slowtap) on a `Jump` action so that the user can tap to jump immediately, or hold down the jump button to charge up a higher powered jump, displaying a UI to show the amount charged:
 
-```CSharp
-using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Interactions;
-
-public class ExampleScript : MonoBehaviour
-{
-    InputAction jumpAction;
-
-    private void Start()
-    {
-        jumpAction = InputSystem.actions.FindAction("Jump");
-
-
-        jumpAction.started += context =>
-        {
-            if (context.interaction is SlowTapInteraction)
-            {
-                // Show "charging" UI
-            }
-        };
-
-        jumpAction.performed += context =>
-        {
-            if (context.interaction is SlowTapInteraction)
-            {
-                // call "charged jump" code
-            }
-            else
-            {
-                // call "regular jump" code
-            };
-        };
-
-        jumpAction.canceled += context =>
-        {
-            // Hide "charging" UI
-        };
-
-    }
-}
-```
+[!code-cs[intro-interactions](Packages/com.unity.inputsystem/DocCodeSamples.Tests/IntroductionInteractions.cs#interactions)]
 
 ## Multiple Controls on an Action
 
@@ -93,10 +52,7 @@ Interactions might need to wait a certain time for a specific input to occur or 
 
 It can be useful to know how much of a timeout is left for an interaction to complete. For example, you might want to display a bar in the UI that is charging up while the interaction is waiting to complete. To query the percentage to which a timeout has completed, use [`GetTimeoutCompletionPercentage`](xref:UnityEngine.InputSystem.InputAction).
 
-```CSharp
-// Returns a value between 0 (inclusive) and 1 (inclusive).
-var warpActionCompletion = playerInput.actions["warp"].GetTimeoutCompletionPercentage();
-```
+[!code-cs[timeout](Packages/com.unity.inputsystem/DocCodeSamples.Tests/IntroductionInteractions.cs#timeout)]
 
 Note that each Interaction can have its own separate timeout (but only a single one at any one time). If [multiple interactions](#multiple-interactions-on-a-binding) are in effect, then [`GetTimeoutCompletionPercentage`](xref:UnityEngine.InputSystem.InputAction) will only use the timeout of the one interaction that is currently driving the action.
 

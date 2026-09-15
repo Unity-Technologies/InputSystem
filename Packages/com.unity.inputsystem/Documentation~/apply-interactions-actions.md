@@ -23,6 +23,4 @@ To apply interactions in the Input Action Editor:
 
 If you create your Actions in code, you can add Interactions like this:
 
-```CSharp
-var Action = new InputAction(Interactions: "tap(duration=0.8)");
-```
+[!code-cs[interactionactions](Packages/com.unity.inputsystem/DocCodeSamples.Tests/IntroductionInteractions.cs#interactionactions)]
