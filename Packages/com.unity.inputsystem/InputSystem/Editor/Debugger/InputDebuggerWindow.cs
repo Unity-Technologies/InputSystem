@@ -326,7 +326,10 @@ namespace UnityEngine.InputSystem.Editor
                     ToggleAddDevicesNotSupportedByProject);
                 menu.AddItem(Contents.diagnosticsModeContent, InputSystem.manager.m_Diagnostics != null,
                     ToggleDiagnosticMode);
-                menu.AddItem(Contents.touchSimulationContent, InputEditorUserSettings.simulateTouch, ToggleTouchSimulation);
+                if (InputSystemPlugin.isSimulatorActive)
+                    menu.AddDisabledItem(Contents.touchSimulationSuppressedBySimulatorContent, InputEditorUserSettings.simulateTouch);
+                else
+                    menu.AddItem(Contents.touchSimulationContent, InputEditorUserSettings.simulateTouch, ToggleTouchSimulation);
 
                 // Add the inverse of "Copy Device Description" which adds a device with the description from
                 // the clipboard to the system. This is most useful for debugging and makes it very easy to
@@ -380,6 +383,7 @@ namespace UnityEngine.InputSystem.Editor
         {
             public static readonly GUIContent optionsContent = new GUIContent("Options");
             public static readonly GUIContent touchSimulationContent = new GUIContent("Simulate Touch Input From Mouse or Pen");
+            public static readonly GUIContent touchSimulationSuppressedBySimulatorContent = new GUIContent("Simulate Touch Input From Mouse or Pen (events suppressed by Device Simulator view)");
             public static readonly GUIContent pasteDeviceDescriptionAsDevice = new GUIContent("Paste Device Description as Device");
             public static readonly GUIContent addDevicesNotSupportedByProjectContent = new GUIContent("Add Devices Not Listed in 'Supported Devices'");
             public static readonly GUIContent diagnosticsModeContent = new GUIContent("Enable Event Diagnostics");
