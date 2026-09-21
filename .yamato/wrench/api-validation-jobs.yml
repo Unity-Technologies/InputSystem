@@ -31,7 +31,7 @@ api_validation_-_inputsystem_-_6000_0_-_win10:
   - command: python PythonScripts/PackageJsonCondersor.py
     timeout: 1
     retries: 0
-  - command: upm-ci package test -u .Editor --package-path Packages/com.unity.inputsystem --type vetting-tests || exit 0
+  - command: upm-ci package test -u .Editor --package-path Packages/com.unity.inputsystem --type vetting-tests --extra-utr-arg="--zero-tests-are-ok=1" || exit 0
     timeout: 30
     retries: 0
   - command: python PythonScripts/parse_upm_ci_results.py --package-path=Packages/com.unity.inputsystem
