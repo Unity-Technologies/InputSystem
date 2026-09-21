@@ -1,7 +1,6 @@
 editors:
   - version: 6000.0
   - version: 6000.3
-  - version: 6000.4
-  - version: trunk
+  - version: 6000.6
 
 upm_ci_install: npm install -g upm-ci-utils@stable --registry https://artifactory.prd.it.unity3d.com/artifactory/api/npm/upm-npm
