@@ -4532,6 +4532,64 @@ namespace UnityEngine.InputSystem
             return savedState;
         }
 
+        /// <summary>
+        /// After <see cref="InputTestStateManager.Restore"/> restores the global registry via
+        /// <c>RestoreSavedState()</c>, the per-map back-references on each <see cref="InputActionMap"/>
+        /// (<c>m_State</c>, <c>m_MapIndexInState</c>) and the per-action index
+        /// (<c>InputAction.m_ActionIndexInState</c>) may be stale because they were cleared by
+        /// <c>Destroy()</c> during <c>StaticDisposeCurrentState()</c>. This method re-links those
+        /// references from the restored <see cref="s_GlobalState"/> and recomputes
+        /// <c>m_EnabledActionsCount</c> from the action phase memory so that maps and actions
+        /// correctly reflect their pre-test enabled state. See IN-107889.
+        /// </summary>
+        internal static void RelinkRestoredStates()
+        {
+            var count = s_GlobalState.globalList.length;
+            for (var i = 0; i < count; ++i)
+            {
+                var handle = s_GlobalState.globalList[i];
+                if (!handle.IsAllocated)
+                    continue;
+                if (handle.Target is InputActionState state)
+                    state.RelinkMapsAndRecomputeEnabledCount();
+            }
+        }
+
+        private unsafe void RelinkMapsAndRecomputeEnabledCount()
+        {
+            for (var mapIndex = 0; mapIndex < totalMapCount; ++mapIndex)
+            {
+                var map = maps[mapIndex];
+                if (map == null)
+                    continue;
+
+                map.m_State = this;
+                map.m_MapIndexInState = mapIndex;
+
+                if (map.m_Asset != null && map.m_Asset.m_SharedStateForAllMaps == null)
+                    map.m_Asset.m_SharedStateForAllMaps = this;
+
+                var indices = mapIndices[mapIndex];
+                var mapActions = map.m_Actions;
+                if (mapActions != null)
+                {
+                    for (var k = 0; k < indices.actionCount; ++k)
+                        mapActions[k].m_ActionIndexInState = indices.actionStartIndex + k;
+                }
+
+                // Recompute m_EnabledActionsCount from the restored action phase memory.
+                // This correctly reflects enabled/disabled state without any explicit Disable()
+                // call having been made (see TestHook_DisableActions changes for IN-107889).
+                var enabledCount = 0;
+                for (var k = 0; k < indices.actionCount; ++k)
+                {
+                    if (!actionStates[indices.actionStartIndex + k].isDisabled)
+                        ++enabledCount;
+                }
+                map.m_EnabledActionsCount = enabledCount;
+            }
+        }
+
         private void AddToGlobalList()
         {
             CompactGlobalList();

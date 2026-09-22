@@ -694,7 +694,7 @@ namespace UnityEngine.InputSystem
                 var touchId = newTouchState.touchId;
                 for (var i = 0; i < touchControlCount; ++i)
                 {
-                    if (currentTouchState[i].touchId == touchId)
+                    if (currentTouchState[i].touchId == touchId && currentTouchState[i].displayIndex == newTouchState.displayIndex)
                     {
                         // Preserve primary touch state.
                         var isPrimaryTouch = currentTouchState[i].isPrimaryTouch;
@@ -915,7 +915,7 @@ namespace UnityEngine.InputSystem
                 for (var i = 0; i < touchControlCount; ++i)
                 {
                     var touch = &currentTouchState[i];
-                    if (touch->touchId == eventTouchId || (!touch->isInProgress && eventTouchPhase.IsActive()))
+                    if ((touch->touchId == eventTouchId && touch->displayIndex == eventTouchState->displayIndex) || (!touch->isInProgress && eventTouchPhase.IsActive()))
                     {
                         offset = primaryTouch.m_StateBlock.byteOffset + primaryTouch.m_StateBlock.alignedSizeInBytes - m_StateBlock.byteOffset +
                             (uint)(i * UnsafeUtility.SizeOf<TouchState>());
@@ -1002,7 +1002,7 @@ namespace UnityEngine.InputSystem
             var currentState = (TouchState*)currentEvent->state;
             var nextState = (TouchState*)nextEvent->state;
 
-            if (currentState->touchId != nextState->touchId || currentState->phaseId != nextState->phaseId || currentState->flags != nextState->flags)
+            if (currentState->touchId != nextState->touchId || currentState->phaseId != nextState->phaseId || currentState->flags != nextState->flags || currentState->displayIndex != nextState->displayIndex)
                 return false;
 
             nextState->delta += currentState->delta;
