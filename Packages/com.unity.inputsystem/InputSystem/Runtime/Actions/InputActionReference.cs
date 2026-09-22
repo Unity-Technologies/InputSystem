@@ -110,7 +110,7 @@ namespace UnityEngine.InputSystem
         /// <paramref name="mapName"/> is <c>null</c> or empty -or- <paramref name="actionName"/>
         /// is <c>null</c> or empty.</exception>
         /// <exception cref="InvalidOperationException">If attempting to mutate a reference object
-        /// that is backed by by .inputactions asset. This is not allowed to prevent side-effects.</exception>
+        /// that is backed by .inputactions asset. This is not allowed to prevent side-effects.</exception>
         /// <exception cref="ArgumentException">No action map called <paramref name="mapName"/> could
         /// be found in <paramref name="asset"/> -or- no action called <paramref name="actionName"/>
         /// could be found in the action map called <paramref name="mapName"/> in <paramref name="asset"/>.</exception>
