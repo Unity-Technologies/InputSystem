@@ -3,6 +3,7 @@ using System.Text;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Pool;
 
 namespace UnityEngine.InputSystem.UI
 {
@@ -78,24 +79,63 @@ namespace UnityEngine.InputSystem.UI
 
         public override string ToString()
         {
-            var stringBuilder = new StringBuilder();
-            stringBuilder.Append(base.ToString());
-            stringBuilder.AppendLine("button: " + button); // Defined in PointerEventData but PointerEventData.ToString() does not include it.
-            stringBuilder.AppendLine("clickTime: " + clickTime); // Same here.
-            stringBuilder.AppendLine("clickCount: " + clickCount); // Same here.
-            stringBuilder.AppendLine("device: " + device);
-            stringBuilder.AppendLine("pointerType: " + pointerType);
-            stringBuilder.AppendLine("touchId: " + touchId);
-            stringBuilder.AppendLine("pressPosition: " + pressPosition);
-            stringBuilder.AppendLine("trackedDevicePosition: " + trackedDevicePosition);
-            stringBuilder.AppendLine("trackedDeviceOrientation: " + trackedDeviceOrientation);
-            stringBuilder.AppendLine("pressure" + pressure);
-            stringBuilder.AppendLine("radius: " + radius);
-            stringBuilder.AppendLine("azimuthAngle: " + azimuthAngle);
-            stringBuilder.AppendLine("altitudeAngle: " + altitudeAngle);
-            stringBuilder.AppendLine("twist: " + twist);
-            stringBuilder.AppendLine("displayIndex: " + displayIndex);
-            return stringBuilder.ToString();
+            var stringBuilder = GenericPool<StringBuilder>.Get();
+            try
+            {
+                stringBuilder.Clear();
+                stringBuilder.Append(base.ToString());
+                stringBuilder.Append("button: "); // Defined in PointerEventData but PointerEventData.ToString() does not include it.
+                stringBuilder.Append(button);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("clickTime: "); // Same here.
+                stringBuilder.Append(clickTime);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("clickCount: "); // Same here.
+                stringBuilder.Append(clickCount);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("device: ");
+                stringBuilder.Append(device);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("pointerType: ");
+                stringBuilder.Append(pointerType);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("touchId: ");
+                stringBuilder.Append(touchId);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("pressPosition: ");
+                stringBuilder.Append(pressPosition);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("trackedDevicePosition: ");
+                stringBuilder.Append(trackedDevicePosition);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("trackedDeviceOrientation: ");
+                stringBuilder.Append(trackedDeviceOrientation);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("pressure: ");
+                stringBuilder.Append(pressure);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("radius: ");
+                stringBuilder.Append(radius);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("azimuthAngle: ");
+                stringBuilder.Append(azimuthAngle);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("altitudeAngle: ");
+                stringBuilder.Append(altitudeAngle);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("twist: ");
+                stringBuilder.Append(twist);
+                stringBuilder.AppendLine();
+                stringBuilder.Append("displayIndex: ");
+                stringBuilder.Append(displayIndex);
+                stringBuilder.AppendLine();
+                return stringBuilder.ToString();
+            }
+            finally
+            {
+                stringBuilder.Clear();
+                GenericPool<StringBuilder>.Release(stringBuilder);
+            }
         }
 
         internal static int MakePointerIdForTouch(int deviceId, int touchId)
