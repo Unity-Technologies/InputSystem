@@ -77,7 +77,14 @@ public class InputSystemSettings : AnnotatedSettingsBase
                 ReleaseOptions = new ReleaseOptions() { IsReleasing = true },
                 ValidationOptions = new ValidationOptions()
                 {
-                    AdditionalUtrArguments = ["--coverage-pkg-version=1.3.0"]
+                    AdditionalUtrArguments = ["--coverage-pkg-version=1.3.0"],
+
+                    // The packed test project carries only PlayMode tests, so the EditMode run is
+                    // always empty and UTR fails a run that selected no tests.
+                    HostsWhereZeroEditmodeTestsAreAllowed = new HashSet<HostPlatform>
+                    {
+                        HostPlatform.Windows, HostPlatform.MacOS, HostPlatform.Ubuntu
+                    }
                 },
                 PackJobOptions = new PackJobOptions()
                 {

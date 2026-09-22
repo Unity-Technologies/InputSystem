@@ -14,6 +14,9 @@ namespace UnityEngine.InputSystem.Editor
     {
         internal Touchscreen SimulatorTouchscreen;
 
+        // The Input Debugger reads this to show its touch simulation toggle as unavailable.
+        internal static bool isSimulatorActive => EnhancedTouch.TouchSimulation.s_DeviceSimulatorCount > 0;
+
         private bool m_InputSystemEnabled;
         private bool m_Quitting;
         private bool m_ConflictingDevicesDisabled;
@@ -40,6 +43,8 @@ namespace UnityEngine.InputSystem.Editor
                 if (deviceSimulator != null)
                     deviceSimulator.touchScreenInput += OnTouchEvent;
                 InputSystem.onDeviceChange += OnDeviceChange;
+
+                EnhancedTouch.TouchSimulation.IncreaseDeviceSimulatorCount();
 
                 SimulatorTouchscreen = InputSystem.AddDevice<Touchscreen>("Device Simulator Touchscreen");
             }
@@ -179,6 +184,8 @@ namespace UnityEngine.InputSystem.Editor
                     InputSystem.RemoveDevice(SimulatorTouchscreen);
 
                 SetConflictingDevicesDisabled(false);
+
+                EnhancedTouch.TouchSimulation.DecreaseDeviceSimulatorCount();
                 m_RootElement = null;
             }
         }

@@ -15,6 +15,31 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 public class DeviceSimulatorTests : InputTestFixture
 {
+    private TouchSimulation m_OldTouchSimulationInstance;
+
+    public override void Setup()
+    {
+        // Detach before base.Setup() resets the input system, so that a TouchSimulation instance
+        // already in place does not see the devices being removed.
+        m_OldTouchSimulationInstance = TouchSimulation.s_Instance;
+        TouchSimulation.s_Instance = null;
+
+        base.Setup();
+    }
+
+    public override void TearDown()
+    {
+        // Destroy while the test's input system is still the current one, since OnDisable removes
+        // the simulated touchscreen from it.
+        TouchSimulation.s_DeviceSimulatorCount = 0;
+        TouchSimulation.Destroy();
+
+        base.TearDown();
+
+        TouchSimulation.s_Instance = m_OldTouchSimulationInstance;
+        m_OldTouchSimulationInstance = null;
+    }
+
     [UnityTest]
     [Category("Device Simulator")]
     public IEnumerator InputEventsArePropagated()
@@ -63,6 +88,63 @@ public class DeviceSimulatorTests : InputTestFixture
 
         plugin.OnDestroy();
         Assert.IsFalse(touchscreen.added);
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void TouchSimulationDoesNotQueueTouchesWhileSimulatorIsOpen()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        TouchSimulation.Enable();
+
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+
+        Press(mouse.leftButton);
+
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.touches[0].isInProgress, Is.False);
+
+        plugin.OnDestroy();
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void TouchInProgressWhenSimulatorOpens_IsCanceled()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        TouchSimulation.Enable();
+        var simulatedTouchscreen = TouchSimulation.instance.simulatedTouchscreen;
+
+        Press(mouse.leftButton);
+        Assert.That(simulatedTouchscreen.touches[0].isInProgress, Is.True);
+
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+        InputSystem.Update();
+
+        Assert.That(simulatedTouchscreen.touches[0].isInProgress, Is.False);
+
+        // The release is swallowed by the early out, so the touch must not come back to life.
+        Release(mouse.leftButton);
+        Assert.That(simulatedTouchscreen.touches[0].isInProgress, Is.False);
+
+        plugin.OnDestroy();
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void TouchSimulationQueuesTouchesAgainAfterSimulatorCloses()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        TouchSimulation.Enable();
+
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+        plugin.OnDestroy();
+
+        Press(mouse.leftButton);
+
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.touches[0].isInProgress, Is.True);
     }
 
     [Test]
