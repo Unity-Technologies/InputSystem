@@ -311,9 +311,7 @@ namespace UnityEngine.InputSystem.Editor
 
         public static IEnumerable<ParameterListView> GetInteractionsAsParameterListViews(InputActionsEditorState state, SerializedInputAction? inputAction)
         {
-            Type expectedValueType = null;
-            if (inputAction.HasValue && !string.IsNullOrEmpty(inputAction.Value.expectedControlType))
-                expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.Value.expectedControlType);
+            var expectedValueType = GetExpectedValueTypeForProcessorsOrInteractions(state, inputAction);
 
             var interactions = string.Empty;
             if (inputAction.HasValue && state.selectionType == SelectionType.Action)
@@ -328,13 +326,35 @@ namespace UnityEngine.InputSystem.Editor
                 InputInteraction.GetValueType);
         }
 
+        /// <summary>
+        /// Expected value type for the current selection. When the selection is a composite part binding,
+        /// returns the part's value type (e.g. float) instead of the composite's (e.g. Vector2). ISXB-1794.
+        /// </summary>
+        private static Type GetExpectedValueTypeForProcessorsOrInteractions(InputActionsEditorState state, SerializedInputAction? inputAction)
+        {
+            if (state.selectionType == SelectionType.Binding)
+            {
+                var binding = GetSelectedBinding(state);
+                if (binding.HasValue && binding.Value.isPartOfComposite)
+                {
+                    var compositeName = NameAndParameters.Parse(binding.Value.compositePath).name;
+                    var partName = binding.Value.name;
+                    var expectedLayout = InputBindingComposite.GetExpectedControlLayoutName(compositeName, partName);
+                    if (!string.IsNullOrEmpty(expectedLayout))
+                        return EditorInputControlLayoutCache.GetValueType(expectedLayout);
+                }
+            }
+
+            if (inputAction.HasValue && !string.IsNullOrEmpty(inputAction.Value.expectedControlType))
+                return EditorInputControlLayoutCache.GetValueType(inputAction.Value.expectedControlType);
+
+            return null;
+        }
+
         public static IEnumerable<ParameterListView> GetProcessorsAsParameterListViews(InputActionsEditorState state, SerializedInputAction? inputAction)
         {
             var processors = string.Empty;
-            Type expectedValueType = null;
-
-            if (inputAction.HasValue && !string.IsNullOrEmpty(inputAction.Value.expectedControlType))
-                expectedValueType = EditorInputControlLayoutCache.GetValueType(inputAction.Value.expectedControlType);
+            var expectedValueType = GetExpectedValueTypeForProcessorsOrInteractions(state, inputAction);
 
             if (inputAction.HasValue && state.selectionType == SelectionType.Action)
                 processors = inputAction.Value.processors;
