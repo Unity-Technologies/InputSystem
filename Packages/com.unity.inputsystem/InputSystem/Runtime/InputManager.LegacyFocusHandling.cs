@@ -218,7 +218,7 @@ namespace UnityEngine.InputSystem
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private unsafe bool LegacyEarlyOutFromEventProcessing(InputUpdateType updateType, ref InputEventBuffer eventBuffer, ref bool dropStatusEvents)
         {
-            var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
+            var shouldProcessTimeouts = ShouldProcessTimeouts(updateType);
             // Determine if we should flush the event buffer which would imply we exit early and do not process
             // any of those events, ever.
             var shouldFlushEventBuffer = ShouldFlushEventBuffer();
@@ -232,7 +232,7 @@ namespace UnityEngine.InputSystem
             {
                 // Normally, we process action timeouts after first processing all events. If we have no
                 // events, we still need to check timeouts.
-                if (shouldProcessActionTimeouts)
+                if (shouldProcessTimeouts)
                     m_StateMonitors.ProcessTimeouts();
 
                 if (shouldFlushEventBuffer)
