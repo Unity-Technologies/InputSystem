@@ -3296,7 +3296,7 @@ namespace UnityEngine.InputSystem
                 // Ensure optimized controls are in valid state
                 CheckAllDevicesOptimizedControlsHaveValidState();
 
-                var shouldProcessActionTimeouts = updateType.IsPlayerUpdate() && gameIsPlaying;
+                var shouldProcessTimeouts = ShouldProcessTimeouts(updateType);
 
                 // See if we're supposed to only take events up to a certain time.
                 // NOTE: We do not require the events in the queue to be sorted. Instead, we will walk over
@@ -3316,7 +3316,7 @@ namespace UnityEngine.InputSystem
                 {
                     // Normally, we process action timeouts after first processing all events. If we have no
                     // events, we still need to check timeouts.
-                    if (shouldProcessActionTimeouts)
+                    if (shouldProcessTimeouts)
                         m_StateMonitors.ProcessTimeouts();
 
                     InvokeAfterUpdateCallback(updateType);
@@ -3334,7 +3334,7 @@ namespace UnityEngine.InputSystem
 
                 ProcessEventBuffer(updateType, ref eventBuffer, currentTime, timesliceEvents, dropStatusEvents);
 
-                if (shouldProcessActionTimeouts)
+                if (shouldProcessTimeouts)
                     m_StateMonitors.ProcessTimeouts();
 
                 FinalizeUpdate(updateType);
@@ -4146,6 +4146,29 @@ namespace UnityEngine.InputSystem
         }
 
 #endif
+
+        /// <summary>
+        /// Determines whether state monitor and action timeouts should be processed for the given update type.
+        /// </summary>
+        /// <param name="updateType">The current update type</param>
+        /// <returns>True if timeouts should be processed, false otherwise.</returns>
+        /// <remarks>
+        /// Timeouts are skipped during <see cref="InputUpdateType.BeforeRender"/> to minimize work during the
+        /// render preparation phase and ensure consistent timeout timing regardless of whether before-render
+        /// devices are present.
+        /// </remarks>
+        /// <seealso cref="InputManagerStateMonitors.ProcessTimeouts"/>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        bool ShouldProcessTimeouts(InputUpdateType updateType)
+        {
+            // Skip when InputUpdateType.BeforeRender to avoid altering the typical update period when timeouts are processed
+            // just because a device that has before-render updates enabled is added to the system.
+            // Otherwise, users who poll in Update() would potentially miss action phase changes if the timeout
+            // occurs during the later BeforeRender period since methods like InputAction.WasPerformedThisFrame would be
+            // reset by the next Update().
+            // (ISX-2898) (ISX-2897): This exception may not be necessary once those issues are addressed.
+            return updateType.IsPlayerUpdate() && updateType != InputUpdateType.BeforeRender && gameIsPlaying;
+        }
 
         bool AreMaximumEventBytesPerUpdateExceeded(uint totalEventBytesProcessed)
         {
