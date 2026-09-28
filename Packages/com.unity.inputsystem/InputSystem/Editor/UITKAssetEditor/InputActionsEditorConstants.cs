@@ -21,6 +21,11 @@ namespace UnityEngine.InputSystem.Editor
 
         /// Classes
         public static readonly string HiddenStyleClassName = "unity-input-actions-editor-hidden";
+        public static readonly string PropertiesFieldStyleClassName = "properties-field";
+
+        // Must stay in sync with the .properties-field label width in InputActionsEditorStyles.uss.
+        // Only the IMGUI control path editor needs it as a number; UITK fields get it from USS.
+        public const int PropertiesLabelWidth = 120;
 
         public const string CompositePartAssignmentTooltip =
             "The named part of the composite that the binding is assigned to. Multiple bindings may be assigned the same part. All controls from "

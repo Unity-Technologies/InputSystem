@@ -78,6 +78,9 @@ namespace UnityEngine.InputSystem.Editor
                 SetExpectedControlLayout(attribute.layout);
         }
 
+        // Fixed label width in pixels; zero sizes the label to its text.
+        internal float labelWidth { get; set; }
+
         public void OnGUI()
         {
             EditorGUILayout.BeginHorizontal();
@@ -96,7 +99,7 @@ namespace UnityEngine.InputSystem.Editor
 
             var lineRect = rect;
             var labelRect = lineRect;
-            labelRect.width = EditorStyles.label.CalcSize(pathLabel).x + 20; // Fit to label with some padding
+            labelRect.width = labelWidth > 0 ? labelWidth : EditorStyles.label.CalcSize(pathLabel).x + 20;
             EditorGUI.LabelField(labelRect, pathLabel);
             lineRect.x += labelRect.width;
             lineRect.width -= labelRect.width;
