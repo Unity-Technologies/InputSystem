@@ -237,3 +237,8 @@
 #control-schemes-toolbar-container {
     flex-shrink: 0;
 }
+
+.properties-field > .unity-base-field__label {
+    min-width: 120px;
+    width: 120px;
+}

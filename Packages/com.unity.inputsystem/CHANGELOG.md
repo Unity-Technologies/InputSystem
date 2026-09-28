@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed misaligned labels in the Input Actions editor properties pane. [UUM-154536](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-154536)
 - Fixed a single click producing two simultaneous touches when the Device Simulator view is open and "Simulate Touch Input From Mouse or Pen" is enabled in the Input Debugger; Touch Simulation now suppresses its events while a Device Simulator view is open [UUM-153420]
 - Fixed the search field in the "Add supported device" popup (Input System Package Settings > Supported Devices > "+") drawing flush against the popup's left edge with no left margin, unlike its right-side spacing; it is now inset to match [UUM-150217](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-150217)
 - Fixed the "Supported Devices" list in the Input System Package Settings sitting flush against the panel edge with no left/right margin, unlike the surrounding fields; it is now inset to line up with the other settings controls [UUM-150207](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-150207)

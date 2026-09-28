@@ -25,6 +25,7 @@ namespace UnityEngine.InputSystem.Editor
 
             m_PathEditorContainer = container.Q<IMGUIContainer>("path-editor-container");
             m_CompositePartField = container.Q<DropdownField>("composite-part-dropdown");
+            m_CompositePartField.AddToClassList(InputActionsEditorConstants.PropertiesFieldStyleClassName);
 
             CreateSelector(Selectors.GetSelectedBinding,
                 (b, s) => b.HasValue && b.Value.isPartOfComposite ? Selectors.GetCompositePartBindingViewState(b.Value, s) : null);
@@ -37,6 +38,7 @@ namespace UnityEngine.InputSystem.Editor
             // TODO: Persist control picker state
             var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
                 () => { Dispatch(Commands.ApplyModifiedProperties()); });
+            controlPathEditor.labelWidth = InputActionsEditorConstants.PropertiesLabelWidth;
 
             controlPathEditor.SetControlPathsToMatch(viewState.currentControlScheme.deviceRequirements.Select(x => x.controlPath));
             controlPathEditor.SetExpectedControlLayout(viewState.expectedControlLayoutName);
