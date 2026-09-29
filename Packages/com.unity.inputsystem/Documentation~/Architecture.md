@@ -54,25 +54,39 @@ The following table describes the color coding that all the diagrams on this pag
 The built-in back ends push discovery and state events into the device discovery queue and the foreground event queue, which drive the `InputManager` class. Events that come from background threads go into the background event queue, which the main thread flushes into the foreground queue. The `InputManager` class sends commands back to the back ends.
 
 ```mermaid
+%%{init: {"flowchart": {"nodeSpacing": 70, "rankSpacing": 110, "padding": 20, "wrappingWidth": 260}}}%%
 flowchart TB
     %% Diagram 1: platform back ends queue events
     backends["Platform back ends
-    Windows · macOS · Linux · UWP · iOS · Android
-    · Switch · Xbox · PS4 · Web · XR"]
-    DDQ["Device discovery queue"]
-    EQ["Event queue (foreground)"]
-    BEQ["Background event queue"]
+    Windows · macOS · Linux · UWP
+    iOS · Android · Switch · Xbox
+    PS4 · Web · XR"]
     threads["Background threads
-    Any code that queues events off the main thread"]
-    InputManager(["<b>InputManager</b>
+    Any code that queues events
+    off the main thread"]
+    %% Invisible group keeps both event sources on the top row.
+    subgraph SRC[" "]
+        direction LR
+        backends
+        threads
+    end
+    DDQ["Device discovery queue"]
+    BEQ["Background event queue"]
+    EQ["Event queue (foreground)"]
+    InputManager("<b>InputManager</b>
     Matches layouts to devices (InputDeviceMatcher),
-    builds devices (InputDeviceBuilder), creates and updates them"])
+    builds devices (InputDeviceBuilder),
+    creates and updates them")
 
-    backends --> DDQ & EQ
-    threads -->|"Queue event (thread-safe)"| BEQ
+    backends --> DDQ
+    backends --> EQ
+    threads -->|"Queue event
+    (thread-safe)"| BEQ
     DDQ -->|"Device discovered"| InputManager
-    EQ -->|"Update (flushes event buffers)"| InputManager
-    BEQ -->|"Flushed by the main thread"| EQ
+    BEQ -->|"Flushed by the
+    main thread"| EQ
+    EQ -->|"Update
+    (flushes event buffers)"| InputManager
     InputManager -->|"Queue event"| EQ
     InputManager -->|"Device command"| backends
 
@@ -86,6 +100,7 @@ flowchart TB
     class threads threaded;
     class InputManager manager;
     class out1 signpost;
+    style SRC fill:none,stroke:none;
 ```
 
 ### Diagram 2: Layouts build devices
