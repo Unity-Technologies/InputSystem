@@ -60,6 +60,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var controlPathEditor = new InputControlPathEditor(viewState.selectedBindingPath, new InputControlPickerState(),
                     () => { Dispatch(Commands.ApplyModifiedProperties()); });
+                controlPathEditor.labelWidth = InputActionsEditorConstants.PropertiesLabelWidth;
                 controlPathEditor.SetControlPathsToMatch(viewState.currentControlScheme.deviceRequirements.Select(x => x.controlPath));
 
                 var inputAction = viewState.selectedInputAction;

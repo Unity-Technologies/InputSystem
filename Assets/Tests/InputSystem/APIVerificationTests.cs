@@ -250,6 +250,25 @@ class APIVerificationTests
         Assert.That(monoBehaviourTypesHelpUrls, Has.All.StartWith(InputSystem.kDocUrl));
     }
 
+    [Test]
+    [Category("API")]
+    public void API_InputActionImporterHasHelpUrlToExistingManualPage()
+    {
+        const string manualPrefix = "/manual/";
+
+        var helpUrlAttribute = typeof(InputActionImporter).GetCustomAttribute<HelpURLAttribute>();
+        Assert.That(helpUrlAttribute, Is.Not.Null, "InputActionImporter has no HelpURL attribute, so the .inputactions Inspector help button falls back to a generated URL with no published page.");
+        Assert.That(helpUrlAttribute.URL, Does.StartWith(InputSystem.kDocUrl + manualPrefix));
+
+        var page = helpUrlAttribute.URL.Substring(InputSystem.kDocUrl.Length + manualPrefix.Length);
+        var anchorIndex = page.IndexOf('#');
+        if (anchorIndex >= 0)
+            page = page.Substring(0, anchorIndex);
+
+        var markdownPath = "Packages/com.unity.inputsystem/Documentation~/" + Path.ChangeExtension(page, ".md");
+        Assert.That(File.Exists(markdownPath), Is.True, $"HelpURL of InputActionImporter points at {helpUrlAttribute.URL} but {markdownPath} does not exist.");
+    }
+
     private const string kAPIDirectory = "Tools/API";
 
     ////FIXME: The .api-based checks are temporary and don't account for platform-specific APIs. Nuke these tests as soon

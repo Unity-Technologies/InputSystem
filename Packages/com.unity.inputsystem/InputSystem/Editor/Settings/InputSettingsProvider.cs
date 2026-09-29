@@ -156,7 +156,13 @@ namespace UnityEngine.InputSystem.Editor
                     + "and avoid picking up input from devices not relevant to the project. When you add devices here, any device that will not be classified "
                     + "as supported will appear under 'Unsupported Devices' in the input debugger.", MessageType.None);
 
-                m_SupportedDevices.DoLayoutList();
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.Space(3f);
+                    using (new EditorGUILayout.VerticalScope())
+                        m_SupportedDevices.DoLayoutList();
+                    GUILayout.Space(3f);
+                }
 
                 EditorGUILayout.LabelField("iOS", EditorStyles.boldLabel);
                 EditorGUILayout.Space();

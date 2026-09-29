@@ -7,7 +7,7 @@ A collection of frequently asked questions, and where to find their answers in t
 
 > **Note:**
 >
-> If you're new to the Input System and have landed on this page looking for documentation, it's best to read the [QuickStart Guide](quick-start-guide.md), and the [Concepts](understanding-input.md) and [Workflows](workflows.md) pages, so that you can make sure you're choosing the best workflow for your project's input requirements.
+> If you're new to the Input System and have landed on this page looking for documentation, it's best to read the [QuickStart Guide](quick-start-guide.md), and the [Concepts](understanding-input.md) and [Workflows](Workflows.md) pages, so that you can make sure you're choosing the best workflow for your project's input requirements.
 >
 > This is because there are a number of different ways to read input using the Input System, and many of the answers on this page give you the quickest but least flexible solution, and may not be suitable for a project with more complex requirements.
 
@@ -27,7 +27,7 @@ How do I...?
 - [create my own custom devices?](hid-create-custom-layout.md)
 
 - create a simple "Fire" type action?</br>
-Use the same techniques shown for the "Jump" action in the [Workflows section](workflows.md)
+Use the same techniques shown for the "Jump" action in the [Workflows section](Workflows.md)
 
 - [require a button to be held down for some duration before triggering an action?](built-in-interactions.md#hold)
 

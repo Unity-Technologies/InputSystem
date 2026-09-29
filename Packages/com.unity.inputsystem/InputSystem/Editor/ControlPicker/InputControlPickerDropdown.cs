@@ -575,6 +575,7 @@ namespace UnityEngine.InputSystem.Editor
                     // When picking controls, have a "Listen" button that allows listening for input.
                     if (m_Owner.m_Mode == InputControlPicker.Mode.PickControl)
                     {
+                        GUILayout.Space(8f);
                         using (new EditorGUILayout.VerticalScope(GUILayout.MaxWidth(50)))
                         {
                             GUILayout.Space(4);
@@ -597,6 +598,10 @@ namespace UnityEngine.InputSystem.Editor
 
                             isListening = isListeningNew;
                         }
+                    }
+                    else
+                    {
+                        GUILayout.Space(8f);
                     }
 
                     ////FIXME: the search box doesn't clear out when listening; no idea why the new string isn't taking effect

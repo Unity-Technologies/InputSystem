@@ -120,6 +120,13 @@ namespace UnityEngine.InputSystem.EnhancedTouch
                 return;
             }
 
+            if (s_DeviceSimulatorCount > 0)
+            {
+                // The Device Simulator supplies its own Touchscreen, so simulating a second one
+                // would report every touch twice
+                return;
+            }
+
             var pointerIndex = m_Pointers.IndexOfReference(device, m_NumPointers);
             if (pointerIndex < 0)
                 return;
@@ -333,6 +340,42 @@ namespace UnityEngine.InputSystem.EnhancedTouch
         [NonSerialized] private Action<InputEventPtr, InputDevice> m_OnEvent;
 
         internal static TouchSimulation s_Instance;
+
+        // Kept in sync by the Device Simulator plugin for every simulator window it has open.
+        internal static int s_DeviceSimulatorCount;
+
+        internal static void IncreaseDeviceSimulatorCount()
+        {
+            ++s_DeviceSimulatorCount;
+
+            // Touches in progress would never see their release once OnEvent starts early-ing out.
+            if (s_DeviceSimulatorCount == 1 && s_Instance != null)
+                s_Instance.CancelAllTouches();
+        }
+
+        internal static void DecreaseDeviceSimulatorCount()
+        {
+            Debug.Assert(s_DeviceSimulatorCount > 0, "Device Simulator count decreased more often than it was increased");
+            --s_DeviceSimulatorCount;
+        }
+
+        private void CancelAllTouches()
+        {
+            if (m_Touches == null || simulatedTouchscreen == null || !simulatedTouchscreen.added)
+                return;
+
+            for (var i = 0; i < m_Touches.Length; ++i)
+            {
+                if (m_Touches[i] == null)
+                    continue;
+
+                var pointerIndex = m_Pointers.IndexOfReference(m_Touches[i].device, m_NumPointers);
+                if (pointerIndex < 0)
+                    continue;
+
+                UpdateTouch(i, pointerIndex, TouchPhase.Canceled);
+            }
+        }
 
         ////TODO: Remove IInputStateChangeMonitor from this class when we can break the API
         void IInputStateChangeMonitor.NotifyControlStateChanged(InputControl control, double time, InputEventPtr eventPtr, long monitorIndex)
