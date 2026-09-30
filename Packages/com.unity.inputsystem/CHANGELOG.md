@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Fixed the Input Actions editor window's unsaved-changes handling on close: it now uses the Editor's built-in save prompt (including on Editor quit), auto-saves pending changes when the window is closed with auto-save enabled, and prompts instead of silently dropping changes if an auto-save fails (e.g. version control refused the checkout). [UUM-154808](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-154808)
 - Fixed misaligned labels in the Input Actions editor properties pane. [UUM-154536](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-154536)
 - Fixed a single click producing two simultaneous touches when the Device Simulator view is open and "Simulate Touch Input From Mouse or Pen" is enabled in the Input Debugger; Touch Simulation now suppresses its events while a Device Simulator view is open [UUM-153420]
 - Fixed the search field in the "Add supported device" popup (Input System Package Settings > Supported Devices > "+") drawing flush against the popup's left edge with no left margin, unlike its right-side spacing; it is now inset to match [UUM-150217](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-150217)
