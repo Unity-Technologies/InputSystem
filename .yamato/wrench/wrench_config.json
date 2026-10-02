@@ -27,9 +27,6 @@
         "generateAdditionalMetrics;generateHtmlReport;assemblyFilters:ASSEMBLY_NAME;"
       ],
       "dependantsToIgnoreInPreviewApv": {
-        "6000.5": [
-          "com.unity.charactercontroller"
-        ],
         "6000.6": [
           "com.unity.charactercontroller"
         ],
