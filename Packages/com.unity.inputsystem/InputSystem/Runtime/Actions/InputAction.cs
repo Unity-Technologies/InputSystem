@@ -103,7 +103,7 @@ namespace UnityEngine.InputSystem
     /// of the action as well as on the interactions (see <see cref="IInputInteraction"/>) present
     /// on the bindings of the action. The default behavior is that when a control is actuated
     /// (that is, moving away from its resting position), <see cref="started"/> is called and then
-    /// <see cref="performed"/>. Subsequently, whenever the a control further changes value to
+    /// <see cref="performed"/>. Subsequently, whenever a control further changes value to
     /// anything other than its default value, <see cref="performed"/> will be called again.
     /// Finally, when the control moves back to its default value (i.e. resting position),
     /// <see cref="canceled"/> is called.
