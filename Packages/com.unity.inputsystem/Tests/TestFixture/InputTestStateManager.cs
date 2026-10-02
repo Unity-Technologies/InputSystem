@@ -121,6 +121,10 @@ namespace UnityEngine.InputSystem
             state.inputUserState.RestoreSavedState();
             state.touchState.RestoreSavedState();
             state.inputActionState.RestoreSavedState();
+            // Re-link per-map/per-action back-references that were cleared during
+            // StaticDisposeCurrentState(). Also recomputes m_EnabledActionsCount
+            // from the restored action phase memory. See IN-107889.
+            InputActionState.RelinkRestoredStates();
 
             InputSystemTestHooks.TestHook_RestoreFromSavedState(state.manager, state.remote, state.remoteConnection);
             InputUpdate.Restore(state.managerState.updateState);
