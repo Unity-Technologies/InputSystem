@@ -571,6 +571,114 @@ internal partial class CoreTests
 
     [Test]
     [Category("Actions")]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsManually, InputUpdateType.Manual)]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsInDynamicUpdate, InputUpdateType.Dynamic)]
+    [TestCase(InputSettings.UpdateMode.ProcessEventsInFixedUpdate, InputUpdateType.Fixed)]
+    public void Actions_HoldInteraction_DurationTimeoutDoesNotPerformDuringBeforeRender(InputSettings.UpdateMode updateMode, InputUpdateType updateType)
+    {
+        // This test uses the Hold interaction as a representative sample of an action timeout
+        // to test that it does not occur during BeforeRender even if the duration threshold
+        // is met beginning with that period.
+
+        var updateModeToRestore = InputSystem.settings.updateMode;
+        InputSystem.settings.updateMode = updateMode;
+
+        // We need one device that has before-render updates enabled for the update to enable
+        // at all.
+        const string kBeforeRenderDevice = @"
+            {
+                ""name"" : ""BeforeRenderGamepad"",
+                ""extend"" : ""Gamepad"",
+                ""beforeRender"" : ""Update""
+            }
+        ";
+        InputSystem.RegisterLayout(kBeforeRenderDevice);
+        InputSystem.AddDevice("BeforeRenderGamepad");
+
+        Assert.That(InputSystem.manager.updateMask & InputUpdateType.BeforeRender, Is.EqualTo(InputUpdateType.BeforeRender));
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Add both bindings just to ensure that there is the potential for the Input Action
+        // to be driven by an input device that enables the before-render update.
+
+        var action = new InputAction(binding: "<Keyboard>/space", interactions: "hold(duration=0.4)");
+        action.AddBinding("<BeforeRenderGamepad>/buttonSouth");
+        action.Enable();
+
+        using (var trace = new InputActionTrace(action))
+        {
+            // Since the InputManager uses timeslicing when doing fixed updated, we need to adjust the
+            // current times to ensure the event buffer with the press event is actually processed.
+            runtime.currentTimeForFixedUpdate = 10.1 + runtime.currentTimeOffsetToRealtimeSinceStartup;
+            currentTime = 10.1;
+
+            // Press and hold.
+            // queueEventOnly: true because otherwise it would invoke InputSystem.Update() instead of the update type we are testing.
+            Press(keyboard.spaceKey, time: 10.0, queueEventOnly: true);
+            InputSystem.Update(updateType);
+
+            Assert.That(trace, Started<HoldInteraction>(action, keyboard.spaceKey, time: 10.0, value: 1.0));
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(action.WasPressedThisFrame(), Is.True);
+            Assert.That(action.WasPerformedThisFrame(), Is.False);
+            Assert.That(action.WasReleasedThisFrame(), Is.False);
+            Assert.That(action.WasCompletedThisFrame(), Is.False);
+
+            trace.Clear();
+
+            // Exceed hold time during BeforeRender phase. Make sure action does not perform yet.
+            currentTime = 10.5;
+            InputSystem.Update(InputUpdateType.BeforeRender);
+
+            Assert.That(trace, Is.Empty);
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Started));
+            Assert.That(action.WasPressedThisFrame(), Is.True);
+            Assert.That(action.WasPerformedThisFrame(), Is.False);
+            Assert.That(action.WasReleasedThisFrame(), Is.False);
+            Assert.That(action.WasCompletedThisFrame(), Is.False);
+
+            trace.Clear();
+
+            // Make sure action performs and *stays* performed after the next update.
+            runtime.currentTimeForFixedUpdate = 10.6;
+            currentTime = 10.6;
+            InputSystem.Update(updateType);
+
+            Assert.That(trace,
+                Performed<HoldInteraction>(action, keyboard.spaceKey, time: 10.6, duration: 0.6, value: 1.0));
+            Assert.That(action.ReadValue<float>(), Is.EqualTo(1));
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Performed));
+            Assert.That(action.WasPressedThisFrame(), Is.False);
+            Assert.That(action.WasPerformedThisFrame(), Is.True);
+            Assert.That(action.WasReleasedThisFrame(), Is.False);
+            Assert.That(action.WasCompletedThisFrame(), Is.False);
+
+            trace.Clear();
+
+            runtime.currentTimeForFixedUpdate = 10.8 + runtime.currentTimeOffsetToRealtimeSinceStartup;
+            currentTime = 10.8;
+
+            // Release.
+            Release(keyboard.spaceKey, time: 10.7, queueEventOnly: true);
+            InputSystem.Update(updateType);
+
+            Assert.That(trace, Canceled<HoldInteraction>(action, keyboard.spaceKey, duration: 0.7, time: 10.7, value: 0.0));
+            Assert.That(action.ReadValue<float>(), Is.Zero);
+            Assert.That(action.phase, Is.EqualTo(InputActionPhase.Waiting));
+            Assert.That(action.WasPressedThisFrame(), Is.False);
+            Assert.That(action.WasPerformedThisFrame(), Is.False);
+            Assert.That(action.WasReleasedThisFrame(), Is.True);
+            Assert.That(action.WasCompletedThisFrame(), Is.True);
+        }
+
+        InputSystem.settings.updateMode = updateModeToRestore;
+    }
+
+    [Test]
+    [Category("Actions")]
     public void Actions_ReleasedHoldInteractionIsCancelled_WithMultipleBindings()
     {
         var keyboard = InputSystem.AddDevice<Keyboard>();
