@@ -16,7 +16,7 @@ To assign bindings to each part of the composite:
 
 1. In the Actions panel, select the Action whose composite binding you want to edit.
 2. Expand the Action's hierarchy as necessary to display the composite binding and its parts.
-3. Select the part you want to configure
+3. Select the part you want to configure.
 4. In the Binding Properties panel, [select a control for this part](./select-control-binding.md) using the Path field.
 
 ## Change a composite's type
@@ -39,7 +39,7 @@ You can assign multiple bindings to the same part, and duplicate, cut, copy and 
 3. Select the part you want to duplicate or remove
 4. Right-click the part, and select Duplicate, Delete, Copy, Cut, or Paste
 
-By duplicating bindings and then editing the new duplicates, you can bind multiple contrls to the same composite part. For example, to create a single 2D composite which receives input from the WSAD keys and the arrow keys on a keyboard.
+By duplicating bindings and then editing the new duplicates, you can bind multiple controls to the same composite part. For example, to create a single 2D composite which receives input from the WASD keys and the arrow keys on a keyboard.
 
 ![The Keyboard setting under Move on the Actions panel displays duplicated part bindings.](./Images/DuplicatedPartBindings.png)<br/>
 *A composite 2D vector binding with duplicated parts, allowing multiple keyboard keys to activate the same part of the composite.*
