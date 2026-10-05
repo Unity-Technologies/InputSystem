@@ -8,7 +8,7 @@ The Input System offers various ways to respond to input at runtime, from the re
 
 ## Recommended workflow
 
-Working with the Input System's [recommended workflow](workflows.md) in your project involves two phases which you must approach in this order:
+Working with the Input System's [recommended workflow](Workflows.md) in your project involves two phases which you must approach in this order:
 
 1. Configure your project's actions.
 2. Implement responses to actions.

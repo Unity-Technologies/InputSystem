@@ -131,6 +131,9 @@ namespace UnityEngine.InputSystem.Editor
         internal void DeleteActionMap(int index)
         {
             Dispatch(Commands.DeleteActionMap(index));
+
+            // Deleting an item sometimes causes the UI Panel to lose focus; make sure we keep it
+            m_ListView.Focus();
         }
 
         internal void DuplicateActionMap(int index)

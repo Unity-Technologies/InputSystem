@@ -394,6 +394,14 @@ class DocumentationBasedAPIVerficationTests
             if (link.StartsWith("https://"))
                 continue;
 
+            // javascript: URIs are used by the PMDT 3.x HTML theme for collapsible navigation elements
+            if (link.StartsWith("javascript:"))
+                continue;
+
+            // xref: URIs are unresolved DocFX cross-references to types outside this package
+            if (link.StartsWith("xref:"))
+                continue;
+
             if (link == "#top")
                 continue;
 

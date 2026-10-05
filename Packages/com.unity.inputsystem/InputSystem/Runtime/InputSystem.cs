@@ -2904,8 +2904,8 @@ namespace UnityEngine.InputSystem
         /// <example>
         /// <code>
         /// InputSystem.customBindingPathValidators += (string bindingPath) => {
-        ///     // Mark <Gamepad> bindings with a warning
-        ///     if (!bindingPath.StartsWith("<Gamepad>"))
+        ///     // Mark &lt;Gamepad&gt; bindings with a warning
+        ///     if (!bindingPath.StartsWith("&lt;Gamepad&gt;"))
         ///         return null;
         ///
         ///     // Draw the warning information in the Binding Properties panel

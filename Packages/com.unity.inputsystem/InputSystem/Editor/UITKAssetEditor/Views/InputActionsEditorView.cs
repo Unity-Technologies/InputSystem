@@ -180,6 +180,10 @@ namespace UnityEngine.InputSystem.Editor
                         viewState.selectedControlSchemeIndex == i ? DropdownMenuAction.Status.Checked : DropdownMenuAction.Status.Normal));
                 m_ControlSchemesToolbar.menu.AppendSeparator();
             }
+            else
+            {
+                m_ControlSchemesToolbar.text = "No Control Schemes";
+            }
 
             m_ControlSchemesToolbar.menu.AppendAction("Add Control Scheme...", _ => AddOrUpdateControlScheme(rootElement));
             m_ControlSchemesToolbar.menu.AppendAction("Edit Control Scheme...", _ => AddOrUpdateControlScheme(rootElement, true),

@@ -10,7 +10,7 @@ This page lists Input Device types and products that the Input System package su
 
 Support for the following Devices doesn't require specialized support of particular products.
 
-|Device|Windows|Mac|Linux|UWP|Android|iOS|tvOS|Xbox(3)|PS4(3)|Switch(3)|WebGL|
+|Device|Windows|Mac|Linux|UWP|Android|iOS|tvOS|Xbox(3)|PS4(3)|Switch(3)|Web|
 |------|-------|---|-----|---|-------|---|----|----|---|------|-----|
 |[Mouse](xref:input-system-mouse)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
 |[Keyboard](xref:input-system-keyboard)|Yes|Yes|Yes|Yes|Yes|No|No|Yes|Yes|No|Yes|
@@ -27,7 +27,7 @@ Support for the following Devices doesn't require specialized support of particu
 
 ## Gamepads
 
-|Device|Windows|Mac|Linux|UWP(13)|Android|iOS(6)|tvOS(6)|Xbox(7)|PS4/PS5(7)|Switch(7)|WebGL|
+|Device|Windows|Mac|Linux|UWP(13)|Android|iOS(6)|tvOS(6)|Xbox(7)|PS4/PS5(7)|Switch(7)|Web|
 |------|-------|---|-----|---|-------|---|----|----|---|------|-----|
 |Xbox 360 (4)|Yes|Yes (3)|Yes|Yes|No|No|No|Yes|No|No|Sometimes (2)|
 |Xbox One|Yes (1)|Yes (3)|Yes (1)|Yes|Yes (1)|Yes (6)|Yes (6)|Yes|No|No|Sometimes (2)|
@@ -38,7 +38,7 @@ Support for the following Devices doesn't require specialized support of particu
 
 > [!NOTE]
 > 1. The trigger motors on the Xbox One controller are only supported on UWP and Xbox.
-> 2. WebGL support varies between browsers, Devices, and operating systems.
+> 2. Web support varies between browsers, Devices, and operating systems.
 > 3. XInput controllers on macOS currently require the installation of the [Xbox Controller Driver for macOS](https://github.com/360Controller/360Controller). This driver only supports only USB connections, and doesn't support wireless dongles. However, the latest generation of Xbox One controllers natively support Bluetooth, and are natively supported on Macs as HIDs without any additional drivers when connected via Bluetooth.
 > 4. This includes any XInput-compatible Device.
 > 5. Unity doesn't support motor rumble and light bar color over Bluetooth. Unity doesn't support the gyro or accelerometer on PS4/PS5 controllers on platforms other than the PlayStation consoles. Unity also doesn't support the DualShock 4 USB Wireless Adapter. On UWP, only USB connection is supported, motor rumble and light bar are not working correctly.
@@ -53,15 +53,16 @@ Support for the following Devices doesn't require specialized support of particu
 >       - On Android it's expected to be working from Android 12.
 >       - On iOS/tvOS it's currently recognized as a generic gamepad and most controls do work.
 > 13. To ensure all controller types are detected on UWP, enable the HumanInterfaceDevice setting in [UWP Player Settings](https://docs.unity3d.com/Manual/class-PlayerSettingsWSA.html#Capabilities).
+> 14. In Unity 6.0, the WebGL build target was renamed to Web. However, to maintain backward compatibility, the Input System APIs, device layouts, and interface names retain the WebGL prefix (for example, WebGLGamepad).
 
-### WebGL
+### Web
 
 The Input System supports the *Standard Gamepad* mapping as specified in the [W3C Gamepad Specification](https://www.w3.org/TR/gamepad/#remapping). It also supports gamepads and joysticks that the browser surfaces without a mapping, but this support is generally limited to detecting the axes and buttons which are present, without any context as to what they mean. This means gamepads and joysticks are generally only useful when [the user manually remaps them](xref:UnityEngine.InputSystem.InputActionRebindingExtensions). The Input System reports these Devices as generic [`Joysticks`](xref:UnityEngine.InputSystem.Joystick).
 
 Support varies between browsers, Devices, and operating systems, and further differs for different browser versions, so it's not feasible to provide an up-to-date compatibility list. At the time of this publication (September 2019), Safari, Chrome, Edge, and Firefox all support the gamepad API, but only Chrome reliably maps common gamepads (Xbox and PlayStation controllers) to the W3C Standard Gamepad mapping, which allows the Input System to correctly identify and map controls.
 
 > [!NOTE]
-> WebGL currently doesn't support rumble.
+> Unity's Web platform currently doesn't support rumble.
 
 ## Other gamepads, joysticks, and racing wheels
 

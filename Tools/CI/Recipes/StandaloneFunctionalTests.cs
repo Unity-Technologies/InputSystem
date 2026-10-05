@@ -23,10 +23,9 @@ public class StandaloneFunctionalTests: BaseRecipe
             .WithDescription(jobName)
             .WithPlatform(platform);
 
-        if (platform.System == SystemType.Windows)
-        {
-            job.WithCommands(c => c.Add(InputSystemSettings.NetfxInstallCmd));
-        }
+        job.WithCommands(c => c.Add(platform.System == SystemType.Windows
+            ? InputSystemSettings.DocfxInstallCmdWindows
+            : InputSystemSettings.DocfxInstallCmdUnix));
 
         job.WithCommands(c => c
                 .Add(InputSystemSettings.DoctoolsInstallCmd)

@@ -8,12 +8,38 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Editor;
 using UnityEngine.InputSystem.EnhancedTouch;
+using UnityEngine.InputSystem.Layouts;
 using UnityEngine.TestTools;
 using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 public class DeviceSimulatorTests : InputTestFixture
 {
+    private TouchSimulation m_OldTouchSimulationInstance;
+
+    public override void Setup()
+    {
+        // Detach before base.Setup() resets the input system, so that a TouchSimulation instance
+        // already in place does not see the devices being removed.
+        m_OldTouchSimulationInstance = TouchSimulation.s_Instance;
+        TouchSimulation.s_Instance = null;
+
+        base.Setup();
+    }
+
+    public override void TearDown()
+    {
+        // Destroy while the test's input system is still the current one, since OnDisable removes
+        // the simulated touchscreen from it.
+        TouchSimulation.s_DeviceSimulatorCount = 0;
+        TouchSimulation.Destroy();
+
+        base.TearDown();
+
+        TouchSimulation.s_Instance = m_OldTouchSimulationInstance;
+        m_OldTouchSimulationInstance = null;
+    }
+
     [UnityTest]
     [Category("Device Simulator")]
     public IEnumerator InputEventsArePropagated()
@@ -62,6 +88,141 @@ public class DeviceSimulatorTests : InputTestFixture
 
         plugin.OnDestroy();
         Assert.IsFalse(touchscreen.added);
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void TouchSimulationDoesNotQueueTouchesWhileSimulatorIsOpen()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        TouchSimulation.Enable();
+
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+
+        Press(mouse.leftButton);
+
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.touches[0].isInProgress, Is.False);
+
+        plugin.OnDestroy();
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void TouchInProgressWhenSimulatorOpens_IsCanceled()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        TouchSimulation.Enable();
+        var simulatedTouchscreen = TouchSimulation.instance.simulatedTouchscreen;
+
+        Press(mouse.leftButton);
+        Assert.That(simulatedTouchscreen.touches[0].isInProgress, Is.True);
+
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+        InputSystem.Update();
+
+        Assert.That(simulatedTouchscreen.touches[0].isInProgress, Is.False);
+
+        // The release is swallowed by the early out, so the touch must not come back to life.
+        Release(mouse.leftButton);
+        Assert.That(simulatedTouchscreen.touches[0].isInProgress, Is.False);
+
+        plugin.OnDestroy();
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void TouchSimulationQueuesTouchesAgainAfterSimulatorCloses()
+    {
+        var mouse = InputSystem.AddDevice<Mouse>();
+        TouchSimulation.Enable();
+
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+        plugin.OnDestroy();
+
+        Press(mouse.leftButton);
+
+        Assert.That(TouchSimulation.instance.simulatedTouchscreen.touches[0].isInProgress, Is.True);
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void ConflictingDevicesAreNotDisabledOnCreate()
+    {
+        var mouse = AddNativeMouse();
+        Assert.That(mouse.native, Is.True);
+
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+
+        // Conflicting devices are only disabled once the Simulator gains focus, not on create.
+        Assert.That(mouse.enabled, Is.True);
+
+        plugin.OnDestroy();
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void ConflictingDeviceAddedWhileSimulatorFocused_IsDisabledThenReenabledOnDestroy()
+    {
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+
+        // Simulate the Simulator window being focused (bypasses the panel-based OnUpdate).
+        plugin.SetConflictingDevicesDisabled(true);
+
+        var mouse = AddNativeMouse();
+
+        Assert.That(mouse.native, Is.True);
+        Assert.That(mouse.enabled, Is.False);   // disabled via the OnDeviceChange gate
+
+        plugin.OnDestroy();
+        Assert.That(mouse.enabled, Is.True);     // ReenableConflictingDevices restores it
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void ConflictingDevicesReenabledWhenSimulatorLosesFocus()
+    {
+        var mouse = AddNativeMouse();
+
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+
+        plugin.SetConflictingDevicesDisabled(true);    // Simulator gained focus
+        Assert.That(mouse.enabled, Is.False);
+
+        plugin.SetConflictingDevicesDisabled(false);   // Simulator lost focus
+        Assert.That(mouse.enabled, Is.True);
+
+        plugin.OnDestroy();
+    }
+
+    [Test]
+    [Category("Device Simulator")]
+    public void ConflictingDeviceAddedWhileSimulatorNotFocused_StaysEnabled()
+    {
+        var plugin = new InputSystemPlugin();
+        plugin.OnCreate();
+        // m_ConflictingDevicesDisabled defaults to false (Simulator not focused).
+
+        var mouse = AddNativeMouse();
+
+        Assert.That(mouse.enabled, Is.True);
+
+        plugin.OnDestroy();
+    }
+
+    // Reports a native Mouse through the test runtime (device.native == true, which the plugin's
+    // disable logic requires) and returns the resolved device rather than relying on Mouse.current.
+    private Mouse AddNativeMouse()
+    {
+        var deviceId = runtime.ReportNewInputDevice(
+            new InputDeviceDescription { deviceClass = "Mouse", interfaceName = "Test" });
+        InputSystem.Update();
+        return (Mouse)InputSystem.GetDeviceById(deviceId);
     }
 
     private TouchEvent CreateTouch(int touchId, Vector2 position, UnityEditor.DeviceSimulation.TouchPhase phase)

@@ -24,14 +24,14 @@ public class EditorFunctionalTests: BaseRecipe
             .WithDescription(jobName)
             .WithPlatform(platform);
 
-        if (platform.System == SystemType.Windows)
-        {
-            job.WithCommands(c => c.Add(InputSystemSettings.NetfxInstallCmd));
-        }
+        job.WithCommands(c => c.Add(platform.System == SystemType.Windows
+            ? InputSystemSettings.DocfxInstallCmdWindows
+            : InputSystemSettings.DocfxInstallCmdUnix));
 
         job.WithCommands(c => c
                 .Add(InputSystemSettings.DoctoolsInstallCmd)
                 .Add(Utilities.GetEditorDownloadCommand(unityBranch, platform))
+                .Add(GetSyncSolutionCommand(platform))
                 .Add(UtrCommand.Run(platform.System, b => b
                     .WithTestProject($"{ProjectPath}")
                     .WithEditor(".Editor")
@@ -52,4 +52,16 @@ public class EditorFunctionalTests: BaseRecipe
 
         return job;
     }
+
+    // Generates .sln/.csproj files via the Rider editor package so that PMDT 3.x can find
+    // them on CI where no IDE is configured and SyncAll() would otherwise be a no-op.
+    private static string GetSyncSolutionCommand(Platform platform) => platform.System switch
+    {
+        SystemType.Windows =>
+            @".Editor\Unity.exe -projectPath . -batchmode -nographics -quit -executeMethod Packages.Rider.Editor.RiderScriptEditor.SyncSolution -logFile -",
+        SystemType.MacOS =>
+            ".Editor/Unity.app/Contents/MacOS/Unity -projectPath . -batchmode -nographics -quit -executeMethod Packages.Rider.Editor.RiderScriptEditor.SyncSolution -logFile -",
+        _ =>
+            ".Editor/Unity -projectPath . -batchmode -nographics -quit -executeMethod Packages.Rider.Editor.RiderScriptEditor.SyncSolution -logFile -"
+    };
 }
