@@ -58,4 +58,4 @@ You can find an example of this workflow in the sample projects included with th
 
 Refer to [Supported Devices](supported-devices-reference.md) for more information about devices supported by the input system, and the API to read their states.
 
-For more a more flexible workflow, refer to the [Actions Workflow](using-actions-workflow.md).
+For a more flexible workflow, refer to the [Actions Workflow](using-actions-workflow.md).
