@@ -5,7 +5,7 @@ uid: input-system-workflow-direct
 
 ![The Input Device icon leads directly into the icon representing your action code.](Images/Workflow-Direct.png)
 
-This is the simplest and most direct input workflow, but the least flexible. It bypasses the [Input Actions editor](actions-editor.md), so you do not benefit from all the features come with [Actions](actions.md).
+This is the simplest and most direct input workflow, but the least flexible. It bypasses the [Input Actions editor](actions-editor.md), so you do not benefit from all the features that come with [Actions](actions.md).
 
 It can be useful if you want a quick implementation with one specific type of device. It's generally not the best choice if you want to provide your users with multiple types of input or if you want to target multiple platforms.
 
@@ -38,7 +38,7 @@ public class MyPlayerScript : MonoBehaviour
 }
 ```
 
-The example above reads values directly from  the right trigger, and the left stick, of the currently connected [gamepad](devices-gamepads.md). It does not use the input system’s "Action" class, and instead the conceptual actions in your game or app, such as "move" and "use", are implicitly defined by what your code does in response to the input. You can use the same approach for other Device types such as the [keyboard](xref:UnityEngine.InputSystem.Keyboard) or [mouse](xref:UnityEngine.InputSystem.Mouse).
+The example above reads values directly from the right trigger, and the left stick, of the currently connected [gamepad](devices-gamepads.md). It does not use the input system’s "Action" class, and instead the conceptual actions in your game or app, such as "move" and "use", are implicitly defined by what your code does in response to the input. You can use the same approach for other Device types such as the [keyboard](xref:UnityEngine.InputSystem.Keyboard) or [mouse](xref:UnityEngine.InputSystem.Mouse).
 
 ## Pros and Cons
 
