@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased] - yyyy-mm-dd
 
+
+
+## [1.20.1] - 2026-10-05
+
 ### Fixed
 
+- Fixed the Input Actions editor window's unsaved-changes handling on close: it now uses the Editor's built-in save prompt (including on Editor quit), auto-saves pending changes when the window is closed with auto-save enabled, and prompts instead of silently dropping changes if an auto-save fails (e.g. version control refused the checkout). [UUM-154808](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-154808)
+- Fixed misaligned labels in the Input Actions editor properties pane. [UUM-154536](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-154536)
 - Fixed a single click producing two simultaneous touches when the Device Simulator view is open and "Simulate Touch Input From Mouse or Pen" is enabled in the Input Debugger; Touch Simulation now suppresses its events while a Device Simulator view is open [UUM-153420]
 - Fixed the search field in the "Add supported device" popup (Input System Package Settings > Supported Devices > "+") drawing flush against the popup's left edge with no left margin, unlike its right-side spacing; it is now inset to match [UUM-150217](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-150217)
 - Fixed the "Supported Devices" list in the Input System Package Settings sitting flush against the panel edge with no left/right margin, unlike the surrounding fields; it is now inset to line up with the other settings controls [UUM-150207](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-150207)
@@ -20,13 +26,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed the Control Schemes dropdown in the Input Actions editor continuing to display a deleted scheme's name after the last control scheme was removed, instead of resetting to "No Control Schemes" until the asset was saved or the editor reopened. [UUM-141563](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-141563)
 - Fixed the Input Debugger window (Window > Analysis > Input Debugger) being resizable arbitrarily small until its toolbar and device/action/layout tree view were no longer usably visible; it now enforces a minimum window size [UUM-137119](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-137119)
 - Fixed the Action Maps list in the Input Actions editor losing keyboard focus after deleting a map, so that Delete, Duplicate, and arrow-key navigation kept working on the auto-selected replacement map without requiring an extra click [UUM-147152](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-147152)
-- Fixed the Device Simulator plugin keeping the real mouse and pen disabled while working in other Editor windows. Conflicting native `Mouse`/`Pen` devices are now only disabled while the Simulator window is focused and re-enabled as soon as focus moves elsewhere [UUM-145509](https://jira.unity3d.com/browse/UUM-145509).
+- Fixed the Device Simulator plugin keeping the real mouse and pen disabled while working in other Editor windows. Conflicting native `Mouse`/`Pen` devices are now only disabled while the Simulator window is focused and re-enabled as soon as focus moves elsewhere [UUM-145509](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-145509).
 - Fixed the Input Actions editor in Project Settings losing the selected action or binding when opening the control picker from the Path field [UUM-151771](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-151771).
 - Fixed polling for interaction phases (such as `WasPerformedThisFrame`) being missed during `Update` due to interaction timeouts sometimes occurring during the later before-render period when a before-render device (such as an XR HMD) is added. This means that timeouts and interactions like Hold may now wait to perform until the next frame instead of the earliest chance during before-render. [UUM-147719](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-147719)
 
 ### Changed
 
-- Removing InputSystem gizmo / icons from scene view window [UUM-151780](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-151780).
+- Removed InputSystem gizmo / icons from scene view window [UUM-151780](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-151780).
 
 
 ## [1.20.0] - 2026-07-21

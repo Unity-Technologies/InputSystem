@@ -11,7 +11,6 @@ namespace UnityEngine.InputSystem.Editor
     internal class ActionPropertiesView : ViewBase<(SerializedInputAction?, List<string>)>
     {
         private readonly Foldout m_ParentFoldout;
-        private readonly int m_DropdownLabelWidth = 90;
 
         public ActionPropertiesView(VisualElement root, Foldout foldout, StateContainer stateContainer)
             : base(root, stateContainer)
@@ -43,11 +42,7 @@ namespace UnityEngine.InputSystem.Editor
                 tooltip = inputAction.actionTypeTooltip
             };
 
-            // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
-            var actionLabel = actionType.Q<Label>();
-            actionLabel.style.minWidth = m_DropdownLabelWidth;
-            actionLabel.style.width = m_DropdownLabelWidth;
-
+            actionType.AddToClassList(InputActionsEditorConstants.PropertiesFieldStyleClassName);
             actionType.RegisterValueChangedCallback(evt =>
             {
                 Dispatch(Commands.ChangeActionType(inputAction, (InputActionType)evt.newValue));
@@ -58,12 +53,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 var controlTypes = viewState.Item2;
                 var controlType = new DropdownField("Control Type");
-
-                // Tighten up the gap between the label and dropdown so the latter is more readable when the parent pane is at min width.
-                var controlLabel = controlType.Q<Label>();
-                controlLabel.style.minWidth = m_DropdownLabelWidth;
-                controlLabel.style.width = m_DropdownLabelWidth;
-
+                controlType.AddToClassList(InputActionsEditorConstants.PropertiesFieldStyleClassName);
                 controlType.choices.Clear();
                 controlType.choices.AddRange(controlTypes.Select(ObjectNames.NicifyVariableName).ToList());
                 var controlTypeIndex = controlTypes.FindIndex(s => s == inputAction.expectedControlType);
@@ -95,9 +85,7 @@ namespace UnityEngine.InputSystem.Editor
             {
                 tooltip = InputActionsEditorConstants.ActionPriorityTooltip
             };
-            var priorityLabel = priorityField.Q<Label>();
-            priorityLabel.style.minWidth = m_DropdownLabelWidth;
-            priorityLabel.style.width = m_DropdownLabelWidth;
+            priorityField.AddToClassList(InputActionsEditorConstants.PropertiesFieldStyleClassName);
             priorityField.SetValueWithoutNotify(inputAction.priority);
             priorityField.RegisterCallback<FocusOutEvent>(_ => ScheduleCommitActionPriority(priorityField, inputAction));
             priorityField.RegisterCallback<BlurEvent>(_ => ScheduleCommitActionPriority(priorityField, inputAction));
@@ -116,6 +104,7 @@ namespace UnityEngine.InputSystem.Editor
                 {
                     tooltip = InputActionsEditorConstants.InitialStateCheckTooltip
                 };
+                initialStateCheck.AddToClassList(InputActionsEditorConstants.PropertiesFieldStyleClassName);
                 initialStateCheck.SetValueWithoutNotify(inputAction.initialStateCheck);
                 initialStateCheck.RegisterValueChangedCallback(evt =>
                 {
