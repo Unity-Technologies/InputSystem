@@ -250,10 +250,12 @@ At runtime, input reaches your scene through four steps:
 The following diagram traces those steps for a single control, the space key on a keyboard:
 
 1. The keyboard's space control stores its value as one bit of `KeyboardState`.
-1. A [`StateEvent`](xref:UnityEngine.InputSystem.LowLevel.StateEvent) object carrying that state feeds `InputManager.OnUpdate()`, which calls `NotifyControlStateChanged()` on the `InputActionState` object.
-    That object holds three arrays: `triggerStates[]`, `bindingStates[]`, and `controls[]`.
-1. State change monitors update the binding and control arrays.
-1. The trigger array notifies [`InputUser`](xref:UnityEngine.InputSystem.Users.InputUser), which calls `OnActionTriggered()` on the `PlayerInput` component.
+1. A [`StateEvent`](xref:UnityEngine.InputSystem.LowLevel.StateEvent) object carrying that state feeds `InputManager.OnUpdate()`, which writes the new state into input state memory.
+1. A state change monitor on the space control detects the change and calls `NotifyControlStateChanged()` on the `InputActionState` object, which processes the change in `ProcessControlStateChange()`.
+    The `InputActionState` object holds three arrays: `actionStates[]`, `bindingStates[]`, and `controls[]`. The Input System fills `bindingStates[]` and `controls[]` when it resolves bindings, not on every state event. Processing reads them and updates the matching entry in `actionStates[]`.
+1. When the action changes phase, its action map raises [`actionTriggered`](xref:UnityEngine.InputSystem.InputActionMap.actionTriggered), which calls `OnActionTriggered()` on the `PlayerInput` component directly.
+
+Separately, [`InputUser`](xref:UnityEngine.InputSystem.Users.InputUser) pairs devices with the `PlayerInput` component and associates its actions with that user. `InputUser` isn't part of the callback path.
 
 ```mermaid
 flowchart TB
@@ -269,22 +271,27 @@ flowchart TB
     %% ---------- Runtime ----------
     StateEvent["StateEvent (KeyboardState)
     from the built-in back end"] -->|feeds| OnUpdate["InputManager.OnUpdate()"]
+    OnUpdate -->|"writes state"| KBbit
 
     %% ---------- Action state ----------
+    Monitor{{"State change monitor
+    (on space)"}}
+    KBbit -->|"change detected"| Monitor
     AState(["InputActionState
-    NotifyControlStateChanged()"])
-    trig["triggerStates[]"]
+    ProcessControlStateChange()"])
+    Monitor ==>|"NotifyControlStateChanged()"| AState
+    act["actionStates[]"]
     bind["bindingStates[]"]
     ctrl["controls[]"]
-    AState --> trig & bind & ctrl
-    OnUpdate ==>|"NotifyControlStateChanged()"| AState
-    KBbit -->|"state change monitor"| bind
-    space -->|"state change monitor"| ctrl
+    bind -.->|read| AState
+    ctrl -.->|read| AState
+    AState ==>|updates| act
 
     %% ---------- Callback out to the scene ----------
-    trig -->|triggers| IU["InputUser"]
-    IU -->|"OnActionTriggered()"| PI["PlayerInput
+    act ==>|"InputActionMap.actionTriggered"| PI["PlayerInput.OnActionTriggered()
     (scene GameObject)"]
+    IU["InputUser
+    (device pairing)"] -.->|"pairs devices and actions"| PI
 
     classDef device fill:#e8f7e8,stroke:#4aa04a,color:#000;
     classDef mem fill:#f0e6f6,stroke:#8a5ea0,color:#000;
@@ -293,8 +300,8 @@ flowchart TB
     classDef go fill:#d9d9d9,stroke:#666,color:#000;
     class Keyboard,space device;
     class KBbit mem;
-    class AState,trig,bind,ctrl astate;
-    class StateEvent,OnUpdate runtime;
+    class AState,act,bind,ctrl astate;
+    class StateEvent,OnUpdate,Monitor runtime;
     class IU,PI go;
 ```
 
@@ -307,7 +314,7 @@ The following diagram shows an asset named `MyGame.inputactions` that lists `Key
 1. The asset contains a `gameplay` action map, which contains a `jump` action and two bindings for that action:
     - `<Keyboard>/space` in the `KeyboardMouse` group.
     - `<Gamepad>/buttonSouth` in the `Gamepad` group.
-1. The action populates `triggerStates[]`.
+1. The action populates `actionStates[]`.
 1. The bindings populate `bindingStates[]`.
 1. The binding states resolve to `controls[]`.
 
@@ -332,17 +339,17 @@ flowchart TB
     Map --> Bind_a & Bind_b
 
     %% ---------- Populates the runtime action state ----------
-    Act -.->|populates| trig["triggerStates[]"]
+    Act -.->|populates| act["actionStates[]"]
     Bind_a -.->|populates| bind["bindingStates[]"]
     Bind_b -.->|populates| bind
     bind -.->|resolves controls| ctrl["controls[]"]
     State(["InputActionState
-    (m_State)"]) --- trig & bind & ctrl
+    (m_State)"]) --- act & bind & ctrl
 
     classDef asset fill:#ffeede,stroke:#c07a3a,color:#000;
     classDef astate fill:#efe9ff,stroke:#7a5ec0,color:#000;
     class Asset,Map,Act,Bind_a,Bind_b asset;
-    class trig,bind,ctrl,State astate;
+    class act,bind,ctrl,State astate;
 ```
 
 ## Additional resources
