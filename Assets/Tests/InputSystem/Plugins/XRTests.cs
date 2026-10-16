@@ -54,6 +54,26 @@ internal class XRTests : CoreTestsFixture
 
     [Test]
     [Category("Devices")]
+    public void Devices_XRHMDLayoutInheritsCanRunInBackgroundFromBaseLayout()
+    {
+        var deviceDescription = CreateSimpleDeviceDescriptionByType(InputDeviceCharacteristics.HeadMounted);
+        runtime.ReportNewInputDevice(deviceDescription.ToJson());
+
+        InputSystem.Update();
+
+        var baseLayout = InputSystem.LoadLayout("XRHMD");
+        var generatedLayout = InputSystem.LoadLayout(
+            $"{XRUtilities.InterfaceCurrent}::{deviceDescription.manufacturer}::{deviceDescription.product}");
+
+        Assert.That(baseLayout.canRunInBackground, Is.Not.Null);
+        Assert.That(generatedLayout.canRunInBackground, Is.EqualTo(baseLayout.canRunInBackground));
+
+        // No device command callback is registered, so QueryCanRunInBackground fails (UUM-139700)
+        Assert.That(InputSystem.devices[0].canDeviceRunInBackground, Is.EqualTo(baseLayout.canRunInBackground.Value));
+    }
+
+    [Test]
+    [Category("Devices")]
     public void Devices_CanChangeHandednessOfXRController()
     {
         var deviceDescription = CreateSimpleDeviceDescriptionByType(InputDeviceCharacteristics.Controller | InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Left);
