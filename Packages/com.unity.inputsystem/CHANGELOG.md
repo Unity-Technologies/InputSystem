@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - Fixed polling for interaction phases (such as `WasPerformedThisFrame`) being missed during `Update` due to interaction timeouts sometimes occurring during the later before-render period when a before-render device (such as an XR HMD) is added. This means that timeouts and interactions like Hold may now wait to perform until the next frame instead of the earliest chance during before-render. [UUM-147719](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-147719)
+- Fixed touch input from Unity Remote 5 being ignored in Unity 6000.5 and newer. [UUM-155327](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-155327)
 
 ## [1.20.1] - 2026-10-05
 
