@@ -15,6 +15,7 @@ internal class InputActionStatePlayModeTests
     const string k_ArmedKey = "InputSystem.Tests.InputActionStatePlayModeTests.Armed";
     const string k_EnabledAfterSceneLoadKey = "InputSystem.Tests.InputActionStatePlayModeTests.EnabledAfterSceneLoad";
     const string k_SavedOptionsKey = "InputSystem.Tests.InputActionStatePlayModeTests.SavedOptions";
+    const string k_SavedOptionsEnabledKey = "InputSystem.Tests.InputActionStatePlayModeTests.SavedOptionsEnabled";
 
     static readonly bool[] k_DisableDomainReloadValues = { false, true };
 
@@ -46,7 +47,12 @@ internal class InputActionStatePlayModeTests
         if (SessionState.GetInt(k_SavedOptionsKey, -1) != -1)
             return;
 
+        // Unity 6000.0 reports no options while they are disabled, so enable them to read the stored ones.
+        var optionsEnabled = EditorSettings.enterPlayModeOptionsEnabled;
+        EditorSettings.enterPlayModeOptionsEnabled = true;
         SessionState.SetInt(k_SavedOptionsKey, (int)EditorSettings.enterPlayModeOptions);
+        SessionState.SetBool(k_SavedOptionsEnabledKey, optionsEnabled);
+        EditorSettings.enterPlayModeOptionsEnabled = optionsEnabled;
     }
 
     [TearDown]
@@ -55,11 +61,14 @@ internal class InputActionStatePlayModeTests
         if (Application.isPlaying)
             return;
 
+        EditorSettings.enterPlayModeOptionsEnabled = true;
         EditorSettings.enterPlayModeOptions = (EnterPlayModeOptions)SessionState.GetInt(k_SavedOptionsKey, 0);
+        EditorSettings.enterPlayModeOptionsEnabled = SessionState.GetBool(k_SavedOptionsEnabledKey, false);
 
         // Entering play mode saves the modified settings to disk, so save the restored ones too.
         AssetDatabase.SaveAssets();
         SessionState.EraseInt(k_SavedOptionsKey);
+        SessionState.EraseBool(k_SavedOptionsEnabledKey);
         SessionState.EraseBool(k_ArmedKey);
         SessionState.EraseBool(k_EnabledAfterSceneLoadKey);
 
@@ -69,6 +78,8 @@ internal class InputActionStatePlayModeTests
 
     static void SetDomainReloadDisabled(bool disabled)
     {
+        // Unity 6000.0 ignores enterPlayModeOptions unless the options are enabled.
+        EditorSettings.enterPlayModeOptionsEnabled = true;
         EditorSettings.enterPlayModeOptions = disabled
             ? EnterPlayModeOptions.DisableDomainReload | EnterPlayModeOptions.DisableSceneReload
             : EnterPlayModeOptions.None;
