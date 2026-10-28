@@ -501,6 +501,8 @@ namespace UnityEngine.InputSystem.Editor
 
                     InputSystem.s_Manager.m_ExitEditModeTime = s_DomainStateManager.exitEditModeTime;
                     InputSystem.s_Manager.m_EnterPlayModeTime = 0;
+
+                    InputActionState.RecordCallbacksBeforePlayMode();
                     break;
 
                 case PlayModeStateChange.EnteredPlayMode:
@@ -524,6 +526,7 @@ namespace UnityEngine.InputSystem.Editor
 
                     // Nuke all InputActionMapStates. Releases their unmanaged memory.
                     InputActionState.DestroyAllActionMapStates();
+                    InputActionState.RemoveCallbacksAddedInPlayMode();
 
                     // Clear the Action reference from all InputActionReference objects
                     InputActionReference.InvalidateAll();
