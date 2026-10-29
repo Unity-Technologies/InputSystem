@@ -1,5 +1,8 @@
 # Unity Input System (Package)
 
+> [!IMPORTANT]
+> Starting with Unity 6.7, Input System development has moved to an internal Unity repository. This repository is now in maintenance mode: only fixes for critical bugs and issues that cause high user pain are backported here. See [CONTRIBUTIONS.md](CONTRIBUTIONS.md) for how to report bugs and share feedback.
+
 The Unity Input System package is an extension package to the [Unity Platform](https://unity.com/products/unity-platform) which provides a system to configure game actions and access input devices to interact with Unity content. It is intended to be a more powerful, flexible, and configurable replacement to [Unity Input API](https://docs.unity3d.com/ScriptReference/Input.html) (the `UnityEngine.Input` class).
 
 ## Prerequisites
@@ -46,11 +49,11 @@ To test out the latest (unreleased) changes:
 During development, run Input System automated tests by selecting `Window > General > Test Runner` to access the Test Runner and select `Run All` for `PlayMode` or `EditMode` tests.
 
 ## Contribution & Feedback
-This project is developed by Unity Technologies but welcomes user contributions and feedback.
+This project is developed by Unity Technologies and no longer accepts external pull requests. See [CONTRIBUTIONS.md](https://github.com/Unity-Technologies/InputSystem/blob/develop/CONTRIBUTIONS.md) for details.
 
-If you have any feedback or questions about Unity's Input System, you are invited to join us on the [Unity Forums](https://forum.unity.com/forums/new-input-system.103/).
+If you have any feedback or questions about Unity's Input System, you are invited to join us on [Unity Discussions](https://discussions.unity.com/tag/input-system/159343).
 
-If you want to contribute to the development of the Input System see [CONTRIBUTIONS.md](https://github.com/Unity-Technologies/InputSystem/blob/develop/CONTRIBUTIONS.md) for additional information.
+To report a bug, use the Unity Bug Reporter as described in [Reporting bugs](https://unity3d.com/unity/qa/bug-reporting).
 
 ## License
 
