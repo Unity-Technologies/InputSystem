@@ -109,7 +109,7 @@ namespace UnityEngine.InputSystem
         /// parameter from the object registered as <c>"tap"</c> (which will usually be <see cref="Interactions.TapInteraction"/>).</param>
         /// <param name="bindingIndex">Index of the binding in <paramref name="action"/>'s <see cref="InputAction.bindings"/>
         /// to look for processors, interactions, and composites on.</param>
-        /// <returns>The current value of the given parameter or <c>null</c> if the parameter not could be found.</returns>
+        /// <returns>The current value of the given parameter or <c>null</c> if the parameter could not be found.</returns>
         /// <remarks>
         /// This method is a variation of <see cref="ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
         /// to specifically target a single binding by index. Otherwise, the method is identical in functionality.
@@ -139,7 +139,7 @@ namespace UnityEngine.InputSystem
         /// name and type of the parameter being looked for.</param>
         /// <param name="bindingMask">Optional mask that determines on which bindings to look for objects with parameters. If used, only
         /// bindings that match (see <see cref="InputBinding.Matches"/>) the given mask will be taken into account.</param>
-        /// <returns>The current value of the given parameter or <c>null</c> if the parameter not could be found.</returns>
+        /// <returns>The current value of the given parameter or <c>null</c> if the parameter could not be found.</returns>
         /// <remarks>
         /// This method is a variation of <see cref="ApplyParameterOverride(InputActionMap,string,PrimitiveValue,InputBinding)"/>
         /// that encapsulates a reference to the name of the parameter and the type of object it is found on in a way that is
