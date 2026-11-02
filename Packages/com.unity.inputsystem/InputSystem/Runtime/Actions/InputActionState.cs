@@ -801,7 +801,7 @@ namespace UnityEngine.InputSystem
             return false;
         }
 
-        private int FindControlIndexOnBinding(int bindingIndex, InputControl control)
+        internal int FindControlIndexOnBinding(int bindingIndex, InputControl control)
         {
             var controlStartIndex = bindingStates[bindingIndex].controlStartIndex;
             var controlCount = bindingStates[bindingIndex].controlCount;
