@@ -22,6 +22,18 @@ internal class UnityRemoteTests : CoreTestsFixture
         base.TearDown();
     }
 
+    // The other tests bypass the native editor hook, so this is what catches GenericRemote moving assemblies.
+    [Test]
+    [Category("Remote")]
+    [TestCase("AddMessageHandler")]
+    [TestCase("RemoveMessageHandler")]
+    [TestCase("SetGyroEnabled")]
+    [TestCase("SetGyroUpdateInterval")]
+    public void Remote_CanFindEditorRemoteAPI(string methodName)
+    {
+        Assert.That(UnityRemoteSupport.GetUnityRemoteAPIMethod(methodName), Is.Not.Null);
+    }
+
     // We have a kill-switch as a safety fallback just in case this feature somehow
     // ends up causing problems.
     [Test]

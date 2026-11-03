@@ -4499,24 +4499,55 @@ namespace UnityEngine.InputSystem
             internal InlinedArray<GCHandle> globalList;
             internal CallbackArray<Action<object, InputActionChange>> onActionChange;
             internal CallbackArray<Action<object>> onActionControlsChanged;
+#if UNITY_EDITOR
+            internal Action<object, InputActionChange>[] onActionChangeBeforePlayMode;
+            internal Action<object>[] onActionControlsChangedBeforePlayMode;
+#endif
         }
 
         internal static GlobalState s_GlobalState;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void InitializeGlobalActionState()
-        {
 #if UNITY_EDITOR
-            // Appears we shouldn't really reset globals in case the domain reload is enabled.
-            // This is because in that case, we've just had the whole system init'ed via static ctors
-            // Moreover, later in GlobalInialize we skip initialization specifically in this case.
-            if (!(InputSystem.s_IsDomainReloadDisabled?.Invoke() ?? false))
-                return;
-#endif
-
-            ResetGlobals();
-            s_GlobalState = default;
+        internal static void RecordCallbacksBeforePlayMode()
+        {
+            s_GlobalState.onActionChangeBeforePlayMode = ToArray(ref s_GlobalState.onActionChange);
+            s_GlobalState.onActionControlsChangedBeforePlayMode = ToArray(ref s_GlobalState.onActionControlsChanged);
         }
+
+        // Without a domain reload, callbacks added during play mode would otherwise outlive it.
+        internal static void RemoveCallbacksAddedInPlayMode()
+        {
+            // Nothing was recorded if a domain reload happened since, and that already cleared the callbacks.
+            if (s_GlobalState.onActionChangeBeforePlayMode == null)
+                return;
+
+            RemovePlayModeCallbacks(ref s_GlobalState.onActionChange, s_GlobalState.onActionChangeBeforePlayMode);
+            RemovePlayModeCallbacks(ref s_GlobalState.onActionControlsChanged, s_GlobalState.onActionControlsChangedBeforePlayMode);
+            s_GlobalState.onActionChangeBeforePlayMode = null;
+            s_GlobalState.onActionControlsChangedBeforePlayMode = null;
+        }
+
+        private static TDelegate[] ToArray<TDelegate>(ref CallbackArray<TDelegate> callbacks)
+            where TDelegate : Delegate
+        {
+            var result = new TDelegate[callbacks.length];
+            for (var i = 0; i < callbacks.length; ++i)
+                result[i] = callbacks[i];
+            return result;
+        }
+
+        private static void RemovePlayModeCallbacks<TDelegate>(ref CallbackArray<TDelegate> callbacks, TDelegate[] callbacksBeforePlayMode)
+            where TDelegate : Delegate
+        {
+            for (var i = callbacks.length - 1; i >= 0; --i)
+            {
+                // Play mode objects are destroyed by now, but editor objects such as open windows survive play mode.
+                var target = callbacks[i].Target as UnityEngine.Object;
+                if (Array.IndexOf(callbacksBeforePlayMode, callbacks[i]) < 0 && target == null)
+                    callbacks.RemoveCallback(callbacks[i]);
+            }
+        }
+#endif
 
         internal static ISavedState SaveAndResetState()
         {

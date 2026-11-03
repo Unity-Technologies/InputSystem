@@ -61,14 +61,14 @@ namespace UnityEngine.InputSystem
                 SetNativeMessageHandler(ProcessMessageFromUnityRemote);
         }
 
-        private static MethodInfo GetUnityRemoteAPIMethod(string methodName)
-        {
-            var editorAssembly = typeof(EditorApplication).Assembly;
-            var genericRemoteClass = editorAssembly.GetType("UnityEditor.Remote.GenericRemote");
-            if (genericRemoteClass == null)
-                return null;
+        // GenericRemote moved from the UnityEditor assembly to UnityEditor.GenericRemoteModule in 6000.5.
+        private static readonly Type s_GenericRemoteType =
+            typeof(EditorApplication).Assembly.GetType("UnityEditor.Remote.GenericRemote")
+            ?? Type.GetType("UnityEditor.Remote.GenericRemote, UnityEditor.GenericRemoteModule");
 
-            return genericRemoteClass.GetMethod(methodName);
+        internal static MethodInfo GetUnityRemoteAPIMethod(string methodName)
+        {
+            return s_GenericRemoteType?.GetMethod(methodName);
         }
 
         private static void SetNativeMessageHandler(Func<IntPtr, bool> handler)

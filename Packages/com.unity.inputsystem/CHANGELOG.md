@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - Fixed polling for interaction phases (such as `WasPerformedThisFrame`) being missed during `Update` due to interaction timeouts sometimes occurring during the later before-render period when a before-render device (such as an XR HMD) is added. This means that timeouts and interactions like Hold may now wait to perform until the next frame instead of the earliest chance during before-render. [UUM-147719](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-147719)
+- Fixed touch input from Unity Remote 5 being ignored in Unity 6000.5 and newer. [UUM-155327](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-155327)
+- Fixed actions enabled during startup, for example in an Entities system's `OnCreate`, being disabled when entering Play Mode with domain reload disabled and in Player builds. [UUM-151403](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-151403)
 - Fixed XR HMD device regeneration not copying the `canRunInBackground` parameter from its base layout, causing the XR app view to become locked to the tracking origin and frozen in place when the application regained focus after the headset went to sleep or a system menu was opened. [UUM-139700](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-139700)
 
 ## [1.20.1] - 2026-10-05
