@@ -424,6 +424,38 @@ public class InputForUITests : InputTestFixture
 
     [Test]
     [Category(kTestCategory)]
+    public void TouchDragEndedWhileUIMapIsDisabled_MouseClickIsDispatchedWhenReenabled()
+    {
+        InputSystem.AddDevice<Touchscreen>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        var uiMap = UseProviderOwnedUIMap();
+
+        BeginTouch(1, new Vector2(100f, 100f));
+        Update();
+        MoveTouch(1, new Vector2(150f, 150f));
+        Update();
+        uiMap.Disable();
+        EndTouch(1, new Vector2(150f, 150f));
+        Update();
+        uiMap.Enable();
+        Update();
+        var eventCountBeforeClick = GetRecordedButtonEvents().Count;
+
+        Press(mouse.leftButton);
+        Update();
+        Release(mouse.leftButton);
+        Update();
+
+        var buttonEvents = GetRecordedButtonEvents().GetRange(eventCountBeforeClick, GetRecordedButtonEvents().Count - eventCountBeforeClick);
+        Assert.That(buttonEvents.ConvertAll(e => (e.type, e.eventSource)), Is.EqualTo(new[]
+        {
+            (PointerEvent.Type.ButtonPressed, EventSource.Mouse),
+            (PointerEvent.Type.ButtonReleased, EventSource.Mouse),
+        }), "Touch has ended, so mouse events must no longer be filtered out");
+    }
+
+    [Test]
+    [Category(kTestCategory)]
     public void PointerHeldWhileUIMapIsDisabledAndReenabled_DispatchesButtonReleasedOnlyWhenReleased([Values] PointerKind kind)
     {
         var device = AddPointerDevice(kind);

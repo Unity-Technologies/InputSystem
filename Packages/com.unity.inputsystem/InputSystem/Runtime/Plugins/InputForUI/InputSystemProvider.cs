@@ -595,6 +595,8 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
         void DispatchButtonReleased(in PressedInput pressedInput)
         {
+            m_ResetSeenEventsOnUpdate = true;
+
             ref var state = ref GetPointerStateForSource(pressedInput.eventSource);
             var wasPressed = state.ButtonsState.Get(pressedInput.button);
             state.OnButtonChange(m_CurrentTime, pressedInput.button, wasPressed, false);
