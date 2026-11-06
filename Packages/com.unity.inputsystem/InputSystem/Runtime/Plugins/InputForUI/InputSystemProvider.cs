@@ -584,8 +584,11 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             foreach (var key in m_ReleasedInputs)
             {
-                if (m_PressedInputs.Remove(key, out var pressedInput))
+                if (m_PressedInputs.TryGetValue(key, out var pressedInput))
+                {
+                    m_PressedInputs.Remove(key);
                     DispatchButtonReleased(pressedInput);
+                }
             }
             m_ReleasedInputs.Clear();
         }
