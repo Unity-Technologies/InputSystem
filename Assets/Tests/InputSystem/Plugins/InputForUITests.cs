@@ -422,6 +422,34 @@ public class InputForUITests : InputTestFixture
         Assert.That(buttonEvents[eventCountBeforePress + 1].type, Is.EqualTo(PointerEvent.Type.ButtonReleased));
     }
 
+    [Test]
+    [Category(kTestCategory)]
+    public void PointerHeldWhileUIMapIsDisabledAndReenabled_DispatchesButtonReleasedOnlyWhenReleased([Values] PointerKind kind)
+    {
+        var device = AddPointerDevice(kind);
+        var uiMap = UseProviderOwnedUIMap();
+
+        PressPointer(device);
+        Update();
+        uiMap.Disable();
+        Update();
+        Update();
+        uiMap.Enable();
+        Update();
+
+        Assert.That(GetRecordedButtonEvents().ConvertAll(e => e.type), Is.EqualTo(new[] { PointerEvent.Type.ButtonPressed }),
+            "Disabling and enabling the UI map must not release a pointer that is still held");
+
+        ReleasePointer(device);
+        Update();
+
+        Assert.That(GetRecordedButtonEvents().ConvertAll(e => e.type), Is.EqualTo(new[]
+        {
+            PointerEvent.Type.ButtonPressed,
+            PointerEvent.Type.ButtonReleased,
+        }));
+    }
+
     InputActionMap UseProjectWideUIMap(System.Action<InputAction> addClickBindings)
     {
         m_ProjectWideUIAsset = ScriptableObject.CreateInstance<InputActionAsset>();
