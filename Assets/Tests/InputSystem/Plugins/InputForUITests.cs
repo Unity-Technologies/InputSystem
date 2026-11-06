@@ -355,6 +355,46 @@ public class InputForUITests : InputTestFixture
             Release(((Mouse)device).leftButton);
     }
 
+    // UUM-160160: a UI Toolkit button stayed pressed after the application lost focus with the mouse button held
+    [Test]
+    [Category(kTestCategory)]
+    public void PointerHeldWhenFocusIsLost_DispatchesButtonReleased(
+        [Values] PointerKind kind,
+        [Values] InputSettings.BackgroundBehavior backgroundBehavior)
+    {
+        InputSystem.settings.backgroundBehavior = backgroundBehavior;
+        var device = AddPointerDevice(kind);
+        if (device is Mouse mouse)
+        {
+            Set(mouse.position, new Vector2(100f, 100f));
+            Update();
+        }
+
+        PressPointer(device);
+        Update();
+
+        // Application.focusChanged reaches the provider before the Input System processes its own focus event
+        m_InputSystemProvider.OnFocusChanged(false);
+        currentTime += 1.0f;
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
+        Update();
+        currentTime += 1.0f;
+        ReleasePointer(device);
+        Update();
+        currentTime += 1.0f;
+        ScheduleFocusChangedEvent(applicationHasFocus: true);
+        m_InputSystemProvider.OnFocusChanged(true);
+        Update();
+        Update();
+
+        var buttonEvents = GetRecordedButtonEvents();
+        Assert.That(buttonEvents.ConvertAll(e => e.type), Is.EqualTo(new[]
+        {
+            PointerEvent.Type.ButtonPressed,
+            PointerEvent.Type.ButtonReleased,
+        }), "The press held when focus was lost must be released exactly once");
+    }
+
     [Test]
     [Category(kTestCategory)]
     public void PointerReleasedWhileUIMapIsDisabled_NextPressIsDispatchedWhenReenabled([Values] PointerKind kind)

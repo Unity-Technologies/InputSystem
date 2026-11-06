@@ -50,6 +50,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             public InputActionState actionState;
             public int bindingIndex;
             public InputControl control;
+            public EventSource eventSource;
+            public PointerEvent.Button button;
+            public int pointerIndex;
         }
 
         readonly Dictionary<(InputActionState, int, InputControl), PressedInput> m_PressedInputs = new Dictionary<(InputActionState, int, InputControl), PressedInput>();
@@ -318,7 +321,6 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 m_MouseState = default;
                 m_TouchState = default;
                 m_PenState = default;
-                m_PressedInputs.Clear();
 
                 if (mouseLastValid)
                     m_MouseState.OnMove(m_CurrentTime, mouseLastPos, mouseLastDisplay);
@@ -582,9 +584,42 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             foreach (var key in m_ReleasedInputs)
             {
-                m_PressedInputs.Remove(key);
+                if (m_PressedInputs.Remove(key, out var pressedInput))
+                    DispatchButtonReleased(pressedInput);
             }
             m_ReleasedInputs.Clear();
+        }
+
+        void DispatchButtonReleased(in PressedInput pressedInput)
+        {
+            ref var state = ref GetPointerStateForSource(pressedInput.eventSource);
+            var wasPressed = state.ButtonsState.Get(pressedInput.button);
+            state.OnButtonChange(m_CurrentTime, pressedInput.button, wasPressed, false);
+            EventProvider.Dispatch(CreateButtonEvent(ref state, false, pressedInput.eventSource, pressedInput.button, pressedInput.pointerIndex));
+        }
+
+        Event CreateButtonEvent(ref PointerState state, bool isPressed, EventSource eventSource, PointerEvent.Button button, int pointerIndex)
+        {
+            return Event.From(new PointerEvent
+            {
+                type = isPressed ? PointerEvent.Type.ButtonPressed : PointerEvent.Type.ButtonReleased,
+                pointerIndex = pointerIndex,
+                position = state.LastPosition,
+                deltaPosition = Vector2.zero,
+                scroll = Vector2.zero,
+                displayIndex = state.LastDisplayIndex,
+                tilt = Vector2.zero,
+                twist = 0.0f,
+                pressure = 0.0f,
+                isInverted = false,
+                button = button,
+                buttonsState = state.ButtonsState,
+                clickCount = state.ClickCount,
+                timestamp = m_CurrentTime,
+                eventSource = eventSource,
+                playerId = k_DefaultPlayerId,
+                eventModifiers = m_EventModifiers
+            });
         }
 
         void OnClickPerformed(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
@@ -605,6 +640,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                     actionState = ctx.m_State,
                     bindingIndex = ctx.bindingIndex,
                     control = ctx.control,
+                    eventSource = eventSource,
+                    button = button,
+                    pointerIndex = pointerIndex,
                 };
                 if (!m_PressedInputs.TryAdd(key, pressedInput))
                     return;
@@ -619,26 +657,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             var wasPressed = state.ButtonsState.Get(button);
             state.OnButtonChange(m_CurrentTime, button, wasPressed, isPressed);
 
-            DispatchFromCallback(Event.From(new PointerEvent
-            {
-                type = isPressed ? PointerEvent.Type.ButtonPressed : PointerEvent.Type.ButtonReleased,
-                pointerIndex = pointerIndex,
-                position = state.LastPosition,
-                deltaPosition = Vector2.zero,
-                scroll = Vector2.zero,
-                displayIndex = state.LastDisplayIndex,
-                tilt = Vector2.zero,
-                twist = 0.0f,
-                pressure = 0.0f,
-                isInverted = false,
-                button = button,
-                buttonsState = state.ButtonsState,
-                clickCount = state.ClickCount,
-                timestamp = m_CurrentTime,
-                eventSource = eventSource,
-                playerId = k_DefaultPlayerId,
-                eventModifiers = m_EventModifiers
-            }));
+            DispatchFromCallback(CreateButtonEvent(ref state, isPressed, eventSource, button, pointerIndex));
         }
 
         void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseLeft);
