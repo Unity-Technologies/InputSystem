@@ -595,7 +595,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             ref var state = ref GetPointerStateForSource(pressedInput.eventSource);
             var wasPressed = state.ButtonsState.Get(pressedInput.button);
             state.OnButtonChange(m_CurrentTime, pressedInput.button, wasPressed, false);
-            EventProvider.Dispatch(CreateButtonEvent(ref state, false, pressedInput.eventSource, pressedInput.button, pressedInput.pointerIndex));
+            DispatchFromCallback(CreateButtonEvent(ref state, false, pressedInput.eventSource, pressedInput.button, pressedInput.pointerIndex));
         }
 
         Event CreateButtonEvent(ref PointerState state, bool isPressed, EventSource eventSource, PointerEvent.Button button, int pointerIndex)

@@ -450,6 +450,25 @@ public class InputForUITests : InputTestFixture
         }));
     }
 
+    [Test]
+    [Category(kTestCategory)]
+    public void PointerPressedThenReleasedWhileUIMapIsDisabledBeforeUpdate_DispatchesButtonPressedBeforeButtonReleased([Values] PointerKind kind)
+    {
+        var device = AddPointerDevice(kind);
+        var uiMap = UseProviderOwnedUIMap();
+
+        PressPointer(device);
+        uiMap.Disable();
+        ReleasePointer(device);
+        Update();
+
+        Assert.That(GetRecordedButtonEvents().ConvertAll(e => e.type), Is.EqualTo(new[]
+        {
+            PointerEvent.Type.ButtonPressed,
+            PointerEvent.Type.ButtonReleased,
+        }));
+    }
+
     InputActionMap UseProjectWideUIMap(System.Action<InputAction> addClickBindings)
     {
         m_ProjectWideUIAsset = ScriptableObject.CreateInstance<InputActionAsset>();
