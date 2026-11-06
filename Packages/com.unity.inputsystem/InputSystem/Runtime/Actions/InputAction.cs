@@ -2142,7 +2142,7 @@ namespace UnityEngine.InputSystem
             ////        the callback to a specific binding on the action
 
             private int actionIndex => m_ActionIndex;
-            private unsafe int bindingIndex => m_State.actionStates[actionIndex].bindingIndex;
+            internal unsafe int bindingIndex => m_State.actionStates[actionIndex].bindingIndex;
             private unsafe int controlIndex => m_State.actionStates[actionIndex].controlIndex;
             private unsafe int interactionIndex => m_State.actionStates[actionIndex].interactionIndex;
 
