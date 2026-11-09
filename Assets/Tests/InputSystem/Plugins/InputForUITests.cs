@@ -424,6 +424,45 @@ public class InputForUITests : InputTestFixture
 
     [Test]
     [Category(kTestCategory)]
+    public void PointerMovedAndReleasedWhileUIMapIsDisabled_ButtonReleasedHasReleasePosition([Values] PointerKind kind)
+    {
+        var device = AddPointerDevice(kind);
+        var uiMap = UseProviderOwnedUIMap();
+        if (device is Mouse mouse)
+        {
+            Set(mouse.position, new Vector2(100f, 100f));
+            Update();
+        }
+
+        PressPointer(device);
+        Update();
+        uiMap.Disable();
+        var releasePosition = new Vector2(300f, 200f);
+        if (device is Touchscreen touchscreen)
+        {
+            MoveTouch(1, releasePosition, screen: touchscreen);
+            EndTouch(1, releasePosition, screen: touchscreen);
+        }
+        else
+        {
+            Set(((Mouse)device).position, releasePosition);
+            Release(((Mouse)device).leftButton);
+        }
+        Update();
+        Update();
+
+        var buttonEvents = GetRecordedButtonEvents();
+        Assert.That(buttonEvents.ConvertAll(e => e.type), Is.EqualTo(new[]
+        {
+            PointerEvent.Type.ButtonPressed,
+            PointerEvent.Type.ButtonReleased,
+        }));
+        Assert.That(buttonEvents[1].position, Is.EqualTo(InputSystemProvider.ScreenBottomLeftToPanelPosition(releasePosition, 0)),
+            "A release at the press position would click the element under the press");
+    }
+
+    [Test]
+    [Category(kTestCategory)]
     public void TouchDragEndedWhileUIMapIsDisabled_MouseClickIsDispatchedWhenReenabled()
     {
         InputSystem.AddDevice<Touchscreen>();
@@ -643,6 +682,39 @@ public class InputForUITests : InputTestFixture
         Assert.That(buttonEvents.Count, Is.EqualTo(2));
         Assert.That(buttonEvents[0].type, Is.EqualTo(PointerEvent.Type.ButtonPressed));
         Assert.That(buttonEvents[1].type, Is.EqualTo(PointerEvent.Type.ButtonReleased));
+    }
+
+    [Test]
+    [Category(kTestCategory)]
+    public void ClickBoundToModifierComposite_TriggeringKeyboardRemovedWhileAnotherHoldsModifier_DispatchesButtonReleasedOnlyWhenReleased()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+        var otherKeyboard = InputSystem.AddDevice<Keyboard>();
+        var mouse = InputSystem.AddDevice<Mouse>();
+        UseProjectWideUIMap(click => click.AddCompositeBinding("ButtonWithOneModifier(modifiersOrder=2)")
+            .With("Modifier", "<Keyboard>/ctrl")
+            .With("Button", "<Mouse>/leftButton"));
+
+        Press(mouse.leftButton);
+        Update();
+        Press(keyboard.leftCtrlKey);
+        Update();
+        Press(otherKeyboard.leftCtrlKey);
+        Update();
+        InputSystem.RemoveDevice(keyboard);
+        Update();
+        Update();
+        Assert.That(GetRecordedButtonEvents().ConvertAll(e => e.type), Is.EqualTo(new[] { PointerEvent.Type.ButtonPressed }),
+            "The composite is still pressed through the other keyboard");
+
+        Release(mouse.leftButton);
+        Update();
+
+        Assert.That(GetRecordedButtonEvents().ConvertAll(e => e.type), Is.EqualTo(new[]
+        {
+            PointerEvent.Type.ButtonPressed,
+            PointerEvent.Type.ButtonReleased,
+        }));
     }
 
     [Test]

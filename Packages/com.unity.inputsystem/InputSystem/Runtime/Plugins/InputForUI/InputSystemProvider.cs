@@ -563,15 +563,24 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         }
 
         // Control indices change when bindings are re-resolved, such as when a device is added
-        static bool IsStillPressed(PressedInput pressedInput)
+        static unsafe bool IsStillPressed(PressedInput pressedInput)
         {
             var actionState = pressedInput.actionState;
-            if (!pressedInput.control.device.added || pressedInput.bindingIndex >= actionState.totalBindingCount)
+            var bindingIndex = pressedInput.bindingIndex;
+            if (bindingIndex >= actionState.totalBindingCount)
                 return false;
 
-            var controlIndex = actionState.FindControlIndexOnBinding(pressedInput.bindingIndex, pressedInput.control);
+            // Reading any control of a composite part evaluates the whole composite, which can outlive the triggering control
+            var bindingState = actionState.bindingStates[bindingIndex];
+            if (bindingState.isPartOfComposite)
+                return bindingState.controlCount > 0 && actionState.ReadValueAsButton(bindingIndex, bindingState.controlStartIndex);
+
+            if (!pressedInput.control.device.added)
+                return false;
+
+            var controlIndex = actionState.FindControlIndexOnBinding(bindingIndex, pressedInput.control);
             return controlIndex != InputActionState.kInvalidIndex &&
-                actionState.ReadValueAsButton(pressedInput.bindingIndex, controlIndex);
+                actionState.ReadValueAsButton(bindingIndex, controlIndex);
         }
 
         void ForgetReleasedInputs()
@@ -598,6 +607,15 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             m_ResetSeenEventsOnUpdate = true;
 
             ref var state = ref GetPointerStateForSource(pressedInput.eventSource);
+
+            // The pointer can move without Point callbacks, such as while the UI map is disabled
+            if (pressedInput.control.device is Pointer pointer && pointer.added)
+            {
+                var positionControl = pressedInput.control.parent is TouchControl touch ? touch.position : pointer.position;
+                var displayIndex = pointer.displayIndex.ReadValue();
+                state.OnMove(m_CurrentTime, ScreenBottomLeftToPanelPosition(positionControl.ReadValue(), displayIndex), displayIndex);
+            }
+
             var wasPressed = state.ButtonsState.Get(pressedInput.button);
             state.OnButtonChange(m_CurrentTime, pressedInput.button, wasPressed, false);
             DispatchFromCallback(CreateButtonEvent(ref state, false, pressedInput.eventSource, pressedInput.button, pressedInput.pointerIndex));
