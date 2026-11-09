@@ -215,7 +215,8 @@ namespace UnityEngine.InputSystem.Controls
         // When we start caring about inter-frame presses, use the info we have to set up the alternate path.
         // If we don't do this, users could call wasPressedThisFrame/wasReleasedThisFrame twice for the first time in
         // a single frame, and the returned value may be incorrect until the next frame.
-        private void BeginTestingForFramePresses(bool currentlyPressed, bool pressedLastFrame)
+        // Returns whether the button was pressed in the last update of the device.
+        private bool BeginTestingForFramePresses(bool currentlyPressed, bool pressedLastFrame)
         {
             needsToCheckFramePress = true;
             device.m_ButtonControlsCheckingPressState.Add(this);
@@ -223,20 +224,26 @@ namespace UnityEngine.InputSystem.Controls
 #if UNITY_EDITOR
             if (InputUpdate.s_LatestUpdateType.IsEditorUpdate())
             {
+                var wasPressedAgain = CheckForRepress(true, startTracking: true);
+                var wasPressed = currentlyPressed && (!pressedLastFrame || wasPressedAgain);
                 m_LastUpdateWasPressEditor = currentlyPressed;
-                if (currentlyPressed && !pressedLastFrame)
+                if (wasPressed)
                     m_UpdateCountLastPressedEditor = device.m_CurrentUpdateStepCount;
                 else if (pressedLastFrame && !currentlyPressed)
                     m_UpdateCountLastReleasedEditor = device.m_CurrentUpdateStepCount;
+                return wasPressed;
             }
             else
 #endif
             {
+                var wasPressedAgain = CheckForRepress(false, startTracking: true);
+                var wasPressed = currentlyPressed && (!pressedLastFrame || wasPressedAgain);
                 m_LastUpdateWasPress = currentlyPressed;
-                if (currentlyPressed && !pressedLastFrame)
+                if (wasPressed)
                     m_UpdateCountLastPressed = device.m_CurrentUpdateStepCount;
                 else if (pressedLastFrame && !currentlyPressed)
                     m_UpdateCountLastReleased = device.m_CurrentUpdateStepCount;
+                return wasPressed;
             }
         }
 
@@ -288,9 +295,9 @@ namespace UnityEngine.InputSystem.Controls
                 {
                     var currentlyPressed = IsValueConsideredPressed(value);
                     var pressedLastFrame = IsValueConsideredPressed(ReadValueFromPreviousFrame());
-                    BeginTestingForFramePresses(currentlyPressed, pressedLastFrame);
+                    var wasPressed = BeginTestingForFramePresses(currentlyPressed, pressedLastFrame);
 
-                    return device.wasUpdatedThisFrame && currentlyPressed && !pressedLastFrame;
+                    return device.wasUpdatedThisFrame && wasPressed;
                 }
 
 #if UNITY_EDITOR
@@ -349,6 +356,7 @@ namespace UnityEngine.InputSystem.Controls
         internal void UpdateWasPressed()
         {
             var isNowPressed = IsValueConsideredPressed(value);
+            var wasPressedAgain = CheckForRepress(false, startTracking: false);
 
             if (m_LastUpdateWasPress != isNowPressed)
             {
@@ -359,12 +367,26 @@ namespace UnityEngine.InputSystem.Controls
 
                 m_LastUpdateWasPress = isNowPressed;
             }
+            else if (isNowPressed && wasPressedAgain)
+            {
+                m_UpdateCountLastPressed = device.m_CurrentUpdateStepCount;
+            }
+        }
+
+        // Lets a button that is made up of several inputs, such as AnyKeyControl, report a new press while it is
+        // already held, when another of its inputs goes down. Called on every press state update, and once when
+        // press tracking starts, in which case it compares against the previous frame. Returns true if there was
+        // such a press since the previous call.
+        internal virtual bool CheckForRepress(bool editorState, bool startTracking)
+        {
+            return false;
         }
 
 #if UNITY_EDITOR
         internal void UpdateWasPressedEditor()
         {
             var isNowPressed = IsValueConsideredPressed(value);
+            var wasPressedAgain = CheckForRepress(true, startTracking: false);
 
             if (m_LastUpdateWasPressEditor != isNowPressed)
             {
@@ -374,6 +396,10 @@ namespace UnityEngine.InputSystem.Controls
                     m_UpdateCountLastReleasedEditor = device.m_CurrentUpdateStepCount;
 
                 m_LastUpdateWasPressEditor = isNowPressed;
+            }
+            else if (isNowPressed && wasPressedAgain)
+            {
+                m_UpdateCountLastPressedEditor = device.m_CurrentUpdateStepCount;
             }
         }
 
