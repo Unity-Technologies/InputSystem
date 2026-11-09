@@ -45,6 +45,19 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
         PointerState m_TouchState;
         bool m_SeenTouchEvents;
 
+        struct PressedInput
+        {
+            public InputActionState actionState;
+            public int bindingIndex;
+            public InputControl control;
+            public EventSource eventSource;
+            public PointerEvent.Button button;
+            public int pointerIndex;
+        }
+
+        readonly Dictionary<(InputActionState, int, InputControl), PressedInput> m_PressedInputs = new Dictionary<(InputActionState, int, InputControl), PressedInput>();
+        readonly List<(InputActionState, int, InputControl)> m_ReleasedInputs = new List<(InputActionState, int, InputControl)>();
+
         const float k_SmallestReportedMovementSqrDist = 0.01f;
 
         NavigationEventRepeatHelper m_RepeatHelper = new();
@@ -90,6 +103,7 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 
             m_TouchState.Reset();
             m_SeenTouchEvents = false;
+            m_PressedInputs.Clear();
 
             SelectInputActionAsset();
             RegisterActions();
@@ -136,6 +150,9 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
 #endif
 
             m_InputEventPartialProvider.Update();
+
+            // Releases that happen while the click actions are disabled never reach the callbacks
+            ForgetReleasedInputs();
 
             // Sort events added by input actions callbacks, based on type.
             // This is necessary to ensure that events are dispatched in the correct order.
@@ -536,23 +553,77 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
             }));
         }
 
-        void OnClickPerformed(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
+        // Composite parts report the value of the whole composite
+        static unsafe (InputActionState, int, InputControl) GetPressedInputKey(InputAction.CallbackContext ctx)
         {
-            ref var state = ref GetPointerStateForSource(eventSource);
+            var bindingState = ctx.m_State.bindingStates[ctx.bindingIndex];
+            return bindingState.isPartOfComposite
+                ? (ctx.m_State, bindingState.compositeOrCompositeBindingIndex, null)
+                : (ctx.m_State, ctx.bindingIndex, ctx.control);
+        }
 
-            var asTouchscreenDevice = ctx.control.device is Touchscreen ? (Touchscreen)ctx.control.device : null;
-            var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
-            var pointerIndex = FindTouchFingerIndex(asTouchscreenDevice, ctx);
+        // Control indices change when bindings are re-resolved, such as when a device is added
+        static unsafe bool IsStillPressed(PressedInput pressedInput)
+        {
+            var actionState = pressedInput.actionState;
+            var bindingIndex = pressedInput.bindingIndex;
+            if (bindingIndex >= actionState.totalBindingCount)
+                return false;
 
+            // Reading any control of a composite part evaluates the whole composite, which can outlive the triggering control
+            var bindingState = actionState.bindingStates[bindingIndex];
+            if (bindingState.isPartOfComposite)
+                return bindingState.controlCount > 0 && actionState.ReadValueAsButton(bindingIndex, bindingState.controlStartIndex);
+
+            if (!pressedInput.control.device.added)
+                return false;
+
+            var controlIndex = actionState.FindControlIndexOnBinding(bindingIndex, pressedInput.control);
+            return controlIndex != InputActionState.kInvalidIndex &&
+                actionState.ReadValueAsButton(bindingIndex, controlIndex);
+        }
+
+        void ForgetReleasedInputs()
+        {
+            foreach (var pressed in m_PressedInputs)
+            {
+                if (!IsStillPressed(pressed.Value))
+                    m_ReleasedInputs.Add(pressed.Key);
+            }
+
+            foreach (var key in m_ReleasedInputs)
+            {
+                if (m_PressedInputs.TryGetValue(key, out var pressedInput))
+                {
+                    m_PressedInputs.Remove(key);
+                    DispatchButtonReleased(pressedInput);
+                }
+            }
+            m_ReleasedInputs.Clear();
+        }
+
+        void DispatchButtonReleased(in PressedInput pressedInput)
+        {
             m_ResetSeenEventsOnUpdate = true;
-            if (asTouchControl != null || asTouchscreenDevice != null)
-                m_SeenTouchEvents = true;
 
-            var wasPressed = state.ButtonsState.Get(button);
-            var isPressed = ctx.ReadValueAsButton();
-            state.OnButtonChange(m_CurrentTime, button, wasPressed, isPressed);
+            ref var state = ref GetPointerStateForSource(pressedInput.eventSource);
 
-            DispatchFromCallback(Event.From(new PointerEvent
+            // The pointer can move without Point callbacks, such as while the UI map is disabled
+            if (pressedInput.control.device is Pointer pointer && pointer.added)
+            {
+                var positionControl = pressedInput.control.parent is TouchControl touch ? touch.position : pointer.position;
+                var displayIndex = pointer.displayIndex.ReadValue();
+                state.OnMove(m_CurrentTime, ScreenBottomLeftToPanelPosition(positionControl.ReadValue(), displayIndex), displayIndex);
+            }
+
+            var wasPressed = state.ButtonsState.Get(pressedInput.button);
+            state.OnButtonChange(m_CurrentTime, pressedInput.button, wasPressed, false);
+            DispatchFromCallback(CreateButtonEvent(ref state, false, pressedInput.eventSource, pressedInput.button, pressedInput.pointerIndex));
+        }
+
+        Event CreateButtonEvent(ref PointerState state, bool isPressed, EventSource eventSource, PointerEvent.Button button, int pointerIndex)
+        {
+            return Event.From(new PointerEvent
             {
                 type = isPressed ? PointerEvent.Type.ButtonPressed : PointerEvent.Type.ButtonReleased,
                 pointerIndex = pointerIndex,
@@ -571,7 +642,45 @@ namespace UnityEngine.InputSystem.Plugins.InputForUI
                 eventSource = eventSource,
                 playerId = k_DefaultPlayerId,
                 eventModifiers = m_EventModifiers
-            }));
+            });
+        }
+
+        void OnClickPerformed(InputAction.CallbackContext ctx, EventSource eventSource, PointerEvent.Button button)
+        {
+            ref var state = ref GetPointerStateForSource(eventSource);
+
+            var asTouchscreenDevice = ctx.control.device is Touchscreen ? (Touchscreen)ctx.control.device : null;
+            var asTouchControl = ctx.control is TouchControl ? (TouchControl)ctx.control : null;
+            var pointerIndex = FindTouchFingerIndex(asTouchscreenDevice, ctx);
+
+            // Pass-through actions also report state changes that keep the value, such as a touch phase change
+            var isPressed = ctx.ReadValueAsButton();
+            var key = GetPressedInputKey(ctx);
+            if (isPressed)
+            {
+                var pressedInput = new PressedInput
+                {
+                    actionState = ctx.m_State,
+                    bindingIndex = ctx.bindingIndex,
+                    control = ctx.control,
+                    eventSource = eventSource,
+                    button = button,
+                    pointerIndex = pointerIndex,
+                };
+                if (!m_PressedInputs.TryAdd(key, pressedInput))
+                    return;
+            }
+            else if (!m_PressedInputs.Remove(key))
+                return;
+
+            m_ResetSeenEventsOnUpdate = true;
+            if (asTouchControl != null || asTouchscreenDevice != null)
+                m_SeenTouchEvents = true;
+
+            var wasPressed = state.ButtonsState.Get(button);
+            state.OnButtonChange(m_CurrentTime, button, wasPressed, isPressed);
+
+            DispatchFromCallback(CreateButtonEvent(ref state, isPressed, eventSource, button, pointerIndex));
         }
 
         void OnLeftClickPerformed(InputAction.CallbackContext ctx) => OnClickPerformed(ctx, GetEventSource(ctx), PointerEvent.Button.MouseLeft);
