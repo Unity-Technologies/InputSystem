@@ -213,7 +213,9 @@ namespace UnityEngine.InputSystem.Editor
             // Notifications/event section.
             EditorGUI.BeginChangeCheck();
             EditorGUILayout.PropertyField(m_NotificationBehaviorProperty, m_NotificationBehaviorText);
-            if (EditorGUI.EndChangeCheck() || actionsWereChanged || !m_NotificationBehaviorInitialized)
+            // Also compare against the last handled behavior to catch changes made outside this inspector (undo, scripts).
+            if (EditorGUI.EndChangeCheck() || actionsWereChanged || !m_NotificationBehaviorInitialized ||
+                m_NotificationBehavior != (PlayerNotifications)m_NotificationBehaviorProperty.intValue)
                 OnNotificationBehaviorChange();
             switch ((PlayerNotifications)m_NotificationBehaviorProperty.intValue)
             {
@@ -451,18 +453,18 @@ namespace UnityEngine.InputSystem.Editor
                     playerInput.m_DeviceRegainedEvent ??= new PlayerInput.DeviceRegainedEvent();
                     playerInput.m_ControlsChangedEvent ??= new PlayerInput.ControlsChangedEvent();
 
-                    if (areEventsDirty)
-                    {
-                        serializedObject.Update();
-
-                        // Force action refresh.
-                        m_ActionAssetInitialized = false;
-                        Refresh();
-                    }
+                    // The action event list is only kept up to date while the behavior is InvokeUnityEvents, so rebuild
+                    // it whenever we switch to it. Do it right away rather than deferring to the next repaint, so the
+                    // events show up in this same GUI pass.
+                    var enteringUnityEvents = !m_NotificationBehaviorInitialized ||
+                        m_NotificationBehavior != PlayerNotifications.InvokeUnityEvents;
+                    if (areEventsDirty || enteringUnityEvents)
+                        InitializeEditorComponent(false);
                     break;
                 }
             }
 
+            m_NotificationBehavior = notificationBehavior;
             m_NotificationBehaviorInitialized = true;
         }
 
@@ -655,6 +657,7 @@ namespace UnityEngine.InputSystem.Editor
         [NonSerialized] private SerializedProperty m_ControlsChangedEventProperty;
 
         [NonSerialized] private bool m_NotificationBehaviorInitialized;
+        [NonSerialized] private PlayerNotifications m_NotificationBehavior;
         [NonSerialized] private bool m_ActionAssetInitialized;
 #if UNITY_6000_4_OR_NEWER
         [NonSerialized] private EntityId m_ActionAssetEntityId;

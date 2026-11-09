@@ -4547,6 +4547,7 @@ namespace UnityEngine.InputSystem
                     callbacks.RemoveCallback(callbacks[i]);
             }
         }
+
 #endif
 
         internal static ISavedState SaveAndResetState()
