@@ -2626,6 +2626,50 @@ partial class CoreTests
 
     [Test]
     [Category("Layouts")]
+    public void Layouts_ControlDeclaredForSeveralVariants_MergesUnderEachOfThem()
+    {
+        const string jsonBase = @"
+            {
+                ""name"" : ""VariantBaseCombined"",
+                ""extend"" : ""Gamepad"",
+                ""controls"" : [
+                    { ""name"" : ""custom"", ""layout"" : ""Axis"", ""variants"" : ""lefty;righty"", ""offset"" : 32 }
+                ]
+            }
+        ";
+        const string jsonDerived = @"
+            {
+                ""name"" : ""VariantDerivedFromCombined"",
+                ""extend"" : ""VariantBaseCombined"",
+                ""controls"" : [
+                    { ""name"" : ""custom"", ""variants"" : ""lefty"", ""format"" : ""FLT"" },
+                    { ""name"" : ""custom"", ""variants"" : ""righty"", ""format"" : ""FLT"" }
+                ]
+            }
+        ";
+
+        InputSystem.RegisterLayout(jsonBase);
+        InputSystem.RegisterLayout(jsonDerived);
+
+        var layout = InputSystem.LoadLayout("VariantDerivedFromCombined");
+
+        // Both variants named in the base must merge with the derived controls and inherit
+        // the base's settings, not just the first one.
+        var lefty = layout.controls.Single(x => x.name.ToString() == "custom" &&
+            string.Equals(x.variants.ToString(), "lefty", StringComparison.OrdinalIgnoreCase));
+        var righty = layout.controls.Single(x => x.name.ToString() == "custom" &&
+            string.Equals(x.variants.ToString(), "righty", StringComparison.OrdinalIgnoreCase));
+
+        Assert.That(lefty.layout.ToString(), Is.EqualTo("Axis"));
+        Assert.That(righty.layout.ToString(), Is.EqualTo("Axis"));
+        Assert.That(lefty.offset, Is.EqualTo(32));
+        Assert.That(righty.offset, Is.EqualTo(32));
+        Assert.That(lefty.format, Is.EqualTo(new FourCC("FLT")));
+        Assert.That(righty.format, Is.EqualTo(new FourCC("FLT")));
+    }
+
+    [Test]
+    [Category("Layouts")]
     [Ignore("TODO")]
     public void TODO_Layouts_CurrentPlatformIsImplicitLayoutVariant()
     {

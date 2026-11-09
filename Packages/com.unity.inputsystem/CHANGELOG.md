@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed touch input from Unity Remote 5 being ignored in Unity 6000.5 and newer. [UUM-155327](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-155327)
 - Fixed actions enabled during startup, for example in an Entities system's `OnCreate`, being disabled when entering Play Mode with domain reload disabled and in Player builds. [UUM-151403](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-151403)
 - Fixed the Player Input component Inspector not showing the action map events after the Behavior is set to Invoke Unity Events, until the GameObject was selected again. [UUM-150956](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-150956)
+- Fixed a control declared for several variants at once (for example `"variants" : "A;B"`) only merging with derived layouts under its first variant; derived overrides for the other variants lost the base control's layout, offset, format and usages.
 
 ## [1.20.1] - 2026-10-05
 
