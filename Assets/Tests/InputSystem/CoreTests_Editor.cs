@@ -3493,6 +3493,7 @@ partial class CoreTests
             foreach (var child in item.children)
                 CollectSearchableLeaves(child);
         }
+
         CollectSearchableLeaves(root);
 
         var duplicatePaths = searchableItems
