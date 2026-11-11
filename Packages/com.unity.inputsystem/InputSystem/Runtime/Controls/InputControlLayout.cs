@@ -1376,7 +1376,7 @@ namespace UnityEngine.InputSystem.Layouts
                             // We're only looking for specific variants so try only that those.
                             for (var i = 0; i < baseControlVariants.Count; ++i)
                             {
-                                if (VariantsMatch(m_Variants.ToLower(), baseControlVariants[i]))
+                                if (VariantsMatch(m_Variants.ToUpper(), baseControlVariants[i]))
                                 {
                                     var key = $"{pair.Key}@{baseControlVariants[i]}";
                                     if (baseControlTable.TryGetValue(key, out baseControlItem))
@@ -1413,11 +1413,11 @@ namespace UnityEngine.InputSystem.Layouts
                     // We may be looking at a control that is targeting a specific variant
                     // in this layout but not targeting a variant in the base layout. We still want to
                     // merge information from that non-targeted base control.
-                    else if (baseControlTable.TryGetValue(pair.Value.name.ToLower(), out baseControlItem))
+                    else if (baseControlTable.TryGetValue(pair.Value.name.ToUpper(), out baseControlItem))
                     {
                         var mergedLayout = pair.Value.Merge(baseControlItem);
                         controls.Add(mergedLayout);
-                        baseControlTable.Remove(pair.Value.name.ToLower());
+                        baseControlTable.Remove(pair.Value.name.ToUpper());
                     }
                     // Seems like we can't match it to a control in the base layout. We already know it
                     // must have a variants setting (because we checked above) so if the variants setting
@@ -1472,7 +1472,7 @@ namespace UnityEngine.InputSystem.Layouts
             var table = new Dictionary<string, ControlItem>();
             for (var i = 0; i < controlItems.Length; ++i)
             {
-                var key = controlItems[i].name.ToLower();
+                var key = controlItems[i].name.ToUpper();
                 // Need to take variants into account as well. Otherwise two variants for
                 // "leftStick", for example, will overwrite each other.
                 var itemVariants = controlItems[i].variants;
@@ -1481,7 +1481,7 @@ namespace UnityEngine.InputSystem.Layouts
                     // If there's multiple variants on the control, we add it to the table multiple times.
                     if (itemVariants.ToString().IndexOf(VariantSeparator[0]) != -1)
                     {
-                        var itemVariantArray = itemVariants.ToLower().Split(VariantSeparator[0]);
+                        var itemVariantArray = itemVariants.ToUpper().Split(VariantSeparator[0]);
                         foreach (var name in itemVariantArray)
                         {
                             variants?.Add(name);
@@ -1491,8 +1491,8 @@ namespace UnityEngine.InputSystem.Layouts
                         continue;
                     }
 
-                    key = $"{key}@{itemVariants.ToLower()}";
-                    variants?.Add(itemVariants.ToLower());
+                    key = $"{key}@{itemVariants.ToUpper()}";
+                    variants?.Add(itemVariants.ToUpper());
                 }
                 table[key] = controlItems[i];
             }
@@ -1501,7 +1501,7 @@ namespace UnityEngine.InputSystem.Layouts
 
         internal static bool VariantsMatch(InternedString expected, InternedString actual)
         {
-            return VariantsMatch(expected.ToLower(), actual.ToLower());
+            return VariantsMatch(expected.ToUpper(), actual.ToUpper());
         }
 
         internal static bool VariantsMatch(string expected, string actual)
@@ -1623,10 +1623,10 @@ namespace UnityEngine.InputSystem.Layouts
                 // Before render behavior.
                 if (!string.IsNullOrEmpty(beforeRender))
                 {
-                    var beforeRenderLowerCase = beforeRender.ToLowerInvariant();
-                    if (beforeRenderLowerCase == "ignore")
+                    var beforeRenderUpperCase = beforeRender.ToUpperInvariant();
+                    if (beforeRenderUpperCase == "IGNORE")
                         layout.m_UpdateBeforeRender = false;
-                    else if (beforeRenderLowerCase == "update")
+                    else if (beforeRenderUpperCase == "UPDATE")
                         layout.m_UpdateBeforeRender = true;
                     else
                         throw new InvalidOperationException($"Invalid beforeRender setting '{beforeRender}' (should be 'ignore' or 'update')");
@@ -1635,10 +1635,10 @@ namespace UnityEngine.InputSystem.Layouts
                 // CanRunInBackground flag.
                 if (!string.IsNullOrEmpty(runInBackground))
                 {
-                    var runInBackgroundLowerCase = runInBackground.ToLowerInvariant();
-                    if (runInBackgroundLowerCase == "enabled")
+                    var runInBackgroundUpperCase = runInBackground.ToUpperInvariant();
+                    if (runInBackgroundUpperCase == "ENABLED")
                         layout.canRunInBackground = true;
-                    else if (runInBackgroundLowerCase == "disabled")
+                    else if (runInBackgroundUpperCase == "DISABLED")
                         layout.canRunInBackground = false;
                     else
                         throw new InvalidOperationException($"Invalid runInBackground setting '{beforeRender}' (should be 'enabled' or 'disabled')");

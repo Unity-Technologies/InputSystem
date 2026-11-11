@@ -14,6 +14,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed actions enabled during startup, for example in an Entities system's `OnCreate`, being disabled when entering Play Mode with domain reload disabled and in Player builds. [UUM-151403](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-151403)
 - Fixed the Player Input component Inspector not showing the action map events after the Behavior is set to Invoke Unity Events, until the GameObject was selected again. [UUM-150956](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-150956)
 - Fixed a control declared for several variants at once (for example `"variants" : "A;B"`) only merging with derived layouts under its first variant; derived overrides for the other variants lost the base control's layout, offset, format and usages. [UUM-160829](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-160829)
+- Fixed `InputSystem.GetDevice(string)` failing to find a device by name or layout on systems whose current culture changes letter casing, such as Turkish. Device lookup now uses the invariant culture. [UUM-160601](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-160601)
+
+### Changed
+
+- Case-insensitive string comparisons now normalize to upper case with the invariant culture, following Microsoft's string best practices. `InternedString` now caches an upper-case copy of the string instead of a lower-case one, so `InternedString.ToLower()` allocates a new string on each call. Use `InternedString.ToUpper()` for case-insensitive comparisons.
+
+### Added
+
+- Added `InternedString.ToUpper()`, which returns a cached upper-case copy of the string without allocating.
 
 ## [1.20.1] - 2026-10-05
 

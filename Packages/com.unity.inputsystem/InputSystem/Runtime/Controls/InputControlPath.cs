@@ -494,7 +494,7 @@ namespace UnityEngine.InputSystem
             // Can't compare lengths here because str may contain wildcards and
             // thus be shorter than matchTo and still match.
 
-            var matchToLowerCase = matchTo.ToLower();
+            var matchToUpperCase = matchTo.ToUpper();
 
             // We manually walk the string here so that we can deal with "normal"
             // comparisons as well as with wildcards.
@@ -513,15 +513,15 @@ namespace UnityEngine.InputSystem
                         return true; // Wildcard at end of string so rest is matched.
 
                     ++posInStr;
-                    nextChar = char.ToLowerInvariant(str[posInStr]);
+                    nextChar = char.ToUpperInvariant(str[posInStr]);
 
-                    while (posInMatchTo < matchToLength && matchToLowerCase[posInMatchTo] != nextChar)
+                    while (posInMatchTo < matchToLength && matchToUpperCase[posInMatchTo] != nextChar)
                         ++posInMatchTo;
 
                     if (posInMatchTo == matchToLength)
                         return false; // Matched all the way to end of matchTo but there's more in str after the wildcard.
                 }
-                else if (char.ToLowerInvariant(nextChar) != matchToLowerCase[posInMatchTo])
+                else if (char.ToUpperInvariant(nextChar) != matchToUpperCase[posInMatchTo])
                 {
                     return false;
                 }
@@ -1113,7 +1113,7 @@ namespace UnityEngine.InputSystem
                 }
 
                 var charInComponent = component[indexInComponent];
-                if (charInComponent == nextCharInPath || char.ToLowerInvariant(charInComponent) == char.ToLowerInvariant(nextCharInPath))
+                if (charInComponent == nextCharInPath || char.ToUpperInvariant(charInComponent) == char.ToUpperInvariant(nextCharInPath))
                 {
                     ++indexInComponent;
                     ++indexInPath;
@@ -1419,7 +1419,7 @@ namespace UnityEngine.InputSystem
                     if (ch == '\\' && i + 1 < pathElementLength)
                         ch = pathElement[++i];
 
-                    if (char.ToLowerInvariant(ch) != char.ToLowerInvariant(element[j]))
+                    if (char.ToUpperInvariant(ch) != char.ToUpperInvariant(element[j]))
                         return false;
                 }
             }

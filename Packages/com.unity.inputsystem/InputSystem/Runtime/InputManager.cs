@@ -1756,13 +1756,13 @@ namespace UnityEngine.InputSystem
             if (m_DevicesCount == 0)
                 return null;
 
-            var nameOrLayoutLowerCase = nameOrLayout.ToLower();
+            var nameOrLayoutUpperCase = nameOrLayout.ToUpperInvariant();
 
             for (var i = 0; i < m_DevicesCount; ++i)
             {
                 var device = m_Devices[i];
-                if (device.m_Name.ToLower() == nameOrLayoutLowerCase ||
-                    device.m_Layout.ToLower() == nameOrLayoutLowerCase)
+                if (device.m_Name.ToUpper() == nameOrLayoutUpperCase ||
+                    device.m_Layout.ToUpper() == nameOrLayoutUpperCase)
                     return device;
             }
 

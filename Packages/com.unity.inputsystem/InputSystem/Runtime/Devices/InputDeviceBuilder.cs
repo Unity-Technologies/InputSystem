@@ -392,8 +392,8 @@ namespace UnityEngine.InputSystem.Layouts
             // See if there is an override for the control.
             if (m_ChildControlOverrides != null)
             {
-                var pathLowerCase = ChildControlOverridePath(parent, name);
-                if (m_ChildControlOverrides.TryGetValue(pathLowerCase, out var controlOverride))
+                var pathUpperCase = ChildControlOverridePath(parent, name);
+                if (m_ChildControlOverrides.TryGetValue(pathUpperCase, out var controlOverride))
                     controlItem = controlOverride.Merge(controlItem);
             }
 
@@ -510,11 +510,11 @@ namespace UnityEngine.InputSystem.Layouts
                 m_ChildControlOverrides = new Dictionary<string, InputControlLayout.ControlItem>();
 
             // See if there are existing overrides for the control.
-            var pathLowerCase = ChildControlOverridePath(parent, controlItem.name);
-            if (!m_ChildControlOverrides.TryGetValue(pathLowerCase, out var existingOverrides))
+            var pathUpperCase = ChildControlOverridePath(parent, controlItem.name);
+            if (!m_ChildControlOverrides.TryGetValue(pathUpperCase, out var existingOverrides))
             {
                 // So, so just insert our overrides and we're done.
-                m_ChildControlOverrides[pathLowerCase] = controlItem;
+                m_ChildControlOverrides[pathUpperCase] = controlItem;
                 return;
             }
 
@@ -522,15 +522,15 @@ namespace UnityEngine.InputSystem.Layouts
             // NOTE: The existing override's properties take precedence here. This is because
             //       the override has been established from higher up in the layout hierarchy.
             existingOverrides = existingOverrides.Merge(controlItem);
-            m_ChildControlOverrides[pathLowerCase] = existingOverrides;
+            m_ChildControlOverrides[pathUpperCase] = existingOverrides;
         }
 
         private string ChildControlOverridePath(InputControl parent, InternedString controlName)
         {
-            var pathLowerCase = controlName.ToLower();
+            var pathUpperCase = controlName.ToUpper();
             for (var current = parent; current != m_Device; current = current.m_Parent)
-                pathLowerCase = $"{current.m_Name.ToLower()}/{pathLowerCase}";
-            return pathLowerCase;
+                pathUpperCase = $"{current.m_Name.ToUpper()}/{pathUpperCase}";
+            return pathUpperCase;
         }
 
         private void AddChildControlIfMissing(InputControlLayout layout, InternedString variants, InputControl parent,

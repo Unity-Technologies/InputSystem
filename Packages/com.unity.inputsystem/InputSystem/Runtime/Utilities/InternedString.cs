@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 
 ////TODO: goal should be to end up with this being internal
 
@@ -27,13 +26,13 @@ namespace UnityEngine.InputSystem.Utilities
     public struct InternedString : IEquatable<InternedString>, IComparable<InternedString>
     {
         private readonly string m_StringOriginalCase;
-        private readonly string m_StringLowerCase;
+        private readonly string m_StringUpperCase;
 
         /// <summary>
         /// Length of the string in characters. Equivalent to <c>string.Length</c>.
         /// </summary>
         /// <value>Length of the string.</value>
-        public int length => m_StringLowerCase?.Length ?? 0;
+        public int length => m_StringUpperCase?.Length ?? 0;
 
         /// <summary>
         /// Initialize the InternedString with the given string. Except if the string is <c>null</c>
@@ -67,14 +66,14 @@ namespace UnityEngine.InputSystem.Utilities
             if (string.IsNullOrEmpty(text))
             {
                 m_StringOriginalCase = null;
-                m_StringLowerCase = null;
+                m_StringUpperCase = null;
             }
             else
             {
                 ////TODO: I think instead of string.Intern() this should use a custom weak-referenced intern table
-                ////      (this way we can also avoid the garbage from ToLower())
+                ////      (this way we can also avoid the garbage from ToUpperInvariant())
                 m_StringOriginalCase = string.Intern(text);
-                m_StringLowerCase = string.Intern(text.ToLower(CultureInfo.InvariantCulture));
+                m_StringUpperCase = string.Intern(text.ToUpperInvariant());
             }
         }
 
@@ -85,20 +84,35 @@ namespace UnityEngine.InputSystem.Utilities
         /// <returns>True if the string is empty.</returns>
         public bool IsEmpty()
         {
-            return m_StringLowerCase == null;
+            return m_StringUpperCase == null;
         }
 
         /// <summary>
-        /// Return a lower-case version of the string.
+        /// Return an upper-case version of the string, converted using the invariant culture.
         /// </summary>
-        /// <returns>A lower-case version of the string.</returns>
+        /// <returns>An upper-case version of the string, or <c>null</c> if the string is empty.</returns>
         /// <remarks>
-        /// InternedStrings internally always store a lower-case version which means that this
-        /// method does not incur a GC heap allocation cost.
+        /// InternedStrings internally always store an upper-case version which means that this
+        /// method does not incur a GC heap allocation cost. Use this method, rather than <see cref="ToLower"/>,
+        /// when normalizing strings for case-insensitive comparisons.
+        /// </remarks>
+        public string ToUpper()
+        {
+            return m_StringUpperCase;
+        }
+
+        /// <summary>
+        /// Return a lower-case version of the string, converted using the invariant culture.
+        /// </summary>
+        /// <returns>A lower-case version of the string, or <c>null</c> if the string is empty.</returns>
+        /// <remarks>
+        /// InternedStrings internally store an upper-case version of the string, so this method
+        /// incurs a GC heap allocation cost on each call. To normalize strings for case-insensitive
+        /// comparisons, use <see cref="ToUpper"/> instead.
         /// </remarks>
         public string ToLower()
         {
-            return m_StringLowerCase;
+            return m_StringOriginalCase?.ToLowerInvariant();
         }
 
         /// <summary>
@@ -114,9 +128,9 @@ namespace UnityEngine.InputSystem.Utilities
 
             if (obj is string str)
             {
-                if (m_StringLowerCase == null)
+                if (m_StringUpperCase == null)
                     return string.IsNullOrEmpty(str);
-                return string.Equals(m_StringLowerCase, str.ToLower(CultureInfo.InvariantCulture));
+                return string.Equals(m_StringUpperCase, str.ToUpperInvariant());
             }
 
             return false;
@@ -134,12 +148,12 @@ namespace UnityEngine.InputSystem.Utilities
         /// </remarks>
         public bool Equals(InternedString other)
         {
-            return ReferenceEquals(m_StringLowerCase, other.m_StringLowerCase);
+            return ReferenceEquals(m_StringUpperCase, other.m_StringUpperCase);
         }
 
         public int CompareTo(InternedString other)
         {
-            return string.Compare(m_StringLowerCase, other.m_StringLowerCase,
+            return string.Compare(m_StringUpperCase, other.m_StringUpperCase,
                 StringComparison.InvariantCultureIgnoreCase);
         }
 
@@ -149,9 +163,9 @@ namespace UnityEngine.InputSystem.Utilities
         /// <returns>A hash code.</returns>
         public override int GetHashCode()
         {
-            if (m_StringLowerCase == null)
+            if (m_StringUpperCase == null)
                 return 0;
-            return m_StringLowerCase.GetHashCode();
+            return m_StringUpperCase.GetHashCode();
         }
 
         public override string ToString()
@@ -171,33 +185,33 @@ namespace UnityEngine.InputSystem.Utilities
 
         public static bool operator==(InternedString a, string b)
         {
-            return string.Compare(a.m_StringLowerCase, b, StringComparison.InvariantCultureIgnoreCase) == 0;
+            return string.Compare(a.m_StringUpperCase, b, StringComparison.InvariantCultureIgnoreCase) == 0;
         }
 
         public static bool operator!=(InternedString a, string b)
         {
-            return string.Compare(a.m_StringLowerCase, b, StringComparison.InvariantCultureIgnoreCase) != 0;
+            return string.Compare(a.m_StringUpperCase, b, StringComparison.InvariantCultureIgnoreCase) != 0;
         }
 
         public static bool operator==(string a, InternedString b)
         {
-            return string.Compare(a, b.m_StringLowerCase, StringComparison.InvariantCultureIgnoreCase) == 0;
+            return string.Compare(a, b.m_StringUpperCase, StringComparison.InvariantCultureIgnoreCase) == 0;
         }
 
         public static bool operator!=(string a, InternedString b)
         {
-            return string.Compare(a, b.m_StringLowerCase, StringComparison.InvariantCultureIgnoreCase) != 0;
+            return string.Compare(a, b.m_StringUpperCase, StringComparison.InvariantCultureIgnoreCase) != 0;
         }
 
         public static bool operator<(InternedString left, InternedString right)
         {
-            return string.Compare(left.m_StringLowerCase, right.m_StringLowerCase,
+            return string.Compare(left.m_StringUpperCase, right.m_StringUpperCase,
                 StringComparison.InvariantCultureIgnoreCase) < 0;
         }
 
         public static bool operator>(InternedString left, InternedString right)
         {
-            return string.Compare(left.m_StringLowerCase, right.m_StringLowerCase,
+            return string.Compare(left.m_StringUpperCase, right.m_StringUpperCase,
                 StringComparison.InvariantCultureIgnoreCase) > 0;
         }
 
