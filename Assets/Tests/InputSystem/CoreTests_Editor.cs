@@ -3474,6 +3474,36 @@ partial class CoreTests
         });
     }
 
+    [Test]
+    [Category("Editor")]
+    public void Editor_InputControlPicker_SearchDoesNotContainDuplicatePaths()
+    {
+        var dropdown = new StubInputControlPickerDropdown(new InputControlPickerState(), _ => {});
+        var root = dropdown.BuildRoot();
+
+        var searchableItems = new List<InputControlDropdownItem>();
+        void CollectSearchableLeaves(UnityEngine.InputSystem.Editor.AdvancedDropdownItem item)
+        {
+            if (!item.children.Any())
+            {
+                if (item is InputControlDropdownItem controlItem && controlItem.searchableName.Length > 0)
+                    searchableItems.Add(controlItem);
+                return;
+            }
+            foreach (var child in item.children)
+                CollectSearchableLeaves(child);
+        }
+        CollectSearchableLeaves(root);
+
+        var duplicatePaths = searchableItems
+            .GroupBy(i => i.controlPathWithDevice)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+        Assert.That(searchableItems.Select(i => i.controlPathWithDevice), Has.Some.EqualTo("<Mouse>/{Back}"));
+        Assert.That(duplicatePaths, Is.Empty);
+    }
+
     internal class StubInputControlPickerDropdown : InputControlPickerDropdown
     {
         public StubInputControlPickerDropdown(InputControlPickerState state, Action<string> onPickCallback,
