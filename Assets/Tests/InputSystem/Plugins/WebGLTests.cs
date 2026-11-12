@@ -116,6 +116,44 @@ internal class WebGLTests : CoreTestsFixture
         AssertButtonPress(joystick, new TestJoystickState());
     }
 
+    // The Trigger control of WebGL joysticks covers the float values of all buttons. A value change of a held
+    // button can set bits in that state, which must not count as another press.
+    [Test]
+    [Category("Devices")]
+    public void Devices_WebGLJoystickTrigger_WasPressedThisFrame_IsFalse_WhenValueOfHeldButtonChanges()
+    {
+        runtime.ReportNewInputDevice(new InputDeviceDescription
+        {
+            interfaceName = "WebGL",
+            deviceClass = "Gamepad",
+            product = "WebGL test joystick",
+            capabilities = new WebGLDeviceCapabilities
+            {
+                mapping = "",
+                numAxes = 3,
+                numButtons = 3
+            }.ToJson()
+        });
+
+        InputSystem.Update();
+
+        var joystick = InputSystem.GetDevice<WebGLJoystick>();
+        var trigger = (ButtonControl)joystick.TryGetChildControl("Trigger");
+
+        // Start tracking frame presses.
+        Assert.That(trigger.wasPressedThisFrame, Is.False);
+
+        InputSystem.QueueStateEvent(joystick, new TestJoystickState {button1 = 1.0f});
+        InputSystem.Update();
+        Assert.That(trigger.wasPressedThisFrame, Is.True);
+
+        // 0.75 has a bit set that 1.0 doesn't have.
+        InputSystem.QueueStateEvent(joystick, new TestJoystickState {button1 = 0.75f});
+        InputSystem.Update();
+        Assert.That(trigger.isPressed, Is.True);
+        Assert.That(trigger.wasPressedThisFrame, Is.False);
+    }
+
     [Test]
     [Category("Devices")]
     public void Devices_CanHaveWebGLJoystickWithBadRegexInName()

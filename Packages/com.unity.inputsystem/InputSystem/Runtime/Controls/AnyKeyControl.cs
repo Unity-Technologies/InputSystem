@@ -16,15 +16,21 @@ namespace UnityEngine.InputSystem.Controls
     /// This control is used by <see cref="Keyboard.anyKey"/> to create a button
     /// that is toggled on as long as any of the keys on the keyboard is pressed.
     ///
-    /// <see cref="ButtonControl.wasPressedThisFrame"/> is true in any frame in which a key goes down,
-    /// even if other keys are already held. <see cref="ButtonControl.wasReleasedThisFrame"/> is only true
-    /// in the frame in which the last held key is released. This means that there can be several presses
-    /// in a row without a release in between.
+    /// For <see cref="Keyboard.anyKey"/>, <see cref="ButtonControl.wasPressedThisFrame"/> is true in any
+    /// frame in which a key goes down, even if other keys are already held.
+    /// <see cref="ButtonControl.wasReleasedThisFrame"/> is only true in the frame in which the last held key
+    /// is released. This means that there can be several presses in a row without a release in between.
     /// </remarks>
     /// <seealso cref="Keyboard.anyKey"/>
     [InputControlLayout(hideInUI = true)]
     public class AnyKeyControl : ButtonControl
     {
+        // Whether each bit of the state is a key, so that a bit going from 0 to 1 is a key going down. Only then
+        // does a key going down while another one is held count as a press. Other devices use this control
+        // over other kinds of state, such as the float button values of WebGL joysticks, where a value change
+        // can also set bits.
+        internal bool tracksIndividualKeys;
+
         // The state as of the last press state update, to find keys that went down since. The editor has its own
         // state buffers, so it gets its own copy.
         private byte[] m_LastState;
@@ -50,6 +56,9 @@ namespace UnityEngine.InputSystem.Controls
 
         internal override unsafe bool CheckForRepress(bool editorState, bool startTracking)
         {
+            if (!tracksIndividualKeys)
+                return false;
+
 #if UNITY_EDITOR
             ref var lastState = ref editorState ? ref m_LastStateEditor : ref m_LastState;
 #else
