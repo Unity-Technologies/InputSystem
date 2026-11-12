@@ -26,6 +26,16 @@ public class Triggers : RecipeBase
     // Run performance build jobs on TvOS for all Unity versions.
     IEnumerable<Dependency> allTvOSPerformanceBuildJobs = new MobilePerformanceBuildJobs().AsDependencies().Where(d => d.JobId.Contains("TvOS"));
 
+    // Wrench's "Validate - inputsystem - <editor> - <platform>" jobs, which run the PVP checks with our
+    // .yamato/wrench/pvp-exemptions.json. Wrench doesn't expose these jobs publicly, so their ids are built
+    // the same way Wrench names them. If the naming changes, regenerating logs a YAM002 warning
+    // ("A dependency references a job that does not exist").
+    IEnumerable<Dependency> allValidationJobs = InputSystemSettings.Instance.InputSystemPackage.UnityEditors
+        .SelectMany(editor => editor.EditorPlatforms.Items.Keys.Select(platformType =>
+            new Dependency("wrench/validation-jobs",
+                $"validate_-_inputsystem_-_{editor.Version.Version.Replace('.', '_')}_-_{platformType.ToString().ToLowerInvariant()}")))
+        .ToList();
+
     protected override ISet<Job> LoadJobs()
         => Combine.Collections(GetTriggers()).SelectJobs();
 
@@ -49,7 +59,9 @@ public class Triggers : RecipeBase
                     .WithDependencies(allStandaloneIl2CppFunctionalTests.Where(d => !d.JobId.Contains("Ubuntu")))
                     .WithDependencies(allMobileFunctionalTests)
                     .WithDependencies(allTvOSFunctionalBuildJobs)
-                    .WithDependencies(new Dependency("wrench/promotion-jobs", "publish_dry_run_inputsystem"))
+                    // Gate on Validate rather than on "Publish Dry Run": a dry run has the same requirements
+                    // as a real publish, so it always fails while the changelog has an [Unreleased] section.
+                    .WithDependencies(allValidationJobs)
                     .WithPullRequestTrigger(pr => pr.ExcludeDraft().And().WithTargetBranch(InputSystemSettings.BranchName).And().WithoutChanges("**/*.md"), true, CancelLeftoverJobs.Always),
 
                 JobBuilder.Create("Nightly trigger")
