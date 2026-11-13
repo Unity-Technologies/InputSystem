@@ -2571,6 +2571,31 @@ partial class CoreTests
         Assert.That(gamepad.rightTrigger.ReadValue(), Is.EqualTo(0.5f).Within(0.000001));
     }
 
+    [Test]
+    [Category("Events")]
+    public void Events_StateEventsAreAccepted_IfTimestampIsMonotonicAndDeviceIsKeyboard()
+    {
+        var device = InputSystem.AddDevice<Keyboard>();
+
+        InputSystem.QueueStateEvent(device, new KeyboardState(), 1.0);
+        InputSystem.Update();
+
+        // Accepted: equal
+        InputSystem.QueueStateEvent(device, new KeyboardState(Key.Space), 1.0);
+        InputSystem.Update();
+        Assert.That(device.spaceKey.ReadValue(), NUnit.Framework.Is.EqualTo(1.0f).Within(1e-6));
+
+        // Accepted: forward
+        InputSystem.QueueStateEvent(device, new KeyboardState(), 1.0000001);
+        InputSystem.Update();
+        Assert.That(device.spaceKey.ReadValue(), NUnit.Framework.Is.EqualTo(0.0f).Within(1e-6));
+
+        // Discarded: backward
+        InputSystem.QueueStateEvent(device, new KeyboardState(Key.Space), 1.0);
+        InputSystem.Update();
+        Assert.That(device.spaceKey.ReadValue(), NUnit.Framework.Is.EqualTo(0.0f).Within(1e-6));
+    }
+
     // This is another case of IInputStateCallbackReceiver making everything more complicated by deviating from
     // the common, simple code path. Basically, what this test here is trying to ensure is that we can send
     // touch states to a Touchscreen and not have them rejected because of timestamps. It's easy to order the
