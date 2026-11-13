@@ -772,6 +772,14 @@ namespace UnityEngine.InputSystem.EnhancedTouch
 
             public void AddFingers(Touchscreen screen)
             {
+                // The global touch state may have been reset after EnhancedTouchSupport.Enable() subscribed to device changes.
+                // A device added through that stale subscription would build a Finger with a None mask, which InputStateHistory.updateMask rejects.
+                // Skip until the state is set up again.
+                if (updateMask == InputUpdateType.None)
+                {
+                    return;
+                }
+
                 var touchCount = screen.touches.Count;
                 ArrayHelpers.EnsureCapacity(ref fingers, totalFingerCount, touchCount);
                 for (var i = 0; i < touchCount; ++i)
