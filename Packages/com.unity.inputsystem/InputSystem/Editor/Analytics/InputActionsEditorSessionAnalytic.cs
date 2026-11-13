@@ -50,7 +50,7 @@ namespace UnityEngine.InputSystem.Editor
         }
 
         /// <summary>
-        /// Register than a binding edit has occurred.
+        /// Register that a binding edit has occurred.
         /// </summary>
         public void RegisterBindingEdit()
         {
@@ -297,6 +297,7 @@ namespace UnityEngine.InputSystem.Editor
             /// </summary>
             public int action_modification_count;
 
+            /// <summary>
             /// The total number of binding modifications during the session.
             /// </summary>
             public int binding_modification_count;
