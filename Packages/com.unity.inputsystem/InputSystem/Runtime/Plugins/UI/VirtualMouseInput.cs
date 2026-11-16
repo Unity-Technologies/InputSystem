@@ -278,6 +278,23 @@ namespace UnityEngine.InputSystem.UI
             set => SetAction(ref m_ScrollWheelAction, value);
         }
 
+        // calculate the scale factor for the applied canvas scaler
+        private Vector2 canvasScale
+        {
+            get
+            {
+                var resolutionXScale = 1f;
+                var resolutionYScale = 1f;
+                if (m_Canvas != null && m_CanvasScaler != null)
+                {
+                    resolutionXScale = m_Canvas.pixelRect.xMax / m_CanvasScaler.referenceResolution.x;
+                    resolutionYScale = m_Canvas.pixelRect.yMax / m_CanvasScaler.referenceResolution.y;
+                }
+
+                return new Vector2(resolutionXScale, resolutionYScale);
+            }
+        }
+
         protected void OnEnable()
         {
             // Hijack system mouse, if enabled.
@@ -296,7 +313,7 @@ namespace UnityEngine.InputSystem.UI
             // Set initial cursor position.
             if (m_CursorTransform != null)
             {
-                var position = m_CursorTransform.anchoredPosition;
+                var position = AnchoredPositionToScreen(m_CursorTransform.anchoredPosition);
                 InputState.Change(m_VirtualMouse.position, position);
                 m_SystemMouse?.WarpCursorPosition(position);
             }
@@ -462,7 +479,7 @@ namespace UnityEngine.InputSystem.UI
                     (m_CursorMode == CursorMode.SoftwareCursor ||
                      (m_CursorMode == CursorMode.HardwareCursorIfAvailable && m_SystemMouse == null)))
                 {
-                    m_CursorTransform.anchoredPosition = m_CanvasScaler == null ? newPosition : new Vector2(newPosition.x / resolutionXScale, newPosition.y / resolutionYScale);
+                    m_CursorTransform.anchoredPosition = ScreenPositionToAnchored(newPosition);
                 }
 
                 m_LastStickValue = stickValue;
@@ -599,6 +616,20 @@ namespace UnityEngine.InputSystem.UI
         private void OnAfterInputUpdate()
         {
             UpdateMotion();
+        }
+
+        // convert to anchored position applying canvas scaling
+        private Vector2 ScreenPositionToAnchored(Vector2 canvasPosition)
+        {
+            var scale = canvasScale;
+            return new Vector2(canvasPosition.x / scale.x, canvasPosition.y / scale.y);
+        }
+
+        // convert to screen position applying canvas scaling
+        private Vector2 AnchoredPositionToScreen(Vector2 anchoredPosition)
+        {
+            var scale = canvasScale;
+            return new Vector2(anchoredPosition.x * scale.x, anchoredPosition.y * scale.y);
         }
 
         /// <summary>
