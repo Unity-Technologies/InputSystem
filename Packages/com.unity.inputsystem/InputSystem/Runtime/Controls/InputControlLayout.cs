@@ -1485,8 +1485,7 @@ namespace UnityEngine.InputSystem.Layouts
                         foreach (var name in itemVariantArray)
                         {
                             variants?.Add(name);
-                            key = $"{key}@{name}";
-                            table[key] = controlItems[i];
+                            table[$"{key}@{name}"] = controlItems[i];
                         }
 
                         continue;
