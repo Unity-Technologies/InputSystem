@@ -88,7 +88,7 @@ namespace UnityEngine.InputSystem.Editor
                 return base.controlPathWithDevice;
         }
 
-        public ControlUsageDropdownItem(string device, string usage, string controlUsage)
+        public ControlUsageDropdownItem(string device, string usage, string controlUsage, bool searchable = true)
             : base(usage)
         {
             m_Device = string.IsNullOrEmpty(device) ? "*" : device;
@@ -96,7 +96,7 @@ namespace UnityEngine.InputSystem.Editor
             m_ControlPath = $"{{{ controlUsage }}}";
             name = controlUsage;
             id = controlPathWithDevice.GetHashCode();
-            m_Searchable = true;
+            m_Searchable = searchable;
         }
     }
 
