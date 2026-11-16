@@ -923,6 +923,18 @@ namespace UnityEngine.InputSystem
         /// </value>
         protected internal unsafe void* previousFrameStatePtr => InputStateBuffers.GetBackBufferForDevice(GetDeviceIndex());
 
+        // Like currentStatePtr and previousFrameStatePtr, but reads the state buffers of the given update type
+        // instead of the ones of the current update.
+        internal unsafe void* GetStatePtr(InputUpdateType updateType, bool previousFrame)
+        {
+            var buffers = InputSystem.manager.m_StateBuffers.GetDoubleBuffersFor(updateType);
+            if (!buffers.valid)
+                return null;
+
+            var deviceIndex = GetDeviceIndex();
+            return previousFrame ? buffers.GetBackBuffer(deviceIndex) : buffers.GetFrontBuffer(deviceIndex);
+        }
+
         /// <summary>
         /// The default state data buffer
         /// </summary>
