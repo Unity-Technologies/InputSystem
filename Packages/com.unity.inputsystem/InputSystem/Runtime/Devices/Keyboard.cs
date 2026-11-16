@@ -2592,7 +2592,6 @@ namespace UnityEngine.InputSystem
             Debug.Assert(keyStrings[(int)Key.F24 - 1] == "f24",
                 "keyString array layout doe not match Key enum layout");
             anyKey = GetChildControl<AnyKeyControl>("anyKey");
-            anyKey.tracksIndividualKeys = true;
             shiftKey = GetChildControl<ButtonControl>("shift");
             ctrlKey = GetChildControl<ButtonControl>("ctrl");
             altKey = GetChildControl<ButtonControl>("alt");

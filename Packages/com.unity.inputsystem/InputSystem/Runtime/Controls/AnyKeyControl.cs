@@ -25,12 +25,6 @@ namespace UnityEngine.InputSystem.Controls
     [InputControlLayout(hideInUI = true)]
     public class AnyKeyControl : ButtonControl
     {
-        // Whether each bit of the state is a key, so that a bit going from 0 to 1 is a key going down. Only then
-        // does a key going down while another one is held count as a press. Other devices use this control
-        // over other kinds of state, such as the float button values of WebGL joysticks, where a value change
-        // can also set bits.
-        internal bool tracksIndividualKeys;
-
         // The state as of the last press state update, to find keys that went down since. The editor has its own
         // state buffers, so it gets its own copy.
         private byte[] m_LastState;
@@ -56,7 +50,11 @@ namespace UnityEngine.InputSystem.Controls
 
         internal override unsafe bool CheckForRepress(bool editorState, bool startTracking)
         {
-            if (!tracksIndividualKeys)
+            // Only on keyboards is each bit of the state a key, so that a bit going from 0 to 1 is a key going down.
+            // Other devices use this control over other kinds of state, such as the float button values of WebGL
+            // joysticks, where a value change can also set bits. Check the device rather than set a flag in
+            // Keyboard.FinishSetup, because the precompiled FastKeyboard doesn't call it.
+            if (!(device is Keyboard))
                 return false;
 
 #if UNITY_EDITOR
