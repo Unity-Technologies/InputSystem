@@ -3518,9 +3518,48 @@ namespace UnityEngine.InputSystem
 #if UNITY_INCLUDE_TESTS
         internal static void TestHook_DisableActions()
         {
-            DisableActions(triggerSetupChanged: true);
-            if (s_Manager != null)
+            // Disconnect the project-wide action maps from their InputActionState without
+            // calling Disable(), which would corrupt the saved state snapshot.
+            //
+            // The normal DisableActions() path calls Disable() then OnSetupChanged() on the
+            // project-wide asset. Disable() modifies action phase memory on the *same* managed
+            // InputActionState objects that were already captured in the SaveAndResetState()
+            // snapshot (GCHandles point to the live objects; no deep copy is made). This means
+            // the restored snapshot has disabled phases even though the maps were enabled when
+            // the snapshot was taken, causing Restore() to leave maps incorrectly disabled.
+            //
+            // Instead, we just null out the map back-references and let Restore() re-link them.
+            // Control monitors registered through the old runtime don't need unsubscribing here
+            // because the test manager installs a new runtime; the old runtime is never polled
+            // during the test. See IN-107889.
+            var projectWideActions = s_Manager?.actions;
+            if (projectWideActions != null)
+            {
+                DisconnectActionMaps(projectWideActions);
                 s_Manager.actions = null;
+            }
+
+            // Also disconnect the configured project-wide asset even if manager.actions is null.
+            // RelinkRestoredStates() restores m_EnabledActionsCount on maps after Restore(). If a
+            // subsequent test's manager.actions is null (e.g. a previous OneTimeTearDown cleared it),
+            // TestHook_DisableActions would be a no-op and those maps would keep m_State set and
+            // m_EnabledActionsCount == m_Actions.Length. InputActionMap.Enable() would then
+            // early-return thinking all actions are already enabled, but the state is not in
+            // s_GlobalState (which was cleared by SaveAndResetState()). See IN-107889.
+            var configuredActions = InputManager.s_GetProjectWideActions?.Invoke();
+            if (configuredActions != null && configuredActions != projectWideActions)
+                DisconnectActionMaps(configuredActions);
+        }
+
+        private static void DisconnectActionMaps(InputActionAsset asset)
+        {
+            foreach (var map in asset.actionMaps)
+            {
+                map.m_State = null;
+                map.m_MapIndexInState = InputActionState.kInvalidIndex;
+                map.m_EnabledActionsCount = 0;
+            }
+            asset.m_SharedStateForAllMaps = null;
         }
 
         internal static void TestHook_EnableActions()
