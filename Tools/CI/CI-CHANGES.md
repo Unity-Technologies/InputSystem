@@ -4,6 +4,26 @@ This file documents notable changes made to the CI cookbook (`Tools/CI/`), inclu
 
 ---
 
+## Gate PRs on Validate instead of Publish Dry Run
+**Branch:** `anthony/pr-gate-on-validate`  
+**Date:** November 2026  
+**Author:** Anthony Yakovlev
+
+### Summary
+Since mid-August 2026, "Publish Dry Run inputsystem" failed on every PR with PVP-40-1 (`CHANGELOG.md: line 8: header must match regex`). The package tooling team confirmed this is expected. `upm-pvp publish --dry-run` has the same requirements as a real publish and doesn't read `.yamato/wrench/pvp-exemptions.json`, and a package can't be published with an `[Unreleased]` changelog section. `develop` is never in a publishable state, so the dry run can't be a PR gate.
+
+### Changes
+- **`Recipes/Triggers.cs`:** "All Functional Tests" now depends on the Wrench "Validate - inputsystem - X - Y" jobs instead of "Publish Dry Run inputsystem". The Validate jobs run `upm-pvp require "rme PVP-160-1 supported .yamato/wrench/pvp-exemptions.json"`, so they apply our exemptions. They were already part of the PR gate, because the dry run depended on them.
+- **`CHANGELOG.md`:** the in-progress header is now `## [Unreleased]` instead of `## [Unreleased] - yyyy-mm-dd`, so it passes PVP-40-1.
+- **`.yamato/wrench/pvp-exemptions.json`:** removed the PVP-40-1 exemption for the placeholder header, and added `"PVP-41-1": {"all": true}` ("Changelog has no [Unreleased] section"). The PVP-41-1 docs recommend skipping it in CI during development.
+
+### Follow-up
+- When releasing, replace `## [Unreleased]` with `## [x.y.z] - yyyy-mm-dd`, as before.
+- When bumping the version after a release, add back `## [Unreleased]` without the ` - yyyy-mm-dd` placeholder. The placeholder fails PVP-40-1, which is no longer exempted.
+- Run "Publish Dry Run inputsystem" manually to check the package is ready to publish, or to test CI changes. It will keep failing while the `[Unreleased]` section is there.
+
+---
+
 ## Wrench 2.12.0 Migration & CI Fixes
 **Branch:** `bugfix/fix-ci-failure-due-to-warnings`  
 **Date:** June 2026  

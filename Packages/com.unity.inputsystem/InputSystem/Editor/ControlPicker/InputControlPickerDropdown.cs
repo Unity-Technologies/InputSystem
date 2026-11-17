@@ -126,14 +126,14 @@ namespace UnityEngine.InputSystem.Editor
             m_OnPickCallback(path);
         }
 
-        private AdvancedDropdownItem BuildTreeForControlUsages(string device = "", string usage = "")
+        private AdvancedDropdownItem BuildTreeForControlUsages(string device = "", string usage = "", bool searchable = true)
         {
             var usageRoot = new AdvancedDropdownItem("Usages");
             foreach (var usageAndLayouts in EditorInputControlLayoutCache.allUsages)
             {
                 if (usageAndLayouts.Item2.Any(LayoutMatchesExpectedControlLayoutFilter))
                 {
-                    var child = new ControlUsageDropdownItem(device, usage, usageAndLayouts.Item1);
+                    var child = new ControlUsageDropdownItem(device, usage, usageAndLayouts.Item1, searchable);
                     usageRoot.AddChild(child);
                 }
             }
@@ -193,7 +193,7 @@ namespace UnityEngine.InputSystem.Editor
                     var usageItem = new DeviceDropdownItem(layout, usage);
 
                     // Add control usages to the device variants
-                    var deviceVariantControlUsages = BuildTreeForControlUsages(layout.name, usage);
+                    var deviceVariantControlUsages = BuildTreeForControlUsages(layout.name, usage, searchable);
                     if (deviceVariantControlUsages.children.Any())
                     {
                         usageItem.AddChild(deviceVariantControlUsages);
@@ -208,7 +208,7 @@ namespace UnityEngine.InputSystem.Editor
             }
 
             // Add control usages
-            var deviceControlUsages = BuildTreeForControlUsages(layout.name);
+            var deviceControlUsages = BuildTreeForControlUsages(layout.name, searchable: searchable);
             if (deviceControlUsages.children.Any())
             {
                 deviceItem.AddChild(deviceControlUsages);
