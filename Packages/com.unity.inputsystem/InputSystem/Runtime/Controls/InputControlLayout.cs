@@ -1301,6 +1301,9 @@ namespace UnityEngine.InputSystem.Layouts
 
             m_UpdateBeforeRender = m_UpdateBeforeRender ?? other.m_UpdateBeforeRender;
 
+            if (canRunInBackground == null)
+                canRunInBackground = other.canRunInBackground;
+
             if (m_Variants.IsEmpty())
                 m_Variants = other.m_Variants;
 
