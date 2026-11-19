@@ -3366,7 +3366,6 @@ namespace UnityEngine.InputSystem
         internal static InputManager s_Manager;
         internal static InputRemoting s_Remote;
 
-#if DEBUG
         private static RemoteInputPlayerConnection s_RemoteConnection;
 
         internal static RemoteInputPlayerConnection remoteConnection
@@ -3400,18 +3399,14 @@ namespace UnityEngine.InputSystem
             }
         }
 
-        #if !UNITY_EDITOR
         private static bool ShouldEnableRemoting()
         {
             #if UNITY_INCLUDE_TESTS
             return false; // Don't remote while running tests.
             #else
-            return true;
+            return Debug.isDebugBuild;
             #endif
         }
-
-        #endif //!UNITY_EDITOR //
-#endif // DEBUG
 
         // The rest here is internal stuff to manage singletons, survive domain reloads,
         // and to support the reset ability for tests.
@@ -3506,10 +3501,8 @@ namespace UnityEngine.InputSystem
             #endif
 
             // Automatically enable remoting in development players.
-            #if DEBUG && !UNITY_EDITOR
             if (ShouldEnableRemoting())
                 SetUpRemoting();
-            #endif
 
             // This is the point where we initialise project-wide actions for the Player
             EnableActions();
