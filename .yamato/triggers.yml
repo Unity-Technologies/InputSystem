@@ -28,6 +28,9 @@ all_functional_tests:
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_6_-_android_-_il2cpp
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_6_-_android_-_mono
   - path: .yamato/input-system-mobile-functional-tests.yml#inputsystem-mobilefunctionaltests_-_6000_6_-_ios
+  - path: .yamato/input-system-player-compile-checks.yml#inputsystem-playercompilechecks_-_6000_0_-_ubuntu2204
+  - path: .yamato/input-system-player-compile-checks.yml#inputsystem-playercompilechecks_-_6000_3_-_ubuntu2204
+  - path: .yamato/input-system-player-compile-checks.yml#inputsystem-playercompilechecks_-_6000_6_-_ubuntu2204
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_0_-_macos13
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_0_-_ubuntu2204
   - path: .yamato/input-system-standalone-functional-tests.yml#inputsystem-standalonefunctionaltests_-_6000_0_-_win10

@@ -17,6 +17,7 @@ public class Triggers : RecipeBase
     IEnumerable<Dependency> allMobileFunctionalTests = new MobileFunctionalTests().AsDependencies().Where(d => !d.JobId.Contains("TvOS"));
     // Run functional build jobs on TvOS for all Unity versions.
     IEnumerable<Dependency> allTvOSFunctionalBuildJobs = new MobileFunctionalBuildJobs().AsDependencies().Where(d => d.JobId.Contains("TvOS"));
+    IEnumerable<Dependency> allPlayerCompileChecks = new PlayerCompileChecks().AsDependencies();
 
     IEnumerable<Dependency> allEditorPerformanceTests = new EditorPerformanceTests().AsDependencies();
     IEnumerable<Dependency> allStandalonePerformanceTests = new StandalonePerformanceTests().AsDependencies();
@@ -59,6 +60,7 @@ public class Triggers : RecipeBase
                     .WithDependencies(allStandaloneIl2CppFunctionalTests.Where(d => !d.JobId.Contains("Ubuntu")))
                     .WithDependencies(allMobileFunctionalTests)
                     .WithDependencies(allTvOSFunctionalBuildJobs)
+                    .WithDependencies(allPlayerCompileChecks)
                     // Gate on Validate rather than on "Publish Dry Run": a dry run has the same requirements
                     // as a real publish, so it always fails while the changelog has an [Unreleased] section.
                     .WithDependencies(allValidationJobs)

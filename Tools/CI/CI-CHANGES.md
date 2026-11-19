@@ -4,6 +4,26 @@ This file documents notable changes made to the CI cookbook (`Tools/CI/`), inclu
 
 ---
 
+## Player compile checks
+**Branch:** `input/ci-player-compile-checks`  
+**Date:** November 2026  
+**Author:** David Lo
+
+### Summary
+All our Player test jobs go through UTR, which only builds development Players. Development builds always define `DEBUG`, so CI never compiled the package for a release Player with tests included. 1.20.0 and 1.20.1 shipped with a compile error in exactly that case: with the `UNITY_INCLUDE_TESTS` scripting define set, a non-development Player build failed with `CS0117: 'InputSystem' does not contain a definition for 'remoteConnection'`. A customer hit it in a real project.
+
+The new jobs compile the Player scripts, without building a Player, in release and development builds, each with and without `UNITY_INCLUDE_TESTS`.
+
+### Changes
+- **`Assets/Editor/PlayerCompileCheck.cs`:** new Editor script. `PlayerCompileCheck.Run` calls `PlayerBuildInterface.CompilePlayerScripts` for the active build target with each combination. It logs a `PlayerCompileCheck:` line per combination and exits with code 1 if any combination fails to compile. Run it locally with `Unity -batchmode -nographics -projectPath . -executeMethod PlayerCompileCheck.Run -logFile -`.
+- **`Recipes/PlayerCompileChecks.cs`:** new recipe with one Ubuntu job per editor version. It only checks `#if` logic, so one platform is enough. The Editor log is saved as `artifacts/PlayerCompileCheck.log`.
+- **`Recipes/Triggers.cs`:** "All Functional Tests" (the PR gate) now depends on the new jobs.
+
+### Follow-up
+- To check another define that users set, add it to `k_DefineSets` in `PlayerCompileCheck.cs`.
+
+---
+
 ## Gate PRs on Validate instead of Publish Dry Run
 **Branch:** `anthony/pr-gate-on-validate`  
 **Date:** November 2026  
