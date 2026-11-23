@@ -95,7 +95,7 @@ namespace UnityEngine.InputSystem.Editor
                 InputState.onChange -= OnDeviceStateChange;
                 InputSystem.onSettingsChange -= NeedControlValueRefresh;
                 Application.focusChanged -= OnApplicationFocusChange;
-                EditorApplication.playModeStateChanged += OnPlayModeChange;
+                EditorApplication.playModeStateChanged -= OnPlayModeChange;
                 EditorApplication.update -= OnEditorUpdate;
             }
 
