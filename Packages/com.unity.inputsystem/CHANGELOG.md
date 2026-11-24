@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed duplicate entries appearing in the Input Actions Editor binding path search for some devices, such as Mouse and XR controllers. [UUM-160646](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-160646)
 - Fixed closed Input Device Debugger windows staying in memory until the next domain reload. [ISX-3179]
 - Fixed XR HMD device regeneration not copying the `canRunInBackground` parameter from its base layout, causing the XR app view to become locked to the tracking origin and frozen in place when the application regained focus after the headset went to sleep or a system menu was opened. [UUM-139700](https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-139700)
+- Fixed a `NullReferenceException` on every mouse move in Play Mode after Play Mode was stopped during an `InputTestFixture` test with domain reload disabled. Actions disposed while another `InputManager` was installed left their state change monitors in the `InputManager` they were enabled in.
 
 ## [1.20.1] - 2026-10-05
 
