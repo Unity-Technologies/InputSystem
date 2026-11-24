@@ -2669,6 +2669,115 @@ partial class CoreTests
         Assert.That(keyboard.anyKey.isPressed, Is.True);
     }
 
+    // UUM-144317: anyKey stays pressed while any key is held, so a key going down while another one was held
+    // did not register as a press.
+    [Test]
+    [Category("Devices")]
+    public void Devices_AnyKeyOnKeyboard_WasPressedThisFrame_WhenKeyGoesDownWhileAnotherIsHeld()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Start tracking frame presses.
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.False);
+
+        Press(keyboard.leftShiftKey);
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.True);
+
+        InputSystem.Update();
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.False);
+
+        Press(keyboard.aKey);
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.True);
+        Assert.That(keyboard.anyKey.wasReleasedThisFrame, Is.False);
+
+        // Releasing one of the held keys is neither a press nor a release.
+        Release(keyboard.aKey);
+        Assert.That(keyboard.anyKey.isPressed, Is.True);
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.False);
+        Assert.That(keyboard.anyKey.wasReleasedThisFrame, Is.False);
+
+        Release(keyboard.leftShiftKey);
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.False);
+        Assert.That(keyboard.anyKey.wasReleasedThisFrame, Is.True);
+    }
+
+    // Same as above, but with full state events like the ones the platform backends send.
+    [Test]
+    [Category("Devices")]
+    public void Devices_AnyKeyOnKeyboard_WasPressedThisFrame_WhenKeyGoesDownWhileAnotherIsHeld_WithFullStateEvents()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.False);
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.LeftShift));
+        InputSystem.Update();
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.True);
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.LeftShift));
+        InputSystem.Update();
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.False);
+
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.LeftShift, Key.A));
+        InputSystem.Update();
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.True);
+    }
+
+    // The first query, which starts tracking frame presses, can come in the frame the key goes down.
+    [Test]
+    [Category("Devices")]
+    public void Devices_AnyKeyOnKeyboard_WasPressedThisFrame_WhenFirstQueriedAsKeyGoesDownWhileAnotherIsHeld()
+    {
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        Press(keyboard.leftShiftKey);
+        Press(keyboard.aKey);
+
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.True);
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.True);
+
+        InputSystem.Update();
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.False);
+    }
+
+#if UNITY_EDITOR
+    // Changing settings refreshes press tracking for both editor and player state, whichever of the two is current.
+    // That must not mix them up.
+    [Test]
+    [Category("Devices")]
+    public void Devices_AnyKeyOnKeyboard_WasPressedThisFrame_KeepsEditorAndPlayerStateApart_WhenSettingsChange()
+    {
+        runtime.runInBackground = true;
+        InputSystem.settings.backgroundBehavior = InputSettings.BackgroundBehavior.IgnoreFocus;
+        InputSystem.settings.editorInputBehaviorInPlayMode = default;
+
+        var keyboard = InputSystem.AddDevice<Keyboard>();
+
+        // Player state: Shift is held.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.LeftShift));
+        InputSystem.Update(InputUpdateType.Dynamic);
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.True);
+
+        // Without game view focus, keyboard input goes to the editor. Editor state: Shift and A are held.
+        ScheduleFocusChangedEvent(applicationHasFocus: false);
+        InputSystem.Update(InputUpdateType.Dynamic);
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.LeftShift, Key.A));
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(keyboard.aKey.isPressed, Is.True);
+
+        // Change a setting while player state is current.
+        InputSystem.Update(InputUpdateType.Dynamic);
+        InputSystem.settings.defaultDeadzoneMin = 0.2f;
+
+        // Releasing Shift in the editor must not make A, which is still held, look newly pressed.
+        InputSystem.QueueStateEvent(keyboard, new KeyboardState(Key.A));
+        InputSystem.Update(InputUpdateType.Editor);
+        Assert.That(keyboard.aKey.isPressed, Is.True);
+        Assert.That(keyboard.anyKey.wasPressedThisFrame, Is.False);
+    }
+
+#endif
+
     [Test]
     [Category("Devices")]
     public void Devices_AnyKeyOnKeyboard_DoesNotReactToIMESelected()
