@@ -11663,6 +11663,42 @@ partial class CoreTests
                 (InputManagerStateMonitors.StateChangeMonitorsForDevice x) => x.memoryRegions.All(r => r.sizeInBits == 0)));
     }
 
+    // Stopping Play Mode during an InputTestFixture test disposed the InputForUI provider's actions while the fixture's
+    // InputManager was still installed, which left their state change monitors in the InputManager they were enabled in.
+    [Test]
+    [Category("Actions")]
+    public void Actions_DisposingActionWhileAnotherInputManagerIsInstalled_RemovesItsStateMonitors()
+    {
+        var gamepad = InputSystem.AddDevice<Gamepad>();
+        var action = new InputAction(binding: "<Gamepad>/buttonSouth");
+        action.Enable();
+        var state = action.m_ActionMap.m_State;
+
+        var manager = InputSystem.manager;
+        using (var otherRuntime = new InputTestRuntime())
+        {
+            var otherManager = InputManager.CreateAndInitialize(otherRuntime, null, fakeManagerForRemotingTests: true);
+            InputSystemTestHooks.TestHook_SwitchToDifferentInputManager(otherManager);
+            try
+            {
+                action.Dispose();
+            }
+            finally
+            {
+                // Dispose first: it resets the current state buffers, which switching back reinstalls.
+                otherManager.Dispose();
+                InputSystemTestHooks.TestHook_SwitchToDifferentInputManager(manager);
+            }
+        }
+
+        var monitors = manager.m_StateMonitors.m_MonitorsPerDevice[gamepad.m_DeviceIndex];
+        Assert.That(monitors.listeners.Take(monitors.count).Select(x => x.monitor), Has.None.SameAs(state));
+
+        // A monitor left behind would call into the action state whose memory Dispose() released.
+        Press(gamepad.buttonSouth);
+        LogAssert.NoUnexpectedReceived();
+    }
+
     // https://fogbugz.unity3d.com/f/cases/1367442/
     [Test]
     [Category("Actions")]

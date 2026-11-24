@@ -143,6 +143,10 @@ namespace UnityEngine.InputSystem
         private bool m_InProcessControlStateChange;
         private bool m_Suppressed;
         private InputEventPtr m_CurrentlyProcessingThisEvent;
+        // The InputManager this state last installed its state change monitors in. Monitors and timeouts are removed
+        // from it rather than from InputSystem.manager, which can be a different manager by then, for example while
+        // InputTestFixture has its own manager installed.
+        private InputManager m_MonitorManager;
         private Action m_OnBeforeUpdateDelegate;
         private Action m_OnAfterUpdateDelegate;
         private static readonly ProfilerMarker k_InputInitialActionStateCheckMarker = new ProfilerMarker("InitialActionStateCheck");
@@ -1109,7 +1113,7 @@ namespace UnityEngine.InputSystem
                 return;
 
             var clampedPriority = (ushort)InputAction.ClampPriority(action.Priority);
-            var manager = InputSystem.manager;
+            var manager = monitorManager;
             var bindingStartIndex = mapIndices[mapIndex].bindingStartIndex;
             var bindingCount = mapIndices[mapIndex].bindingCount;
             var bindingStatesPtr = memory.bindingStates;
@@ -1267,7 +1271,10 @@ namespace UnityEngine.InputSystem
                 "Control start index out of range");
             Debug.Assert(controlStartIndex + numControls <= totalControlCount, "Control range out of bounds");
 
-            var manager = InputSystem.manager;
+            // Keep all of this state's monitors in one manager, so that they can all be removed from it again.
+            if (!HasEnabledControls())
+                m_MonitorManager = InputSystem.manager;
+            var manager = m_MonitorManager;
             for (var i = 0; i < numControls; ++i)
             {
                 var controlIndex = controlStartIndex + i;
@@ -1304,7 +1311,7 @@ namespace UnityEngine.InputSystem
                 "Control start index out of range");
             Debug.Assert(controlStartIndex + numControls <= totalControlCount, "Control range out of bounds");
 
-            var manager = InputSystem.manager;
+            var manager = monitorManager;
             for (var i = 0; i < numControls; ++i)
             {
                 var controlIndex = controlStartIndex + i;
@@ -1355,11 +1362,23 @@ namespace UnityEngine.InputSystem
             }
         }
 
+        // The manager holding this state's monitors, which its timeouts go to as well.
+        private InputManager monitorManager => m_MonitorManager ?? InputSystem.manager;
+
         private bool IsControlEnabled(int controlIndex)
         {
             var intIndex = controlIndex / 32;
             var mask = 1U << (controlIndex % 32);
             return (enabledControls[intIndex] & mask) != 0;
+        }
+
+        private bool HasEnabledControls()
+        {
+            var intCount = (totalControlCount + 31) / 32;
+            for (var i = 0; i < intCount; ++i)
+                if (enabledControls[i] != 0)
+                    return true;
+            return false;
         }
 
         private void SetControlEnabled(int controlIndex, bool state)
@@ -2292,7 +2311,7 @@ namespace UnityEngine.InputSystem
             Debug.Assert(trigger.controlIndex >= 0 && trigger.controlIndex < totalControlCount, "Control index out of range");
             Debug.Assert(trigger.interactionIndex >= 0 && trigger.interactionIndex < totalInteractionCount, "Interaction index out of range");
 
-            var manager = InputSystem.manager;
+            var manager = monitorManager;
             var currentTime = trigger.time;
             var control = controls[trigger.controlIndex];
             var interactionIndex = trigger.interactionIndex;
@@ -2321,7 +2340,7 @@ namespace UnityEngine.InputSystem
 
             ref var interactionState = ref interactionStates[interactionIndex];
 
-            var manager = InputSystem.manager;
+            var manager = monitorManager;
             manager.RemoveStateChangeMonitorTimeout(this, interactionState.timerMonitorIndex, interactionIndex);
 
             // Update state.
