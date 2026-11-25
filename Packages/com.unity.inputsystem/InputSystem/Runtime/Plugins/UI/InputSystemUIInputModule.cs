@@ -1,10 +1,12 @@
 #if PACKAGE_DOCS_GENERATION || UNITY_INPUT_SYSTEM_ENABLE_UI
 using System;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.Controls;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine.Pool;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 ////FIXME: The UI is currently not reacting to pointers until they are moved after the UI module has been enabled. What needs to
@@ -26,8 +28,6 @@ using UnityEngine.UI;
 
 ////TODO: add ability to query which device was last used with any of the actions
 ////REVIEW: also give access to the last/current UI event?
-
-////TODO: ToString() method a la PointerInputModule
 
 namespace UnityEngine.InputSystem.UI
 {
@@ -2431,6 +2431,40 @@ namespace UnityEngine.InputSystem.UI
             return sourcePointerData is ExtendedPointerEventData ep
                 ? ep.uiToolkitPointerId
                 : base.ConvertUIToolkitPointerId(sourcePointerData);
+        }
+
+        public override string ToString()
+        {
+            var sb = GenericPool<StringBuilder>.Get();
+            try
+            {
+                sb.Clear();
+                sb.Append("<b>Pointer Input Module of type: </b>");
+                sb.Append(GetType());
+                sb.AppendLine();
+                sb.AppendLine();
+
+                if (m_PointerStates.length == 0)
+                    sb.AppendLine("No active pointers.");
+
+                for (var i = 0; i < m_PointerStates.length; ++i)
+                {
+                    var eventData = m_PointerStates[i].eventData;
+                    if (eventData == null)
+                        continue;
+                    sb.Append("<b>Pointer:</b> ");
+                    sb.Append(m_PointerIds[i]);
+                    sb.AppendLine();
+                    sb.AppendLine(eventData.ToString());
+                }
+
+                return sb.ToString();
+            }
+            finally
+            {
+                sb.Clear();
+                GenericPool<StringBuilder>.Release(sb);
+            }
         }
 
 #if UNITY_INPUT_SYSTEM_INPUT_MODULE_SCROLL_DELTA
